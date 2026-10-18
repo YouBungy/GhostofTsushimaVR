@@ -721,3 +721,28 @@ spaces, session, instance → TerminateProcess.
 - Known limits / to verify in the headset: the HUD panel is head-locked (world-locked only in theatre); full-screen
   UI effects (pause-menu dimming, letterbox bars drawn by the UI) shrink with the panel; if the UI target is cleared
   by a viewport-limited draw instead of a full clear, old UI could remain outside the panel (F9 off is the check).
+
+## GoTVR 0.12.0 → 0.13.0 — pause menu head-locked; menus low-res; start screen follows the head (BUG-42..44)
+- `[HEADSET]` 0.12.0: pre-rendered videos on the theatre quad PASS; HUD single (no double image) PASS; HUD and pause
+  screen follow the head (by design in 0.12: head-locked panel). Owner: menus too low resolution; pause menu on a
+  stationary screen in a black void like the videos; start screen anchored in space.
+- BUG-42 pause `[STATIC]`: the game clock 0x141489DF0 combines 28 time-scale reasons at +0x84 (Clock_SetScale
+  0x56F340(clock, reason, scale)). Reason 7 = refcount of open UI screens flagged "pauses the game" (screen+0x7F8;
+  0x7D6E10 first opener sets 0, 0x7D7240 last closer sets 1) → pause menu, map, gear, options. Reason 8 = video
+  (Movie_Tick 0x7A1190), 9 = world load/reset (0x59AAC0). Fix: a flat-context decision once per tick at GameTick
+  start (pause reason in pause_channels, default 0x80 | video | no 3D world | F10); in a flat tick the game renders
+  its OWN flat camera/projection (no eye pose, no right-eye tick, every tick simulated), the frame is published to both
+  slots tagged GV_SLOT_THEATER|GV_SLOT_FLAT (protocol v6), the host shows it on the world-locked screen in a black
+  void (never as a projection: no pose), and 2 camera cuts are forced at each flat↔stereo switch. theater_flat_render=0
+  keeps the stereo image on the screen instead.
+- BUG-43 resolution (analysis, fix next): the eye image is the 2560×1440 back buffer over a ~106°×100° frustum →
+  ~24 px/° horizontally and only ~14 px/° vertically; the HUD panel maps the UI into ~half of that. The playbook fix
+  is the UI on its own compositor quad at the UI target's own resolution (04 "Get UI off the backbuffer";
+  HUD-004). RE for it: Ctx_BindColor 0x50E430 stores the colour attachment at ctx+0x2C8, attachment+0x18 = resource
+  record (Res_Transition target) → native via the TAA chain; RT binding is lazy (ctx+0x340 dirty bit). 0.13.0 logs a
+  one-time "UI probe": whether the UI target colour is the back buffer or a separate texture, its format and size.
+- BUG-44 start screen (analysis): needs a title-screen signal; 0.13.0 logs every time-scale reason change and the raw
+  world mode byte (+0x80F09: 0 none, 1/2 seen by the pass-65 fade 0x728400) to find it, then the UI layer is placed
+  world-locked there (HUD-002).
+- Self-test: 47/47; UI test extended (pause reason 7 → flat, reason 9 ignored, flat render on/off, flags, cut count)
+  PASS; all earlier tests PASS.

@@ -1,4 +1,4 @@
-# GoTVR 0.12.0 — SYNCHRONIZED STEREO 6DoF (xr=4): both eyes from the same moment of the game
+# GoTVR 0.13.0 — SYNCHRONIZED STEREO 6DoF (xr=4): both eyes from the same moment of the game
 
 Single-player only. Never enter Legends (online) with any GoTVR file installed.
 What changed and why: `docs/BUGLOG.md` (BUG-5, BUG-6).
@@ -21,6 +21,24 @@ refused to send images ("FRAME GENERATION is on" in the log, although it was off
 "R1 census" every 5 s (or on F10): the list of views the engine renders each frame. That decides how true
 same-frame stereo (both eyes every frame) gets built. Please press **F10** once in each of: main menu, standing
 outdoors, riding, a cutscene, photo mode.
+
+## 0.13.0: pause menu on the still screen (xr=4)
+
+**Install both files again:** `xinput1_4.dll` and `GoTVR\GoTVRHost.exe` (the protocol between them changed).
+
+- **Pause menu, map, gear, options (every menu that pauses the game):** now shown like the videos, on the still screen
+  in a black room, placed where you look when it opens. While it is open the game draws a normal flat picture (its
+  own camera, right shape), so the menu and the paused scene behind it look exactly as on a monitor. Closing the menu
+  goes straight back to 3D. F11 re-centres the screen. `theater_flat_render=0` puts the stereo image on the screen
+  instead.
+- **Logging for the next two steps** (no visible change): which texture the UI is drawn into (for the sharp UI layer)
+  and which game states change when you open menus (to recognise the start screen).
+
+Please test, in this order, and send `gotvr.log` + `host.log` afterwards:
+1. Start the game and stay on the **start screen** for ~10 s (note whether it is on the still screen or follows you).
+2. Load the game. Open the **pause menu**, wait 3 s, close it. Then the **map**, the **gear** menu, and **photo mode**,
+   each the same way. Tell me the order you did them in.
+3. Is the pause menu on the still screen, the right shape and sharp? Does 3D come back cleanly when you close it?
 
 ## 0.12.0: HUD and menus at the right size, videos on a screen, DLSS off (xr=4)
 

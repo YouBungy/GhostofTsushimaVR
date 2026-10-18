@@ -279,3 +279,11 @@ layer; layout untouched). Flat contexts (pre-rendered video, no-3D-world frames,
 GV_SLOT_THEATER and shown by the host on a world-locked 16:9-correct quad (HUD-002/003). Next: world-locked / lazy-follow
 HUD and pause menus (needs a pause signal), a real transparent HUD layer (copy the UI target into its own shared
 texture and suppress the engine's composite), first-person anchor, motion controls.
+
+## Session 15 (2026-10-18): flat contexts rendered flat; UI-layer RE
+Videos on the theatre quad accepted in the headset. Pausing menus (clock time-scale reason 7) are now flat contexts:
+the game renders a normal flat frame (own camera, every tick simulated) shown on the world-locked screen in a black
+void. Next, in order: (1) UI on its own OpenXR quad at the UI target's resolution (from the 0.13.0 probe: separate
+texture → copy + clear before the composite; back buffer → redirect the UI binds to a layer texture), (2) start screen
+UI world-locked with the 3D world behind (title signal from the census), (3) square-aspect render resolution
+(design doc) for 3D sharpness.

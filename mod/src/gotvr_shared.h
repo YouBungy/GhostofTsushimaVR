@@ -7,7 +7,7 @@
 #include <stdint.h>
 
 #define GV_MAGIC 0x52565447u /* 'GTVR' */
-#define GV_VERSION 5u
+#define GV_VERSION 6u
 #define GV_TEXCOUNT 6        /* 2 eyes x 3 buffers (game writes round-robin, never waits on the host) */
 
 // Names (wchar): Local\GoTVR_<pid>, Local\GoTVR_<pid>_g<gen>_tex<i> (new names per generation), Local\GoTVR_<pid>_fence
@@ -32,7 +32,7 @@ struct GvSlot {                 // one per eye and buffer, written by the game a
     float fov[4];               // the frustum this image was rendered with (angles)
     uint32_t flags;             // v5: GV_SLOT_* (flat context: show on the theatre screen instead of the projection layer)
 };
-enum : uint32_t { GV_SLOT_THEATER = 1u, GV_SLOT_CROP169 = 2u };   // CROP169: the image holds a 16:9 video letterboxed in the frame
+enum : uint32_t { GV_SLOT_THEATER = 1u, GV_SLOT_CROP169 = 2u, GV_SLOT_FLAT = 4u };   // CROP169: a 16:9 video letterboxed in the frame; FLAT: a normal flat game frame (no eye pose)
 
 struct GvShared {
     uint32_t magic, version;
