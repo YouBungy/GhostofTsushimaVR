@@ -24,7 +24,7 @@
 #include "gotvr_shared.h"
 
 typedef uint64_t u64; typedef uint32_t u32;
-#define HOST_VERSION "GoTVRHost 0.8.0 (pair-atomic xr=4, theatre screen for videos/menus)"
+#define HOST_VERSION "GoTVRHost 0.9.0 (pair-atomic xr=4, theatre screen for videos/pause/menus, flat frames)"
 
 static FILE *g_log; static wchar_t g_dir[MAX_PATH];
 static void logf(const char *fmt, ...) {
@@ -388,7 +388,7 @@ static void frame() {
         if (!use->everReleased) { use = &blank[e]; imageIsGame = false; }        // never reference an unreleased chain (review #4)
         if (!use->everReleased) { layerOk = false; break; }
         if (!acq[e] && useGame && use == ch[e]) imageIsGame = shown[e].valid;   // last released game image is still what it shows
-        if (imageIsGame) {
+        if (imageIsGame && !(shown[e].flags & GV_SLOT_FLAT)) {
             const GvPose &p = shown[e].pose;   // declare exactly what the image was rendered with
             pv[e].pose.orientation = {p.q[0], p.q[1], p.q[2], p.q[3]}; pv[e].pose.position = {p.p[0], p.p[1], p.p[2]};
             pv[e].fov = {shown[e].fov[0], shown[e].fov[1], shown[e].fov[2], shown[e].fov[3]};
@@ -411,13 +411,14 @@ static void frame() {
         ql.layerFlags = 0; ql.space = local; ql.eyeVisibility = XR_EYE_VISIBILITY_BOTH;
         ql.subImage.swapchain = eyeSc[0].sc; ql.subImage.imageRect = r; ql.subImage.imageArrayIndex = 0;
         ql.pose = qPose; ql.size = {wm, wm * (float)r.extent.height / (float)(r.extent.width ? r.extent.width : 1)};
-        if (S->theaterBackdrop && layerOk) { layers[1] = (XrCompositionLayerBaseHeader *)&ql; nLayers = 2; }
+        if (S->theaterBackdrop && layerOk && !(shown[0].flags & GV_SLOT_FLAT) && !(shown[1].flags & GV_SLOT_FLAT)) {   // a flat frame has no eye pose: never a projection
+            layers[1] = (XrCompositionLayerBaseHeader *)&ql; nLayers = 2; }
         else { layers[0] = (XrCompositionLayerBaseHeader *)&ql; nLayers = 1; }
         S->hostTheater++;
     }
     {   static bool was = false; static u32 wasFlags = 0;
         if (theatre != was || (theatre && shown[0].flags != wasFlags)) {
-            if (theatre) logf("theatre: ON (%s, image %dx%d at %d,%d of %ux%u, %u layer(s))", (shown[0].flags & GV_SLOT_CROP169) ? "video, cropped to 16:9" : "menu/forced, full frame",
+            if (theatre) logf("theatre: ON (%s%s, image %dx%d at %d,%d of %ux%u, %u layer(s))", (shown[0].flags & GV_SLOT_CROP169) ? "video, cropped to 16:9" : "full frame", (shown[0].flags & GV_SLOT_FLAT) ? ", flat-rendered" : ", stereo image",
                               ql.subImage.imageRect.extent.width, ql.subImage.imageRect.extent.height, ql.subImage.imageRect.offset.x, ql.subImage.imageRect.offset.y, eyeSc[0].w, eyeSc[0].h, nLayers);
             else logf("theatre: off (stereo projection)");
             was = theatre; wasFlags = shown[0].flags;
