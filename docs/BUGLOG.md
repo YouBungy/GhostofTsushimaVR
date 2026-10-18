@@ -746,3 +746,108 @@ spaces, session, instance → TerminateProcess.
   world-locked there (HUD-002).
 - Self-test: 47/47; UI test extended (pause reason 7 → flat, reason 9 ignored, flat render on/off, flags, cut count)
   PASS; all earlier tests PASS.
+
+## GoTVR 0.13.0 → 0.14.0 — cinematic bars and fades confined to the HUD rectangle; UI layer; start screen (BUG-45..47)
+- `[HEADSET]` 0.13.0: whole prologue stable; pause menu and map on the theatre screen exactly as intended (PASS).
+  Probe `[LIVE]`: the UI passes draw into a SEPARATE 2560×1440 RGBA8 texture (flags 0x5), composited later. Census:
+  pause = reason 7 (confirmed: 1→0 on open, 0→1 on close); reason 27 = 0 from boot through the start screen until the
+  first world finishes loading (frame+0xA0 != 0), again briefly before loads; reason 8 = video; 9 = load.
+- BUG-45 fades `[STATIC]`: pass 65's pre-callback 0x610460 → 0x728400 draws the full-screen fade into the target its
+  context inherited from pass 64 (Ctx_InheritState → RT_Bind(UI target)) → mapped into the HUD panel. Fix: hook
+  0x610460: full viewport/scissor, and (layer mode) the engine's own UI image for the fade draw (ctx+0x340 dirty bit
+  re-issues the engine RTV).
+- BUG-46 letterbox bars: the UI layout asks the display service (services+0xC8) vt+0x70("Letterbox") whether a
+  cinematic letterbox is pushed (0x6E9544: layout falls back to a 1920 canvas then). 0.14.0 asks the same each tick;
+  while true the UI mode is CINEMA: no mapping, no layer → bars, fades and subtitles are the whole frame (head-locked
+  across the view, as on a monitor). To verify live: "UI mode -> CINEMATIC" lines during letterboxed scenes.
+- BUG-43 resolution, implemented (playbook 04 "Get UI off the backbuffer", "rebind the target once"): after
+  RT_Bind(UI target) the command list awaits its next OMSetRenderTargets (lazy bind), whose RTV is the engine's UI
+  view (locked in after 3 identical captures; never seen after 900 binds → layer off, panel mapping); it is replaced
+  by our own render target of the same desc. The engine image is cleared once per frame (its composite adds nothing);
+  ours is copied at Present into shared UI images (GV_TEXCOUNT 9, protocol v7) and cleared. GoTVRHost 0.10.0 shows it
+  as an alpha-blended quad (premultiplied by default) at 2560 px over the HUD width: ~2× the panel's pixel density.
+  HUD: head-locked quad (VIEW space). Start screen (reason 27 == 0, world mode 2, not paused): world-locked,
+  gravity-aligned panel placed on entry (HUD-002), 3D world behind in stereo. Flat/cinema: no layer.
+- Known: the desktop mirror has no HUD while the layer is on; the HUD stays head-locked (forearm HUD planned with
+  first person).
+- Self-test: 50/50 signatures; UI layer test (lock-in, substitution, once-per-frame engine-image clear, other targets
+  untouched, fade un-substitution, cinema = no layer, title = world flag) PASS; all earlier tests PASS.
+
+## GoTVR 0.14.0 → 0.14.1 — frame rate halved; start screen not anchored; intro videos missed (BUG-47..49)
+- `[LIVE]` 0.14.0 log: ~31 stereo pairs/s instead of ~72 (census present=54-65/s, 0.13.0: ~145). UI layer refused:
+  "UI texture 2560x1440 does not match the shared images 2560x1600" (the game now letterboxes a 2560x1440 render
+  inside a 2560x1600 window) → panel mapping, so the start screen stayed head-locked.
+- BUG-48 frame rate `[STATIC]`: 0.14.0 called taa::listOf(ctx) (VirtualQuery via readable()) in the RT_Bind hook for
+  EVERY bind (82 call sites, thousands per frame, all render job threads) - VirtualQuery is a syscall that takes the
+  process address-space lock, so the render jobs serialised on it. Fix: non-UI binds touch nothing unless a list is
+  awaiting/substituted (counter); the list is read with the same plain derefs the engine's Ctx_SetViewport does;
+  letterbox query without VirtualQuery. No VirtualQuery left on any per-bind / per-draw path.
+- BUG-47 layer refused: the UI images are now their own shared textures at the UI target's size/format (protocol v8,
+  uiGen); GoTVRHost 0.11.0 opens them separately. The game also publishes where the picture sits inside the eye image
+  (centred UI-target-sized rect when smaller); the host declares only that rect as the projection view (the
+  letterbox bars no longer squash the 3D vertically) and as the theatre image.
+- BUG-49 intro videos: CreateProcess(GoTVRHost) took 27-35 s at game start in every log and blocked enabling the hooks;
+  now it runs on its own thread (log shows how long it took).
+- Self-test: 50/50; UI + UI layer tests PASS (plus: a non-UI bind with nothing awaiting does not touch the list).
+
+## GoTVR 0.14.1 → 0.14.2 — screen mostly black and flickering, HUD jumping in size (BUG-50)
+- `[LIVE]` 0.14.1: frame rate restored (87/58 pairs-ticks, 156 in flat), host startup 26.6 s (antivirus, confirmed by
+  the owner), UI layer active - but the engine's UI RTV "locked in" dozens of times (…aded0, …ad6d0, …adfd0, …ae5d0 …):
+  the engine creates a NEW render-target view for every bind (transient descriptor ring). The RTV-substitution design
+  therefore swapped other targets' views (scene → our UI texture, cleared → black frames) and missed the real UI
+  binds (UI drawn full-screen into the engine image → the HUD alternating between full-screen and the quad).
+- Fix (simpler, no descriptor games): the engine draws its UI unmodified into its own texture; at pass 65's
+  pre-callback (after UI passes 60/61/64 in GPU order, before the full-screen fade) the texture - if bound to that
+  context, i.e. in RENDER_TARGET per the engine's tracker - is transitioned with the engine's own Res_Transition/flush,
+  copied into the next shared UI image, transitioned back and cleared through our own RTV, so the composite adds
+  nothing while the fade still covers the frame. OMSetRenderTargets is no longer hooked.
+- Self-test: 50/50; UI layer test (full size, copy + round robin, untouched when not bound, cinema/title/kill switch)
+  PASS; all earlier tests PASS.
+
+## GoTVR 0.14.2 → 0.14.3 — "the whole game on the UI quad, and it still follows the head" (BUG-51, BUG-52)
+- `[HEADSET]` 0.14.2: flicker gone; the quad showed the whole game, not just the HUD; quad head-locked.
+- BUG-51 `[LIVE]` analysis: the texture the UI passes draw into (0x143377510's colour, 2560x1440) is the game's FINAL
+  picture: the 3D scene is already in it (upscaler output, pass 59) and the UI is drawn on top, then the frame is
+  letterboxed into the 2560x1600 window. The 0.13.0 probe only proved "not the back buffer". So the UI cannot be
+  separated by copying - the layer is OFF (forced); the HUD is drawn into the 3D image on the mapped panel again (0.13
+  behaviour) with the 0.14 fixes kept: full-frame fades (pass 65), full-frame cinematic letterbox, letterbox crop,
+  background host start, no VirtualQuery in hot paths. A UI-only seam (redirecting passes 60/61/64 into a cleared
+  transparent target, with HUD-004 alpha handling) is future work.
+- BUG-52 start screen detection `[LIVE]`: clock reason 27 = 0 marks "leaving the world / about to load" (0.5 s before
+  each load), NOT the start screen (which ran with reason 27 = 1). Detection dropped (title_reason default -1).
+  Instead (HUD-002 "lazily ease a recenter after sustained large deviation"): the HUD/menu panel is a rectangle fixed in
+  the room (LOCAL space, gravity-aligned, yaw-locked, following head position), projected per eye into the mapped rect
+  (billboarded; float viewport so it slides off the edge instead of squashing). After looking more than 35° away for
+  0.5 s it eases back in front at 90°/s; F11 or a new context re-centres at once. hud_follow=0: old head-locked panel.
+- Self-test: 50/50; UI test, world-locked geometry (30° yaw → 0.577 tangent, behind → hidden) PASS.
+
+## GoTVR 0.14.3 → 0.14.4 — world things stretching with the HUD; start screen; loading screens (BUG-53..55)
+- `[HEADSET]` 0.14.3: HUD world-locked OK; "when I look up and down the game world also stretches like the HUD";
+  owner wants the main menu fixed (no turning to face the head, no following) and loading screens like pause/videos.
+- BUG-53 `[STATIC]`: UI_WorldDraw 0x6E37D0 (renderer class with this draw at vtable slot 8; vtables 0x14112FBF0/
+  0x14112FC58) projects each element with the view's view-projection (view+0x5C0) - world-anchored UI (markers, prompts,
+  icons on things), already per-eye correct. Mapped into the panel it moved with the panel. Fix: hook Batch_Draw
+  0x5681A0(renderer, range{ctx, view}) - for that class on a mapped context the full frame is restored around the call,
+  then the panel mapping re-applied. A per-second census logs which other renderer draw functions run on the panel.
+  F3 (xr=4) now toggles the letterbox crop for an A/B in case the crop contributes.
+- BUG-54 start screen: the first world shown after boot is the title world; its camera position is remembered; a later
+  world opening at that position (quit to title) is the title again; it ends at the next load. It is a flat context ->
+  the theatre screen (fixed in the room, proper quad, no billboarding). menu_theater=0 disables.
+- BUG-55 loading screens: world mode 1 or time-scale reason 9 = 0 → flat context (theatre). loading_theater=0 disables.
+- Self-test: 52/52; world-anchored UI exemption, loading theatre, UI tests PASS.
+
+## GoTVR 0.14.4 → 0.14.5 — "nothing changed": world stretch, start screen, loading screens (BUG-53b..56)
+- `[LIVE]` 0.14.4 log: the world-anchored-UI exemption never fired (0 batches) - Batch_Draw calls vtable slot 8, and
+  slot 8 of that class is 0x6E5780 (0x6E37D0 is slot 9). Renderers seen on the panel: 0x6E5780 (2/frame, also on the
+  start screen), 0x5A7FE0 (1/frame), 0x7EFC20 (1/frame, gameplay only) - none is clearly world-anchored, so the
+  exemption is left inactive (census kept). "Start screen" fired on a 0.5 s staging world (camera 2000,0,500), not the
+  title (18 s at world mode 2 with 0x6E5780+0x5A7FE0 only). The post-load loading screen ran at world mode 2.
+- BUG-56 (most likely cause of the stretch): the letterbox crop (0.14.1) assumed the game draws black bars around its
+  16:9 picture in the 16:10 window. If it scales instead, cropping magnifies the world ~11% vertically - it swims when
+  you look up/down. Now measured: 32x4 px readback boxes (middle of the top band / centre) on lit frames; crop only if
+  the top band stays black (log: "letterbox check"). F3 still forces it off; F4 toggles the room-fixed HUD for A/B.
+- BUG-54b start screen: fingerprint of the title world's fixed camera - (5907, 3490, 17158) ±300 with fov 0.789 rad,
+  identical in the 0.14.0, 0.14.2 and 0.14.4 logs → theatre screen. World-mode changes now log camera + fov.
+- BUG-55b loading screen at world mode 2: the game's own fade (0x14149AF80, alpha +0xC, drawn by pass 65) fully opaque
+  for 150 ms → theatre; back to stereo when it starts fading in.
+- Self-test: 52/52; loading test extended (black screen 150 ms → flat, fade-in → stereo) PASS; all UI tests PASS.

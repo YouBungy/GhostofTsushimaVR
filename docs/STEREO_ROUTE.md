@@ -287,3 +287,9 @@ void. Next, in order: (1) UI on its own OpenXR quad at the UI target's resolutio
 texture → copy + clear before the composite; back buffer → redirect the UI binds to a layer texture), (2) start screen
 UI world-locked with the 3D world behind (title signal from the census), (3) square-aspect render resolution
 (design doc) for 3D sharpness.
+
+## Session 16 (2026-10-18): UI layer, cinematics, start screen
+0.13.0 accepted (pause/map theatre). 0.14.0: the UI renders into our own target and goes to the host as its own
+quad (HUD head-locked; start screen world-locked with the stereo world behind); cinematics (display "Letterbox" mode)
+keep the UI full-frame; the pass-65 fade is always full-frame. Next: verify the letterbox signal live, then square
+render aspect / resolution scaler (design doc), first person.

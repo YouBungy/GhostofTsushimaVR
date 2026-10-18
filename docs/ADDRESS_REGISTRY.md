@@ -157,3 +157,6 @@ Restart/level-transition validation: **none yet**. Every row needs a `[LIVE]` re
 | ADDR-114 | Clock_SetScale (clock 0x141489DF0, reason, scale): reasons at clock+0x84 (28 floats); 7 = pausing UI screens (refcount 0x1434C28F0; 0x7D6E10 / 0x7D7240), 8 = video (0x7A1190), 9 = world load (0x59AAC0) | 0x56F340 | — | `[STATIC]` | 0.13.0 |
 | ADDR-115 | Ctx_BindColor (ctx, slot, attachment): ctx+0x2C8[slot] = attachment, attachment+0x18 = resource record → Res_Transition(…,4), ctx+0x340 \|= 1 (lazy bind) | 0x50E430 | — | `[STATIC]` | 0.13.0 |
 | ADDR-116 | Pass 65 pre 0x610460 → 0x728400: full-screen fade colour (alpha > 1/255, world mode != 1) | 0x728400 | — | `[STATIC]` | 0.13.0 |
+| ADDR-117 | Display service: services(0x141998300)+0xC8 (getter 0x409450); vt+0x70(name) = mode active, vt+0x78 push, vt+0x88 pop; "Letterbox" 0x141114870 (cinematics; UI layout 0x6E9544 reads it) | 0x409450 | `48 8B 05 A9 EE 58 01 48 8B 80 C8 00 00 00 C3` | `[STATIC]` | 0.14.0 |
+| ADDR-118 | UI target colour (live): separate 2560×1440 R8G8B8A8_UNORM, flags 0x5, target flags 0x20000009, 1 attachment; composited after pass 65 | — | runtime probe | `[LIVE]` | 0.13.0 log |
+| ADDR-119 | Clock reason 27 (Clock_Update: 0 while frame+0xA0 != 0): 0 from boot through the start screen until the first world is loaded, briefly before loads | 0x56EEFF | — | `[LIVE]` census | 0.13.0 log |

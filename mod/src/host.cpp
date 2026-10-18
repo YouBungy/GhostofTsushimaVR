@@ -24,7 +24,7 @@
 #include "gotvr_shared.h"
 
 typedef uint64_t u64; typedef uint32_t u32;
-#define HOST_VERSION "GoTVRHost 0.9.0 (pair-atomic xr=4, theatre screen for videos/pause/menus, flat frames)"
+#define HOST_VERSION "GoTVRHost 0.11.0 (pair-atomic xr=4, theatre screen, UI layer quad at the UI size, letterbox crop)"
 
 static FILE *g_log; static wchar_t g_dir[MAX_PATH];
 static void logf(const char *fmt, ...) {
@@ -67,7 +67,8 @@ static u64 ownVal[3], ownNext = 1; static int ring;
 static ID3D12Resource *tex[GV_TEXCOUNT]; static ID3D12Fence *gameFence; static LONG texGen; static u32 texW, texH; static DXGI_FORMAT texFmt;
 
 struct Chain { XrSwapchain sc = XR_NULL_HANDLE; u32 w = 0, h = 0; ID3D12Resource *img[8] = {}; u32 n = 0; ID3D12DescriptorHeap *rtv = nullptr; u32 step = 0; DXGI_FORMAT fmt = DXGI_FORMAT_UNKNOWN; bool everReleased = false; bool broken = false; };
-static Chain eyeSc[2];
+static Chain eyeSc[2]; static Chain uiSc;   // v7: the game UI on its own quad layer
+static ID3D12Resource *uiTex[GV_UITEX]; static LONG uiGenOpen = 0, uiGenFailed = 0;
 struct Shown { bool valid = false; u32 tex = 0; u32 frame = 0; u64 fence = 0; GvPose pose{}; float fov[4]{}; u32 flags = 0; };
 static Shown shown[2];   // what each eye's swapchain currently shows (declared pose/fov)
 
@@ -120,7 +121,10 @@ static bool makeChain(Chain &c, u32 w, u32 h, DXGI_FORMAT want) {
     logf("swapchain %ux%u format %d (wanted %d), %u images", w, h, (int)pick, (int)want, n);
     return true;
 }
-static void destroyChains() { for (auto &c : eyeSc) { if (c.sc) { PFN_xrDestroySwapchain d = nullptr; gipa(inst, "xrDestroySwapchain", (PFN_xrVoidFunction *)&d); if (d) d(c.sc); } if (c.rtv) c.rtv->Release(); c = Chain{}; shown[&c - eyeSc] = Shown{}; } }
+static void destroyChains() {
+    if (uiSc.sc) { PFN_xrDestroySwapchain d = nullptr; gipa(inst, "xrDestroySwapchain", (PFN_xrVoidFunction *)&d); if (d) d(uiSc.sc); } if (uiSc.rtv) uiSc.rtv->Release(); uiSc = Chain{}; S->uiOk = 0;
+    for (auto &t : uiTex) if (t) { t->Release(); t = nullptr; } uiGenOpen = 0;
+    for (auto &c : eyeSc) { if (c.sc) { PFN_xrDestroySwapchain d = nullptr; gipa(inst, "xrDestroySwapchain", (PFN_xrVoidFunction *)&d); if (d) d(c.sc); } if (c.rtv) c.rtv->Release(); c = Chain{}; shown[&c - eyeSc] = Shown{}; } }
 
 // Open the game's shared textures when it publishes a new generation. texGen is only committed on success
 // (review #3); on any failure nothing from the old generation stays usable.
@@ -163,6 +167,24 @@ static void openShared() {
     if (!good) { logf("shared generation %ld unusable -> black until the game publishes a new one", g); dropShared(); failedGen = g; return; }
     texGen = g; S->imagesOk = 1;
     logf("opened shared eye textures gen %ld: %ux%u format %d", g, texW, texH, (int)texFmt);
+}
+
+// v8: the UI images (own size and generation; the game builds them once it knows its UI texture)
+static void openUi() {
+    LONG g = S->uiGen; if (texGen <= 0 || g <= 0 || g == uiGenOpen || g == uiGenFailed) return;
+    if (uiSc.sc) { PFN_xrDestroySwapchain d = nullptr; gipa(inst, "xrDestroySwapchain", (PFN_xrVoidFunction *)&d); if (d) d(uiSc.sc); } if (uiSc.rtv) uiSc.rtv->Release(); uiSc = Chain{}; S->uiOk = 0;
+    for (auto &t : uiTex) if (t) { t->Release(); t = nullptr; }
+    bool good = true; wchar_t nm[96], sfx[32];
+    for (int i = 0; i < GV_UITEX && good; i++) {
+        _snwprintf(sfx, 32, L"_u%ld_ui%d", (long)g, i); sfx[31] = 0; gvName(nm, 96, g_pid, sfx); HANDLE h = nullptr;
+        HRESULT hr = dev->OpenSharedHandleByName(nm, GENERIC_ALL, &h);
+        if (SUCCEEDED(hr) && h) hr = dev->OpenSharedHandle(h, IID_PPV_ARGS(&uiTex[i]));
+        if (FAILED(hr) || !uiTex[i]) { logf("open %ls failed 0x%08lx", nm, (unsigned long)hr); good = false; }
+        if (h) CloseHandle(h);
+    }
+    if (good) good = makeChain(uiSc, S->uiW, S->uiH, srgbOf((DXGI_FORMAT)S->uiFmt));
+    if (!good) { logf("UI layer generation %ld unusable -> the game keeps the UI in the 3D image", g); for (auto &t : uiTex) if (t) { t->Release(); t = nullptr; } uiSc = Chain{}; uiGenFailed = g; return; }
+    uiGenOpen = g; S->uiOk = 1; logf("UI layer: opened UI images gen %ld: %ux%u format %u", g, S->uiW, S->uiH, S->uiFmt);
 }
 
 // Acquire + wait. XR_TIMEOUT_EXPIRED is a success code, so loop on it; an image that was acquired but could
@@ -306,11 +328,23 @@ static void placeScreen(const XrPosef &head) {
     qPlaced = true;
     logf("theatre screen placed %.2f m ahead (yaw %.1f deg), width %.2f m", d, yaw * 57.29578f, S->theaterWidth);
 }
+// v7 UI layer placement: head-locked HUD (VIEW space) or a world-locked, gravity-aligned panel (HUD-002) for the start screen
+static XrPosef wPose{}; static bool wPlaced = false; static u64 wLast = 0; static LONG wRecentre = 0;
+static void placeWorldPanel(const XrPosef &head, float d) {
+    const XrQuaternionf &q = head.orientation;
+    float fx = -2.0f * (q.x * q.z + q.w * q.y), fz = -(1.0f - 2.0f * (q.x * q.x + q.y * q.y));
+    float l = sqrtf(fx * fx + fz * fz); if (l < 1e-3f) { fx = 0; fz = -1; l = 1; } fx /= l; fz /= l;
+    const float yaw = atan2f(-fx, -fz), down = d * tanf(S->hudDown / 57.29578f);
+    wPose.orientation = {0, sinf(yaw * 0.5f), 0, cosf(yaw * 0.5f)};
+    wPose.position = {head.position.x + fx * d, head.position.y - down, head.position.z + fz * d};
+    wPlaced = true; logf("UI layer: world-locked panel placed %.2f m ahead (yaw %.1f deg)", d, yaw * 57.29578f);
+}
 static XrRect2Di screenRect(u32 w, u32 h, bool crop) {   // the part of the game image that is the picture
     XrRect2Di r{{0, 0}, {(int32_t)w, (int32_t)h}};
+    { const int32_t *k = S->content; if (k[2] > 0 && k[3] > 0 && k[0] + k[2] <= (int32_t)w && k[1] + k[3] <= (int32_t)h) { r = {{k[0], k[1]}, {k[2], k[3]}}; w = (u32)k[2]; h = (u32)k[3]; } }
     if (crop && w && h) {
-        if (w * 9 < h * 16) { int32_t hh = (int32_t)(w * 9 / 16); r.offset.y = ((int32_t)h - hh) / 2; r.extent.height = hh; }       // letterboxed (16:10 frame)
-        else if (w * 9 > h * 16) { int32_t ww = (int32_t)(h * 16 / 9); r.offset.x = ((int32_t)w - ww) / 2; r.extent.width = ww; }  // pillarboxed (ultrawide)
+        if (w * 9 < h * 16) { int32_t hh = (int32_t)(w * 9 / 16); r.offset.y += ((int32_t)h - hh) / 2; r.extent.height = hh; }       // letterboxed (16:10 frame)
+        else if (w * 9 > h * 16) { int32_t ww = (int32_t)(h * 16 / 9); r.offset.x += ((int32_t)w - ww) / 2; r.extent.width = ww; }  // pillarboxed (ultrawide)
     }
     return r;
 }
@@ -337,7 +371,7 @@ static void frame() {
 
     XrFrameBeginInfo fb{XR_TYPE_FRAME_BEGIN_INFO}; if (!ok(xrBeginFrame_(sess, &fb), "xrBeginFrame")) return;
     // From here every path reaches xrEndFrame with one projection layer (playbook ch07: never zero layers).
-    openShared();
+    openShared(); openUi();
     bool gameFresh = (u64)GetTickCount64() - (u64)S->gameBeat < 1500;
     if (texGen > 0 && (eyeSc[0].broken || eyeSc[1].broken)) { logf("eye swapchain broken -> rebuilding"); dropShared(); failedGen = 0; openShared(); }
     bool useGame = texGen > 0 && eyeSc[0].sc && eyeSc[1].sc && !eyeSc[0].broken && !eyeSc[1].broken && S->mode != GV_MODE_TEST;
@@ -362,7 +396,22 @@ static void frame() {
             pick[0] = cand[0][bl]; pick[1] = cand[1][br];
         }
     } else for (int e = 0; e < 2; e++) for (int b = 0; b < 3; b++) if (cand[e][b].valid && (!pick[e].valid || cand[e][b].fence > pick[e].fence)) pick[e] = cand[e][b];
+    // v7 UI layer: newest completed UI image of this generation, from (about) the frame the eyes show
+    Shown uiPick{}; u32 uiFlags = 0;
+    if (useGame && uiSc.sc && !uiSc.broken) for (int b = 0; b < GV_UITEX; b++) {
+        GvSlot sl{}; GvSlot &src = S->ui[b];
+        bool got = gvRead(&src.seq, [&] { sl.tex = src.tex; sl.gen = src.gen; sl.fence = src.fence; sl.frame = src.frame; sl.flags = src.flags; });
+        if (got && sl.fence && sl.fence <= done && (LONG)sl.gen == uiGenOpen && sl.tex < GV_UITEX && uiTex[sl.tex] && (!uiPick.valid || (int)(sl.frame - uiPick.frame) > 0)) { uiPick.valid = true; uiPick.tex = sl.tex; uiPick.frame = sl.frame; uiPick.fence = sl.fence; uiFlags = sl.flags; }
+    }
+    const bool uiFresh = uiPick.valid && shown[0].valid && (int)(uiPick.frame - pick[0].frame) >= -3 && (uiFlags & (GV_UI_HEAD | GV_UI_WORLD));
+    u32 uiIdx = 0; const bool uiAcq = uiFresh && acquire(uiSc, uiIdx);
     auto *c = beginCl();
+    if (uiAcq) {
+        D3D12_RESOURCE_BARRIER br = barrier(uiSc.img[uiIdx], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_DEST); c->ResourceBarrier(1, &br);
+        D3D12_TEXTURE_COPY_LOCATION dst{uiSc.img[uiIdx], D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX, {}}, src{uiTex[uiPick.tex], D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX, {}};
+        c->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
+        br = barrier(uiSc.img[uiIdx], D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET); c->ResourceBarrier(1, &br);
+    }
     for (int e = 0; e < 2; e++) {
         if (!acq[e]) continue;
         Chain &h = *ch[e];
@@ -380,6 +429,7 @@ static void frame() {
     }
     submitCl();                                                       // work is on the queue BEFORE release (review #1)
     for (int e = 0; e < 2; e++) if (acq[e]) release(*ch[e]);
+    if (uiAcq) release(uiSc);
     XrCompositionLayerProjectionView pv[2]; bool layerOk = true;
     for (int e = 0; e < 2; e++) {
         pv[e] = {XR_TYPE_COMPOSITION_LAYER_PROJECTION_VIEW};
@@ -395,9 +445,13 @@ static void frame() {
         } else if (views) { pv[e].pose = v[e].pose; pv[e].fov = v[e].fov; }
         else { pv[e].pose.orientation.w = 1; pv[e].fov = {-0.9f, 0.9f, 0.9f, -0.9f}; }
         pv[e].subImage.swapchain = use->sc; pv[e].subImage.imageRect = {{0, 0}, {(int32_t)use->w, (int32_t)use->h}};
+        if (imageIsGame && use == &eyeSc[e]) {   // v8: only the picture, not the game's letterbox bars, spans the eye frustum
+            const int32_t *k = S->content;
+            if (k[2] > 0 && k[3] > 0 && k[0] >= 0 && k[1] >= 0 && k[0] + k[2] <= (int32_t)use->w && k[1] + k[3] <= (int32_t)use->h) pv[e].subImage.imageRect = {{k[0], k[1]}, {k[2], k[3]}};
+        }
     }
     XrCompositionLayerProjection pl{XR_TYPE_COMPOSITION_LAYER_PROJECTION}; pl.space = local; pl.viewCount = 2; pl.views = pv;
-    const XrCompositionLayerBaseHeader *layers[2] = {(XrCompositionLayerBaseHeader *)&pl, nullptr}; u32 nLayers = layerOk ? 1 : 0;
+    const XrCompositionLayerBaseHeader *layers[3] = {(XrCompositionLayerBaseHeader *)&pl, nullptr, nullptr}; u32 nLayers = layerOk ? 1 : 0;
     // theatre: the left image of a flat-context pair goes on the screen; the projection layer is dropped (black room)
     // unless theaterBackdrop = 1. The eye-0 chain holds exactly that image (copied above this frame, or still shown).
     XrCompositionLayerQuad ql{XR_TYPE_COMPOSITION_LAYER_QUAD};
@@ -415,6 +469,20 @@ static void frame() {
             layers[1] = (XrCompositionLayerBaseHeader *)&ql; nLayers = 2; }
         else { layers[0] = (XrCompositionLayerBaseHeader *)&ql; nLayers = 1; }
         S->hostTheater++;
+    }
+    XrCompositionLayerQuad uq{XR_TYPE_COMPOSITION_LAYER_QUAD};
+    if (!theatre && uiAcq && uiSc.everReleased && layerOk && headOk) {   // the HUD / start-screen UI at the UI's own resolution
+        const float d = S->hudDist > 0.3f ? S->hudDist : 1.6f, deg = S->hudDeg > 5 ? S->hudDeg : 55.0f;
+        const float w = 2.0f * d * tanf(deg * 0.5f / 57.29578f), h = w * (float)uiSc.h / (float)(uiSc.w ? uiSc.w : 1);
+        uq.layerFlags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT | (S->uiPremul ? 0 : XR_COMPOSITION_LAYER_UNPREMULTIPLIED_ALPHA_BIT);
+        uq.eyeVisibility = XR_EYE_VISIBILITY_BOTH; uq.subImage.swapchain = uiSc.sc; uq.subImage.imageRect = {{0, 0}, {(int32_t)uiSc.w, (int32_t)uiSc.h}}; uq.size = {w, h};
+        if (uiFlags & GV_UI_WORLD) {
+            const u64 now = GetTickCount64(); const LONG rc = S->theaterRecenter;
+            if (!wPlaced || now - wLast > 3000 || rc != wRecentre) { wRecentre = rc; placeWorldPanel(hl.pose, d); }
+            wLast = now; uq.space = local; uq.pose = wPose;
+        } else { uq.space = viewSp; uq.pose.orientation.w = 1; uq.pose.position = {0, -d * tanf(S->hudDown / 57.29578f), -d}; }
+        layers[nLayers++] = (XrCompositionLayerBaseHeader *)&uq; S->hostUi++;
+        static u32 wasUi = 0; if (uiFlags != wasUi) { logf("UI layer: %s quad %.2f x %.2f m at %.2f m (%ux%u)", (uiFlags & GV_UI_WORLD) ? "WORLD-LOCKED" : "head-locked", w, h, d, uiSc.w, uiSc.h); wasUi = uiFlags; }
     }
     {   static bool was = false; static u32 wasFlags = 0;
         if (theatre != was || (theatre && shown[0].flags != wasFlags)) {

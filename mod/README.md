@@ -1,4 +1,4 @@
-# GoTVR 0.13.0 — SYNCHRONIZED STEREO 6DoF (xr=4): both eyes from the same moment of the game
+# GoTVR 0.14.5 — SYNCHRONIZED STEREO 6DoF (xr=4): both eyes from the same moment of the game
 
 Single-player only. Never enter Legends (online) with any GoTVR file installed.
 What changed and why: `docs/BUGLOG.md` (BUG-5, BUG-6).
@@ -21,6 +21,107 @@ refused to send images ("FRAME GENERATION is on" in the log, although it was off
 "R1 census" every 5 s (or on F10): the list of views the engine renders each frame. That decides how true
 same-frame stereo (both eyes every frame) gets built. Please press **F10** once in each of: main menu, standing
 outdoors, riding, a cutscene, photo mode.
+
+## 0.14.5: second try at the stretch, start screen and loading screens (xr=4)
+
+**Install both files:** `xinput1_4.dll` and `GoTVR\GoTVRHost.exe`.
+
+The 0.14.4 log showed why nothing changed: the start-screen rule caught a half-second screen before the real start
+screen, the loading screen you saw happens after the world has loaded (so it did not count as "loading"), and the
+world-marker fix never triggered.
+
+- **World stretching when you look up/down:** the most likely cause is a fix from 0.14.1 that cut 80 pixels off the top
+  and bottom of the picture (assuming the game draws black bars there). If the game actually stretches its picture to
+  fill the window, that cut magnifies the world vertically, which makes it swim exactly like you describe. The mod
+  now measures whether black bars are really there and only cuts them if they are (see "letterbox check" in the log).
+  Two A/B keys if it is still there: **F3** = cut off/on, **F4** = HUD panel fixed in the room / fixed to your view.
+  Please tell me which combination looks right.
+- **Start screen:** recognised by the game's fixed start-screen camera now -> on the still screen.
+- **Loading screens:** whenever the game's screen is fully black (its own fade), it goes on the still screen, including
+  the loading screen after a load.
+
+## 0.14.4: world markers back in the world, start screen and loading screens on the still screen (xr=4)
+
+**Install both files:** `xinput1_4.dll` and `GoTVR\GoTVRHost.exe`.
+
+- **World things no longer move with the HUD:** markers, prompts and icons that sit on things in the world are drawn
+  by the game together with the HUD; 0.14.3 squeezed them onto the HUD panel, so they stretched and moved with it when
+  you looked up/down. They are now drawn where they belong in the 3D world (in stereo); only the real HUD goes on the
+  panel. If you still see stretching, press **F3** (turns the letterbox crop off/on) and tell me which looks right.
+- **Start screen:** shown on the still screen like the pause menu (fixed in the room, does not turn or follow).
+- **Loading screens:** also on the still screen.
+- ini: `menu_theater=0` / `loading_theater=0` switch those two back off.
+
+Please test: does the world still stretch when you look up/down (also try F3)? Start screen and loading screens on the
+still screen? Quest markers/prompts sitting in the world correctly? Send `gotvr.log` + `host.log`.
+
+## 0.14.3: 3D back, HUD and start screen stay put in the room (xr=4)
+
+**Install both files:** `xinput1_4.dll` and `GoTVR\GoTVRHost.exe`.
+
+- **3D is back.** The texture I treated as "the HUD" turned out to be the game's finished picture with the HUD drawn on
+  top of the 3D scene, so copying it put the whole game on the panel. The separate HUD layer is switched off for now
+  (it needs a different technique); the HUD is drawn into the 3D picture on its panel again, as in 0.13, keeping
+  0.14's fixes: full-screen fades and cinematic bars, the letterbox crop and the faster start.
+- **HUD and start screen stay put:** the panel no longer moves with your head. It stays in place in the room (always
+  upright, at the same distance if you lean or walk), so you can look around it. If you look more than 35° away for
+  half a second, it glides back in front of you. F11 re-centres it immediately. `hud_follow=0` in the ini = old
+  behaviour (fixed to your view); `hud_follow_deg` / `hud_follow_speed` tune the follow.
+
+Please test: 3D normal again? Does the start screen menu stay put while you look around? Does the gameplay HUD feel
+better staying put, or would you rather it stay fixed to your view (`hud_follow=0`)? Send `gotvr.log` + `host.log`.
+
+## 0.14.2: black flicker and jumping HUD fixed (xr=4)
+
+**Install both files:** `xinput1_4.dll` and `GoTVR\GoTVRHost.exe` (host unchanged since 0.14.1, but keep them together).
+
+0.14.1 moved the HUD to its own layer by swapping the game's "draw the UI here" target on the fly. The game makes a new
+such target reference for every draw batch, so the mod kept grabbing the wrong ones: the 3D picture went into the HUD
+layer and was wiped (black), and the HUD jumped between full-screen and the small panel. 0.14.2 leaves the game's UI
+drawing completely alone and simply copies the finished HUD into the layer once per frame (then clears the game's
+copy so it isn't drawn twice). Fades still cover the whole view.
+
+Please test the same as before: picture stable? HUD sharp and steady? Start screen still in the room? Cutscene bars
+at the edges? Send `gotvr.log` + `host.log`. If anything is wrong with the HUD, `hud_layer=0` in `gotvr.ini` brings
+back the 0.13 HUD while I look at the log.
+
+## 0.14.1: frame rate back, start screen and sharp HUD for real (xr=4)
+
+**Install both files again:** `xinput1_4.dll` and `GoTVR\GoTVRHost.exe`.
+
+- **Frame rate:** 0.14.0 did a slow Windows memory check on every render-target switch the game makes (thousands per
+  frame, on all render threads), which halved the frame rate. Removed.
+- **Start screen / sharp HUD:** in your last run the game drew a 2560×1440 picture inside a 2560×1600 window, and
+  0.14.0 refused the HUD layer because the sizes differed. The layer now uses the UI's own size, so the sharp HUD and
+  the start screen that stays in the room actually switch on.
+- **Letterboxed window:** that same 16:9-in-16:10 setting also put black bars into the 3D picture and squashed it a
+  little vertically in the headset. The mod now sends only the picture part to the headset. (Setting the game back to
+  2560×1440 windowed, as before, is also fine.)
+- **Intro videos:** the headset program took ~30 s to start every time and the mod waited for it, so the intro videos
+  were over before VR was live. It now starts in the background; the log says how long Windows took to start it.
+
+Please test: frame rate back to normal? Start screen still in the room and sharp? Story videos on the screen? Send
+`gotvr.log` + `host.log`.
+
+## 0.14.0: sharp HUD, full-screen cinematics, start screen fixed in the room (xr=4)
+
+**Install both files again:** `xinput1_4.dll` and `GoTVR\GoTVRHost.exe`.
+
+- **Fades to/from black** now cover the whole view again (the game drew them into the HUD's rectangle).
+- **Cinematic bars:** during letterboxed scenes the game's UI is drawn over the whole frame again, so the black bars
+  sit at the top and bottom of your view, with the subtitles near the bottom bar, like on a monitor.
+- **Sharper HUD and menus:** the HUD is no longer squeezed into the 3D picture. It goes to the headset as its own
+  layer at the game's full 2560-pixel UI resolution (about twice as sharp), same place and size as before (F9 sizes).
+- **Start screen:** its menu now stays still in the room (placed in front of you when it appears), with the 3D scene
+  behind it. F11 re-places it.
+- The monitor window shows no HUD while the HUD layer is on (the headset has it). `hud_layer=0` in the ini goes back to
+  0.13's HUD; `hud_layer_premultiplied=0` if HUD edges look too bright/dark or translucent panels look wrong.
+
+Please test:
+1. Start screen: still in the room? Sharp? Does it switch to the normal HUD once you are in the game?
+2. Gameplay HUD and prompts: sharper than before? Anything missing, doubled, too faint or too bright?
+3. A cutscene with black bars: bars at the top/bottom of your view? Fades covering everything? Subtitles readable?
+Send `gotvr.log` + `host.log` (look for `UI mode ->`, `UI layer:` and `UILAYER/s`).
 
 ## 0.13.0: pause menu on the still screen (xr=4)
 
