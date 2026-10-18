@@ -7,8 +7,9 @@
 #include <stdint.h>
 
 #define GV_MAGIC 0x52565447u /* 'GTVR' */
-#define GV_VERSION 6u
+#define GV_VERSION 9u
 #define GV_TEXCOUNT 6        /* 2 eyes x 3 buffers (game writes round-robin, never waits on the host) */
+#define GV_UITEX 3           /* v8: UI-layer images, own size (the UI target's), names Local\GoTVR_<pid>_u<uiGen>_ui<i> */
 
 // Names (wchar): Local\GoTVR_<pid>, Local\GoTVR_<pid>_g<gen>_tex<i> (new names per generation), Local\GoTVR_<pid>_fence
 static inline void gvName(wchar_t *out, size_t n, uint32_t pid, const wchar_t *suffix) {
@@ -67,7 +68,28 @@ struct GvShared {
     uint32_t theaterBackdrop;                        // 0 = black room around the screen, 1 = the last game image behind it
     volatile LONG theaterRecenter;                   // game bumps it (F11) -> host re-places the screen in front of you
     volatile LONG64 hostTheater;                     // host frames shown as the theatre screen (diagnostics)
+
+    // v7 UI layer (playbook ch04 "Get UI off the backbuffer", HUD-004): the game's UI render target, captured at full
+    // resolution, on its own quad layer. slot.flags = GV_UI_*; pose/fov unused.
+    GvSlot ui[GV_UITEX];              // slot.tex = UI image index, slot.gen = uiGen
+    float hudDist, hudDeg, hudDown;   // HUD quad: metres in front, width in degrees, centre below eye level (degrees)
+    uint32_t uiPremul;                // 1 = the UI image is premultiplied alpha
+    volatile LONG uiOk;               // host: 1 once its UI-layer swapchain exists for the current generation
+    volatile LONG64 hostUi;           // host frames that showed the UI layer (diagnostics)
+    volatile LONG uiGen;              // v8: bumped after the UI images exist under their names
+    uint32_t uiW, uiH, uiFmt;
+    int32_t content[4];               // v8: x, y, w, h of the picture inside the eye images (the game letterboxes a 16:9
+                                      // render inside a 16:10 window, for example); w == 0 -> the whole image
+    // v9: where the room-fixed HUD panel is (the game DLL runs the lazy follow, HUD-002), LOCAL space (seqlock)
+    volatile LONG uiPoseSeq;
+    float uiPos[3];                   // panel centre
+    float uiYaw;                      // panel faces you from this yaw (0 = straight ahead along -z)
+    float uiWidth;                    // metres
+    uint32_t uiPoseOk;
 };
+// head-locked HUD quad / world-locked panel / v9 FULL: the UI covers the whole view of each eye exactly like on the monitor
+// (cinematics: letterbox bars, fades and subtitles at the screen edges) - one quad per eye on the frustum its image used
+enum : uint32_t { GV_UI_HEAD = 1u, GV_UI_WORLD = 2u, GV_UI_FULL = 4u };
 
 // seqlock helpers (single writer per field group)
 static inline void gvWriteBegin(volatile LONG *s) { InterlockedIncrement(s); MemoryBarrier(); }

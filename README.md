@@ -5,11 +5,13 @@
 - TAA Only; DLSS caused more performance loss and jitter. Will investigate later
 - Set to windowed for increased performance, it downsizes the window to a smaller resolution to save overhead.
 
-# Current version: GoTVR 0.13.0
+# Current version: GoTVR 0.15.6
 - **xr=4 synchronized stereo:** true per-eye stereo with 6DoF. Both eyes are rendered from the same simulation tick and presented as complete pairs. The monitor shows only the left eye.
 - **Per-eye temporal state:** each eye has its own occlusion/culling history and TAA history and reprojection, with fast-head-turn handling and a 3° render margin.
-- **HUD and menus:** the UI is drawn on a converged, correctly proportioned panel (55° wide, 1.6 m away). F9 cycles the size.
-- **Pre-rendered videos, pausing menus (pause, map, gear) and world-less menus:** these are shown on a world-locked theatre screen (an OpenXR quad layer). F10 cycles the mode: auto, always, never. F11 recentres.
+- **Sharp HUD layer:** the game's UI passes are redirected into their own image and shown as a separate quad at the HUD's full resolution (2560x1440). The panel stays put in the room and eases back when you look away (F4: fixed to view, F9: size, F1: old in-picture panel).
+- **Cutscenes:** in-engine cutscenes (letterbox bars, the cutscene camera) show the HUD over the whole view until the game hands the camera back; after the pause menu the HUD is large for 1 s.
+- **Theatre screen** (a world-locked quad in a black void): pre-rendered videos, pausing menus (pause, map, gear), the start screen and loading screens. F10 cycles the mode: auto, always, never. F11 recentres (also automatic when VR starts).
+- **Startup:** the headset session starts at the game's first frame, so the PlayStation launcher can be used in Virtual Desktop / SteamVR.
 - **Headset side:** runs out of process (`GoTVRHost.exe`, OpenXR, D3D12 shared textures). Tested on Quest 3 via Virtual Desktop (VDXR); SteamVR is supported through OpenXR.
 
 **Single-player only.** Never enter Legends (online) with the mod installed. The mod refuses to run on unknown game builds; it checks the exe hash and byte signatures.
