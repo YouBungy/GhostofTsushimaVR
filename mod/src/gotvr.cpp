@@ -25,7 +25,7 @@
 #include "gotvr_shared.h"
 
 typedef uint64_t u64; typedef uint32_t u32; typedef uint8_t u8;
-#define GOTVR_VERSION "GoTVR 0.15.6 (xr=4 SYNCHRONIZED-SEQUENTIAL stereo: both eyes from one simulation tick, pair-atomic presentation, per-eye occlusion + TAA history, left-eye monitor mirror, HUD on its own sharp layer that stays put in the room (lazy follow), cinematic letterbox bars and fades over the whole view, theatre screen for videos/pause/menus/loading (flat-rendered); xr=3 experimental)"
+#define GOTVR_VERSION "GoTVR 0.16.5 (xr=4 SYNCHRONIZED-SEQUENTIAL stereo: both eyes from one simulation tick, pair-atomic presentation, per-eye occlusion + TAA history, left-eye monitor mirror, HUD on its own sharp layer that stays put in the room (lazy follow), cinematic letterbox bars and fades over the whole view, theatre screen for videos/pause/menus/loading (flat-rendered); xr=3 experimental)"
 static const u32 EXPECTED_TIMESTAMP = 1782230973u;
 static const char EXPECTED_SHA[] = "ed0931b6f6d3ca3874baf39ebc16d95ff0e93296891182f96c3a790da7109f63";
 
@@ -50,7 +50,7 @@ enum : u32 {
     RVA_RES_TRANSITION = 0x4FDD50, RVA_CTX_FLUSHBARRIERS = 0x4FE780, RVA_SWAPCHAIN_GET = 0x4093C0, RVA_RV_SNAPSHOT = 0x9B6AE0, RVA_PASS0_PRE = 0x60EDC0,
     RVA_CLOCK_UPDATE = 0x56ED80, RVA_CLOCK = 0x1489DF0, RVA_CAM_TEMPORAL = 0x808EF0, RVA_CAMS_STOREPREV = 0x8085D0, RVA_RV_OCC = 0x9E5350, RVA_OCC_SLOTS = 0x3389240, RVA_OCC_DIMS = 0x33891A4, RVA_PARITY = 0x148A3F8, RVA_OCC_ENABLE = 0x1804010, RVA_AA_RESOLVE = 0x614EB0, RVA_AA_VELOCITY = 0x614720, RVA_TAA_DRAW = 0x7E7D10, RVA_FRAMEID = 0x19F1A50, RVA_AA_OBJ = 0x3376280, RVA_SL_CONSTS = 0x807140, RVA_NGX_CREATE = 0x4B91B0, RVA_NGX_EVAL = 0x4B9300, RVA_NGX_RELEASE = 0x4B96B0,
     RVA_PASSJOB = 0x9B55B0, RVA_PASSBODY = 0x9B55D0, RVA_INLINE_RET = 0x9B5431, RVA_PASSTAB = 0x1210930, RVA_FN_NOP = 0x3FCBD0, NPASS = 69,
-    RVA_RT_BIND = 0x7E34E0, RVA_CTX_FLUSHRT = 0x4FEA80, RVA_FLUSHRT_DSV = 0x4FED6D, RVA_DSV_INC = 0x1CDFBD8, RVA_DSV_BASE = 0x1CDFB58, RVA_CTX_VIEWPORT = 0x50ECA0, RVA_CTX_SCISSOR = 0x50EC60, RVA_MOVIE_DRAW = 0x7EAF80, RVA_UI_TARGET = 0x3377510, RVA_WORLD_ON = 0x5A0450, RVA_UI60_PRE = 0x6E3790, RVA_PASS65_PRE = 0x610460, RVA_BATCH_DRAW = 0x5681A0, RVA_FADE = 0x149AF80, RVA_UI_WORLDDRAW = 0x6E37D0, RVA_STR_LETTERBOX = 0x1114870, RVA_SVC_DISPLAY = 0x409450,   // Reflex frame id: incremented first thing in GameTick; Present tags desc[0] with it
+    RVA_RT_BIND = 0x7E34E0, RVA_SC_COMPUTESIZES = 0x46C840, RVA_POSTSCCMD = 0x4277D0, RVA_WND_PUMP = 0x446530, RVA_APPLY_DISPLAY = 0x421ED0, RVA_SC_RECREATE = 0x46E3D0, RVA_SERVICES_ROOT = 0x1998300, RVA_CTX_FLUSHRT = 0x4FEA80, RVA_FLUSHRT_DSV = 0x4FED6D, RVA_DSV_INC = 0x1CDFBD8, RVA_DSV_BASE = 0x1CDFB58, RVA_CTX_VIEWPORT = 0x50ECA0, RVA_CTX_SCISSOR = 0x50EC60, RVA_MOVIE_DRAW = 0x7EAF80, RVA_UI_TARGET = 0x3377510, RVA_WORLD_ON = 0x5A0450, RVA_UI60_PRE = 0x6E3790, RVA_PASS65_PRE = 0x610460, RVA_BATCH_DRAW = 0x5681A0, RVA_FADE = 0x149AF80, RVA_UI_WORLDDRAW = 0x6E37D0, RVA_STR_LETTERBOX = 0x1114870, RVA_SVC_DISPLAY = 0x409450,   // Reflex frame id: incremented first thing in GameTick; Present tags desc[0] with it
 };
 
 // ---------------- XInput forwarding ----------------
@@ -159,6 +159,11 @@ static const Sig kSigs[] = {
     {"Movie_Draw", RVA_MOVIE_DRAW, "48 8B C4 55 53 56 57 41 56 41 57 48 8D 68 98 48 81 EC 38 01 00 00 0F 29 70 B8 0F 29 78 A8 44 0F"},
     {"World_IsRendered (+0x80F09)", RVA_WORLD_ON, "0F B6 81 09 0F 08 00 C3"},
     {"UI_Pass60_pre (binds UI target 0x143377510)", RVA_UI60_PRE, "40 53 48 83 EC 20 41 B9 FF FF FF FF 48 8D 15 6D 3D C9 02 45 33 C0 48 8B D9 E8 32 FD 0F 00"},
+    {"SC_ComputeSizes (window/output/render size records of the swapchain object)", RVA_SC_COMPUTESIZES, "40 55 53 56 57 41 54 41 55 41 56 41 57 48 8D 6C 24 E1 48 81 EC D8 00 00 00"},
+    {"NxApp_PostSCCmd (synchronous swapchain-thread command; 2 = apply display)", RVA_POSTSCCMD, "48 89 5C 24 10 57 48 83 EC 20 48 83 B9 F0 06 00 00 00"},
+    {"SC_Recreate (SCImpl vt+0x20: destroys and creates the swapchain)", RVA_SC_RECREATE, "48 89 5C 24 08 57 48 83 EC 20 48 8B DA 48 8B F9 E8 ?? ?? ?? ?? 4C 8D 05 ?? ?? ?? ??"},
+    {"GameWindow_Pump (main thread: queued window messages -> display changes)", RVA_WND_PUMP, "48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 18 57 41 54 41 55 41 56 41 57 48 83 EC 50 0F 29 74 24 40"},
+    {"NxApp_ApplyDisplay (the game's own display apply: flags, PostSCCmd 2, window + Reflex follow-ups)", RVA_APPLY_DISPLAY, "48 89 5C 24 08 48 89 74 24 10 48 89 7C 24 18 4C 89 74 24 20 55 48 8D AC 24 40 FE FF FF"},
     {"Ctx_FlushRT (binds the colour/depth targets: OMSetRenderTargets)", RVA_CTX_FLUSHRT, "4C 8B DC 41 57 48 83 EC 70 F6 81 40 03 00 00 01 4C 8B F9 0F 84 3C 03 00 00"},
     {"Ctx_FlushRT depth handle (ctx+0x33C * [0x141CDFBD8] + [0x141CDFB58])", RVA_FLUSHRT_DSV, "41 8B 8F 3C 03 00 00 0F AF 0D 5D 0E 7E 01 48 03 0D D6 0D 7E 01 48 85 D2"},
     {"Pass65_pre (full-screen fade)", RVA_PASS65_PRE, "48 83 EC 28 48 8B D1 48 8D 0D 12 AB E8 00 E8 8D 7F 11 00 33 C0 48 83 C4"},
@@ -197,7 +202,7 @@ static Config g_cfg;
 static std::atomic<int> m_cullHead{1}; static std::atomic<u64> c_cullHead{0};   // F7 (xr=4): world copy +0x850 follows the eye camera
 static float g_fastTurnDeg = 2.0f; static int g_fastTurnMode = 1; static float g_fovMarginDeg = 3.0f;
 struct UiCfg { int hud = 1; float hudDeg = 55.0f, hudDist = 1.6f, hudDown = 3.0f; int theater = 1; float thDist = 3.0f, thWidth = 3.2f, thHeight = 0.0f; int thBackdrop = 0; int thCrop = 0; int flatRender = 1; u32 pauseMask = 0x80; int layer = 1; int premul = 1; int titleReason = 27; int follow = 1; float followDeg = 35.0f, followSpeed = 90.0f; int loadTheater = 1, menuTheater = 1, crop = 0; };
-static UiCfg g_ui; static int g_hostStart = 1;   // 0.12.0 UI/HUD/video settings (playbook ch04)
+static UiCfg g_ui; static int g_hostStart = 1, g_renderSize = 2560; static float g_uiAspect = 16.0f / 9.0f;   // 0.12.0 UI/HUD/video settings (playbook ch04)
 static std::atomic<bool> g_flatRender{false};   // 0.13.0 xr=4: this tick is a flat context rendered as a normal flat frame (game thread decides at tick start)
 static std::atomic<int> g_flatCut{0};           // camera cuts still to force after a flat <-> stereo switch
 static float g_ipd = 0.064f;   // metres between the eyes (from the runtime's eye poses; game thread)
@@ -238,6 +243,9 @@ static void loadConfig() {
             "; hud_follow: 1 = the HUD/menu panel stays put in the room and only follows when you look away (default), 0 = fixed to your view\r\n"
             "; hud_follow_deg / hud_follow_speed: how far you can look away before it follows (35) and how fast it follows (90 deg/s)\r\n"
             "; loading_theater / menu_theater: loading screens / the start screen on the theatre screen (1 = default)\r\n"
+            "; render_size (xr=4): square render size per eye in pixels (2560 default, 0.16.5; the game must be in WINDOWED mode), 0 = the game's own size; F2 cycles\r\n"
+            "; ui_aspect (with render_size): the aspect the game lays out its HUD, menus and flat frames for (1.7778 = 16:9 default;\r\n"
+            ";   the square image is shown at this aspect in the headset), 0 = square like the image\r\n"
             "; host_start: 1 = start the headset session at the game's first frame (default; the launcher shows in Virtual Desktop / SteamVR), 0 = at once\r\n"
             "; letterbox_crop: 0 = the whole window image goes to the headset (default), 1 = only a 16:9 picture inside it (F3 toggles)\r\n"
             "; fast_turn_deg / fast_turn_mode (xr=4): head turn per eye frame pair above which culling memory is not trusted (2.0);\r\n"
@@ -265,6 +273,7 @@ static void loadConfig() {
     g_cfg.histReset = GetPrivateProfileIntW(L"gotvr", L"history_reset", g_cfg.xr == 3 ? 1 : 0, ini);
     g_cfg.mirrorLeft = GetPrivateProfileIntW(L"gotvr", L"monitor_left_eye", 1, ini);
     g_hostStart = GetPrivateProfileIntW(L"gotvr", L"host_start", 1, ini) ? 1 : 0;
+    g_renderSize = GetPrivateProfileIntW(L"gotvr", L"render_size", 2560, ini); if (g_renderSize != 0 && (g_renderSize < 512 || g_renderSize > 4096)) g_renderSize = 2560;
     g_cfg.dlssMode = GetPrivateProfileIntW(L"gotvr", L"dlss_per_eye", 0, ini); if (g_cfg.dlssMode < 0 || g_cfg.dlssMode > 2) g_cfg.dlssMode = 0;
     {   auto fl = [&](const wchar_t *k, float def, float lo, float hi) { wchar_t b[32], d[32]; swprintf(d, 32, L"%g", def); GetPrivateProfileStringW(L"gotvr", k, d, b, 32, ini); float v = (float)_wtof(b); return (v >= lo && v <= hi) ? v : def; };
         g_ui.hud = GetPrivateProfileIntW(L"gotvr", L"hud", 1, ini) ? 1 : 0;
@@ -281,6 +290,7 @@ static void loadConfig() {
         g_ui.follow = GetPrivateProfileIntW(L"gotvr", L"hud_follow", 1, ini) ? 1 : 0;
         g_ui.loadTheater = GetPrivateProfileIntW(L"gotvr", L"loading_theater", 1, ini) ? 1 : 0; g_ui.menuTheater = GetPrivateProfileIntW(L"gotvr", L"menu_theater", 1, ini) ? 1 : 0;
         g_ui.crop = GetPrivateProfileIntW(L"gotvr", L"letterbox_crop", 0, ini) ? 1 : 0;   // 0.15.0: off by default (BUG-56: F3 off = no stretch)
+        g_uiAspect = fl(L"ui_aspect", 16.0f / 9.0f, 0.0f, 4.0f); if (g_uiAspect > 0 && g_uiAspect < 0.5f) g_uiAspect = 16.0f / 9.0f;
         g_ui.followDeg = fl(L"hud_follow_deg", 35.0f, 5.0f, 120.0f); g_ui.followSpeed = fl(L"hud_follow_speed", 90.0f, 10.0f, 720.0f);
         { wchar_t b[32]; GetPrivateProfileStringW(L"gotvr", L"pause_channels", L"0x80", b, 32, ini); g_ui.pauseMask = (u32)wcstoul(b, nullptr, 0) & 0x0FFFFFFFu; } }
     m_cullHead = GetPrivateProfileIntW(L"gotvr", L"cull_follows_head", 1, ini) ? 1 : 0;
@@ -1042,7 +1052,11 @@ static float *cacheIn(Cache &c, u64 cam, float *live) {   // the game's values (
 static void cacheOut(Cache &c, const float *v) { memcpy(c.live, v, 4 * c.n); memcpy(c.last, v, 4 * c.n); }
 static void cacheOffFor(Cache &c, u64) { cacheOff(c); }
 
+namespace rsz { static std::atomic<int> applying{0}; }   // 0.16.3: the game is applying a new render size (main thread blocked)
 static void hSlot43(void *cam) {
+    // BUG-64c: during a size change the swapchain thread runs RTPool_OnResize -> Cam_SetAspect -> this slot on CAM-A; no eye
+    // pose belongs to that call (the main thread is blocked in the apply) -> the engine's own update only
+    if (rsz::applying.load()) { oSlot43(cam); return; }
     if ((u64)cam == camA() && isCam((u64)cam)) {
         c_slot43A++; t_slot43 = GetCurrentThreadId();
         currentPacket();
@@ -1496,6 +1510,95 @@ static void drainFirst(u32 target) {
 }
 } // namespace r1
 
+// ---------------- 0.16.0 render size for the headset (design doc: square aspect + resolution scaler) ----------------
+// RE (BUG-62, ADDR-128..131): in windowed mode the game renders at its WINDOW CLIENT size, clamped to the "Forced aspect
+// ratio" setting (16:9 here -> 2560x1440 inside the 2560x1600 window). SC_ComputeSizes 0x46C840(swapchain object, settings)
+// derives every size record from settings +0x10/+0x14 (windowed width/height) and +0x28 (forced aspect): client/back
+// buffer (SC+0x1C0), viewport (+0x1E8, aspect +0x208), output (+0x160) and render size (+0x190); when one changes the
+// engine releases and recreates all its render targets (RTPool_OnResize 0x4DF360) and resizes the swapchain. The hook
+// hands it W x H (square) and aspect "auto" for the duration of the call only (the settings themselves are restored, so
+// nothing is saved), so the game itself builds a consistent W x H frame - back buffer included - while the desktop
+// window keeps its own size (DXGI scales the mirror into it). The headset image is that back buffer. F2 cycles the size;
+// a change is applied through the engine's own path: PostSCCmd(NxApp, 2) on the game thread (as the settings menu does).
+namespace rsz {
+static std::atomic<int> want{0};       // square size in pixels; 0 = the game's own size
+static std::atomic<u64> calls{0}; static std::atomic<int> lastW{0}, lastH{0};
+// BUG-64 (0.16.1: "HUD, menus and the pause screen turned into squares, stretched in height"): the game lays out its UI on a
+// canvas built from the viewport aspect SC+0x208 (SetRenderDims 0x4DBB60: 3840 x 3840 at aspect 1) and its flat-frame camera
+// takes the same aspect (RTPool_OnResize 0x4DF3D1 -> Cam_SetAspect 0x806F00: tanH = aspect * tanV). The image stays square
+// (the headset eye), but the game is told 16:9 -> UI canvas 3840x2160, flat frames rendered with a 16:9 projection: every
+// image is anamorphic (stretched vertically by 16:9) and the host shows the UI and theatre frames at 16:9 (GvShared v10
+// dispAspect). Stereo frames are unaffected: the eye projection is written whole (P00/P11 from the eye tangents).
+static std::atomic<float> ana{0.0f};    // display aspect of the images (0 = their own pixel aspect)
+typedef u64 (*FnCS)(u8 *, u8 *); static FnCS oCS;
+static u8 *scObj = nullptr;   // the swapchain object (SC+0x1A8 = render aspect: Movie_Draw letterboxes from it)
+static u64 hCS(u8 *sc, u8 *st) {
+    calls++; scObj = sc;
+    {   // fail closed: a resize storm (the engine re-applying because the window and the swapchain sizes disagree) -> off
+        static u64 t0 = 0; static int nIn = 0; const u64 now = GetTickCount64();
+        if (now - t0 > 2000) { t0 = now; nIn = 0; }
+        if (++nIn > 30 && want.load()) { want = 0; logf("render size: the game recomputed its sizes %d times in 2 s -> headset render size OFF (the game's own size); please send this log", nIn); }
+    }
+    const int n = want.load(); const bool windowed = st && st[0] == 0;
+    u64 r;
+    if (n >= 256 && windowed) {
+        const u32 w0 = *(u32 *)(st + 0x10), h0 = *(u32 *)(st + 0x14); const int a0 = *(int *)(st + 0x28);
+        *(u32 *)(st + 0x10) = (u32)n; *(u32 *)(st + 0x14) = (u32)n; *(int *)(st + 0x28) = 0;
+        r = oCS(sc, st);
+        *(u32 *)(st + 0x10) = w0; *(u32 *)(st + 0x14) = h0; *(int *)(st + 0x28) = a0;
+        const float A = g_uiAspect;
+        if (A > 0.5f) { const float a1 = *(float *)(sc + 0x208); *(float *)(sc + 0x208) = A; ana = A;
+            if (fabsf(a1 - A) > 1e-3f) logf("render size: the game lays out its UI and flat frames for aspect %.3f (the image is %dx%d; shown at %.3f in the headset)", A, n, n, A); }
+        else ana = 0.0f;
+    } else {
+        r = oCS(sc, st); ana = 0.0f;
+        if (n >= 256 && !windowed) { static int once = 0; if (!once++) logf("render size: the game is in fullscreen mode - the headset render size works in WINDOWED mode only (set Display mode = Windowed)"); }
+    }
+    const int ow = *(int *)(sc + 0x160), oh = *(int *)(sc + 0x164);
+    if (ow != lastW.load() || oh != lastH.load()) {
+        lastW = ow; lastH = oh;
+        logf("render size: game output %dx%d (render %dx%d, back buffer %dx%d, aspect %.3f)%s", ow, oh, *(int *)(sc + 0x190), *(int *)(sc + 0x194), *(int *)(sc + 0x1C0), *(int *)(sc + 0x1C4), *(float *)(sc + 0x208),
+             n >= 256 && windowed ? " <- headset size from the mod" : " (the game's own size)");
+    }
+    return r;
+}
+// BUG-63 (0.16.0 froze the game on F2, fullscreen): PostSCCmd from the GameTick hook deadlocked. BUG-64c (0.16.1/0.16.2 crashed
+// right after F2, windowed; dump GhostOfTsushima.exe.66416): 0.16.1 applied from the WINDOW thread, so the main thread kept
+// ticking while the swapchain thread rebuilt the back buffers: the next tick's Comp_Draw 0x4FE620 -> NxD3D vt+0x138 0x43CC60 ->
+// 0x437AF0 read back-buffer entry 0 of the D3D12 driver (+0x168 -> +0x30, entries of 0x40) while it was empty -> AV at
+// exe+0x437B11 (null+0x10) on the tick thread. The game itself applies display changes ON THE MAIN THREAD: the window thread
+// only queues messages (NxWnd_Queue 0x444F80); GameWindow_Pump 0x446530 (GameWindow vt+0x48, called first thing in NxApp::Update
+// 0x4257B0 at the start of each tick) hands them to 0x445970, which calls NxApp vt+0x120 -> ApplyDisplay 0x421ED0 -> PostSCCmd(2):
+// the main thread is blocked for the whole swapchain rebuild. F2 now does exactly that: the request is applied right after the
+// game's own message pump, through ApplyDisplay (with its flags and window/Reflex follow-ups), with the current settings.
+static std::atomic<int> pending{0}; static std::atomic<u64> applies{0}, pumpTid{0};
+typedef u8 *(*FnApp)(); typedef char (*FnApply)(u8 *, u8 *);
+static u8 *appNow() { u8 *svc = *(u8 **)(g_base + RVA_SERVICES_ROOT); return svc ? *(u8 **)svc : nullptr; }
+static FnApp getApp = appNow; static FnApply apply = nullptr;   // apply = the game's ApplyDisplay (self-test: a stand-in)
+static u8 *settingsOf(u8 *app) { typedef u8 *(*FnGet)(u8 *); return app ? ((FnGet)(*(void ***)app)[0x118 / 8])(app) : nullptr; }
+static bool windowedNow() { u8 *st = settingsOf(getApp()); return st && st[0] == 0; }
+static void applyNow() {   // main thread, between the game's message pump and the rest of its tick
+    u8 *app = getApp(); u8 *st = settingsOf(app);
+    if (!app || !st || !apply) { logf("render size: the game's display path is not available -> not applied"); return; }
+    if (st[0] != 0) { logf("render size: the game is in FULLSCREEN mode -> not applied (set Display mode = Windowed)"); return; }
+    alignas(16) static u8 copy[0x200]; memcpy(copy, st, 0x148);   // the current display settings (0x148 bytes), unchanged
+    const u64 t0 = GetTickCount64(); applying = 1; const char r = apply(app, copy); applying = 0; applies++;
+    logf("render size: applied on the game's main thread through its own display path (%llu ms, result %d)", (unsigned long long)(GetTickCount64() - t0), (int)r);
+}
+typedef char (*FnPump)(u8 *, float); static FnPump oPump;
+static char hPump(u8 *w, float dt) {
+    const char r = oPump(w, dt);
+    if (!pumpTid.load()) pumpTid = GetCurrentThreadId();
+    if (pending.exchange(0)) applyNow();
+    return r;
+}
+static void request() {   // hotkey thread: never blocks; the main thread applies it at its next message pump
+    if (!windowedNow()) { logf("render size: the game is in FULLSCREEN mode - set Display mode = Windowed in the game's settings for the headset render size (F2 does nothing in fullscreen)"); return; }
+    if (!oPump) { logf("render size: the game's message pump is not hooked -> F2 unavailable"); return; }
+    if (pending.exchange(1)) { logf("render size: a change is still waiting to be applied"); return; }
+}
+}
+
 // ---------------- UI, HUD and videos (0.12.0, playbook ch04 HUD-002/003/004) ----------------
 // RE (STEREO_ROUTE session 14): the UI passes 60/61/64 draw into their own render target 0x143377510, bound by
 // RT_Bind 0x7E34E0 from pass 60's pre-callback 0x6E3790, pass 61/64's setup 0x6F0860 and Ctx_InheritState 0x7E5170
@@ -1548,7 +1651,8 @@ static std::atomic<ID3D12Resource *> probeNat{nullptr}; static std::atomic<u32> 
 // pixel rect (x0, y0, x1, y1) of the HUD panel in a W x H target for view v; false = no mapping
 static bool panel(const View &v, int W, int H, float deg, float out[4]) {
     if (!v.ok || W <= 0 || H <= 0 || !(deg > 1.0f)) return false;
-    const float d = g_ui.hudDist, hw = d * tanf(deg * 0.5f / 57.2957795f), hh = hw * (float)H / (float)W, cy = -d * tanf(g_ui.hudDown / 57.2957795f);
+    const float an = rsz::ana.load();   // BUG-64: an anamorphic UI image is shown at the game's layout aspect
+    const float d = g_ui.hudDist, hw = d * tanf(deg * 0.5f / 57.2957795f), hh = an > 0.5f ? hw / an : hw * (float)H / (float)W, cy = -d * tanf(g_ui.hudDown / 57.2957795f);
     float x0 = (-hw - v.ex) / d, x1 = (hw - v.ex) / d, yT = (cy + hh) / d, yB = (cy - hh) / d;   // tangents seen from this eye
     if (v.wl) { x0 = v.wx0; x1 = v.wx1; yT = v.wyT; yB = v.wyB; }                               // world-locked (start screen)
     const float sw = v.tr - v.tl, sh = v.tu - v.td; if (!(sw > 0.01f && sh > 0.01f)) return false;
@@ -1698,9 +1802,14 @@ static void rowsCopy(GL *gl, ID3D12Resource *src, ID3D12Resource *dst, DXGI_FORM
         D3D12_BOX box{0, y, 0, w, y + 1, 1}; gl->CopyTextureRegion(&to, 0, 0, 0, &from, &box);
     }
 }
+static std::atomic<u64> cineSizeSkip{0};
 static void cineCopy(GL *gl, ID3D12Resource *src, u32 f) {
-    const int s = (int)(f & 7); if (!rbUi[s] || !rbPitch || !src) return;
-    rowsCopy(gl, src, rbUi[s], rbFmt, rbW, rbH, rbPitch); rbFrame[s] = f;
+    const int s = (int)(f & 7); ID3D12Resource *dst = rbUi[s]; const u32 w = rbW, h = rbH, p = rbPitch; if (!dst || !p || !src) return;
+    // BUG-64b: while a new render size rebuilds the UI images and this ring (present thread), a render thread may see an old image
+    // with the new ring or the reverse - a copy box outside the image is a GPU fault. Both sides must match exactly.
+    const D3D12_RESOURCE_DESC sd = src->GetDesc(), dd = dst->GetDesc();
+    if (sd.Width != w || sd.Height != h || dd.Width < (u64)p * NROW || p < w * 4) { cineSizeSkip++; return; }
+    rowsCopy(gl, src, dst, rbFmt, w, h, p); rbFrame[s] = f;
 }
 static bool active(float p[4], const int r[4]) {
     if (!hud.load() || g_cfg.xr != 4) return false;
@@ -1726,7 +1835,7 @@ static void hRT(u8 *ctx, u8 *target, int *rect, int slice) {
         ID3D12Resource *nat = taa::nativeRec(rr);
         if (nat && nat != probeNat.load()) { probeNat = nat; probeRec = rr; probeFlags = *(u32 *)(target + 0xC8); probeCount = *(u32 *)(target + 0x618); probeLogged = 0; }
     }
-    { const int *rr2 = (const int *)(ctx + 0x2948); if (rr2[2] > rr2[0] && rr2[3] > rr2[1]) uiAspect = (float)(rr2[3] - rr2[1]) / (float)(rr2[2] - rr2[0]); }
+    { const int *rr2 = (const int *)(ctx + 0x2948); if (rr2[2] > rr2[0] && rr2[3] > rr2[1]) { const float an = rsz::ana.load(); uiAspect = an > 0.5f ? 1.0f / an : (float)(rr2[3] - rr2[1]) / (float)(rr2[2] - rr2[0]); } }
     if (pass >= 32 && pass < 96) { uiPassMask |= 1ull << (pass - 32); uiPassSeen |= 1ull << (pass - 32); }
     if (layerOn()) {   // full-size UI, redirected into this frame's UI image at the flush (UI passes only: pass 59 writes the 3D picture here)
         if (!(pass >= 60 && pass <= 65)) lSkip++;
@@ -1806,7 +1915,15 @@ static u64 hP65(u8 *ctx) {
     }
     return oP65(ctx);
 }
-static void hMovie(void *a, void *b, void *c, void *d) { lastMovie = post.load(); movieDraws++; oMovie(a, b, c, d); }
+// BUG-64d (0.16.2: "pre-rendered cutscenes too smushed"): Movie_Draw letterboxes the 16:9 video from the RENDER aspect SC+0x1A8
+// (swapchain vt+0xB0 = SC+0x188, +0x20), still 1:1 -> a 16:9 band in the square image, which the host then showed at 16:9
+// (squashed). During the draw the render aspect is the layout aspect too: the video fills the anamorphic image like the UI.
+static void hMovie(void *a, void *b, void *c, void *d) {
+    lastMovie = post.load(); movieDraws++;
+    u8 *sc = rsz::scObj; const float an = rsz::ana.load();
+    if (sc && an > 0.5f) { float *ra = (float *)(sc + 0x1A8); const float r0 = *ra; *ra = an; oMovie(a, b, c, d); *ra = r0; return; }
+    oMovie(a, b, c, d);
+}
 // 0.14.3 start screen (HUD-002, world-locked gravity-aligned panel) without a layer: the panel is a rectangle fixed in the
 // runtime's LOCAL space, placed in front of the head (yaw only) when the start screen appears or on F11; every frame
 // each eye's mapped rect is where that rectangle (billboarded, no roll) projects in THIS eye's frustum.
@@ -1866,7 +1983,11 @@ static void beginPost() {   // game thread, main view, before its render graph i
 }
 static void endPost() {   // game thread: the flat-context decision for this frame's published image
     const u32 f = frameCtr(); const bool fl = flat(), mv = movieNow(); if (fl) flatPosts++;
-    ring[f & 31] = {f, fl ? (GV_SLOT_THEATER | (crop && mv ? GV_SLOT_CROP169 : 0u) | (g_flatRender.load() ? GV_SLOT_FLAT : 0u)) : 0u};
+    // 0.16.0: a 16:9 video is letterboxed inside the square image -> only its band on the screen; 0.16.2 (BUG-64): the game is told
+    // 16:9, so the video fills the (anamorphic) image and the host shows the whole image at 16:9 instead
+    const float an = rsz::ana.load(); if (S) S->dispAspect = an;
+    const bool sq = rsz::want.load() > 0 && !(an > 0.5f);
+    ring[f & 31] = {f, fl ? (GV_SLOT_THEATER | ((crop || sq) && mv ? GV_SLOT_CROP169 : 0u) | (g_flatRender.load() ? GV_SLOT_FLAT : 0u)) : 0u};
     u32 uf = 0;
     if (layerOn()) {
         const float fa = *(volatile float *)(g_base + RVA_FADE + 0xC);   // the game's own fade (pass 65) covers the UI on the monitor
@@ -2126,10 +2247,11 @@ static u8 *findObj(ID3D12Resource *r) {
     }
     return nullptr;
 }
+static u64 lastTry = 0, fastUntil = 0;
 static bool ensure(IDXGISwapChain3 *sc) {
     if (count) return true;
     if (!sc) return false;
-    static u64 lastTry = 0; u64 now = GetTickCount64(); if (lastTry && now - lastTry < 10000) return false; lastTry = now;   // 0.8.2 log: rescanned every frame
+    u64 now = GetTickCount64(); if (lastTry && now - lastTry < (now < fastUntil ? 250u : 10000u)) return false; lastTry = now;   // 0.8.2 log: rescanned every frame
     DXGI_SWAP_CHAIN_DESC1 d{}; if (FAILED(sc->GetDesc1(&d)) || d.BufferCount == 0 || d.BufferCount > 8) return false;
     u32 found = 0;
     for (u32 i = 0; i < d.BufferCount; i++) { ID3D12Resource *r = nullptr; if (FAILED(sc->GetBuffer(i, IID_PPV_ARGS(&r)))) return false; nat[i] = r; r->Release(); obj[i] = findObj(r); found += obj[i] != nullptr; }
@@ -2139,6 +2261,11 @@ static bool ensure(IDXGISwapChain3 *sc) {
     return true;
 }
 static void notePresent(u32 frame, u32 idx) { lastFrame = frame; lastIdx = idx; have = 1; }
+// BUG-64b (0.16.1 crashed right after F2 applied a new size): nat[] / obj[] are the swapchain's back buffers and the engine's
+// objects for them - ResizeBuffers frees both, and the next left-eye capture called GetDesc on a freed back buffer. Dropped
+// before every ResizeBuffers (pub::hResize, under pub::cs); rescanned 4x per second for 5 s afterwards (the engine builds its
+// objects for the new buffers right after the resize)
+static void invalidate() { count = 0; have = 0; for (auto &x : nat) x = nullptr; for (auto &x : obj) x = nullptr; lastTry = 0; fastUntil = GetTickCount64() + 5000; }
 static bool predict(u32 frame, u32 &idx) { if (!have.load() || !count) return false; idx = (lastIdx.load() + (frame - lastFrame.load())) % count; return true; }
 // record into an engine pass context: back buffer of this frame -> dst (texture or readback footprint)
 static bool copyInto(void *ctx, u32 idx, const D3D12_TEXTURE_COPY_LOCATION &dst) {
@@ -2226,6 +2353,10 @@ static bool init(void *self) {
     IDXGISwapChain *nsc = (IDXGISwapChain *)native(gni, psc); nscRaw = nsc;
     logf("pub: swapchain %p (vtable in %s) native %p (vtable in %s), slGetNativeInterface %s", (void *)psc, vtMod(psc, m1, 64), (void *)nsc, vtMod(nsc, m2, 64), gni ? "found" : "absent");
     if (FAILED(nsc->QueryInterface(IID_PPV_ARGS(&sc)))) { logf("pub: IDXGISwapChain3 unavailable"); return false; }
+    // BUG-64e (0.16.3 F2: "fatal error making a swap chain"): DXGI allows one swapchain per window, and this reference kept the
+    // game's old swapchain alive when it re-created it -> CreateSwapChain failed. The mod never owns the swapchain: the
+    // reference is given back at once and SC_Recreate (hooked) drops the pointer before the game destroys it.
+    sc->Release();
     HRESULT hr = sc->GetDevice(IID_PPV_ARGS(&q));
     if (FAILED(hr) || !q) {
         logf("pub: native swapchain GetDevice(ID3D12CommandQueue) failed 0x%08lx", (unsigned long)hr); q = nullptr;
@@ -2329,9 +2460,18 @@ static void ensureUiTex() {
         if (d.Format == DXGI_FORMAT_R8G8B8A8_TYPELESS) rv.Format = DXGI_FORMAT_R8G8B8A8_UNORM; else if (d.Format == DXGI_FORMAT_B8G8R8A8_TYPELESS) rv.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
         dev->CreateRenderTargetView(uiSh[i], &rv, h); ui::shRtv[i] = h.ptr; ui::sh[i] = uiSh[i];
     }
-    if (!ui::rbUi[0]) {   // cinematic detector: 8 readback buffers of 3 UI rows each, persistently mapped
-        const u32 pitch = ((u32)d.Width * 4 + 255) & ~255u;
-        D3D12_HEAP_PROPERTIES hp{}; hp.Type = D3D12_HEAP_TYPE_READBACK; D3D12_RESOURCE_DESC bd{}; bd.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER; bd.Width = (u64)pitch * ui::NROW; bd.Height = 1; bd.DepthOrArraySize = 1; bd.MipLevels = 1; bd.SampleDesc.Count = 1; bd.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+    // 0.16.2 (BUG-64b): the ring is made once with room for 4096-pixel rows (or wider); a new render size only changes the row size
+    // used in it, so a render thread that reads the old and the new values mid-change still stays inside the mapped buffers
+    static u32 rbCapPitch = 0; const u32 needPitch = ((u32)d.Width * 4 + 255) & ~255u;
+    if (ui::rbUi[0] && needPitch > rbCapPitch) {   // wider than the ring: rebuilt (rows of the old ring are no longer read)
+        ui::rbPitch = 0; for (int i = 0; i < 8; i++) { ui::rbMap[i] = nullptr; ui::rbFrame[i] = 0xFFFFFFFFu; if (ui::rbUi[i]) { taa::bury(ui::rbUi[i]); ui::rbUi[i] = nullptr; } }
+    } else if (ui::rbUi[0] && ui::rbPitch && (ui::rbW != (u32)d.Width || ui::rbH != d.Height)) {
+        ui::rbPitch = 0; for (auto &fr : ui::rbFrame) fr = 0xFFFFFFFFu; ui::rbW = (u32)d.Width; ui::rbH = d.Height; ui::rbPitch = needPitch;
+        logf("UI layer: cinematic detector rows now %ux%u", ui::rbW, ui::rbH);
+    }
+    if (!ui::rbUi[0]) {   // cinematic detector: 8 readback buffers of 13 UI rows each, persistently mapped
+        const u32 pitch = needPitch, capPitch = needPitch > 4096u * 4u ? needPitch : 4096u * 4u;
+        D3D12_HEAP_PROPERTIES hp{}; hp.Type = D3D12_HEAP_TYPE_READBACK; D3D12_RESOURCE_DESC bd{}; bd.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER; bd.Width = (u64)capPitch * ui::NROW; rbCapPitch = capPitch; bd.Height = 1; bd.DepthOrArraySize = 1; bd.MipLevels = 1; bd.SampleDesc.Count = 1; bd.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
         bool okr = d.Format == DXGI_FORMAT_R8G8B8A8_UNORM || d.Format == DXGI_FORMAT_B8G8R8A8_UNORM || d.Format == DXGI_FORMAT_R8G8B8A8_UNORM_SRGB || d.Format == DXGI_FORMAT_B8G8R8A8_UNORM_SRGB;
         for (int i = 0; i < 8 && okr; i++) {
             if (FAILED(dev->CreateCommittedResource(&hp, D3D12_HEAP_FLAG_NONE, &bd, D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&ui::rbUi[i])))) { okr = false; break; }
@@ -2394,6 +2534,7 @@ static void readK(int k) {
 static void record(ID3D12GraphicsCommandList *c, ID3D12Resource *bb, int k, u32 W, u32 H, DXGI_FORMAT F) {
     const bool t10 = F == DXGI_FORMAT_R10G10B10A2_UNORM;
     if (!(t10 || F == DXGI_FORMAT_R8G8B8A8_UNORM || F == DXGI_FORMAT_B8G8R8A8_UNORM || F == DXGI_FORMAT_R8G8B8A8_UNORM_SRGB || F == DXGI_FORMAT_B8G8R8A8_UNORM_SRGB)) return;
+    if (rb[0] && w != W) { for (int i = 0; i < 3; i++) { pend[i] = false; map[i] = nullptr; if (rb[i]) { taa::bury(rb[i]); rb[i] = nullptr; } } tried = false; }   // 0.16.0: new size
     if (!rb[k]) { if (tried && !rb[0]) return; tried = true; pitch = (W * 4 + 255) & ~255u; w = W; ten = t10;
         D3D12_HEAP_PROPERTIES hp{}; hp.Type = D3D12_HEAP_TYPE_READBACK; D3D12_RESOURCE_DESC bd{}; bd.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER; bd.Width = (u64)pitch * ui::NROW; bd.Height = 1; bd.DepthOrArraySize = 1; bd.MipLevels = 1; bd.SampleDesc.Count = 1; bd.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
         for (int i = 0; i < 3; i++) { void *m = nullptr; D3D12_RANGE rr{0, (SIZE_T)bd.Width};
@@ -2524,7 +2665,56 @@ static HRESULT STDMETHODCALLTYPE hNatPresent1(IDXGISwapChain1 *self, UINT a, UIN
     if (b & DXGI_PRESENT_TEST) { testCalls++; return oNatPresent1(self, a, b, p); }
     natDepth++; atNative((IDXGISwapChain *)self); HRESULT r = oNatPresent1(self, a, b, p); natDepth--; return r;
 }
+// BUG-64b: the native ResizeBuffers / ResizeBuffers1 (the engine's SC_Resize 0x435510 calls vt+0x68 on the swapchain):
+// everything that points at the old back buffers or at the engine's old UI texture is dropped first, under cs, so no capture,
+// copy or probe can touch a freed resource; the eye textures, UI images and readback rings follow the new size on their own
+typedef HRESULT(STDMETHODCALLTYPE *FnResize)(IDXGISwapChain *, UINT, UINT, UINT, DXGI_FORMAT, UINT);
+typedef HRESULT(STDMETHODCALLTYPE *FnResize1)(IDXGISwapChain3 *, UINT, UINT, UINT, DXGI_FORMAT, UINT, const UINT *, IUnknown *const *);
+static FnResize oResize; static FnResize1 oResize1; static std::atomic<u64> resizes{0};
+static bool oursSc(void *self) { return self && (self == (void *)sc || self == nscRaw || self == meter::nsc); }
+static void beforeResize() {
+    bbmap::invalidate(); pending = 0;
+    ui::probeNat = nullptr; ui::probeRec = nullptr; ui::probeLogged = 0;
+}
+static HRESULT STDMETHODCALLTYPE hResize(IDXGISwapChain *self, UINT n, UINT w, UINT h, DXGI_FORMAT f, UINT fl) {
+    if (!oursSc(self)) return oResize(self, n, w, h, f, fl);
+    EnterCriticalSection(&cs); beforeResize(); const HRESULT r = oResize(self, n, w, h, f, fl); LeaveCriticalSection(&cs);
+    resizes++; logf("pub: swapchain ResizeBuffers %ux%u (%u buffers) -> 0x%08lx; back-buffer map and UI probe dropped", w, h, n, (unsigned long)r);
+    return r;
+}
+static HRESULT STDMETHODCALLTYPE hResize1(IDXGISwapChain3 *self, UINT n, UINT w, UINT h, DXGI_FORMAT f, UINT fl, const UINT *nm, IUnknown *const *qs) {
+    if (!oursSc(self)) return oResize1(self, n, w, h, f, fl, nm, qs);
+    EnterCriticalSection(&cs); beforeResize(); const HRESULT r = oResize1(self, n, w, h, f, fl, nm, qs); LeaveCriticalSection(&cs);
+    resizes++; logf("pub: swapchain ResizeBuffers1 %ux%u (%u buffers) -> 0x%08lx; back-buffer map and UI probe dropped", w, h, n, (unsigned long)r);
+    return r;
+}
+static void hookResize(void *swap) {
+    static bool done = false; if (done || !swap) return; done = true;
+    IDXGISwapChain3 *s3 = nullptr; void **vt = *(void ***)swap;
+    MH_STATUS a = MH_CreateHook(vt[13], (void *)hResize, (void **)&oResize); if (a == MH_OK) a = MH_EnableHook(vt[13]);
+    MH_STATUS b = MH_ERROR_NOT_INITIALIZED;
+    if (SUCCEEDED(((IUnknown *)swap)->QueryInterface(IID_PPV_ARGS(&s3))) && s3) { void **v3 = *(void ***)s3; b = MH_CreateHook(v3[39], (void *)hResize1, (void **)&oResize1); if (b == MH_OK) b = MH_EnableHook(v3[39]); s3->Release(); }
+    logf("pub: native ResizeBuffers hook %s, ResizeBuffers1 %s", MH_StatusToString(a), MH_StatusToString(b));
+}
+// BUG-64e: the game re-creates its swapchain (SC_Recreate 0x46E3D0 = SCImpl vt+0x20: destroy vt+0x28, create vt+0x18) for some
+// display changes instead of resizing it. Everything that points at the old swapchain or its buffers is dropped first; the
+// publisher initialises again on the new swapchain at the next Present (new eye textures, the host follows the generation).
+static std::atomic<u64> recreates{0};
+static void dropSwapchain(const char *why) {
+    EnterCriticalSection(&cs);
+    beforeResize(); ready = false; tried = false; sc = nullptr; nscRaw = nullptr;
+    LeaveCriticalSection(&cs);
+    logf("pub: %s -> swapchain pointers dropped; the publisher starts again on the new swapchain", why);
+}
+typedef char (*FnRecreate)(u8 *, u8 *); static FnRecreate oRecreate;
+static char hRecreate(u8 *scImpl, u8 *settings) {
+    dropSwapchain("the game re-creates its swapchain"); recreates++;
+    const char r = oRecreate(scImpl, settings);
+    logf("pub: swapchain re-created by the game (result %d)", (int)r);
+    return r;
+}
 static void hookNative() {
+    hookResize(sc);
     void **vt = *(void ***)sc;
     MH_STATUS a = MH_CreateHook(vt[8], (void *)hNatPresent, (void **)&oNatPresent);
     MH_STATUS b = MH_CreateHook(vt[22], (void *)hNatPresent1, (void **)&oNatPresent1);
@@ -2546,6 +2736,16 @@ static void onPresent(void *self, void *desc) {
         if (!okInit) { if (tried) logf("pub: init failed -> headset shows black, game stays flat"); return; }
     }
     if (!ready) return;
+    {   // BUG-64e fallback: the engine's swapchain is no longer the one the publisher was set up on -> start again
+        void *psc = (void *)rd<u64>((u8 *)self + 0x30);
+        static void *lastPsc = nullptr;
+        if (psc && psc != nscRaw && psc != lastPsc) {   // checked once per distinct pointer (a proxy differs from the native one)
+            static PFN_slGetNativeInterface gni = nullptr; static bool gniTried = false;
+            if (!gniTried) { gniTried = true; HMODULE slm = GetModuleHandleW(L"sl.interposer.dll"); if (slm) gni = (PFN_slGetNativeInterface)GetProcAddress(slm, "slGetNativeInterface"); }
+            if (native(gni, psc) != nscRaw) { lastPsc = nullptr; dropSwapchain("the engine presents on a different swapchain"); return; }
+            lastPsc = psc;
+        }
+    }
     if (!desc || !readable(desc, 8)) return;
     u32 frame = *(u32 *)desc;   // engine frame id of the image being presented (Present Reflex markers use it)
     u64 w = ++wrapperCalls;
@@ -2608,7 +2808,7 @@ static void init(void *wrapperSelf) {
     D3D12_RESOURCE_DESC d = bb->GetDesc(); bb->Release();
     if (!makeRb(d)) { logf("meter: readback buffer failed"); return; }
     if (!pub::hooked) {   // the native Present hooks (shared with the publisher)
-        pub::hooked = true; void **vt = *(void ***)n;
+        pub::hooked = true; pub::hookResize(n); void **vt = *(void ***)n;
         MH_STATUS a = MH_CreateHook(vt[8], (void *)pub::hNatPresent, (void **)&pub::oNatPresent), b = MH_CreateHook(vt[22], (void *)pub::hNatPresent1, (void **)&pub::oNatPresent1);
         if (a == MH_OK) a = MH_EnableHook(vt[8]);
         if (b == MH_OK) b = MH_EnableHook(vt[22]);
@@ -3049,6 +3249,9 @@ static DWORD WINAPI worker(void *) {
         {RVA_VC_END, (void *)r1::hVcEnd, (void **)&r1::oVcEnd, "VC_FrameEnd"}, {RVA_PASSBODY, (void *)r1::hPassBody, (void **)&r1::oPassBody, "Pass_Body"}, {RVA_CLOCK_UPDATE, (void *)hClock, (void **)&oClock, "Clock_Update"}, {RVA_CAM_TEMPORAL, (void *)hCamT, (void **)&oCamT, "Cam_TemporalUpdate"}, {RVA_CAMS_STOREPREV, (void *)occ::hStorePrev, (void **)&occ::oSP, "Cam_StorePrev"}, {RVA_RV_OCC, (void *)occ::hOcc, (void **)&occ::oOcc, "RV_OcclusionSetup"}, {RVA_AA_RESOLVE, (void *)taa::hRes, (void **)&taa::oRes, "AA_Resolve"}, {RVA_SL_CONSTS, (void *)dlss::hSLC, (void **)&dlss::oSLC, "Cam_BuildSLConstants"}, {RVA_NGX_CREATE, (void *)dlss::hNgxCreate, (void **)&dlss::oNgxCreate, "NGX_CreateFeature"}, {RVA_NGX_EVAL, (void *)dlss::hNgxEval, (void **)&dlss::oNgxEval, "NGX_EvaluateFeature_C"}, {RVA_NGX_RELEASE, (void *)dlss::hNgxRelease, (void **)&dlss::oNgxRelease, "NGX_ReleaseFeature"}, {RVA_AA_VELOCITY, (void *)taa::hVel, (void **)&taa::oVel, "AA_Velocity"}, {RVA_TAA_DRAW, (void *)taa::hDraw, (void **)&taa::oDraw, "TAA_Draw"}, {RVA_RCTX_BUILD, (void *)r1::hRCtxBuild, (void **)&r1::oRCtxBuild, "RCtx_Build"}, {RVA_RCTX_FLUSH, (void *)r1::hRCtxFlush, (void **)&r1::oRCtxFlush, "RCtx_FlushDraws"}, {RVA_SLPASS, (void *)hSLPass, (void **)&oSLPass, "StreamlinePass"},
         {RVA_RT_BIND, (void *)ui::hRT, (void **)&ui::oRT, "RT_Bind"}, {RVA_CTX_SCISSOR, (void *)ui::hSC, (void **)&ui::oSC, "Ctx_SetScissor"}, {RVA_MOVIE_DRAW, (void *)ui::hMovie, (void **)&ui::oMovie, "Movie_Draw"}, {RVA_PASS65_PRE, (void *)ui::hP65, (void **)&ui::oP65, "Pass65_pre (fade)"}, {RVA_BATCH_DRAW, (void *)ui::hBatch, (void **)&ui::oBatch, "Batch_Draw"},
         {RVA_UI60_PRE, (void *)ui::hUI60, (void **)&ui::oUI60, "UI_Pass60_pre (clears the UI image)"}, {RVA_CTX_FLUSHRT, (void *)ui::hFlushRT, (void **)&ui::oFlushRT, "Ctx_FlushRT (UI layer redirect)"},
+        {RVA_SC_COMPUTESIZES, (void *)rsz::hCS, (void **)&rsz::oCS, "SC_ComputeSizes (headset render size)"},
+        {RVA_WND_PUMP, (void *)rsz::hPump, (void **)&rsz::oPump, "GameWindow_Pump (F2 size change on the main thread)"},
+        {RVA_SC_RECREATE, (void *)pub::hRecreate, (void **)&pub::oRecreate, "SC_Recreate (swapchain re-creation)"},
     };
     for (auto &h : hooks) { MH_STATUS st = MH_CreateHook(g_base + h.rva, h.det, h.orig); logf("hook %s -> %s", h.name, MH_StatusToString(st)); if (st != MH_OK) { logf("hook failed -> aborting all hooks"); MH_Uninitialize(); return 0; } }
     // the shared block must exist before any hook can read it
@@ -3063,6 +3266,8 @@ static DWORD WINAPI worker(void *) {
         if (r1::tabOk) { r1::on = 1; logf("xr=3 NATIVE STEREO: second render (right eye) on from the start; history reset every frame = %d", g_cfg.histReset); }
         else { g_cfg.xr = 2; logf("xr=3 needs the verified pass table -> falling back to xr=2 (alternate-eye)"); if (S) S->mode = 2; }
     }
+    rsz::apply = (rsz::FnApply)(g_base + RVA_APPLY_DISPLAY);
+    if (g_cfg.xr == 4) { rsz::want = g_renderSize; logf("render size: %s", g_renderSize ? "square headset render size set before the swapchain exists (render_size in gotvr.ini, F2 cycles)" : "the game's own size (render_size=0)"); if (g_renderSize) logf("render size: %d x %d per eye", g_renderSize, g_renderSize); }
     MH_STATUS st = MH_EnableHook(MH_ALL_HOOKS); logf("hooks enabled: %s", MH_StatusToString(st));
     if (g_cfg.xr == 4) {
         dlss::mode = g_cfg.dlssMode; if (g_cfg.dlssMode) dlss::install();
@@ -3106,7 +3311,11 @@ static DWORD WINAPI worker(void *) {
                     }
                     if (i == 10 && g_cfg.xr == 4) { if (ui::rdRefused.exchange(0)) { ui::rdFailRun = 0; ui::f1Off = 1; } ui::f1Off = !ui::f1Off.load(); logf("HOTKEY F1 HUD -> %s", ui::f1Off.load() ? "drawn into the 3D image (0.14 panel, A/B)" : "its own sharp layer"); }
                     else if (i == 10) { m_offTest ^= 1; logf("HOTKEY F1 second render's camera 0.5 m to the right (flat stereo proof; needs F5 on) -> %d", m_offTest.load()); }
-                    if (i == 9) { if (sweep::running.load()) sweep::end("cancelled with F2"); else sweep::begin(GetTickCount64()); }
+                    if (i == 9 && g_cfg.xr == 4) {   // F2: headset render size 1536 -> 1792 -> 2048 -> 2304 -> 2560 -> game's own -> 1536
+                        static const int sz[6] = {1536, 1792, 2048, 2304, 2560, 0}; int cur = rsz::want.load(), nx = sz[0];
+                        for (int j = 0; j < 6; j++) if (sz[j] == cur) { nx = sz[(j + 1) % 6]; break; }
+                        rsz::want = nx; logf("HOTKEY F2 headset render size -> %s %d", nx ? "square" : "the game's own (0)", nx); rsz::request(); }
+                    else if (i == 9) { if (sweep::running.load()) sweep::end("cancelled with F2"); else sweep::begin(GetTickCount64()); }
                     if (i == 8 && g_cfg.xr == 4) { ui::cropOn = !ui::cropOn.load(); logf("HOTKEY F3 letterbox crop -> %s", ui::cropOn.load() ? "ON (only the 16:9 picture goes to the headset)" : "OFF (the whole window image)"); }
                     else if (i == 8) { static int k = 0; k = (k + 1) % 6; r1::skipFrom = r1::skipSteps[k]; r1::pjDump = 1;
                                   if (r1::skipFrom.load()) logf("HOTKEY F3 second run skips passes %d..68 (bisection; image should come from run 1)", r1::skipFrom.load()); else logf("HOTKEY F3 second run complete again (no skipped passes)"); }
@@ -3185,7 +3394,7 @@ static DWORD WINAPI worker(void *) {
                      ui::mode.load(), (int)ui::layerReady(), ui::shReady.load(), ui::hostUiOk.load(), (void *)ui::probeRec.load(), ui::f1Off.load(), (unsigned long long)(x0 - r0), (unsigned long long)(x4 - r4), (unsigned long long)(x5 - r5), (unsigned long long)(x1 - r1), (unsigned long long)(x8 - r8),
                      (unsigned long long)(x6 - r6), (unsigned long long)(x7 - r7), (unsigned long long)(x2 - r2), (unsigned long long)(x3 - r3), pn ? pb : " none", S ? (long long)S->hostUi : -1LL);
                 { u64 a = camA(); float cf[6] = {0, 0, 0, 0, 0, 0}; if (isCam(a)) { cf[0] = *(const float *)(a + 0x670); for (int j = 0; j < 4; j++) cf[1 + j] = *(const float *)(a + 0x6A4 + 4 * j); cf[5] = (float)*(const u8 *)(a + 0x7D8); }
-                  logf("   CAMCENSUS/s: fov %.3f rect +0x6A4 %.3f %.3f %.3f %.3f cut %.0f | cutscene(bars)=%d | outermost 3D rows brightness avg %d max %d (of 255) | HUD images skipped (right eye)=%llu", cf[0], cf[1], cf[2], cf[3], cf[4], cf[5], ui::sceneBars.load(), ui::rowEdgeAvg.load(), ui::rowEdgeMax.load(), (unsigned long long)ui::rightSkip.exchange(0)); }
+                  logf("   CAMCENSUS/s: fov %.3f rect +0x6A4 %.3f %.3f %.3f %.3f cut %.0f | cutscene(bars)=%d | outermost 3D rows brightness avg %d max %d (of 255) | HUD images skipped (right eye)=%llu | size recomputes=%llu (output %dx%d, UI/flat aspect %.3f) swapchain resizes=%llu UI row copies skipped while resizing=%llu", cf[0], cf[1], cf[2], cf[3], cf[4], cf[5], ui::sceneBars.load(), ui::rowEdgeAvg.load(), ui::rowEdgeMax.load(), (unsigned long long)ui::rightSkip.exchange(0), (unsigned long long)rsz::calls.exchange(0), rsz::lastW.load(), rsz::lastH.load(), rsz::ana.load(), (unsigned long long)pub::resizes.load(), (unsigned long long)ui::cineSizeSkip.exchange(0)); }
                 { static u64 s0, s1; u64 y0 = ui::sReads, y1 = ui::sHits;
                 logf("   UICINE/s: HUD image reads=%llu hits=%llu cinematic=%d (max bar rows top/bottom %d/%d of 6, max veil rows %d of %d) | 3D picture reads=%llu hits=%llu bars=%d (max bar rows top/bottom %d/%d) | HUD alpha at mid-row samples: zero %u, partial %u, full %u (HUD-004: squared alpha shows as few full)",
                      (unsigned long long)(x9 - r9), (unsigned long long)(x10 - r10), ui::cine.load(), ui::maxTop.exchange(0), ui::maxBot.exchange(0), ui::maxVeil.exchange(0), ui::NROW,
@@ -3271,6 +3480,9 @@ extern "C" __declspec(dllexport) int GoTVR_SelfTest(const wchar_t *exePath) {
         {RVA_VC_END, (void *)r1::hVcEnd, (void **)&r1::oVcEnd, "VC_FrameEnd"}, {RVA_PASSBODY, (void *)r1::hPassBody, (void **)&r1::oPassBody, "Pass_Body"}, {RVA_CLOCK_UPDATE, (void *)hClock, (void **)&oClock, "Clock_Update"}, {RVA_CAM_TEMPORAL, (void *)hCamT, (void **)&oCamT, "Cam_TemporalUpdate"}, {RVA_CAMS_STOREPREV, (void *)occ::hStorePrev, (void **)&occ::oSP, "Cam_StorePrev"}, {RVA_RV_OCC, (void *)occ::hOcc, (void **)&occ::oOcc, "RV_OcclusionSetup"}, {RVA_AA_RESOLVE, (void *)taa::hRes, (void **)&taa::oRes, "AA_Resolve"}, {RVA_SL_CONSTS, (void *)dlss::hSLC, (void **)&dlss::oSLC, "Cam_BuildSLConstants"}, {RVA_NGX_CREATE, (void *)dlss::hNgxCreate, (void **)&dlss::oNgxCreate, "NGX_CreateFeature"}, {RVA_NGX_EVAL, (void *)dlss::hNgxEval, (void **)&dlss::oNgxEval, "NGX_EvaluateFeature_C"}, {RVA_NGX_RELEASE, (void *)dlss::hNgxRelease, (void **)&dlss::oNgxRelease, "NGX_ReleaseFeature"}, {RVA_AA_VELOCITY, (void *)taa::hVel, (void **)&taa::oVel, "AA_Velocity"}, {RVA_TAA_DRAW, (void *)taa::hDraw, (void **)&taa::oDraw, "TAA_Draw"}, {RVA_RCTX_BUILD, (void *)r1::hRCtxBuild, (void **)&r1::oRCtxBuild, "RCtx_Build"}, {RVA_RCTX_FLUSH, (void *)r1::hRCtxFlush, (void **)&r1::oRCtxFlush, "RCtx_FlushDraws"}, {RVA_SLPASS, (void *)hSLPass, (void **)&oSLPass, "StreamlinePass"},
         {RVA_RT_BIND, (void *)ui::hRT, (void **)&ui::oRT, "RT_Bind"}, {RVA_CTX_SCISSOR, (void *)ui::hSC, (void **)&ui::oSC, "Ctx_SetScissor"}, {RVA_MOVIE_DRAW, (void *)ui::hMovie, (void **)&ui::oMovie, "Movie_Draw"}, {RVA_PASS65_PRE, (void *)ui::hP65, (void **)&ui::oP65, "Pass65_pre (fade)"}, {RVA_BATCH_DRAW, (void *)ui::hBatch, (void **)&ui::oBatch, "Batch_Draw"},
         {RVA_UI60_PRE, (void *)ui::hUI60, (void **)&ui::oUI60, "UI_Pass60_pre (clears the UI image)"}, {RVA_CTX_FLUSHRT, (void *)ui::hFlushRT, (void **)&ui::oFlushRT, "Ctx_FlushRT (UI layer redirect)"},
+        {RVA_SC_COMPUTESIZES, (void *)rsz::hCS, (void **)&rsz::oCS, "SC_ComputeSizes (headset render size)"},
+        {RVA_WND_PUMP, (void *)rsz::hPump, (void **)&rsz::oPump, "GameWindow_Pump (F2 size change on the main thread)"},
+        {RVA_SC_RECREATE, (void *)pub::hRecreate, (void **)&pub::oRecreate, "SC_Recreate (swapchain re-creation)"},
     };
     int bad = 0;
     for (auto &h : hooks) {
@@ -3456,6 +3668,69 @@ extern "C" __declspec(dllexport) int GoTVR_SelfTest(const wchar_t *exePath) {
         logf("F2 sweep simulation: %s (culprit %d)", sweepOk ? "PASS" : "FAIL", g_fixCulprit);
         r1::fixM0 = 0; r1::fixM1 = 0; r1::on = 0; meter::ok = false;
     }
+    bool rsOk = false;
+    {   // 0.16.0 render size hook: windowed -> the engine sees W x H and aspect auto during the call, settings restored after;
+        // fullscreen -> untouched; size 0 -> untouched
+        static u8 sc[0x300], st[0x100]; static u32 seenW, seenH; static int seenA;
+        rsz::oCS = [](u8 *c, u8 *t) -> u64 { seenW = *(u32 *)(t + 0x10); seenH = *(u32 *)(t + 0x14); seenA = *(int *)(t + 0x28); *(int *)(c + 0x160) = (int)seenW; *(int *)(c + 0x164) = (int)seenH; return 1; };
+        memset(st, 0, sizeof st); *(u32 *)(st + 0x10) = 2560; *(u32 *)(st + 0x14) = 1600; *(int *)(st + 0x28) = 3;
+        rsz::want = 2048; rsz::hCS(sc, st); rsOk = seenW == 2048 && seenH == 2048 && seenA == 0 && *(u32 *)(st + 0x10) == 2560 && *(u32 *)(st + 0x14) == 1600 && *(int *)(st + 0x28) == 3 && *(int *)(sc + 0x160) == 2048;
+        st[0] = 1; rsz::hCS(sc, st); rsOk &= seenW == 2560 && seenH == 1600 && seenA == 3; st[0] = 0;
+        rsz::want = 0; rsz::hCS(sc, st); rsOk &= seenW == 2560 && seenA == 3;
+        logf("render size hook test (windowed override + restore, fullscreen untouched, off): %s", rsOk ? "PASS" : "FAIL");
+        // 0.16.2 (BUG-64): the square render tells the game 16:9 (SC+0x208, UI canvas + flat camera) -> anamorphic images
+        const float ua = g_uiAspect; g_uiAspect = 16.0f / 9.0f; *(float *)(sc + 0x208) = 1.0f;
+        rsz::want = 2048; rsz::hCS(sc, st); bool an = fabsf(*(float *)(sc + 0x208) - 16.0f / 9.0f) < 1e-5f && fabsf(rsz::ana.load() - 16.0f / 9.0f) < 1e-5f;
+        st[0] = 1; *(float *)(sc + 0x208) = 1.6f; rsz::hCS(sc, st); an &= rsz::ana.load() == 0.0f && *(float *)(sc + 0x208) == 1.6f; st[0] = 0;
+        g_uiAspect = 0.0f; *(float *)(sc + 0x208) = 1.0f; rsz::hCS(sc, st); an &= rsz::ana.load() == 0.0f && *(float *)(sc + 0x208) == 1.0f;
+        g_uiAspect = 16.0f / 9.0f; rsz::hCS(sc, st); float p2[4]; ui::View vv{true, 0, -1, 1, 1, -1, 0};
+        an &= ui::panel(vv, 2048, 2048, 90, p2) && fabsf((p2[3] - p2[1]) - 2048.0f * 9.0f / 16.0f) < 0.5f;   // panel at 16:9 in the square eye
+        rsz::want = 0; rsz::hCS(sc, st); an &= rsz::ana.load() == 0.0f; g_uiAspect = ua;
+        logf("anamorphic UI aspect test (square render laid out for 16:9, fullscreen / ui_aspect=0 / off untouched, panel 16:9): %s", an ? "PASS" : "FAIL");
+        rsOk &= an;
+        rsz::oCS = nullptr; rsz::lastW = 0; rsz::lastH = 0;
+    }
+    {   // 0.16.3 (BUG-64c): F2 is applied on the main thread right after the game's message pump, through ApplyDisplay with the
+        // current settings; fullscreen: not applied; nothing pending: the pump only
+        static u8 st[0x200]; static void *vt[64]; static u8 *app[2]; static int nApply = 0, nPump = 0; static bool sawApplying = false, sameCopy = false;
+        for (int i = 0; i < 0x148; i++) st[i] = (u8)(i * 7 + 1); st[0] = 0;
+        vt[0x118 / 8] = (void *)(u8 *(*)(u8 *))[](u8 *) -> u8 * { return st; }; app[0] = (u8 *)vt;
+        const auto sg = rsz::getApp; const auto sa = rsz::apply; const auto sp = rsz::oPump;
+        rsz::getApp = []() -> u8 * { return (u8 *)app; };
+        rsz::apply = [](u8 *a, u8 *c) -> char { nApply++; sawApplying = rsz::applying.load() == 1; sameCopy = a == (u8 *)app && c != st && !memcmp(c, st, 0x148); return 1; };
+        rsz::oPump = [](u8 *, float) -> char { nPump++; return 1; };
+        bool ok = rsz::windowedNow();
+        rsz::hPump(nullptr, 0.016f); ok &= nPump == 1 && nApply == 0;                 // nothing pending
+        rsz::request(); rsz::hPump(nullptr, 0.016f); ok &= nPump == 2 && nApply == 1 && sawApplying && sameCopy && rsz::applying.load() == 0;
+        rsz::hPump(nullptr, 0.016f); ok &= nApply == 1;                                // once per request
+        st[0] = 1; rsz::request(); ok &= rsz::pending.load() == 0;                     // fullscreen: refused at the key
+        rsz::pending = 1; rsz::hPump(nullptr, 0.016f); ok &= nApply == 1; st[0] = 0;   // ...and at the pump
+        rsz::getApp = sg; rsz::apply = sa; rsz::oPump = sp; rsz::pending = 0; rsz::applies = 0; rsz::pumpTid = 0;
+        logf("main-thread size change test (after the message pump, ApplyDisplay with the current settings, once, never in fullscreen): %s", ok ? "PASS" : "FAIL");
+        rsOk &= ok;
+    }
+    {   // 0.16.4 (BUG-64e): the game re-creating its swapchain -> the publisher lets go of it BEFORE the old one is destroyed
+        static u8 fakeSc[64], fakeRes[64]; static bool clean = false; void *const svRaw = pub::nscRaw; IDXGISwapChain3 *const svSc = pub::sc; const bool svReady = pub::ready, svTried = pub::tried;
+        pub::nscRaw = fakeSc; pub::sc = (IDXGISwapChain3 *)fakeSc; pub::ready = true; pub::tried = true; bbmap::count = 3; bbmap::nat[0] = (ID3D12Resource *)fakeRes; ui::probeNat = (ID3D12Resource *)fakeRes;
+        pub::oRecreate = [](u8 *, u8 *) -> char { clean = !pub::sc && !pub::nscRaw && !pub::ready && !pub::tried && bbmap::count == 0 && !ui::probeNat.load(); return 1; };
+        const char r = pub::hRecreate(fakeSc, fakeRes); const bool ok = r == 1 && clean && pub::recreates.load() == 1;
+        pub::oRecreate = nullptr; pub::recreates = 0; pub::nscRaw = svRaw; pub::sc = svSc; pub::ready = svReady; pub::tried = svTried; bbmap::count = 0; bbmap::fastUntil = 0; bbmap::lastTry = 0;
+        logf("swapchain re-creation test (publisher drops the swapchain and its buffers before the game destroys them): %s", ok ? "PASS" : "FAIL");
+        rsOk &= ok;
+    }
+    {   // 0.16.2 (BUG-64b): ResizeBuffers drops the back-buffer map and the UI probe BEFORE the swapchain frees them
+        static u8 fakeSc[64], fakeRes[64]; static bool seenClean = false; void *const svRaw = pub::nscRaw; pub::nscRaw = fakeSc;
+        bbmap::count = 3; bbmap::have = 1; bbmap::nat[0] = (ID3D12Resource *)fakeRes; bbmap::obj[0] = fakeRes; ui::probeNat = (ID3D12Resource *)fakeRes; ui::probeRec = fakeRes;
+        pub::oResize = [](IDXGISwapChain *, UINT, UINT, UINT, DXGI_FORMAT, UINT) -> HRESULT { seenClean = bbmap::count == 0 && !bbmap::have.load() && !bbmap::nat[0] && !bbmap::obj[0] && !ui::probeNat.load() && !ui::probeRec.load(); return S_OK; };
+        const HRESULT hr = pub::hResize((IDXGISwapChain *)fakeSc, 3, 2304, 2304, DXGI_FORMAT_R8G8B8A8_UNORM, 0);
+        bbmap::count = 3; bool other = false; static bool otherCalled = false;
+        pub::oResize = [](IDXGISwapChain *, UINT, UINT, UINT, DXGI_FORMAT, UINT) -> HRESULT { otherCalled = true; return S_OK; };
+        pub::hResize((IDXGISwapChain *)fakeRes, 3, 100, 100, DXGI_FORMAT_R8G8B8A8_UNORM, 0); other = otherCalled && bbmap::count == 3;   // someone else's swapchain: untouched
+        const bool ok = hr == S_OK && seenClean && other && bbmap::fastUntil > GetTickCount64();
+        bbmap::count = 0; bbmap::fastUntil = 0; bbmap::lastTry = 0; pub::nscRaw = svRaw; pub::oResize = nullptr; pub::resizes = 0;
+        logf("swapchain resize test (back-buffer map + UI probe dropped before ResizeBuffers, other swapchains untouched): %s", ok ? "PASS" : "FAIL");
+        rsOk &= ok;
+    }
     bool uiOk = false;
     {   // 0.12.0 HUD panel + theatre: panel geometry, convergence, and the real Ctx_SetViewport code driven by the RT_Bind hook
         const int sx = g_cfg.xr; g_cfg.xr = 4; g_ui.hudDist = 2.0f; g_ui.hudDown = 0.0f; g_ui.theater = 1; g_ui.loadTheater = 0; g_ui.menuTheater = 0;
@@ -3613,7 +3888,7 @@ extern "C" __declspec(dllexport) int GoTVR_SelfTest(const wchar_t *exePath) {
         ui::theaterMode = 0; ui::hudDeg = 55; ui::pauseMask = 0x80; ui::flatNow = false; g_flatRender = false; g_flatCut = 0; g_cfg.xr = sx; g_ui = UiCfg{};
     }
     MH_Uninitialize(); logflush(); CloseHandle(g_log);
-    return bad || en != MH_OK || dis != MH_OK || !restored || !tabTest || !simOk || !sweepOk || !cutOk || !occOk || !taaOk || !fastOk || !dlssOk || !uiOk ? 3 : 0;
+    return bad || en != MH_OK || dis != MH_OK || !restored || !tabTest || !simOk || !sweepOk || !cutOk || !occOk || !taaOk || !fastOk || !dlssOk || !uiOk || !rsOk ? 3 : 0;
 }
 #endif
 

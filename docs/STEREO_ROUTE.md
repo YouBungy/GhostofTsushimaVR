@@ -301,3 +301,8 @@ sharp 2560x1440 quad: room-fixed lazy-follow panel placed by the game DLL, proto
 on that UI-only image and shown over each eye's whole frustum. Next: square render aspect / resolution scaler (design
 doc; the eye image is 2560x1600 for a ~1:1 lens frustum, VDXR recommends 2496x2688), HUD-004 alpha fix if the alpha
 histogram shows squared alpha, then first person.
+
+## Session 18 (2026-10-18): headset render size
+0.15.6 accepted and pushed (gotvr-0.15.6). 0.16.0: square per-eye render size chosen by the mod (render_size, F2), applied
+through the engine's own swapchain path (SC_ComputeSizes + PostSCCmd), independent of the desktop window. Next: verify
+live (HUD layout on a square canvas, theatre crop, performance), then first person.

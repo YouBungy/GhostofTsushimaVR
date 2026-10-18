@@ -7,7 +7,7 @@
 #include <stdint.h>
 
 #define GV_MAGIC 0x52565447u /* 'GTVR' */
-#define GV_VERSION 9u
+#define GV_VERSION 10u
 #define GV_TEXCOUNT 6        /* 2 eyes x 3 buffers (game writes round-robin, never waits on the host) */
 #define GV_UITEX 3           /* v8: UI-layer images, own size (the UI target's), names Local\GoTVR_<pid>_u<uiGen>_ui<i> */
 
@@ -86,6 +86,10 @@ struct GvShared {
     float uiYaw;                      // panel faces you from this yaw (0 = straight ahead along -z)
     float uiWidth;                    // metres
     uint32_t uiPoseOk;
+    // v10 (BUG-64): the headset render is square but the game lays out its UI, menus and flat frames for 16:9 (the mod tells
+    // the game "16:9" while the image is square): every image is ANAMORPHIC - stretched vertically by dispAspect. The host shows
+    // the UI image and theatre (flat) frames at this display aspect (width / height); 0 = the images' own pixel aspect.
+    float dispAspect;
 };
 // head-locked HUD quad / world-locked panel / v9 FULL: the UI covers the whole view of each eye exactly like on the monitor
 // (cinematics: letterbox bars, fades and subtitles at the screen edges) - one quad per eye on the frustum its image used

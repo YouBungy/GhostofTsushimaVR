@@ -24,7 +24,7 @@
 #include "gotvr_shared.h"
 
 typedef uint64_t u64; typedef uint32_t u32;
-#define HOST_VERSION "GoTVRHost 0.12.0 (pair-atomic xr=4, theatre screen, sharp UI layer: room-fixed HUD panel from the game, full-view cinematic UI)"
+#define HOST_VERSION "GoTVRHost 0.13.0 (pair-atomic xr=4, theatre screen, sharp UI layer: room-fixed HUD panel from the game, full-view cinematic UI, anamorphic 16:9 UI and flat frames of the square render)"
 
 static FILE *g_log; static wchar_t g_dir[MAX_PATH];
 static void logf(const char *fmt, ...) {
@@ -464,7 +464,9 @@ static void frame() {
         const float wm = S->theaterWidth > 0.2f ? S->theaterWidth : 3.2f;
         ql.layerFlags = 0; ql.space = local; ql.eyeVisibility = XR_EYE_VISIBILITY_BOTH;
         ql.subImage.swapchain = eyeSc[0].sc; ql.subImage.imageRect = r; ql.subImage.imageArrayIndex = 0;
-        ql.pose = qPose; ql.size = {wm, wm * (float)r.extent.height / (float)(r.extent.width ? r.extent.width : 1)};
+        // v10 (BUG-64): a flat frame of the square render is anamorphic (the game drew it for dispAspect) -> shown at that aspect
+        const float da = S->dispAspect; const bool ana = da > 0.5f && !(shown[0].flags & GV_SLOT_CROP169) && (shown[0].flags & GV_SLOT_FLAT);   // a stereo image has the eye's own square projection
+        ql.pose = qPose; ql.size = {wm, ana ? wm / da : wm * (float)r.extent.height / (float)(r.extent.width ? r.extent.width : 1)};
         if (S->theaterBackdrop && layerOk && !(shown[0].flags & GV_SLOT_FLAT) && !(shown[1].flags & GV_SLOT_FLAT)) {   // a flat frame has no eye pose: never a projection
             layers[1] = (XrCompositionLayerBaseHeader *)&ql; nLayers = 2; }
         else { layers[0] = (XrCompositionLayerBaseHeader *)&ql; nLayers = 1; }
@@ -473,7 +475,8 @@ static void frame() {
     XrCompositionLayerQuad uq{XR_TYPE_COMPOSITION_LAYER_QUAD}, uq2{XR_TYPE_COMPOSITION_LAYER_QUAD};
     if (!theatre && uiAcq && uiSc.everReleased && layerOk && headOk) {   // the HUD at the UI's own resolution (sharp: sampled once, by the runtime)
         const float d = S->hudDist > 0.3f ? S->hudDist : 1.6f, deg = S->hudDeg > 5 ? S->hudDeg : 55.0f;
-        float w = 2.0f * d * tanf(deg * 0.5f / 57.29578f), h = w * (float)uiSc.h / (float)(uiSc.w ? uiSc.w : 1);
+        const float da = S->dispAspect, uiInvA = da > 0.5f ? 1.0f / da : (float)uiSc.h / (float)(uiSc.w ? uiSc.w : 1);   // v10: anamorphic UI image
+        float w = 2.0f * d * tanf(deg * 0.5f / 57.29578f), h = w * uiInvA;
         uq.layerFlags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT | (S->uiPremul ? 0 : XR_COMPOSITION_LAYER_UNPREMULTIPLIED_ALPHA_BIT);
         uq.eyeVisibility = XR_EYE_VISIBILITY_BOTH; uq.subImage.swapchain = uiSc.sc; uq.subImage.imageRect = {{0, 0}, {(int32_t)uiSc.w, (int32_t)uiSc.h}}; uq.size = {w, h};
         const char *how = "head-locked";
@@ -506,7 +509,7 @@ static void frame() {
                 gvRead(&S->uiPoseSeq, [&] { pp[0] = S->uiPos[0]; pp[1] = S->uiPos[1]; pp[2] = S->uiPos[2]; yaw = S->uiYaw; pw = S->uiWidth; pok = S->uiPoseOk; });
                 if (pok && pw > 0.05f) {   // v9: the game's room-fixed lazy-follow panel (HUD-002)
                     how = "ROOM-FIXED (lazy follow)"; uq.space = local; uq.pose.orientation = {0, sinf(yaw * 0.5f), 0, cosf(yaw * 0.5f)}; uq.pose.position = {pp[0], pp[1], pp[2]};
-                    w = pw; h = w * (float)uiSc.h / (float)(uiSc.w ? uiSc.w : 1); uq.size = {w, h};
+                    w = pw; h = w * uiInvA; uq.size = {w, h};
                 } else {
                     how = "WORLD-LOCKED"; const u64 now = GetTickCount64(); const LONG rc = S->theaterRecenter;
                     if (!wPlaced || now - wLast > 3000 || rc != wRecentre) { wRecentre = rc; placeWorldPanel(hl.pose, d); }
@@ -515,12 +518,12 @@ static void frame() {
             } else { uq.space = viewSp; uq.pose.orientation.w = 1; uq.pose.position = {0, -d * tanf(S->hudDown / 57.29578f), -d}; }
             layers[nLayers++] = (XrCompositionLayerBaseHeader *)&uq; S->hostUi++;
         }
-        static u32 wasUi = 0; if (uiFlags != wasUi) { logf("UI layer: %s quad %.2f x %.2f m (%ux%u)", how, w, h, uiSc.w, uiSc.h); wasUi = uiFlags; }
+        static u32 wasUi = 0; static float wasDa = -1; if (uiFlags != wasUi || da != wasDa) { logf("UI layer: %s quad %.2f x %.2f m (%ux%u%s)", how, w, h, uiSc.w, uiSc.h, da > 0.5f ? ", anamorphic: shown at the game's layout aspect" : ""); wasUi = uiFlags; wasDa = da; }
     }
     {   static bool was = false; static u32 wasFlags = 0;
         if (theatre != was || (theatre && shown[0].flags != wasFlags)) {
-            if (theatre) logf("theatre: ON (%s%s, image %dx%d at %d,%d of %ux%u, %u layer(s))", (shown[0].flags & GV_SLOT_CROP169) ? "video, cropped to 16:9" : "full frame", (shown[0].flags & GV_SLOT_FLAT) ? ", flat-rendered" : ", stereo image",
-                              ql.subImage.imageRect.extent.width, ql.subImage.imageRect.extent.height, ql.subImage.imageRect.offset.x, ql.subImage.imageRect.offset.y, eyeSc[0].w, eyeSc[0].h, nLayers);
+            if (theatre) logf("theatre: ON (%s%s, image %dx%d at %d,%d of %ux%u, %u layer(s), display aspect %.3f)", (shown[0].flags & GV_SLOT_CROP169) ? "video, cropped to 16:9" : "full frame", (shown[0].flags & GV_SLOT_FLAT) ? ", flat-rendered" : ", stereo image",
+                              ql.subImage.imageRect.extent.width, ql.subImage.imageRect.extent.height, ql.subImage.imageRect.offset.x, ql.subImage.imageRect.offset.y, eyeSc[0].w, eyeSc[0].h, nLayers, ql.size.width / (ql.size.height > 1e-4f ? ql.size.height : 1.0f));
             else logf("theatre: off (stereo projection)");
             was = theatre; wasFlags = shown[0].flags;
         }

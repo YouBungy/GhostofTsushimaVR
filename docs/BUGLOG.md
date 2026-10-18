@@ -962,3 +962,99 @@ spaces, session, instance → TerminateProcess.
 ## GoTVR 0.15.5 → 0.15.6 — pause hold 1 s
 - `[HEADSET]` 0.15.5: the large HUD now lasts whole cutscenes (thin and thick bars). Owner: after the pause menu the HUD
   should go back to small after 1 s (was 3 s). Changed; self-test 54/54 PASS.
+
+## GoTVR 0.15.6 → 0.16.0 — headset render size (square), independent of the desktop window (BUG-62)
+- Owner request (design doc): square render aspect and a resolution scaler for the headset; should the desktop window be
+  720x720 to save resources?
+- `[STATIC]` RE (ADDR-128..131): in windowed mode the game renders at its window client size from settings +0x10/+0x14,
+  clamped by "Forced aspect ratio" +0x28 (0 auto, 3 = 16:9 -> the 2560x1440 picture in the 2560x1600 window).
+  SC_ComputeSizes 0x46C840(SC, settings) builds client/back-buffer (SC+0x1C0), viewport (+0x1E8, aspect +0x208), output
+  (+0x160) and render (+0x190) records; a change makes the engine recreate every target (RTPool_OnResize 0x4DF360) and
+  resize the swapchain at the client record. PostSCCmd 0x4277D0(NxApp = **0x141998300, 2) runs the apply synchronously on
+  the swapchain thread (the settings menu path). No render-scale setting exists (only dynamic resolution / upscaler).
+- Fix: hook SC_ComputeSizes; while windowed and render_size > 0 the settings it reads say W x W and aspect auto for the
+  duration of the call (restored right after: nothing is saved), so the engine itself builds a consistent square frame,
+  back buffer included; the desktop window keeps its size (DXGI scales the mirror). F2 cycles 1536/1792/2048/2304/2560/
+  game's own and applies through PostSCCmd on the game thread. Fail-closed: > 30 recomputes in 2 s -> off. Videos inside
+  the square image are cropped to their 16:9 band on the theatre screen. Detector readback rings are rebuilt on resize.
+- 720x720 window: not needed - with the override the headset size no longer depends on the window; a smaller window only
+  saves the desktop's scaled copy (negligible), so it is left to the user.
+- Self-test 56/56; render size hook test PASS.
+
+## GoTVR 0.16.0 → 0.16.1 — F2 froze the game (BUG-63)
+- `[HEADSET]` 0.16.0: pressing F2 turned the headset black and froze the game (sound kept playing).
+- `[LIVE]` log: the game is in FULLSCREEN mode (display settings byte0 = 1), so the square override never applied ("the game's
+  own size", output 2560x1440, back buffer 2560x1600). On F2 the game thread stopped for good (tick=0 from then on; host:
+  gameFresh=0) and "applied ..." was never logged: PostSCCmd(NxApp, 2) blocks until the swapchain thread finishes, which
+  needs the frame the game thread was in the middle of -> called from the GameTick hook it deadlocked.
+- `[STATIC]` the game applies display changes from its window-message handler (Alt+Enter, 0x445970 -> vt+0x118/vt+0x120;
+  vt+0x120 returns early when the settings are unchanged - every caller passes "only if changed"); SC::Apply 0x46BB20 always
+  runs SC_ComputeSizes before deciding whether to rebuild.
+- Fix: F2 posts a private message to the game window (subclassed on first use); its handler calls PostSCCmd(app, 2) in
+  the same context as Alt+Enter, never from inside a frame. In fullscreen F2 only logs that Windowed mode is needed.
+- Self-test 56/56 PASS.
+
+## GoTVR 0.16.1 → 0.16.2 — F2 crashed the game (BUG-64b); UI, menus and pause screen square (BUG-64)
+- `[HEADSET]` 0.16.1 (windowed): F2 applied 2304x2304 ("applied ... on the window thread (547 ms, result 1)"), then the game
+  stopped (tick=0, present=0) and crashed. Also: with the square render the HUD, the menus and the pause screen became squares,
+  stretched in height.
+- BUG-64b `[STATIC]` the engine resizes the swapchain with ResizeBuffers (SC_Resize 0x435510 -> vt+0x68). The mod's back-buffer
+  map (bbmap::nat / obj, the native back buffers and the engine's objects for them) and the UI-texture probe were raw pointers
+  cached at startup and never refreshed: the first left-eye capture after the resize called GetDesc on a freed back buffer.
+  The crash dump could not be uploaded (148 MB, "upload failed" three times); this is the one use of freed memory that the
+  first frame after a resize always reaches.
+- Fix: the native ResizeBuffers / ResizeBuffers1 are hooked; under the publisher lock the back-buffer map, the UI probe and a
+  pending copy are dropped BEFORE the swapchain frees the buffers. The map is rescanned 4x/s for 5 s after a resize (the engine
+  builds its objects for the new buffers right after). The cinematic-detector ring is made once with room for 4096-pixel rows,
+  so a new size only changes the row size used in it, and every UI row copy checks that the image and the ring agree (no copy
+  box outside an image while the present thread rebuilds the UI images).
+- BUG-64 `[STATIC]` the UI canvas comes from the viewport aspect SC+0x208: SetRenderDims 0x4DBB60 (vt+0xA8 of the swapchain
+  object = SC+0x1E8, +0x20 = aspect) -> 0x141A0AB24/28 = 3840 x 2160 at 16:9, 3840 x 3840 at 1:1 (read all over the UI
+  module 0x6E....-0x6F....). The flat-frame camera takes the same value (RTPool_OnResize 0x4DF3D1 -> Cam_SetAspect 0x806F00:
+  cam+0x67C = aspect, tanH = aspect x tanV; fov +0x670 is vertical).
+- Fix (anamorphic): the image stays square, but SC_ComputeSizes (hooked) leaves aspect 16:9 (ui_aspect) in SC+0x208 -> the
+  UI is laid out on a 3840x2160 canvas and flat frames use a 16:9 projection, both drawn into the square image (stretched
+  vertically by 16:9). GvShared v10 dispAspect: the host shows the UI image (head-locked / room-fixed) and flat theatre frames
+  at 16:9; videos fill the image and are no longer cropped. Stereo frames are unaffected (the eye projection is written whole:
+  P00/P11 from the eye tangents, half-tangents widened). The full-view cinematic UI still covers each eye's whole view.
+- Self-test PASS (anamorphic aspect: windowed override, fullscreen / ui_aspect=0 / size 0 untouched, panel 16:9 in the square
+  eye; resize: map + probe dropped before ResizeBuffers, other swapchains untouched).
+
+## GoTVR 0.16.2 → 0.16.3 — F2 still crashed (BUG-64c); pre-rendered cutscenes squashed (BUG-64d)
+- `[HEADSET]` 0.16.2: menus and the pause screen at 16:9 again (BUG-64 fixed), but videos looked squashed, and F2 still crashed.
+- BUG-64c `[DUMP]` GhostOfTsushima.exe.66416.dmp (uploaded by hand): AV reading null+0x10 at exe+0x437B11 on the TICK thread,
+  stack hGameTick -> GameTick 0x4C49E0 -> 0x577820 -> ... -> Comp_Draw 0x4FE620 (object 0x141CE0450) -> NxD3D vt+0x138
+  0x43CC60 -> 0x437AF0: back-buffer entry 0 of the D3D12 driver (NxD3D+0x168 -> +0x30, 0x40-byte entries: +0 back buffer,
+  +0x10 its descriptor range) was empty. The swapchain thread was idle (0x42470E), the window thread in GetMessage.
+  The 0.16.2 ResizeBuffers hook worked ("swapchain ResizeBuffers 2304x2304 -> 0"); the crash is the game's own.
+- `[STATIC]` cause: 0.16.1/0.16.2 applied from the WINDOW thread, so the main thread went on ticking while the swapchain thread
+  rebuilt the back buffers. The game applies display changes on its MAIN thread: the window thread only queues messages
+  (NxWnd_Queue 0x444F80); GameWindow_Pump 0x446530 (GameWindow vt+0x48, the first call of NxApp::Update 0x4257B0, early in
+  every tick) hands them to 0x445970, whose WM_SIZE / Alt+Enter cases call NxApp vt+0x120 -> ApplyDisplay 0x421ED0 ->
+  PostSCCmd(2): the main thread is blocked for the whole rebuild.
+- Fix: F2 only sets a request; a hook on GameWindow_Pump applies it right after the game's own pump, on the main thread, through
+  ApplyDisplay with the current settings (the game's flags and window/Reflex follow-ups included). During the apply the
+  camera slot hook passes through (RTPool_OnResize calls it from the swapchain thread via Cam_SetAspect).
+- BUG-64d `[STATIC]` Movie_Draw 0x7EAF80 letterboxes from the RENDER aspect SC+0x1A8 (swapchain vt+0xB0 = SC+0x188, +0x20),
+  not SC+0x208: the video was a 16:9 band in the square image, shown at 16:9 by the host = squashed. Fix: during Movie_Draw
+  the render aspect is the layout aspect too, so the video fills the anamorphic image like the UI and its subtitles.
+- Self-test PASS (58 signatures; main-thread size change: after the pump, ApplyDisplay with the current settings, once, never
+  in fullscreen).
+
+## GoTVR 0.16.3 → 0.16.4 — F2: "fatal error making a swap chain" (BUG-64e)
+- `[HEADSET]` 0.16.3: videos fixed (BUG-64d); F2 ended with the game's fatal error "creating a swap chain".
+- `[DUMP]` GhostOfTsushima.exe.56848: main thread in ApplyDisplay 0x422077 -> PostSCCmd 0x42782E (as designed, BUG-64c fix
+  works); the swapchain thread crashed at exe+0x4359C5 (NxDXGI vt+0x40 0x435990: `mov rax,[rcx]` with the swapchain pointer
+  this+0x30 = NULL) after the game took the RE-CREATE path (SC_Recreate 0x46E3D0: destroy vt+0x28, create vt+0x18) and the
+  create failed. Log: no ResizeBuffers this time.
+- Cause: the mod's publisher held a COM reference to the game's swapchain (QueryInterface for IDXGISwapChain3 at init, never
+  released). DXGI allows one swapchain per window, so the old one stayed alive and the new one could not be created.
+- Fix: the reference is released right after the QueryInterface (the mod never owns the swapchain); SC_Recreate is hooked and
+  drops every pointer to the old swapchain and its buffers before the game destroys it; the publisher starts again on the
+  new swapchain at the next Present (new eye-texture generation, the host follows). Fallback: if the engine presents on a
+  different swapchain than the publisher's, the publisher starts again too.
+- Self-test PASS (59 signatures; re-creation: swapchain + buffers dropped before the game's destroy).
+
+## GoTVR 0.16.4 → 0.16.5 — default headset size 2560
+- `[HEADSET]` 0.16.4: F2 works (resize and re-creation, no crash); the user preferred the highest size, 2560 x 2560.
+- Change: render_size default 2048 -> 2560 (the ini key still overrides it; F2 cycle unchanged). Self-test PASS.
