@@ -24,7 +24,7 @@
 #include "gotvr_shared.h"
 
 typedef uint64_t u64; typedef uint32_t u32;
-#define HOST_VERSION "GoTVRHost 0.11.0 (pair-atomic xr=4, theatre screen, UI layer quad at the UI size, letterbox crop)"
+#define HOST_VERSION "GoTVRHost 0.12.0 (pair-atomic xr=4, theatre screen, sharp UI layer: room-fixed HUD panel from the game, full-view cinematic UI)"
 
 static FILE *g_log; static wchar_t g_dir[MAX_PATH];
 static void logf(const char *fmt, ...) {
@@ -403,7 +403,7 @@ static void frame() {
         bool got = gvRead(&src.seq, [&] { sl.tex = src.tex; sl.gen = src.gen; sl.fence = src.fence; sl.frame = src.frame; sl.flags = src.flags; });
         if (got && sl.fence && sl.fence <= done && (LONG)sl.gen == uiGenOpen && sl.tex < GV_UITEX && uiTex[sl.tex] && (!uiPick.valid || (int)(sl.frame - uiPick.frame) > 0)) { uiPick.valid = true; uiPick.tex = sl.tex; uiPick.frame = sl.frame; uiPick.fence = sl.fence; uiFlags = sl.flags; }
     }
-    const bool uiFresh = uiPick.valid && shown[0].valid && (int)(uiPick.frame - pick[0].frame) >= -3 && (uiFlags & (GV_UI_HEAD | GV_UI_WORLD));
+    const bool uiFresh = uiPick.valid && shown[0].valid && (int)(uiPick.frame - pick[0].frame) >= -3 && (uiFlags & (GV_UI_HEAD | GV_UI_WORLD | GV_UI_FULL));
     u32 uiIdx = 0; const bool uiAcq = uiFresh && acquire(uiSc, uiIdx);
     auto *c = beginCl();
     if (uiAcq) {
@@ -451,7 +451,7 @@ static void frame() {
         }
     }
     XrCompositionLayerProjection pl{XR_TYPE_COMPOSITION_LAYER_PROJECTION}; pl.space = local; pl.viewCount = 2; pl.views = pv;
-    const XrCompositionLayerBaseHeader *layers[3] = {(XrCompositionLayerBaseHeader *)&pl, nullptr, nullptr}; u32 nLayers = layerOk ? 1 : 0;
+    const XrCompositionLayerBaseHeader *layers[4] = {(XrCompositionLayerBaseHeader *)&pl, nullptr, nullptr, nullptr}; u32 nLayers = layerOk ? 1 : 0;
     // theatre: the left image of a flat-context pair goes on the screen; the projection layer is dropped (black room)
     // unless theaterBackdrop = 1. The eye-0 chain holds exactly that image (copied above this frame, or still shown).
     XrCompositionLayerQuad ql{XR_TYPE_COMPOSITION_LAYER_QUAD};
@@ -470,19 +470,52 @@ static void frame() {
         else { layers[0] = (XrCompositionLayerBaseHeader *)&ql; nLayers = 1; }
         S->hostTheater++;
     }
-    XrCompositionLayerQuad uq{XR_TYPE_COMPOSITION_LAYER_QUAD};
-    if (!theatre && uiAcq && uiSc.everReleased && layerOk && headOk) {   // the HUD / start-screen UI at the UI's own resolution
+    XrCompositionLayerQuad uq{XR_TYPE_COMPOSITION_LAYER_QUAD}, uq2{XR_TYPE_COMPOSITION_LAYER_QUAD};
+    if (!theatre && uiAcq && uiSc.everReleased && layerOk && headOk) {   // the HUD at the UI's own resolution (sharp: sampled once, by the runtime)
         const float d = S->hudDist > 0.3f ? S->hudDist : 1.6f, deg = S->hudDeg > 5 ? S->hudDeg : 55.0f;
-        const float w = 2.0f * d * tanf(deg * 0.5f / 57.29578f), h = w * (float)uiSc.h / (float)(uiSc.w ? uiSc.w : 1);
+        float w = 2.0f * d * tanf(deg * 0.5f / 57.29578f), h = w * (float)uiSc.h / (float)(uiSc.w ? uiSc.w : 1);
         uq.layerFlags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT | (S->uiPremul ? 0 : XR_COMPOSITION_LAYER_UNPREMULTIPLIED_ALPHA_BIT);
         uq.eyeVisibility = XR_EYE_VISIBILITY_BOTH; uq.subImage.swapchain = uiSc.sc; uq.subImage.imageRect = {{0, 0}, {(int32_t)uiSc.w, (int32_t)uiSc.h}}; uq.size = {w, h};
-        if (uiFlags & GV_UI_WORLD) {
-            const u64 now = GetTickCount64(); const LONG rc = S->theaterRecenter;
-            if (!wPlaced || now - wLast > 3000 || rc != wRecentre) { wRecentre = rc; placeWorldPanel(hl.pose, d); }
-            wLast = now; uq.space = local; uq.pose = wPose;
-        } else { uq.space = viewSp; uq.pose.orientation.w = 1; uq.pose.position = {0, -d * tanf(S->hudDown / 57.29578f), -d}; }
-        layers[nLayers++] = (XrCompositionLayerBaseHeader *)&uq; S->hostUi++;
-        static u32 wasUi = 0; if (uiFlags != wasUi) { logf("UI layer: %s quad %.2f x %.2f m at %.2f m (%ux%u)", (uiFlags & GV_UI_WORLD) ? "WORLD-LOCKED" : "head-locked", w, h, d, uiSc.w, uiSc.h); wasUi = uiFlags; }
+        const char *how = "head-locked";
+        if (uiFlags & GV_UI_FULL) {
+            // v9 cinematic: the UI image covers each eye's whole frustum, exactly where the monitor shows it (letterbox bars at
+            // the top/bottom edge of the view, fades over everything). One quad per eye on the frustum its eye image used.
+            how = "FULL VIEW (cinematic)"; bool ok2 = true; XrCompositionLayerQuad *qq[2] = {&uq, &uq2};
+            for (int e = 0; e < 2 && ok2; e++) {
+                const bool use = shown[e].valid && !(shown[e].flags & GV_SLOT_FLAT);
+                const GvPose &p = shown[e].pose; const float *fv = shown[e].fov;
+                XrPosef ep; float a[4];
+                if (use) { ep.orientation = {p.q[0], p.q[1], p.q[2], p.q[3]}; ep.position = {p.p[0], p.p[1], p.p[2]}; for (int i = 0; i < 4; i++) a[i] = fv[i]; }
+                else if (views) { ep = v[e].pose; a[0] = v[e].fov.angleLeft; a[1] = v[e].fov.angleRight; a[2] = v[e].fov.angleUp; a[3] = v[e].fov.angleDown; }
+                else { ok2 = false; break; }
+                const float tl = tanf(a[0]), tr = tanf(a[1]), tu = tanf(a[2]), td = tanf(a[3]), dd = 1.0f;
+                const float cx = 0.5f * (tl + tr) * dd, cy = 0.5f * (tu + td) * dd;   // centre of the frustum rectangle at 1 m, eye space
+                const XrQuaternionf &q = ep.orientation;   // eye-space offset -> LOCAL: q * (cx, cy, -dd)
+                const float vx = cx, vy = cy, vz = -dd, tx = 2 * (q.y * vz - q.z * vy), ty = 2 * (q.z * vx - q.x * vz), tz = 2 * (q.x * vy - q.y * vx);
+                XrCompositionLayerQuad &o = *qq[e]; o = uq;
+                o.space = local; o.eyeVisibility = e == 0 ? XR_EYE_VISIBILITY_LEFT : XR_EYE_VISIBILITY_RIGHT;
+                o.pose.orientation = q;
+                o.pose.position = {ep.position.x + vx + q.w * tx + (q.y * tz - q.z * ty), ep.position.y + vy + q.w * ty + (q.z * tx - q.x * tz), ep.position.z + vz + q.w * tz + (q.x * ty - q.y * tx)};
+                o.size = {(tr - tl) * dd, (tu - td) * dd};
+                if (e == 0) { w = o.size.width; h = o.size.height; }
+            }
+            if (ok2) { layers[nLayers++] = (XrCompositionLayerBaseHeader *)&uq; layers[nLayers++] = (XrCompositionLayerBaseHeader *)&uq2; S->hostUi++; }
+        } else {
+            if (uiFlags & GV_UI_WORLD) {
+                float pp[3] = {0, 0, 0}, yaw = 0, pw = 0; u32 pok = 0;
+                gvRead(&S->uiPoseSeq, [&] { pp[0] = S->uiPos[0]; pp[1] = S->uiPos[1]; pp[2] = S->uiPos[2]; yaw = S->uiYaw; pw = S->uiWidth; pok = S->uiPoseOk; });
+                if (pok && pw > 0.05f) {   // v9: the game's room-fixed lazy-follow panel (HUD-002)
+                    how = "ROOM-FIXED (lazy follow)"; uq.space = local; uq.pose.orientation = {0, sinf(yaw * 0.5f), 0, cosf(yaw * 0.5f)}; uq.pose.position = {pp[0], pp[1], pp[2]};
+                    w = pw; h = w * (float)uiSc.h / (float)(uiSc.w ? uiSc.w : 1); uq.size = {w, h};
+                } else {
+                    how = "WORLD-LOCKED"; const u64 now = GetTickCount64(); const LONG rc = S->theaterRecenter;
+                    if (!wPlaced || now - wLast > 3000 || rc != wRecentre) { wRecentre = rc; placeWorldPanel(hl.pose, d); }
+                    wLast = now; uq.space = local; uq.pose = wPose;
+                }
+            } else { uq.space = viewSp; uq.pose.orientation.w = 1; uq.pose.position = {0, -d * tanf(S->hudDown / 57.29578f), -d}; }
+            layers[nLayers++] = (XrCompositionLayerBaseHeader *)&uq; S->hostUi++;
+        }
+        static u32 wasUi = 0; if (uiFlags != wasUi) { logf("UI layer: %s quad %.2f x %.2f m (%ux%u)", how, w, h, uiSc.w, uiSc.h); wasUi = uiFlags; }
     }
     {   static bool was = false; static u32 wasFlags = 0;
         if (theatre != was || (theatre && shown[0].flags != wasFlags)) {

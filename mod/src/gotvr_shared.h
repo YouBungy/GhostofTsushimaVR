@@ -7,7 +7,7 @@
 #include <stdint.h>
 
 #define GV_MAGIC 0x52565447u /* 'GTVR' */
-#define GV_VERSION 8u
+#define GV_VERSION 9u
 #define GV_TEXCOUNT 6        /* 2 eyes x 3 buffers (game writes round-robin, never waits on the host) */
 #define GV_UITEX 3           /* v8: UI-layer images, own size (the UI target's), names Local\GoTVR_<pid>_u<uiGen>_ui<i> */
 
@@ -80,8 +80,16 @@ struct GvShared {
     uint32_t uiW, uiH, uiFmt;
     int32_t content[4];               // v8: x, y, w, h of the picture inside the eye images (the game letterboxes a 16:9
                                       // render inside a 16:10 window, for example); w == 0 -> the whole image
+    // v9: where the room-fixed HUD panel is (the game DLL runs the lazy follow, HUD-002), LOCAL space (seqlock)
+    volatile LONG uiPoseSeq;
+    float uiPos[3];                   // panel centre
+    float uiYaw;                      // panel faces you from this yaw (0 = straight ahead along -z)
+    float uiWidth;                    // metres
+    uint32_t uiPoseOk;
 };
-enum : uint32_t { GV_UI_HEAD = 1u, GV_UI_WORLD = 2u };   // head-locked HUD quad / world-locked menu panel (start screen)
+// head-locked HUD quad / world-locked panel / v9 FULL: the UI covers the whole view of each eye exactly like on the monitor
+// (cinematics: letterbox bars, fades and subtitles at the screen edges) - one quad per eye on the frustum its image used
+enum : uint32_t { GV_UI_HEAD = 1u, GV_UI_WORLD = 2u, GV_UI_FULL = 4u };
 
 // seqlock helpers (single writer per field group)
 static inline void gvWriteBegin(volatile LONG *s) { InterlockedIncrement(s); MemoryBarrier(); }

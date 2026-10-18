@@ -293,3 +293,11 @@ UI world-locked with the 3D world behind (title signal from the census), (3) squ
 quad (HUD head-locked; start screen world-locked with the stereo world behind); cinematics (display "Letterbox" mode)
 keep the UI full-frame; the pass-65 fade is always full-frame. Next: verify the letterbox signal live, then square
 render aspect / resolution scaler (design doc), first person.
+
+## Session 17 (2026-10-18): the UI on its own layer for real; cinematic bars and fades over the whole view
+0.14.5 accepted (start screen + loading on the theatre; F3 off = no stretch). 0.15.0 (fixed in 0.15.1, BUG-58b: RT_Bind flushes eagerly, arm before it): the UI passes' colour target is
+redirected at the engine's target flush into a shared image (the HUD-less 3D picture stays per-eye stereo, the UI is a
+sharp 2560x1440 quad: room-fixed lazy-follow panel placed by the game DLL, protocol v9). Cinematic bars/fades are measured
+on that UI-only image and shown over each eye's whole frustum. Next: square render aspect / resolution scaler (design
+doc; the eye image is 2560x1600 for a ~1:1 lens frustum, VDXR recommends 2496x2688), HUD-004 alpha fix if the alpha
+histogram shows squared alpha, then first person.

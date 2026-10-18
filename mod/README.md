@@ -1,4 +1,4 @@
-# GoTVR 0.14.5 — SYNCHRONIZED STEREO 6DoF (xr=4): both eyes from the same moment of the game
+# GoTVR 0.15.6 — SYNCHRONIZED STEREO 6DoF (xr=4): both eyes from the same moment of the game
 
 Single-player only. Never enter Legends (online) with any GoTVR file installed.
 What changed and why: `docs/BUGLOG.md` (BUG-5, BUG-6).
@@ -21,6 +21,76 @@ refused to send images ("FRAME GENERATION is on" in the log, although it was off
 "R1 census" every 5 s (or on F10): the list of views the engine renders each frame. That decides how true
 same-frame stereo (both eyes every frame) gets built. Please press **F10** once in each of: main menu, standing
 outdoors, riding, a cutscene, photo mode.
+
+## 0.15.6: after the pause menu the HUD is large for 1 s (was 3 s)
+
+## 0.15.5: whole cutscenes with the large HUD, recentre at start, large HUD after pause (xr=4)
+
+**Install both files:** `xinput1_4.dll` and `GoTVR\GoTVRHost.exe` (host unchanged since 0.15.0; keep them together).
+
+- **Cutscenes:** the mod now follows the game's cutscene camera. Once bars (thin or thick) are seen, the HUD stays large
+  for as long as the cutscene camera is in use - it keeps its own field of view for the whole scene - and goes back to
+  the panel when the game hands the camera back to you. Thin-bar shots are also recognised directly from the camera.
+- **Recentre:** automatic once the headset session starts and again when you first reach 3D gameplay.
+- **Pause menu:** after closing it, the HUD is large for 3 s.
+
+## 0.15.4: launcher visible, thick-bar cutscenes (xr=4)
+
+**Install both files:** `xinput1_4.dll` and `GoTVR\GoTVRHost.exe` (host unchanged since 0.15.0; keep them together).
+
+- **Launcher:** the headset session now starts only when the game draws its first frame, so while the launcher is up you
+  see Virtual Desktop's (or SteamVR's) normal view of your desktop and can click Play. `host_start=0` restores the old way.
+- **Thick (32:9) bar cutscenes:** the bars are not perfectly black (film grain), which made the detector lose them. It now
+  accepts near-black bars and only returns to the small HUD after 3 s without bars.
+
+## 0.15.3: cutscenes keep the large HUD, steady interact prompts (xr=4)
+
+**Install both files:** `xinput1_4.dll` and `GoTVR\GoTVRHost.exe` (host unchanged since 0.15.0; keep them together).
+
+- **Cutscenes:** in-engine cutscenes always have black bars in the 3D picture. Once they are seen the mod now treats it as
+  a cutscene and keeps the HUD large for the whole scene, through dark shots and camera cuts, until there have been no bars
+  for 1.5 s. (0.15.2 dropped back to the small panel whenever a shot was dark.)
+- **Interact prompts no longer jitter:** prompts like "E to mount" are placed by the game where the object is on screen, and
+  the mod renders left and right eyes on alternate frames - so the prompt moved by the eye distance every frame. The HUD
+  image now comes from one eye only.
+
+## 0.15.2: cinematic bars and fades (xr=4)
+
+**Install both files:** `xinput1_4.dll` and `GoTVR\GoTVRHost.exe` (host unchanged since 0.15.0; keep them together).
+
+- **Thin black bars** are part of the 3D picture, not the HUD, so the mod now also watches the 3D picture for them.
+- **Thick black bars and fades to/from black** are part of the HUD; the detector now measures them as bands from the
+  screen edges and accepts semi-transparent black (it was far too strict and never triggered).
+- **Whenever bars or a HUD fade are present, the whole HUD goes large over your view and the small panel disappears.**
+  When they are gone, the HUD returns to the stationary panel.
+- The game's own fade to black now hides the HUD panel earlier (above 30 % instead of 50 %).
+
+## 0.15.1: HUD back on its panel (xr=4)
+
+**Install both files:** `xinput1_4.dll` and `GoTVR\GoTVRHost.exe` (host unchanged since 0.15.0; keep them together).
+
+- **The HUD was always huge in 0.15.0** because the new sharp layer never actually received the HUD: the game sets up
+  its drawing target in one step that the mod was hooking one moment too late, so the HUD stayed in the 3D picture at
+  full size. Fixed. The HUD (objectives etc.) should now be on the room-fixed panel, sharp; only cinematic bars and fades
+  cover the whole view.
+- **Safety net:** if the layer ever fails to receive the HUD for half a second, the mod falls back to the 0.14 panel by
+  itself (the log says so). F1 switches between the sharp layer and the 0.14 panel.
+
+## 0.15.0: sharp HUD on its own layer, cinematic bars and fades over the whole view (xr=4)
+
+**Install both files:** `xinput1_4.dll` and `GoTVR\GoTVRHost.exe` (the host changed; the two must match).
+
+- **Sharp HUD:** the game now draws its HUD into a separate image instead of into the 3D picture. The headset shows it as
+  its own flat panel at the HUD's full resolution (2560x1440), so it is no longer squeezed into the 3D image's pixels.
+  The panel still stays put in the room and follows only when you look away (F4 switches to fixed-to-view).
+- **Cinematic black bars and fades:** detected on that HUD image. During them the HUD image covers your whole view, so the
+  bars sit at the top and bottom edges of what you see and fades cover everything. Subtitles are at the bottom of the view.
+- **Stretch fix is now the default:** the letterbox crop starts off (F3 still toggles it).
+- **F1:** switch the HUD between the new sharp layer and the old 0.14 panel, for A/B. `hud_layer=0` in `gotvr.ini`
+  turns the new layer off for good.
+
+Known limit: semi-transparent HUD parts may look a little too faint on the new layer. The log measures it, so this can be fixed next.
+Next big step for overall sharpness: square render aspect (design doc).
 
 ## 0.14.5: second try at the stretch, start screen and loading screens (xr=4)
 

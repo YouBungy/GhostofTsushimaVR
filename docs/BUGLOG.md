@@ -851,3 +851,114 @@ spaces, session, instance → TerminateProcess.
 - BUG-55b loading screen at world mode 2: the game's own fade (0x14149AF80, alpha +0xC, drawn by pass 65) fully opaque
   for 150 ms → theatre; back to stereo when it starts fading in.
 - Self-test: 52/52; loading test extended (black screen 150 ms → flat, fade-in → stereo) PASS; all UI tests PASS.
+
+## GoTVR 0.14.5 → 0.15.0 — blurry HUD, fades and cinematic bars on the HUD panel (BUG-56b..58)
+- `[HEADSET]` 0.14.5: loading screens and the start screen on the theatre screen are right. **F3 (crop off) fixes the
+  world stretching** and the HUD stays put in the room. The HUD is blurry; fades to/from black and the cinematic black bars
+  are drawn on the HUD rectangle instead of across the whole view. User saved 0.14.5 as `gotvr-0.14.5` (WIP) on GitHub.
+- BUG-56b `[LIVE]`: the "letterbox check" said "bars" because it measured video frames (pre-rendered videos have their own
+  bars). Gameplay frames fill the window: the engine's 2560x1440 picture is scaled to 2560x1600, so the eye frustum spans
+  the whole window image. letterbox_crop now defaults to 0 (F3 still toggles).
+- BUG-57 `[STATIC]`: the "Letterbox" display mode (ADDR-117) is a SETTINGS toggle (setting callback 0x140D160C0 → push/pop
+  0x996740), not a cinematic signal - so 0.14's "cinema" mode never triggered. The cinematic bars are a UI widget
+  (`CUiLetterbox`, script `PushLetterbox`/`PopLetterbox`, tunables TRIGGER/UNTRIGGER_LETTERBOX_SPEED) drawn in the UI
+  passes; `HUDScaling` (0x6E3210) is the ultrawide HUD-width setting. Fix: measured on the UI-only image (BUG-58): rows at
+  3 % and 97 % of the height opaque black across the width (bars), or all three sampled rows covered and dark (a UI fade)
+  → GV_UI_FULL: the UI image covers each eye's whole frustum (one quad per eye on the frustum its image used), so bars sit
+  at the top/bottom of the view and fades cover everything. Enter after 2 hits, leave after 24 misses. While the game's
+  own pass-65 fade (0x14149AF80 alpha) is above 0.5 the UI layer is hidden (on the monitor that fade covers the UI too).
+- BUG-58 (HUD blur): the HUD was rasterised into the eye image (2560x1600 for a ~1:1 lens frustum; VDXR recommends
+  2496x2688) - a 1440-row UI squeezed into ~450 rows of the panel, then resampled again by the compositor. Fix (playbook
+  ch04 "Redirect a whole category of draws by rebinding the target once", HUD-004): UI passes 60-65 (ctx+0x2A50) that bind
+  the UI target are armed in RT_Bind; right after the engine's `Ctx_FlushRT` 0x4FEA80 (one OMSetRenderTargets per flush,
+  fresh RTV each time - why 0.14.1's RTV-identity lock-in failed, BUG-50) the same list gets OMSetRenderTargets(our shared
+  image's RTV, the engine's own depth view ctx+0x33C*[0x141CDFBD8]+[0x141CDFB58]) when colour attachment 0 is the UI
+  texture. Pass 59 (the 3D picture) is never redirected. One shared image per frame (chosen at RV_Post), cleared to
+  transparent in pass 60's pre-callback, un-redirected at pass 65 (dirty bit → the engine re-binds its own target for the
+  fade), published to the host → a quad at 2560x1440, sampled once by the runtime. The 3D picture is now HUD-less. Arms
+  are cleared every frame (pooled contexts). Kill switch: hud_layer=0 or F1 (the 0.14 panel mapping).
+  Known limit (HUD-004 trip hazard): the engine's blend squares the alpha of translucent UI; the log's UICINE line prints
+  the alpha histogram of the middle row so this can be measured before a blend fix.
+- Self-test: 54/54 (Ctx_FlushRT + its depth-handle code); redirect test (arm / clear / re-bind + depth / clean flush /
+  other texture / pass 59 / pass 65 / flags / F1) and cinematic detector test (bars / empty / fade / partial / hysteresis)
+  PASS; host test OK.
+
+## GoTVR 0.15.0 → 0.15.1 — "the HUD is always too large" (BUG-58b)
+- `[HEADSET]` 0.15.0: the in-game HUD was always huge (not only during bars/fades).
+- `[LIVE]` 0.15.0 log: mode HUD on the UI layer, UI-pass binds armed ~290/s, clears and publishes every frame, but
+  **redirected flushes = 0**; the published UI image is fully transparent (mid-row alpha: all zero). So the UI was never
+  redirected: with the layer on the panel mapping is off, and the UI was drawn full-size into the 3D picture.
+- Cause `[STATIC]`: RT_Bind 0x7E34E0 calls Ctx_FlushRT ITSELF at its end (eager flush, then drops stale slots). 0.15.0
+  armed the context after RT_Bind returned, so the one flush that binds the UI target was missed; later draws found the
+  context clean. Fix: arm before calling the engine's RT_Bind (the pass index is known from ctx+0x2A50 beforehand); the
+  re-bind no longer requires attachment slot 1 to be empty (stale slots are removed after the flush; we bind 1 RTV).
+- Fail-closed safety net: if UI binds are armed but none is redirected for 30 frames, the layer refuses itself and the
+  HUD goes back to the 0.14 panel (log line; F1 retries). Self-test reproduces the bind-then-flush order: PASS 54/54.
+
+## GoTVR 0.15.1 → 0.15.2 — fades not over the whole view; thin bars full but the HUD panel stays; thick bars undetected (BUG-57b)
+- `[HEADSET]` 0.15.1: the HUD is stationary and sharp (redirect works: ~130 redirected flushes/s, the HUD image has
+  zero/partial/full alpha populations). Fades to/from black do not cover the whole view; THIN black bars do cover the whole
+  view but the small HUD panel stays; THICK bars are not detected (no full-view HUD).
+- `[LIVE]` 0.15.1 log: the detector never fired (hits = 0 all session; one sample bottom 24/24 + middle covered 24/24).
+  Causes: (1) one row at 3 %/97 % with "a >= 230, rgb <= 10" - the UI's squared alpha (HUD-004) and translucent fades
+  never pass; (2) the thin bars are not UI: they are in the 3D picture (the HUD image never contains them).
+- Fix: 13 rows edge to edge (0.5 %…14 %, 50 %, 86 %…99.5 %), 32 samples each, measured as BANDS. HUD image: bar rows
+  (a >= 150, rgb <= 20) counted from each edge inwards, both edges -> bars; all 13 rows covered by a dark veil (a >= 20,
+  rgb <= a/2) -> a fade. 3D picture (published left-eye image, same rows): symmetric black bands (rgb <= 4) at both edges
+  with the picture between -> bars. Either -> GV_UI_FULL (the HUD over the whole view, no small panel). The game's own
+  pass-65 fade now hides the HUD layer above alpha 0.3 (was 0.5). Log: UICINE/s prints the max band rows per second.
+  Separating the bars from the rest of the HUD was not done: the full-view HUD keeps subtitles where the game puts them.
+- Self-test 54/54; band detector test (HUD: none/thick/squared/veil/partial; 3D: thin/sky/black; hysteresis) PASS.
+
+## GoTVR 0.15.2 → 0.15.3 — thick bars flicker back to small; cutscene detection; jittering interact prompt (BUG-57c, BUG-59)
+- `[HEADSET]` 0.15.2: thin bars → full-view HUD worked; thick (32:9) bars worked momentarily, then back to the small panel.
+  Interact prompts ("E: mount horse") jitter back and forth on the still HUD panel. Owner asks for a cutscene detector
+  instead of fade detection.
+- `[LIVE]` 0.15.2 log: every in-engine cutscene showed bars only in the 3D picture (bar rows 5/5 of 6; the HUD image never
+  had any). The latch toggled every 0.5-2 s: dark shots/cuts break "symmetric bars with picture between" for 20 frames.
+  Census for a game-state signal: the cutscene camera is written by the same gameplay camera system (SetLocalMatrix caller
+  0x673FC1 in gameplay AND cutscenes; 0xA38841 = title camera) -> not a discriminator. Strings: an input-owner enum
+  (Zero, Debug, Skill, Gadget, GadgetExtra, Hud, HeroScript, Camera, POIVol, Hwacha, SneakAttack, SkillPeek, GadgetPeek,
+  WhistleRadialMenu, RadialMenu, HandsOff, Movie, CutScene, ManualCamera, TestRigging, PhotoMode, PauseMenu, Menu, ...) at
+  name table 0x1417B5300 - its storage is not located yet (`[OPEN]`).
+- BUG-57c fix: the 3D-picture bar detector is now a CUTSCENE latch (playbook ch13: cinematic classifier with hysteresis):
+  enter on 3 strict hits; while in a cutscene, any frame with both edges black holds it (dark shots, cuts to black); leave
+  after 90 frames (~1.5 s) without. CAMCENSUS/s logs camera fov, rect +0x6A4 and cut flag each second (to find a state flag).
+- BUG-59: world-anchored prompts are placed with the eye view of the frame that drew them; xr=4 alternates eyes per frame,
+  so consecutive HUD images differed by the eye offset and the host showed them alternately -> jitter. Only left-eye frames
+  publish the HUD image now (60 Hz HUD updates, consistent positions).
+- Self-test 54/54; cutscene latch (enter/hold through black/leave after 90) and right-eye skip PASS.
+
+## GoTVR 0.15.3 → 0.15.4 — thick-bar cutscenes still drop to the small HUD; black headset during the launcher (BUG-57d, BUG-60)
+- `[HEADSET]` 0.15.3: with the thick 32:9 bars the HUD stays large longer but still shrinks back mid-scene. Jitter fixed,
+  HUD sharp. While the PlayStation launcher is up the headset is black. (No cutscenes in this session's log.)
+- BUG-57d `[LIVE]` (0.15.2 log, inference): during letterboxed scenes the strict bar test passed on only 4-63 of ~60 reads/s
+  -> the bars are not pure black (grain/dither around 4/255). Thresholds: enter <= 12/255 (rows need 28 of 32 samples),
+  hold <= 24/255, picture between >= 32/255; leave after 180 frames (~3 s) without bars. CAMCENSUS/s logs the brightness
+  (avg/max) of the outermost 3D-picture rows, so the bar colour is measured next time.
+- BUG-60 `[LIVE]`: the host (OpenXR session) started with the game process; the game's first frame came 8 s later (more
+  while the launcher waits) - black headset meanwhile. host_start=1 (default): the session starts at the game's first
+  presented frame, so Virtual Desktop / SteamVR keeps showing its own home (desktop, launcher) until then. host_start=0:
+  old behaviour.
+- Self-test 54/54; latch test extended (grainy 14/255 bars held; leave after 180) PASS.
+
+## GoTVR 0.15.4 → 0.15.5 — thick-bar cutscenes still shrink; recentre at start; large HUD after pause (BUG-57e, BUG-61)
+- `[HEADSET]` 0.15.4: launcher fixed (visible in Virtual Desktop until the game's first frame). Thick 32:9-bar cutscenes:
+  large HUD for longer but still shrinks; never with the thin bars. Requests: recentre once VR starts; large HUD for 3 s
+  after closing the pause menu.
+- `[LIVE]` 0.15.4 CAMCENSUS: during the thick-bar shots the 3D picture's outermost rows are BRIGHT (avg ~127) and the bar
+  detector sees bars only ~0.5 s per shot (5/5 rows) -> the latch left after 3 s each time. The camera keeps the
+  cutscene's field of view for the whole sequence: fov 1.028 rad from ~4 s before the first bars until the end, gameplay
+  0.935 (0.934 the moment it ends). The thin-bar shots set camera rect +0x6A4 to (-1, -0.758, 1, 0.758) = the engine's own
+  2.35:1 letterbox (outermost rows 0/255 then). Where the thick bars are drawn is still `[OPEN]` (not in the sampled rows of
+  the 3D picture or the HUD image most of the time).
+- BUG-57e fix (game thread, uiDecide): any evidence (3D-picture bars, HUD-image bars/fade, or rect top < 0.99) STARTS a
+  cutscene; it HOLDS while the camera keeps the fov it had at the start; ENDS when the fov changes with no evidence for
+  0.5 s, after 15 s without evidence, or on a flat context. Pausing-menu close -> GV_UI_FULL for 3 s.
+- BUG-61: recentre automatically 1.5 s after the headset session starts (host state RUNNING) and at the first 3D gameplay
+  after start (F11 as before).
+- Self-test 54/54 PASS.
+
+## GoTVR 0.15.5 → 0.15.6 — pause hold 1 s
+- `[HEADSET]` 0.15.5: the large HUD now lasts whole cutscenes (thin and thick bars). Owner: after the pause menu the HUD
+  should go back to small after 1 s (was 3 s). Changed; self-test 54/54 PASS.
