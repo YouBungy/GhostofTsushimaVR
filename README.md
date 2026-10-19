@@ -2,6 +2,7 @@
 (WIP) GOT VR mod with 6DGOF, native stereo rendering, and motion controls.
 
 # Important Notes
+- PLAY WINDOWED.
 - TAA Only; DLSS caused more performance loss and jitter. Will investigate later
 - **Set the game to Windowed display mode.** The headset image is then a square render per eye, independent of the desktop window.
 
