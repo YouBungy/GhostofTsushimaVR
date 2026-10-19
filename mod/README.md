@@ -1,4 +1,4 @@
-# GoTVR 0.15.6 — SYNCHRONIZED STEREO 6DoF (xr=4): both eyes from the same moment of the game
+# GoTVR 0.16.5 — SYNCHRONIZED STEREO 6DoF (xr=4): both eyes from the same moment of the game
 
 Single-player only. Never enter Legends (online) with any GoTVR file installed.
 What changed and why: `docs/BUGLOG.md` (BUG-5, BUG-6).
@@ -21,6 +21,71 @@ refused to send images ("FRAME GENERATION is on" in the log, although it was off
 "R1 census" every 5 s (or on F10): the list of views the engine renders each frame. That decides how true
 same-frame stereo (both eyes every frame) gets built. Please press **F10** once in each of: main menu, standing
 outdoors, riding, a cutscene, photo mode.
+
+## 0.16.5: 2560 x 2560 is the default headset size (xr=4)
+
+**Install:** `xinput1_4.dll` (host unchanged since 0.16.2). The game must be in Windowed mode.
+
+- F2 works without crashing since 0.16.4. The highest size, **2560 x 2560 per eye**, is now the default
+  (`render_size` in `gotvr.ini` still overrides it; F2 still cycles 1536 -> 1792 -> 2048 -> 2304 -> 2560 -> the game's own).
+
+## 0.16.4: F2 "fatal error making a swap chain" fixed (xr=4)
+
+**Install:** `xinput1_4.dll` (host unchanged since 0.16.2). The game must be in Windowed mode.
+
+- F2 now reaches the game's own size-change path, and this time the game rebuilt its whole swapchain (the part of
+  Windows that shows its picture). The mod was still holding on to the old one, and Windows allows only one per window,
+  so the game could not create the new one. The mod no longer holds on to it, and lets go of everything that pointed to
+  it just before the game rebuilds. The headset picture pauses for a moment and then comes back at the new size.
+
+## 0.16.3: F2 crash fixed for real, videos no longer squashed (xr=4)
+
+**Install:** `xinput1_4.dll` (the host `GoTVR\GoTVRHost.exe` is the same as 0.16.2). The game must be in Windowed mode.
+
+- **F2 crash:** your crash dump showed the real cause. The mod asked the game to change size from the wrong place, so the game
+  kept drawing while its screen buffers were being rebuilt. The game itself changes size from its main loop, with drawing
+  paused. F2 now hands the change to the game's main loop at exactly that point (the same path the game uses when you resize its window).
+- **Pre-rendered cutscenes squashed:** videos use a different size setting than the menus. They now fill the image the same way
+  as the menus, so they show at 16:9 with their subtitles.
+
+## 0.16.2: F2 crash fixed, HUD / menus / pause screen back to 16:9 (xr=4)
+
+**Install both files:** `xinput1_4.dll` and `GoTVR\GoTVRHost.exe` (the host changed: GoTVRHost 0.13.0; keep them together).
+**The game must be in Windowed display mode** for the square render.
+
+- **F2 crash:** when the game rebuilt its swapchain for the new size, the mod still held pointers to the old (freed) back
+  buffers and used one on the very next frame. The mod now lets go of them just before the game resizes, and picks up the
+  new ones afterwards. F2 should now change the size in about half a second without crashing.
+- **HUD, menus and pause screen square / stretched in height:** the game lays out its UI for the shape of the image, so a
+  square image gave a square layout. The mod now tells the game "16:9" while the image stays square: the UI, menus, pause
+  screen, videos and the start screen are drawn for 16:9, and the headset shows them at 16:9 again, like before. The 3D view
+  in the headset is unchanged (each eye still uses the full square image).
+- `ui_aspect` in `gotvr.ini` (new; default 1.7778 = 16:9, 0 = square like the image).
+- Note: the desktop window shows the square image, so in menus it looks squeezed sideways there. That is only the monitor copy.
+
+## 0.16.1: F2 freeze fixed (xr=4)
+
+**Install both files:** `xinput1_4.dll` and `GoTVR\GoTVRHost.exe` (host unchanged since 0.15.0; keep them together).
+
+- **F2 froze the game** because the mod asked the game to rebuild its render targets from the middle of a frame. It now
+  asks the way the game does it for Alt+Enter: through the game window's message handling, between frames.
+- **Your game is in fullscreen mode, where the square size cannot work** (the game then sizes itself to the monitor).
+  Set *Display mode = Windowed* in the game's settings; the square 2048 x 2048 size is then used from the start, and F2
+  changes it. In fullscreen F2 does nothing (the log says so).
+
+## 0.16.0: square headset render size, adjustable (xr=4)
+
+**Install both files:** `xinput1_4.dll` and `GoTVR\GoTVRHost.exe` (host unchanged since 0.15.0; keep them together).
+**The game must be in Windowed display mode.**
+
+- The game now renders each eye as a **square 2048 x 2048** image (it was a 2560 x 1440 picture stretched into the
+  2560 x 1600 window, which wasted pixels sideways and lacked them vertically). The size no longer depends on the desktop
+  window: the window on your monitor just shows a scaled copy.
+- **F2** cycles the size: 1536 -> 1792 -> 2048 -> 2304 -> 2560 -> the game's own -> 1536. The change takes a moment
+  (the game rebuilds its render targets). `render_size` in `gotvr.ini` sets the start size (0 = the game's own).
+- A 720 x 720 desktop window is not needed: the headset size is now set separately, and a smaller window only saves the
+  scaled monitor copy, which costs next to nothing.
+- If the game keeps re-applying its size (stutter), the mod turns this off by itself and says so in the log.
 
 ## 0.15.6: after the pause menu the HUD is large for 1 s (was 3 s)
 
