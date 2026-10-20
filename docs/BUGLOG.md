@@ -1596,6 +1596,32 @@ spaces, session, instance → TerminateProcess.
   report one eye or both.
 - Self-test PASS (selftest=0, 111): fingers with a shared palm joint and helper leaves (5 chains, index 3 joints), all earlier tests.
 
+## GoTVR 0.18.22 → 0.18.23 — BUG-80 = ambient occlusion, landing arms, eye trims, body speed, runtime recenter, forearm twist (host 0.14.4)
+- `[HEADSET]` owner: fingers good. Arms see-through only with SSAO Quality on, normal with it off; screen-space shadows no effect
+  (log: the menu wrote AmbientOcclusionQuality +0x60 = 0..3, ScreenSpaceShadows +0x98 = 0/1). VR arms go back to the animation at the
+  END of a jump; eyes ~3 cm left of the head; view 2 cm too low; on big turns the movement lags the head and the body shows; the Meta
+  recenter button should recenter the game; turning the wrist should turn the forearm too (the wrist pinches).
+- BUG-80 resolved (workaround): AO held at 0 while first person runs in VR (shade namespace, main thread, 0.5 s; the player's menu
+  value remembered and restored on F5 / exit / Shift+F6; values outside 0..8 left alone). `[INFERENCE]` the AO pass (likely temporal
+  / reprojected) prints the background onto near geometry; a proper fix = find the AO pass and reject near pixels.
+- Arms at landing: the 0.18.19 jump window (1.2 s from the A press) ended before longer falls landed; the landing animation lifts the
+  hands above head - 15 cm -> raisedUntil -> the game owned the arms. bodyStep now tracks the root's vertical speed (|vz| > 0.8 m/s =
+  airborne); the window = 1.2 s, or while airborne up to 4 s after the press and 0.6 s after touching down. Riding cannot START inside
+  the window (ARMS/s counts "jump windows held").
+- fp_eye_left_cm 0 -> -3 (Jin's right), fp_eye_up_cm -3 -> -1. Body follow fp_body_head_follow_s 0.25 -> 0.08, fp_body_turn_speed 540
+  -> 1440 deg/s.
+- Movement lag: vrin turns the stick by headYawNow - gameYaw every poll (no smoothing); the residual lag is the game's locomotion turn
+  rate (BODY/s "Jin faces N deg from your forward" swings 40-100 deg while running). Real fix = lock-on / stance strafing (bldbrne-vr
+  bloodborne_facing.h), roadmap.
+- Runtime recenter: host 0.14.4 handles XR_TYPE_EVENT_DATA_REFERENCE_SPACE_CHANGE_PENDING (LOCAL / STAGE) -> shared v15
+  hostRecenterSeq; the game runs vrin::recenterView() (= F11) 300 ms later, after the runtime moved the space.
+- Forearm twist (fbik): twist joints = elbow subtree minus hand subtree within 3 cm of the elbow -> wrist line, 15-105 % along (Jin
+  508 / 509 / 510 at 25 / 50 / 75 %, 511 / 512 at the wrist). Before the solve: roll of the hand about the forearm, from the elbow's own
+  frame (projected axes); after: the same; the difference (clamped +-150 deg) times t times fp_forearm_twist turns each twist joint about
+  the forearm axis through itself. The arms log lists the twist joints; ARMS/s the live roll.
+- Self-test PASS (selftest=0, 115): + ambient occlusion hold, forearm twist (synthetic: half way down takes half the roll).
+- Pushed before this round: branch gotvr-0.18.22-vrik-wip ("(WIP) GoTVR 0.18.22: VR IK").
+
 ## GoTVR 0.18.21 → 0.18.22 — owner change: movement always headset-oriented, body follows the head past 7.5 deg
 - Owner (before testing 0.18.21): "always rotate Jin to match the headset rotation after a small threshold (5-10 deg); movement totally
   headset oriented at all times".

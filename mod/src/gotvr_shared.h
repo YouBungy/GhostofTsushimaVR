@@ -7,7 +7,7 @@
 #include <stdint.h>
 
 #define GV_MAGIC 0x52565447u /* 'GTVR' */
-#define GV_VERSION 14u
+#define GV_VERSION 15u
 #define GV_TEXCOUNT 6        /* 2 eyes x 3 buffers (game writes round-robin, never waits on the host) */
 #define GV_UITEX 3           /* v8: UI-layer images, own size (the UI target's), names Local\GoTVR_<pid>_u<uiGen>_ui<i> */
 
@@ -130,6 +130,10 @@ struct GvShared {
     uint32_t ovDebug;                 // 1 = show the head-gesture indicator (gameplay, [controls] gesture_indicator)
     uint32_t ovAtHead;                // bit 0 left hand, bit 1 right hand in the gesture zone
     uint32_t ovGestSeq[2]; char ovGestName[2][24];   // bumped per fired gesture, with its name
+    // v15 (owner: "have the Meta controller reset position button properly call the reset view function in game"): host -> game,
+    // bumped when the runtime announces a recentre of the LOCAL space (XR_TYPE_EVENT_DATA_REFERENCE_SPACE_CHANGE_PENDING: holding
+    // the Meta / Oculus button, or Virtual Desktop's own reset); the game runs its own recenter (= F11) right after the change
+    volatile LONG hostRecenterSeq;
 };
 // head-locked HUD quad / world-locked panel / v9 FULL: the UI covers the whole view of each eye exactly like on the monitor
 // (cinematics: letterbox bars, fades and subtitles at the screen edges) - one quad per eye on the frustum its image used

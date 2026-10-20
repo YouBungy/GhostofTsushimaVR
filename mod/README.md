@@ -1,4 +1,4 @@
-# GoTVR 0.18.22 — SYNCHRONIZED STEREO 6DoF (xr=4): both eyes from the same moment of the game
+# GoTVR 0.18.23 — SYNCHRONIZED STEREO 6DoF (xr=4): both eyes from the same moment of the game
 
 Single-player only. Never enter Legends (online) with any GoTVR file installed.
 What changed and why: `docs/BUGLOG.md` (BUG-5, BUG-6).
@@ -21,6 +21,27 @@ refused to send images ("FRAME GENERATION is on" in the log, although it was off
 "R1 census" every 5 s (or on F10): the list of views the engine renders each frame. That decides how true
 same-frame stereo (both eyes every frame) gets built. Please press **F10** once in each of: main menu, standing
 outdoors, riding, a cutscene, photo mode.
+
+## 0.18.23: solid arms (AO), arms through landings, eye position, faster body, headset recenter, forearm twist
+
+**Install both files:** `xinput1_4.dll` and `GoTVR\GoTVRHost.exe` (the host now passes on the headset's recenter).
+
+- **See-through arms:** you found it: the game's **ambient occlusion** (SSAO Quality) printed the grass behind the arm onto it. AO is now
+  held **off** while first person runs in VR, and your menu setting comes back when you leave first person (F5) or quit. **Shift+F6**
+  turns it back on to compare; `fp_ao_off=0` leaves it alone. AO off also saves GPU time. If the arms are still see-through with AO
+  on in the menu, the game isn't taking the mod's change, so set SSAO Quality to Off in the menu yourself and tell me.
+- **VR arms at the end of a jump:** the "jump" window that stops the game taking over the arms lasted 1.2 s from the button press, so
+  longer falls landed after it. The landing animation lifts the hands, which the mod took for a climb. The window now lasts while
+  Jin is in the air (up to 4 s) plus 0.6 s after touching down. A jump can't switch on the "riding" state any more either.
+- **View position:** 3 cm to Jin's right (`fp_eye_left_cm=-3`) and 2 cm higher (`fp_eye_up_cm=-1`).
+- **Body turning:** Jin's body turns to the headset about 3x faster (0.08 s, up to 1440 deg/s), so big turns don't show his body.
+- **Movement direction:** the mod already turns the stick to where the headset looks on every frame, with no smoothing. What you feel on
+  big turns is **the game turning Jin** at its own run-turn speed (wide turns and pivots above ~45 deg). Removing that needs the
+  game's lock-on / stance strafing, the route the Bloodborne VR mod uses, which is on the roadmap. The faster body turn hides most of it.
+- **Meta / Oculus recenter button:** holding it now recentres the game view exactly like F11 (also Virtual Desktop's reset).
+- **Forearm twist:** when you turn your hand (palm up / palm down), the forearm now turns with it the way a real one does: nothing at
+  the elbow, more toward the wrist, all of it at the wrist. Before, the whole roll sat in the wrist joint, which pinched the wrist.
+  `fp_forearm_twist` (1.0) scales it; 0 turns it off.
 
 ## 0.18.22: movement always follows the headset, body turns to the headset past a small threshold
 

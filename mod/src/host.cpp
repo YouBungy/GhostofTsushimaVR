@@ -27,7 +27,7 @@
 #include "gotvr_shared.h"
 
 typedef uint64_t u64; typedef uint32_t u32;
-#define HOST_VERSION "GoTVRHost 0.14.3 (thumb / trigger touch for the VR fingers, five-option item wheel, shared block v14, item wheel + gesture indicator overlay, VR controllers: canonical controller per hand for Touch / Touch Plus / Index / Vive / WMR / HP / Pico / simple, haptics, pose prediction lead = measured pipeline lag, high GPU priority, pair-atomic xr=4, theatre screen, sharp UI layer: room-fixed HUD panel from the game, full-view cinematic UI, anamorphic 16:9 UI and flat frames of the square render)"
+#define HOST_VERSION "GoTVRHost 0.14.4 (the headset's own recenter (Meta button) recentres the game view, shared block v15, thumb / trigger touch for the VR fingers, five-option item wheel, shared block v14, item wheel + gesture indicator overlay, VR controllers: canonical controller per hand for Touch / Touch Plus / Index / Vive / WMR / HP / Pico / simple, haptics, pose prediction lead = measured pipeline lag, high GPU priority, pair-atomic xr=4, theatre screen, sharp UI layer: room-fixed HUD panel from the game, full-view cinematic UI, anamorphic 16:9 UI and flat frames of the square render)"
 
 static FILE *g_log; static wchar_t g_dir[MAX_PATH];
 static void logf(const char *fmt, ...) {
@@ -311,7 +311,14 @@ static void pollEvents() {
             } else if (s->state == XR_SESSION_STATE_STOPPING) { ok(xrEndSession_(sess), "xrEndSession"); running = false; invalidatePose(); setState(GV_HOST_SESSION, "session stopped"); }
             else if (s->state == XR_SESSION_STATE_EXITING || s->state == XR_SESSION_STATE_LOSS_PENDING) { running = false; quit = true; invalidatePose(); }
         } else if (ev.type == XR_TYPE_EVENT_DATA_INTERACTION_PROFILE_CHANGED) { xin::profDirty = true;
-        } else if (ev.type == XR_TYPE_EVENT_DATA_INSTANCE_LOSS_PENDING) { running = false; quit = true; invalidatePose(); }
+        } else if (ev.type == XR_TYPE_EVENT_DATA_INSTANCE_LOSS_PENDING) { running = false; quit = true; invalidatePose();
+        } else if (ev.type == XR_TYPE_EVENT_DATA_REFERENCE_SPACE_CHANGE_PENDING) {   // 0.14.4: the runtime recentres (Meta button held)
+            auto *r = (XrEventDataReferenceSpaceChangePending *)&ev;
+            if (r->referenceSpaceType == XR_REFERENCE_SPACE_TYPE_LOCAL || r->referenceSpaceType == XR_REFERENCE_SPACE_TYPE_STAGE) {
+                InterlockedIncrement(&S->hostRecenterSeq);
+                logf("runtime recentre (reference space %d changes; pose valid %u) -> the game recentres its view", (int)r->referenceSpaceType, (unsigned)r->poseValid);
+            }
+        }
         ev = {XR_TYPE_EVENT_DATA_BUFFER};
     }
 }

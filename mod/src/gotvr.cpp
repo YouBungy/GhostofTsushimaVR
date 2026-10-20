@@ -25,7 +25,7 @@
 #include "gotvr_shared.h"
 
 typedef uint64_t u64; typedef uint32_t u32; typedef uint8_t u8;
-#define GOTVR_VERSION "GoTVR 0.18.22 (movement always follows the headset, body turns to the headset past 7.5 deg standing and moving, movement forward only when you start moving, fingers bend on one hinge each (no sideways fingers), thumb curls across like a fist, fingers ease into their poses, Shift+F6 arm shading test (screen-space shadows / AO), near clip back to the game, fingers: thumb by length + the hand's own palm, thumb / trigger touch, forward taken as you start moving, the body turns past the threshold while moving too, gesture indicator off, fingers from leaf paths + structure log, riding needs two markers (jumps keep the VR arms), movement forward taken at stops, Shift+F4 HUD-layer test, VR fingers: bind-pose fingers on the IK hands, grip curls a fist, trigger the index, movement forward = headset forward at snap / start / menu exit, view direction kept across menus, body dead zone 45 deg, body under the headset smoothed, body heading kept in world yaw with an even dead zone, movement faces the headset, body under the headset, smoother eye anchor, Shift+F7 near-plane A/B, standing hips squared to the body follow, hips turned square after a snap turn, Shift+F7 TAA A/B, 0.18.12-14 transparency changes removed, standing stance squared to face forward, idle animations held still in first person, near-focus stipple off in first person, snap turn without the catch-up wobble, wrist point from the grip (back / up / thumb, Ctrl+F1-F3), near clip in the environment too (TAA reprojection agrees), eyes 3 cm further back, each eye culled by its own view - no cross-eye occlusion (preset 7), eyes 5 cm further back, near plane 2 cm in first person, F1/F2/F3 hand trims saved to gotvr.ini, near stipple fade off in first person, hands pitched, grip unbound, per-eye occlusion by tracked slot ownership, hands flipped, near plane 4 cm, stand tall in the sword stance, arms handed to the game for flute / climbing / takedowns, arm chains by bone chain, F11 resets the per-eye histories, five-option wheel with flute and recenter, eyes centred on the head, AA diagnostics, motion blur off in VR, carried items turn with the body, body drawn facing forward when running back, eye-order swap diagnostic, head found by its joint cluster - lone gear above it is skipped, left eye composed before the tick, VR controllers for any OpenXR controller: virtual pad, snap turn, item wheel, head gestures, rumble; first person with the head hidden in the render pose, xr=4 SYNCHRONIZED-SEQUENTIAL stereo: both eyes from one simulation tick, pair-atomic presentation, per-eye occlusion + TAA history, left-eye monitor mirror, HUD on its own sharp layer that stays put in the room (lazy follow), cinematic letterbox bars and fades over the whole view, theatre screen for videos/pause/menus/loading (flat-rendered); xr=3 experimental)"
+#define GOTVR_VERSION "GoTVR 0.18.23 (ambient occlusion held off in first person (see-through arms), VR arms kept through the landing, eyes 3 cm right / 2 cm up, body turns faster, headset recenter button recentres the game, forearm twist with the wrist, movement always follows the headset, body turns to the headset past 7.5 deg standing and moving, movement forward only when you start moving, fingers bend on one hinge each (no sideways fingers), thumb curls across like a fist, fingers ease into their poses, Shift+F6 arm shading test (screen-space shadows / AO), near clip back to the game, fingers: thumb by length + the hand's own palm, thumb / trigger touch, forward taken as you start moving, the body turns past the threshold while moving too, gesture indicator off, fingers from leaf paths + structure log, riding needs two markers (jumps keep the VR arms), movement forward taken at stops, Shift+F4 HUD-layer test, VR fingers: bind-pose fingers on the IK hands, grip curls a fist, trigger the index, movement forward = headset forward at snap / start / menu exit, view direction kept across menus, body dead zone 45 deg, body under the headset smoothed, body heading kept in world yaw with an even dead zone, movement faces the headset, body under the headset, smoother eye anchor, Shift+F7 near-plane A/B, standing hips squared to the body follow, hips turned square after a snap turn, Shift+F7 TAA A/B, 0.18.12-14 transparency changes removed, standing stance squared to face forward, idle animations held still in first person, near-focus stipple off in first person, snap turn without the catch-up wobble, wrist point from the grip (back / up / thumb, Ctrl+F1-F3), near clip in the environment too (TAA reprojection agrees), eyes 3 cm further back, each eye culled by its own view - no cross-eye occlusion (preset 7), eyes 5 cm further back, near plane 2 cm in first person, F1/F2/F3 hand trims saved to gotvr.ini, near stipple fade off in first person, hands pitched, grip unbound, per-eye occlusion by tracked slot ownership, hands flipped, near plane 4 cm, stand tall in the sword stance, arms handed to the game for flute / climbing / takedowns, arm chains by bone chain, F11 resets the per-eye histories, five-option wheel with flute and recenter, eyes centred on the head, AA diagnostics, motion blur off in VR, carried items turn with the body, body drawn facing forward when running back, eye-order swap diagnostic, head found by its joint cluster - lone gear above it is skipped, left eye composed before the tick, VR controllers for any OpenXR controller: virtual pad, snap turn, item wheel, head gestures, rumble; first person with the head hidden in the render pose, xr=4 SYNCHRONIZED-SEQUENTIAL stereo: both eyes from one simulation tick, pair-atomic presentation, per-eye occlusion + TAA history, left-eye monitor mirror, HUD on its own sharp layer that stays put in the room (lazy follow), cinematic letterbox bars and fades over the whole view, theatre screen for videos/pause/menus/loading (flat-rendered); xr=3 experimental)"
 static const u32 EXPECTED_TIMESTAMP = 1782230973u;
 static const char EXPECTED_SHA[] = "ed0931b6f6d3ca3874baf39ebc16d95ff0e93296891182f96c3a790da7109f63";
 
@@ -228,14 +228,14 @@ static float g_fastTurnDeg = 2.0f, g_fastTurnDegLeft = 2.0f; static int g_fastTu
 struct UiCfg { int hud = 1; float hudDeg = 55.0f, hudDist = 1.6f, hudDown = 3.0f; int theater = 1; float thDist = 3.0f, thWidth = 3.2f, thHeight = 0.0f; int thBackdrop = 0; int thCrop = 0; int flatRender = 1; u32 pauseMask = 0x80; int layer = 1; int premul = 1; int titleReason = 27; int follow = 1; float followDeg = 35.0f, followSpeed = 90.0f; int loadTheater = 1, menuTheater = 1, crop = 0; };
 static UiCfg g_ui; static int g_hostStart = 1, g_renderSize = 2304; static float g_uiAspect = 16.0f / 9.0f;
 // 0.17.0 first person (playbook ch01/ch02/ch12; references: bldbrne-vr, BetterVR, FRIK - anchor on the body root, not the head bone)
-struct FpCfg { int on = 1; float nearCm = 0.0f, stanceMaxCm = 25.0f; int standTall = 0; float eyeUpCm = -3.0f, eyeFwdCm = 1.0f, eyeLeftCm = 0.0f, vertTau = 0.35f, horizTau = 1.0f, lean = 1.0f, maxCamDistM = 8.0f, hideRadiusCm = 22.0f; int hide = 1;
-                int idleHold = 1, stanceSquare = 1, fingers = 1, indexTrigger = 1; float gripFull = 0.35f, fingerSign = 1.0f, fingerRelaxed = 5.0f, fingerTween = 0.15f; int bodyFollow = 1, bodyAttach = 1, bodyHead = 1, arms = 1; float headDeadDeg = 7.5f, headTau = 0.25f, moveTau = 0.15f, underMaxCm = 60.0f, underTau = 0.5f; int bodyUnder = 1; float idleSettle = 0.5f, handBackCm = 7.0f, handUpCm = 3.0f, handSideCm = 0.0f, handPitch = 0.0f, handYaw = 0.0f, handRoll = 0.0f; float bodyStartDeg = 80.0f, bodyFullDeg = 130.0f, bodyTurnSpeed = 540.0f, bodyMaxSpeed = 8.0f; };
+struct FpCfg { int on = 1; float nearCm = 0.0f, stanceMaxCm = 25.0f; int standTall = 0; float eyeUpCm = -1.0f, eyeFwdCm = 1.0f, eyeLeftCm = -3.0f, vertTau = 0.35f, horizTau = 1.0f, lean = 1.0f, maxCamDistM = 8.0f, hideRadiusCm = 22.0f; int hide = 1;
+                int idleHold = 1, stanceSquare = 1, fingers = 1, indexTrigger = 1; float gripFull = 0.35f, fingerSign = 1.0f, fingerRelaxed = 5.0f, fingerTween = 0.15f, forearmTwist = 1.0f; int bodyFollow = 1, bodyAttach = 1, bodyHead = 1, arms = 1; float headDeadDeg = 7.5f, headTau = 0.08f, moveTau = 0.15f, underMaxCm = 60.0f, underTau = 0.5f; int bodyUnder = 1; float idleSettle = 0.5f, handBackCm = 7.0f, handUpCm = 3.0f, handSideCm = 0.0f, handPitch = 0.0f, handYaw = 0.0f, handRoll = 0.0f; float bodyStartDeg = 80.0f, bodyFullDeg = 130.0f, bodyTurnSpeed = 1440.0f, bodyMaxSpeed = 8.0f; };
 static FpCfg g_fp;   // 0.12.0 UI/HUD/video settings (playbook ch04)
 static std::atomic<bool> g_flatRender{false};   // 0.13.0 xr=4: this tick is a flat context rendered as a normal flat frame (game thread decides at tick start)
 static std::atomic<int> g_eyeSwap{0}; static int g_eyeSwapLatched = 0;
 static std::atomic<int> g_mblurOff{1};   // 0.18.6: hold the game's motion blur at 0 while in VR
 namespace mblur { static void tick(bool force = false); static void restore(); }
-namespace shade { static void tick(bool force = false); static void restore(); static std::atomic<int> mode{0}; }
+namespace shade { static void tick(bool force = false); static void restore(); static std::atomic<int> mode{1}; }
 namespace stipple { static void tick(bool fpOn); }
 static std::atomic<int> g_flatCut{0};           // camera cuts still to force after a flat <-> stereo switch
 static float g_ipd = 0.064f;   // metres between the eyes (from the runtime's eye poses; game thread)
@@ -280,12 +280,14 @@ static void loadConfig() {
             "; ui_aspect (with render_size): the aspect the game lays out its HUD, menus and flat frames for (1.7778 = 16:9 default;\r\n"
             ";   the square image is shown at this aspect in the headset), 0 = square like the image\r\n"
             "; first_person (xr=4): 1 = first person (default; F5 toggles, Shift+F5 logs the hero skeleton), 0 = the game's third-person camera\r\n"
-            "; fp_eye_up_cm / fp_eye_forward_cm / fp_eye_left_cm: your eyes relative to the top of the hero's head (-3 / 1 / 0; sideways they sit on the head's centre); fp_hide_head: 1 = hide the head (default), 0 = off\r\n"
+            "; fp_eye_up_cm / fp_eye_forward_cm / fp_eye_left_cm: your eyes relative to the top of the hero's head (-1 / 1 / -3 = 3 cm to his right; sideways they sit on the head's centre); fp_hide_head: 1 = hide the head (default), 0 = off\r\n"
             "; fp_body_follow: 1 = when Jin faces away from your forward direction (running backwards) his body is drawn facing it (default), 0 = off;\r\n"
-            ";   fp_body_follow_start_deg / _full_deg (80 / 130), fp_body_turn_speed (540 deg/s, 0 = instant), fp_body_follow_max_speed (8 m/s; off above it and while riding)\r\n"
+            ";   fp_body_follow_start_deg / _full_deg (80 / 130), fp_body_turn_speed (1440 deg/s, 0 = instant), fp_body_follow_max_speed (8 m/s; off above it and while riding)\r\n"
             ";   fp_body_follow_items: 1 = the sword and other carried items turn with the body (default; the joint world matrices are turned), 0 = only the body\r\n"
-            "; fp_body_follows_head: 1 = Jin's body turns to where you look once you look more than fp_body_head_deadzone_deg (7.5) away, standing and moving (default; fp_body_head_follow_s 0.25)\r\n"
+            "; fp_body_follows_head: 1 = Jin's body turns to where you look once you look more than fp_body_head_deadzone_deg (7.5) away, standing and moving (default; fp_body_head_follow_s 0.08)\r\n"
             "; [controls] move_follows_head: 1 = the left stick's forward is always where the headset looks (default); 0 = taken when you start moving / snap turn / leave a menu\r\n"
+            "; fp_forearm_twist (1): how much of the wrist's roll the forearm takes, shared along its twist joints like a real forearm (0 = off, the roll stays in the wrist)\r\n"
+            "; fp_ao_off (xr=4): 1 = the game's ambient occlusion is held off while first person runs (it printed the grass onto Jin's arms; default; Shift+F6 toggles), 0 = left as set in the menu\r\n"
             "; fp_near_cm (xr=4): the camera's near clip plane in first person (0 = the game's own 10 cm, default since 0.18.20; 2 = arms closer than 10 cm not cut open, but grass then draws over them; Shift+F7 toggles)\r\n"
             "; fp_stand_tall: 1 = when the game crouches him a little (the sword stance, up to fp_stand_tall_max_cm 25) he is drawn standing tall, feet planted (0 = off, default)\r\n"
             "; fp_arms: 1 = Jin's arms follow your controllers (full-body IK stage 1, default; Shift+F10 toggles), 0 = the game's animation\r\n"
@@ -345,19 +347,19 @@ static void loadConfig() {
         g_ui.loadTheater = GetPrivateProfileIntW(L"gotvr", L"loading_theater", 1, ini) ? 1 : 0; g_ui.menuTheater = GetPrivateProfileIntW(L"gotvr", L"menu_theater", 1, ini) ? 1 : 0;
         g_ui.crop = GetPrivateProfileIntW(L"gotvr", L"letterbox_crop", 0, ini) ? 1 : 0;   // 0.15.0: off by default (BUG-56: F3 off = no stretch)
         g_fp.on = GetPrivateProfileIntW(L"gotvr", L"first_person", 1, ini) ? 1 : 0; g_fp.hide = GetPrivateProfileIntW(L"gotvr", L"fp_hide_head", 1, ini) ? 1 : 0;
-        g_fp.eyeUpCm = fl(L"fp_eye_up_cm", -3.0f, -60.0f, 40.0f); g_fp.nearCm = fl(L"fp_near_cm", 0.0f, 0.0f, 50.0f);   /* 0.18.20: back to the game's 10 cm - grass was drawn over the arms with 2 cm (photo) */ g_fp.standTall = GetPrivateProfileIntW(L"gotvr", L"fp_stand_tall", 0, ini) ? 1 : 0; g_fp.stanceMaxCm = fl(L"fp_stand_tall_max_cm", 25.0f, 0.0f, 80.0f); g_fp.eyeLeftCm = fl(L"fp_eye_left_cm", 0.0f, -30.0f, 30.0f);   // 0.18.7: -11 -> -8 ("a tiny bit higher")
+        g_fp.eyeUpCm = fl(L"fp_eye_up_cm", -1.0f, -60.0f, 40.0f); /* 0.18.23 owner: "make the view 2 cm higher" (-3 -> -1) */ g_fp.nearCm = fl(L"fp_near_cm", 0.0f, 0.0f, 50.0f);   /* 0.18.20: back to the game's 10 cm - grass was drawn over the arms with 2 cm (photo) */ g_fp.standTall = GetPrivateProfileIntW(L"gotvr", L"fp_stand_tall", 0, ini) ? 1 : 0; g_fp.stanceMaxCm = fl(L"fp_stand_tall_max_cm", 25.0f, 0.0f, 80.0f); g_fp.eyeLeftCm = fl(L"fp_eye_left_cm", -3.0f, -30.0f, 30.0f); /* 0.18.23 owner: "still a bit to the left of Jin's head (maybe 3 cm)" -> 3 cm to his right */   // 0.18.7: -11 -> -8 ("a tiny bit higher")
         g_fp.eyeFwdCm = fl(L"fp_eye_forward_cm", 1.0f, -40.0f, 60.0f);   // 0.18.12 owner: "back a few cm, still too far out" (4 -> 1); 0.18.11: 9 -> 4
         g_fp.bodyHead = GetPrivateProfileIntW(L"gotvr", L"fp_body_follows_head", 1, ini) ? 1 : 0; g_fp.arms = GetPrivateProfileIntW(L"gotvr", L"fp_arms", 1, ini) ? 1 : 0;
-        g_fp.headDeadDeg = fl(L"fp_body_head_deadzone_deg", 7.5f, 1.0f, 120.0f); /* 0.18.17 owner: 35 -> 45; 0.18.22 owner: "always rotate to match the headset after a small threshold (5-10 deg)" -> 7.5 */ g_fp.headTau = fl(L"fp_body_head_follow_s", 0.25f, 0.0f, 3.0f); g_fp.moveTau = fl(L"fp_body_move_follow_s", 0.15f, 0.0f, 3.0f);
+        g_fp.headDeadDeg = fl(L"fp_body_head_deadzone_deg", 7.5f, 1.0f, 120.0f); /* 0.18.17 owner: 35 -> 45; 0.18.22 owner: "always rotate to match the headset after a small threshold (5-10 deg)" -> 7.5 */ g_fp.headTau = fl(L"fp_body_head_follow_s", 0.08f, 0.0f, 3.0f); /* 0.18.23 owner: "Jin's body must face the headset faster - in large turns I can see his body" (0.25 -> 0.08) */ g_fp.moveTau = fl(L"fp_body_move_follow_s", 0.15f, 0.0f, 3.0f);
         g_fp.bodyUnder = GetPrivateProfileIntW(L"gotvr", L"fp_body_under_hmd", 1, ini) ? 1 : 0; g_fp.underMaxCm = fl(L"fp_body_under_max_cm", 60.0f, 0.0f, 200.0f); g_fp.underTau = fl(L"fp_body_under_follow_s", 0.5f, 0.0f, 5.0f);
         g_fp.fingers = GetPrivateProfileIntW(L"gotvr", L"fp_fingers", 1, ini) ? 1 : 0; g_fp.indexTrigger = GetPrivateProfileIntW(L"gotvr", L"fp_finger_index_trigger", 1, ini) ? 1 : 0;
-        g_fp.gripFull = fl(L"fp_grip_fist_full", 0.35f, 0.1f, 1.0f); g_fp.fingerSign = fl(L"fp_finger_bend_sign", 1.0f, -1.0f, 1.0f) < 0.0f ? -1.0f : 1.0f; g_fp.fingerRelaxed = fl(L"fp_finger_relaxed_deg", 5.0f, -20.0f, 40.0f); g_fp.fingerTween = fl(L"fp_finger_tween_s", 0.15f, 0.02f, 1.0f);
+        g_fp.gripFull = fl(L"fp_grip_fist_full", 0.35f, 0.1f, 1.0f); g_fp.fingerSign = fl(L"fp_finger_bend_sign", 1.0f, -1.0f, 1.0f) < 0.0f ? -1.0f : 1.0f; g_fp.fingerRelaxed = fl(L"fp_finger_relaxed_deg", 5.0f, -20.0f, 40.0f); g_fp.fingerTween = fl(L"fp_finger_tween_s", 0.15f, 0.02f, 1.0f); g_fp.forearmTwist = fl(L"fp_forearm_twist", 1.0f, 0.0f, 1.5f); shade::mode = GetPrivateProfileIntW(L"gotvr", L"fp_ao_off", 1, ini) ? 1 : 0;
         g_fp.idleHold = GetPrivateProfileIntW(L"gotvr", L"fp_idle_hold", 1, ini) ? 1 : 0; g_fp.idleSettle = fl(L"fp_idle_settle_s", 0.5f, 0.1f, 5.0f); g_fp.stanceSquare = GetPrivateProfileIntW(L"gotvr", L"fp_stance_square", 1, ini) ? 1 : 0;
         g_fp.handBackCm = fl(L"fp_hand_back_cm", 7.0f, -10.0f, 20.0f); g_fp.handUpCm = fl(L"fp_hand_up_cm", 3.0f, -10.0f, 10.0f); g_fp.handSideCm = fl(L"fp_hand_side_cm", 0.0f, -10.0f, 10.0f); g_fp.handPitch = fl(L"fp_hand_pitch_deg", 0.0f, -180.0f, 180.0f); g_fp.handYaw = fl(L"fp_hand_yaw_deg", 0.0f, -180.0f, 180.0f); g_fp.handRoll = fl(L"fp_hand_roll_deg", 0.0f, -180.0f, 180.0f);
         g_fp.bodyFollow = GetPrivateProfileIntW(L"gotvr", L"fp_body_follow", 1, ini) ? 1 : 0; g_fp.bodyAttach = GetPrivateProfileIntW(L"gotvr", L"fp_body_follow_items", 1, ini) ? 1 : 0;
         g_fp.bodyStartDeg = fl(L"fp_body_follow_start_deg", 80.0f, 10.0f, 170.0f); g_fp.bodyFullDeg = fl(L"fp_body_follow_full_deg", 130.0f, 20.0f, 180.0f);
         if (g_fp.bodyFullDeg < g_fp.bodyStartDeg + 5.0f) g_fp.bodyFullDeg = fminf(180.0f, g_fp.bodyStartDeg + 5.0f);
-        g_fp.bodyTurnSpeed = fl(L"fp_body_turn_speed", 540.0f, 0.0f, 5000.0f); g_fp.bodyMaxSpeed = fl(L"fp_body_follow_max_speed", 8.0f, 0.5f, 100.0f);
+        g_fp.bodyTurnSpeed = fl(L"fp_body_turn_speed", 1440.0f, 0.0f, 5000.0f); /* 0.18.23: 540 -> 1440 deg/s */ g_fp.bodyMaxSpeed = fl(L"fp_body_follow_max_speed", 8.0f, 0.5f, 100.0f);
         g_fp.hideRadiusCm = fl(L"fp_hide_radius_cm", 22.0f, 5.0f, 60.0f); g_fp.vertTau = fl(L"fp_vertical_smoothing_s", 0.35f, 0.0f, 3.0f);
         g_fp.horizTau = fl(L"fp_lean_smoothing_s", 1.0f, 0.0f, 3.0f);   // 0.18.16: 0.3 -> 1.0 (owner: "stuttering and jittering when I look down") g_fp.lean = fl(L"fp_follow_lean", 1.0f, 0.0f, 1.0f); g_fp.maxCamDistM = fl(L"fp_max_camera_distance_m", 8.0f, 2.0f, 100.0f);
         g_uiAspect = fl(L"ui_aspect", 16.0f / 9.0f, 0.0f, 4.0f); if (g_uiAspect > 0 && g_uiAspect < 0.5f) g_uiAspect = 16.0f / 9.0f;
@@ -403,6 +405,7 @@ static std::atomic<int> m_leftHalf{0};   // F8: asymmetric projection (left half
 static std::atomic<int> m_yaw{0};        // F9: +5 deg yaw on the render camera world matrix (EXP-02 mutation)
 static std::atomic<int> m_burst{0};      // F10: log a detailed snapshot
 static std::atomic<int> m_recenter{0};   // F11: recentre head tracking
+static std::atomic<u64> nMetaRecenters{0};   // 0.18.23: recentres from the headset's own button
 static u64 g_autoRecentreAt = 0;          // 0.15.5: recentre once the headset session runs
 static std::atomic<int> m_histReset{-1}; // F6: force the camera-cut flag every VR frame (TAA/DLSS history reset A/B); -1 = use ini
 static std::atomic<u64> c_engineCuts{0};  // camera cuts the ENGINE raised itself (seen at Cam_TemporalUpdate entry)
@@ -1423,6 +1426,7 @@ static void findLone() {   // validation: tail joints with no other shown joint 
 // tail joint high was enough, and a jump lifts gear carried on the body (joint 600) past 150 cm above the root - the arms were
 // switched off and the body snapped to the node's facing as if mounted. On the horse BOTH reins/saddle markers (644 / 651, ~202 cm)
 // are up. Now at least two markers must be high (or the only one there is), for 0.25 s on and 0.25 s off.
+static std::atomic<float> vertMs{0}; static std::atomic<u64> airAt{0}, nJumpHeld{0};   // 0.18.23
 static std::atomic<int> rideMarkersHigh{0}; static std::atomic<u64> nStopCaps{0}, nDeadTurns{0}, nSnapTurns{0}; static std::atomic<float> moveOffDeg{0};
 static bool ridingRaw(const float *root, const float *U) {
     const float s = g_cfg.unitsPerM * 0.01f; int high = 0;
@@ -1434,6 +1438,9 @@ static bool ridingRaw(const float *root, const float *U) {
 static bool rideState = false; static float rideFor = 0.0f;
 static bool riding(const float *root, const float *U, float dt) {
     const bool raw = ridingRaw(root, U);
+    {   // 0.18.23: on foot, a jump / its fall / its landing never STARTS riding (gear flies up past the markers' height)
+        const u64 tj = GetTickCount64(), sinceJ = tj - vrin::jumpAt.load(), sinceAir = tj - airAt.load();
+        if (raw && !rideState && (sinceJ < 1200 || (sinceJ < 4000 && sinceAir < 600))) { rideFor = 0.0f; nJumpHeld++; return rideState; } }
     if (raw != rideState) { rideFor += dt; if (rideFor >= 0.25f || dt <= 0.0f) { rideState = raw; rideFor = 0.0f; } } else rideFor = 0.0f;
     return rideState;
 }
@@ -1441,6 +1448,11 @@ static void bodyStep(const float *root, const float *U, const float *F, bool was
     const float PI = 3.14159265f, D = 57.2957795f;
     const u64 now = GetTickCount64(); const float dt = bodyLastMs ? fminf((float)(now - bodyLastMs) * 0.001f, 0.1f) : 0.0f; bodyLastMs = now;
     float sp = 0; if (lastRootOk && dt > 0.0f) { float d[3] = {root[12] - lastRoot[0], root[13] - lastRoot[1], root[14] - lastRoot[2]}; const float u = d[0] * U[0] + d[1] * U[1] + d[2] * U[2]; for (int c = 0; c < 3; c++) d[c] -= u * U[c]; sp = len3(d) / dt / g_cfg.unitsPerM; }
+    {   // 0.18.23 (owner: "at the end of a jump, the VR IK arms go back to animation-controlled"): the vertical speed of the root; the
+        // landing comes > 1.2 s after the press on longer falls, so the jump window now lasts while Jin is in the air (+ 0.6 s)
+        float vz = 0; if (lastRootOk && dt > 0.0f) vz = ((root[12] - lastRoot[0]) * U[0] + (root[13] - lastRoot[1]) * U[1] + (root[14] - lastRoot[2]) * U[2]) / dt / g_cfg.unitsPerM;
+        vertMs = vz; if (fabsf(vz) > 0.8f) airAt = GetTickCount64();
+    }
     lastRoot[0] = root[12]; lastRoot[1] = root[13]; lastRoot[2] = root[14]; lastRootOk = true; speedMs = sp;
     if (!wasActive) bodyYawCur = 0;
     float target = 0; bool expo = false;
@@ -1638,6 +1650,8 @@ static void analyseArms(u8 *job, u8 *nd, const float *pose, int cnt) {   // job 
     logf("arms: %s", why);
     { char lw[300]; const int nl = fbik::findLegs(parents, cnt, pose, headZ, skip, legsD, lw, sizeof lw); logf("legs: %s -> %s", lw, nl == 2 ? "stand tall available" : "stand tall off (legs not found)"); if (nl == 2) legsReady = 1; }
     if (f == 2) { armsReady = 1; logf("arms: both arm chains found -> Jin's arms follow your controllers (fp_arms = 1, Shift+F10 toggles)");
+        for (int sd = 0; sd < 2; sd++) { char tb[160]; int o = 0; tb[0] = 0; for (int i = 0; i < armsD[sd].nTw && o < 150; i++) o += snprintf(tb + o, sizeof tb - (size_t)o, " %d (%.0f %%)", armsD[sd].tw[i], armsD[sd].twT[i] * 100.0f);
+            logf("arms: %s forearm twist joints:%s -> the wrist's roll is shared along the forearm (fp_forearm_twist %.2f)", sd ? "right" : "left", armsD[sd].nTw ? tb : " none", g_fp.forearmTwist); }
         {   // 0.18.18 fingers: the bind pose from the skinning palette's inverse-bind matrices (node+0x2F8 -> +0x660 -> +0xA8, 3x4 each)
             u8 *p1 = readable(nd + 0x2F8, 8) ? *(u8 **)(nd + 0x2F8) : nullptr; u8 *p2 = p1 && readable(p1 + 0x660, 8) ? *(u8 **)(p1 + 0x660) : nullptr;
             const float *IB = p2 && readable(p2 + 0xA8, 8) ? *(const float **)(p2 + 0xA8) : nullptr; const int ibN = readable(nd + 0x280, 4) ? *(int *)(nd + 0x280) - 1 : 0;
@@ -1677,7 +1691,7 @@ static bool solveArms(u8 *nd, float *pose, int cnt, float bodyA) {   // job thre
     if (!fbik::norm3(n0) || !fbik::norm3(n1) || !fbik::norm3(n2)) return false;
     auto toModelP = [&](const float *w, float *o) { const float d[3] = {w[0] - N[12], w[1] - N[13], w[2] - N[14]}; o[0] = fbik::dot3(d, n0); o[1] = fbik::dot3(d, n1); o[2] = fbik::dot3(d, n2); };
     auto toModelD = [&](const float *w, float *o) { o[0] = fbik::dot3(w, n0); o[1] = fbik::dot3(w, n1); o[2] = fbik::dot3(w, n2); };
-    fbik::Params prm; prm.bodyYaw = bodyA; bool any = false;
+    fbik::Params prm; prm.bodyYaw = bodyA; prm.twist = g_fp.forearmTwist; bool any = false;
     for (int side = 0; side < 2; side++) {
         const fbik::Arm &A = armsD[side]; if (!ap.ok[side] || ap.w[side] <= 0.0f || A.hand < 0 || A.hand >= cnt || A.clav < 0) continue;
         fbik::Target T; toModelP(ap.pos[side], T.pos); toModelD(ap.fing[side], T.fing); toModelD(ap.thumb[side], T.thumb); T.orient = true;
@@ -1860,7 +1874,11 @@ static void hAnimJob(u8 *job) {
     if (armsReady.load()) {   // 0.18.9: the ANIMATION lifts a hand to head height (climbing, ledges, grappling, the flute) -> the game owns the arms
         const int k2 = hpubIdx.load(std::memory_order_acquire); if (k2 >= 0 && hpub[k2].head >= 0 && hpub[k2].head < nJ) {
             const float hz = pose[(size_t)hpub[k2].head * 16 + 14], s = g_cfg.unitsPerM * 0.01f;
-            const bool jumping = GetTickCount64() - vrin::jumpAt.load() < 1200;   // 0.18.19: a jump swings the arms up - not a climb
+            // 0.18.19: a jump swings the arms up - not a climb. 0.18.23: ... and so does the landing: the window lasts while Jin is in the air
+            // after a jump press (up to 4 s, a long fall) and 0.6 s past touching down
+            const u64 tj = GetTickCount64(), sinceJ = tj - vrin::jumpAt.load(), sinceAir = tj - airAt.load();
+            const bool jumping = sinceJ < 1200 || (sinceJ < 4000 && sinceAir < 600);
+            if (jumping && sinceJ >= 1200) nJumpHeld++;
             for (int sd = 0; sd < 2 && !jumping; sd++) { const int h = armsD[sd].hand; if (h >= 0 && h < nJ && pose[(size_t)h * 16 + 14] > hz - 15.0f * s) { raisedUntil = GetTickCount64() + 400; nRaised++; break; } } } }
     {   // 0.18.13 idle hold: only a fresh pose of an active first person (a copied pose already carries it)
         const int k3 = hpubIdx.load(std::memory_order_acquire);
@@ -2716,30 +2734,27 @@ static void tick(bool force) {   // main thread (message pump)
 }
 static void restore() { if (st0 && orig > 0 && readable(st0 + 0x64, 4) && *(float *)(st0 + 0x64) == 0.0f) *(float *)(st0 + 0x64) = orig; }
 }
-// 0.18.21 arm see-through test (owner: "the grass, in black and white, can be seen through the arm - the arm is still there, just a
-// little see-through"; both eyes; depends on where the headset looks; photo crop: grass-shaped dark streaks ON the forearm skin). That
-// is the signature of a SCREEN-SPACE shadow / occlusion pass: it marches the depth buffer from each pixel toward the sun (or around it)
-// and, for a surface a few cm from the eye, the march leaves the arm at once and lands on the grass behind it -> the grass's shape is
-// printed onto the arm as shade, and how much depends on the sun's direction on screen = where you look. The same settings block as
-// motion blur (reflection table 0x1404600F0): AmbientOcclusionQuality +0x60 (int), ScreenSpaceShadows +0x98 (int).
-// Shift+F6 cycles: the game's own -> screen-space shadows off -> + ambient occlusion off -> the game's own. Main thread (message pump),
-// written every 0.5 s while on, the player's values back on the way out / at exit. If the game only reads them when its menu applies
-// them, nothing changes - then the in-game menu toggle is the test (the log says what the game holds).
+// 0.18.21 / 0.18.23 see-through arms (BUG-80). Owner, 0.18.22: "the hands are only semi-transparent when I have ambient occlusion on
+// (SSAO Quality), normal when it is off (screen-space shadows had no positive nor negative effect)". The game's AO prints the grass
+// behind a near arm onto it (photo: grass-shaped shade on the forearm, view-dependent). Until that pass is found and fixed for near
+// pixels, ambient occlusion is held OFF while first person runs in VR (fp_ao_off = 1, Shift+F6 toggles) - it also saves GPU time.
+// The PC settings block (reflection table 0x1404600F0): AmbientOcclusionQuality +0x60 (int; the menu writes 0..3 there - log 0.18.22).
+// Main thread (message pump), every 0.5 s; whatever the player picks in the menu meanwhile is remembered and put back when first
+// person ends (F5), Shift+F6 turns it off, or the game exits.
 namespace shade {
-static int oS = -1, oA = -1; static u8 *st0 = nullptr; static std::atomic<int> seenS{-1}, seenA{-1}; static std::atomic<u64> writes{0};
+static int oA = -1; static u8 *st0 = nullptr; static std::atomic<int> seenS{-1}, seenA{-1}; static std::atomic<u64> writes{0};
 static bool sane(int v) { return v >= 0 && v <= 8; }
 static void tick(bool force) {   // main thread (message pump)
     static u64 next = 0; const u64 now = GetTickCount64(); if (now < next && !force) return; next = now + 500;
     u8 *st = rsz::settingsOf(rsz::getApp()); if (!st || !readable(st + 0x60, 4) || !readable(st + 0x98, 4)) return;
-    int *pS = (int *)(st + 0x98), *pA = (int *)(st + 0x60); seenS = *pS; seenA = *pA;
-    const int m = g_cfg.xr == 4 ? mode.load() : 0;
-    if (m == 0) { if (st0 == st) { if (oS >= 0 && *pS == 0) *pS = oS; if (oA >= 0 && *pA == 0) *pA = oA; } oS = oA = -1; st0 = nullptr; return; }
-    if (st0 != st) { st0 = st; oS = *pS; oA = *pA; if (!sane(oS) || !sane(oA)) { logf("arm shading test: the settings block holds screen-space shadows %d / ambient occlusion %d - not a setting we know -> left alone", oS, oA); mode = 0; st0 = nullptr; oS = oA = -1; return; }
-        logf("arm shading test: the game's own values: screen-space shadows %d, ambient occlusion %d", oS, oA); }
-    if (*pS != 0) { *pS = 0; writes++; }
-    if (m >= 2) { if (*pA != 0) { *pA = 0; writes++; } } else if (oA >= 0 && *pA == 0 && oA != 0) *pA = oA;
+    int *pA = (int *)(st + 0x60); seenS = *(int *)(st + 0x98); seenA = *pA;
+    const bool on = g_cfg.xr == 4 && mode.load() && fp::on.load();
+    if (!on) { if (st0 == st && oA > 0 && *pA == 0) *pA = oA; oA = -1; st0 = nullptr; return; }
+    if (!sane(*pA)) { static int told = 0; if (!told++) logf("ambient occlusion: the settings block holds %d - not a setting we know -> left alone", *pA); return; }
+    if (st0 != st) { st0 = st; oA = -1; }
+    if (*pA != 0) { if (oA != *pA) logf("ambient occlusion: the game's setting is %d -> held off while first person runs in VR (fp_ao_off = 1; the arm see-through fix; Shift+F6 toggles)", *pA); oA = *pA; *pA = 0; writes++; }
 }
-static void restore() { if (st0 && readable(st0 + 0x98, 4)) { if (oS > 0 && *(int *)(st0 + 0x98) == 0) *(int *)(st0 + 0x98) = oS; if (oA > 0 && *(int *)(st0 + 0x60) == 0) *(int *)(st0 + 0x60) = oA; } }
+static void restore() { if (st0 && readable(st0 + 0x60, 4) && oA > 0 && *(int *)(st0 + 0x60) == 0) *(int *)(st0 + 0x60) = oA; }
 }
 
 // ---------------- UI, HUD and videos (0.12.0, playbook ch04 HUD-002/003/004) ----------------
@@ -4585,8 +4600,8 @@ static DWORD WINAPI worker(void *) {
                         else { fp::on = !fp::on.load(); logf("HOTKEY F5 first person -> %s", fp::on.load() ? "ON" : "OFF (the game's third-person camera)"); } }
                     else if (i == 6) { r1::on ^= 1; slDump = 2; logf("HOTKEY F5 R1-A second render-graph run (same camera) -> %d", r1::on.load()); }
                     if (i == 5 && g_cfg.xr == 4 && (GetAsyncKeyState(VK_SHIFT) & 0x8000)) {   // 0.18.21 arm shading test (see namespace shade)
-                        const int m = (shade::mode.load() + 1) % 3; shade::mode = m;
-                        logf("HOTKEY Shift+F6 arm shading test -> %s (the game holds: screen-space shadows %d, ambient occlusion %d)", m == 0 ? "the game's own settings" : m == 1 ? "screen-space shadows OFF" : "screen-space shadows + ambient occlusion OFF", shade::seenS.load(), shade::seenA.load());
+                        const int m = shade::mode.load() ? 0 : 1; shade::mode = m;
+                        logf("HOTKEY Shift+F6 ambient occlusion in first person -> %s (the game holds %d)", m ? "held OFF (arms solid)" : "the game's own setting", shade::seenA.load());
                     }
                     else if (i == 5) {
                         if (g_cfg.xr == 4 && cutp::applied) { applyPreset(g_preset.load() + 1); logf("HOTKEY F6 history preset %s", kPresets[g_preset.load()].name); }
@@ -4669,15 +4684,15 @@ static DWORD WINAPI worker(void *) {
                          (unsigned long long)(g7 - f7), (unsigned long long)(g8 - f8), g8 > f8 ? (double)(g10 - f10) / (double)(g8 - f8) : 0.0, (unsigned long long)(g9 - f9), (unsigned long long)(g5 - f5), (unsigned long long)(g6 - f6), fp::headUp.load() / (g_cfg.unitsPerM * 0.01f), fp::camDist.load(), fp::headLat.load());
                     (void)g4; (void)f4;
                     { const u64 ca = camA(); const float cn = isCam(ca) ? *(const float *)(ca + 0x664) : -1.0f;
-                    logf("   NEAR/s: first-person near plane %.1f cm (0 = game's own; camera now %.1f, environment entries set %llu) applied left %llu right %llu, projection not recognised %llu | hand trims pitch %.1f yaw %.1f roll %.1f deg (F1/F2/F3, Shift = back), wrist back %.1f up %.1f thumb %.1f cm (Ctrl+F1/F2/F3) | arm shading test (Shift+F6) %d: the game holds screen-space shadows %d, ambient occlusion %d (writes %llu)", g_fp.nearCm, cn, (unsigned long long)stipple::nNear.exchange(0),
+                    logf("   NEAR/s: first-person near plane %.1f cm (0 = game's own; camera now %.1f, environment entries set %llu) applied left %llu right %llu, projection not recognised %llu | hand trims pitch %.1f yaw %.1f roll %.1f deg (F1/F2/F3, Shift = back), wrist back %.1f up %.1f thumb %.1f cm (Ctrl+F1/F2/F3) | ambient occlusion held off (fp_ao_off, Shift+F6) %d: the game holds screen-space shadows %d, ambient occlusion %d (writes %llu)", g_fp.nearCm, cn, (unsigned long long)stipple::nNear.exchange(0),
                          (unsigned long long)fp::nearHits[0].exchange(0), (unsigned long long)fp::nearHits[1].exchange(0), (unsigned long long)fp::nearMiss.exchange(0), g_fp.handPitch, g_fp.handYaw, g_fp.handRoll, g_fp.handBackCm, g_fp.handUpCm, g_fp.handSideCm, shade::mode.load(), shade::seenS.load(), shade::seenA.load(), (unsigned long long)shade::writes.exchange(0)); }
                     { static const char *iw[] = {"holding", "off", "pad input", "moving", "game owns the arms", "riding", "animation moving", "pose size"}; const int w = fp::idleWhy.load();
                       logf("   UNDER/s: body under the headset %s, offset %.1f cm (max %.0f)", g_fp.bodyUnder ? "on" : "off (fp_body_under_hmd)", fp::underCm.load(), g_fp.underMaxCm);
                       logf("   IDLE/s: idle hold %s | weight %.2f | stance turned %.1f deg to face forward | held poses %llu, let go %llu", w >= 0 && w <= 7 ? iw[w] : "-", fp::idleWOut.load(), -fp::idleSquareDeg.load(), (unsigned long long)fp::nIdleHeld.exchange(0), (unsigned long long)fp::nIdleRelease.exchange(0)); }
                     logf("   FINGERS/s: %s | posed %llu | grip curl left %.2f right %.2f | thumb down left %.2f right %.2f", fp::fingState.load() == 1 ? (g_fp.fingers ? "VR fingers on" : "off (fp_fingers)") : fp::fingState.load() < 0 ? "not usable (animated)" : "not analysed yet", (unsigned long long)fp::nFingPosed.exchange(0), fp::fingCurlOut[0].load(), fp::fingCurlOut[1].load(), fp::thumbOut[0].load(), fp::thumbOut[1].load());
-                    logf("   ARMS/s: %s | solves %llu, held off %llu | hand blend left %.2f right %.2f | parent table %d | game owns the arms %.2f (input holds %llu, animation raised a hand %llu) | stand tall %.1f cm applied %.1f (%llu poses)", fp::armsReady.load() ? (fp::armsWant.load() && g_fp.arms ? "VR arms ON" : "VR arms off (Shift+F10 / fp_arms)") : "arm chains not found yet",
+                    logf("   ARMS/s: %s | solves %llu, held off %llu | hand blend left %.2f right %.2f | parent table %d | game owns the arms %.2f (input holds %llu, animation raised a hand %llu) | stand tall %.1f cm applied %.1f (%llu poses) | forearm twist left %.0f right %.0f deg (%d / %d twist joints), jump windows held %llu", fp::armsReady.load() ? (fp::armsWant.load() && g_fp.arms ? "VR arms ON" : "VR arms off (Shift+F10 / fp_arms)") : "arm chains not found yet",
                          (unsigned long long)fp::nArmSolves.exchange(0), (unsigned long long)fp::nArmSkipped.exchange(0), fp::armW[0].load(), fp::armW[1].load(), fp::parState.load(),
-                         fp::gateW.load(), (unsigned long long)fp::nAnimHolds.exchange(0), (unsigned long long)fp::nRaised.exchange(0), fp::standDz.load() / (g_cfg.unitsPerM * 0.01f), fp::standApplied.load() / (g_cfg.unitsPerM * 0.01f), (unsigned long long)fp::nStand.exchange(0));
+                         fp::gateW.load(), (unsigned long long)fp::nAnimHolds.exchange(0), (unsigned long long)fp::nRaised.exchange(0), fp::standDz.load() / (g_cfg.unitsPerM * 0.01f), fp::standApplied.load() / (g_cfg.unitsPerM * 0.01f), (unsigned long long)fp::nStand.exchange(0), fbik::lastTwistDeg[0], fbik::lastTwistDeg[1], fp::armsD[0].nTw, fp::armsD[1].nTw, (unsigned long long)fp::nJumpHeld.exchange(0));
                     logf("   BODY/s: body drawn facing your forward: frames %llu, render poses turned %llu (items %llu), now %.0f deg | Jin faces %.0f deg from your forward, speed %.1f m/s | stance hips %.0f deg (squared while standing) | turns: dead zone %llu, snap %llu; body turned past the forward while moving %.0f deg, forward taken at move starts %llu (all %llu) | held off: riding %llu, fast %llu, refused %llu (fp_body_follow %d)",
                          (unsigned long long)fp::nBodyFrames.exchange(0), (unsigned long long)fp::nBodyJobs.exchange(0), (unsigned long long)fp::nWorldTurned.exchange(0), fp::bodyDeg.load(), fp::facingDeg.load(), fp::speedMs.load(), fp::hipYawDeg.load(), (unsigned long long)fp::nDeadTurns.exchange(0), (unsigned long long)fp::nSnapTurns.exchange(0), fp::moveOffDeg.load(), (unsigned long long)vrin::nMoveStarts.load(), (unsigned long long)vrin::nMoveCaps.load(),
                          (unsigned long long)fp::nBodyRiding.exchange(0), (unsigned long long)fp::nBodyFast.exchange(0), (unsigned long long)fp::nBodyRefused.exchange(0), g_fp.bodyFollow);
@@ -4750,6 +4765,12 @@ static DWORD WINAPI worker(void *) {
                      pp.L[0], pp.L[1], pp.L[2], pp.R[0], pp.R[1], pp.R[2], pp.mad, (unsigned long long)meter::nPairs.load(), (unsigned long long)meter::pairDrops.load()); }
         }
         if (S && S->hostState != lastHostState) { lastHostState = S->hostState; logf("host state -> %ld (%s)", lastHostState, S->hostMsg); if (lastHostState == GV_HOST_RUNNING) g_autoRecentreAt = GetTickCount64() + 1500; }
+        {   // 0.18.23 the headset's own recenter (hold the Meta button): the host forwards the runtime's reference-space change; 300 ms
+            // later (the runtime moves LOCAL at its changeTime, the poses must already be the new ones) the game view recentres like F11
+            static LONG seen = -1; static u64 at = 0; const LONG rs = S ? S->hostRecenterSeq : 0;
+            if (seen < 0) seen = rs; else if (rs != seen) { seen = rs; at = GetTickCount64() + 300; }
+            if (at && GetTickCount64() >= at) { at = 0; nMetaRecenters++; vrin::recenterView(); logf("recentre: the headset's own recenter (Meta button) -> game view recentred"); }
+        }
         if (g_autoRecentreAt && GetTickCount64() >= g_autoRecentreAt) { g_autoRecentreAt = 0; m_recenter = 1; if (S) InterlockedIncrement(&S->theaterRecenter); logf("recentre: automatic, headset session started (F11 recentres any time)"); }
         { static bool first3d = false; if (!first3d && g_cfg.xr == 4 && ui::mode.load() == ui::M_HUD && !ui::flat()) { first3d = true; m_recenter = 1; if (S) InterlockedIncrement(&S->theaterRecenter); logf("recentre: automatic, first 3D gameplay after start"); } }
         if (g_hostProc && !hostExitLogged && WaitForSingleObject(g_hostProc, 0) == WAIT_OBJECT_0) { DWORD c = 0; GetExitCodeProcess(g_hostProc, &c); hostExitLogged = true; logf("host process exited (code %lu); headset off, game continues flat. See GoTVR\\host.log", c); }
@@ -5044,15 +5065,16 @@ extern "C" __declspec(dllexport) int GoTVR_SelfTest(const wchar_t *exePath) {
             g_cfg.xr = 0; mblur::tick(true); mb &= *(float *)(st + 0x64) == 0.75f;                        // not in VR: untouched
             g_cfg.xr = sx; mblur::orig = -1.0f; mblur::st0 = nullptr; mblur::forced = 0; *(float *)(st + 0x64) = 0;
             ok &= mb; logf("motion blur test (held at 0 in VR, restored at exit, untouched when off / not in VR): %s", mb ? "PASS" : "FAIL");
-            {   // 0.18.21 arm shading test: Shift+F6 modes write 0 to +0x98 (and +0x60), the game's values come back, odd values are left alone
-                const int sx2 = g_cfg.xr; g_cfg.xr = 4; *(int *)(st + 0x98) = 2; *(int *)(st + 0x60) = 3;
-                shade::mode = 1; shade::tick(true); bool sh = *(int *)(st + 0x98) == 0 && *(int *)(st + 0x60) == 3;
-                shade::mode = 2; shade::tick(true); sh &= *(int *)(st + 0x98) == 0 && *(int *)(st + 0x60) == 0;
-                shade::mode = 0; shade::tick(true); sh &= *(int *)(st + 0x98) == 2 && *(int *)(st + 0x60) == 3;
-                *(int *)(st + 0x98) = 77; shade::mode = 1; shade::tick(true); sh &= *(int *)(st + 0x98) == 77 && shade::mode.load() == 0;   // not a setting we know
-                *(int *)(st + 0x98) = 1; shade::mode = 2; shade::tick(true); shade::restore(); sh &= *(int *)(st + 0x98) == 1 && *(int *)(st + 0x60) == 3;   // exit
-                shade::mode = 0; shade::tick(true); g_cfg.xr = sx2; *(int *)(st + 0x98) = 0; *(int *)(st + 0x60) = 0; shade::writes = 0;
-                ok &= sh; logf("arm shading test (Shift+F6: screen-space shadows, then + ambient occlusion off; the game's values back; unknown values untouched): %s", sh ? "PASS" : "FAIL");
+            {   // 0.18.23 ambient occlusion held off in first person (VR), the menu's choice remembered and put back; odd values left alone
+                const int sx2 = g_cfg.xr, so = fp::on.load(); g_cfg.xr = 4; fp::on = 1; *(int *)(st + 0x98) = 1; *(int *)(st + 0x60) = 2;
+                shade::mode = 1; shade::tick(true); bool sh = *(int *)(st + 0x60) == 0 && *(int *)(st + 0x98) == 1;
+                *(int *)(st + 0x60) = 3; shade::tick(true); sh &= *(int *)(st + 0x60) == 0;                     // the player picks 3 in the menu: off again
+                fp::on = 0; shade::tick(true); sh &= *(int *)(st + 0x60) == 3;                                    // first person off (F5): the player's 3
+                fp::on = 1; shade::tick(true); shade::restore(); sh &= *(int *)(st + 0x60) == 3;                  // exit
+                *(int *)(st + 0x60) = 77; shade::tick(true); sh &= *(int *)(st + 0x60) == 77;                     // not a setting we know
+                shade::mode = 0; *(int *)(st + 0x60) = 2; shade::tick(true); sh &= *(int *)(st + 0x60) == 2;      // fp_ao_off = 0: untouched
+                g_cfg.xr = sx2; fp::on = so; *(int *)(st + 0x98) = 0; *(int *)(st + 0x60) = 0; shade::writes = 0; shade::mode = 1;
+                ok &= sh; logf("ambient occlusion test (held off in first person, the menu's choice put back after F5 / exit, unknown values and fp_ao_off = 0 untouched): %s", sh ? "PASS" : "FAIL");
             }
             {   // 0.18.10 near stipple fade: switched off in the active environment sets while first person is on, the game's value back after
                 static u8 fset[0x2C58]; memset(fset, 0, sizeof fset); u8 *e = fset + 106 * 0x20; *(int *)(e + 0x10) = 106; *(int *)(e + 0x14) = 3; e[0] = 0; e[0x1C] = 0;
@@ -5091,7 +5113,7 @@ extern "C" __declspec(dllexport) int GoTVR_SelfTest(const wchar_t *exePath) {
         const auto soj = fp::oAnimJob;   // the "animation job": model-space render pose of this tick (joint i at i * 6 cm, the hand at `hand`)
         fp::oAnimJob = [](u8 *j) { float *P = *(float **)(j + 0xA8); for (int i = 0; i < 30; i++) { float *m = P + i * 16; memset(m, 0, 64); m[0] = m[5] = m[10] = m[15] = 1; m[14] = i * 6.0f; } P[29 * 16 + 14] = hand; P[1 * 16 + 12] = 3; P[1 * 16 + 14] = 205; };   // joint 1 = the lone gear (as in the world array)
         *(u8 **)(job + 0xE8) = hero; *(float **)(job + 0xA8) = pose[0];
-        const int sxr = g_cfg.xr; g_cfg.xr = 4; ui::mode = ui::M_HUD; ui::flatNow = false; const FpCfg sfp = g_fp; g_fp = FpCfg{}; g_fp.vertTau = 0; fp::on = 1; g_stFrameOn = true; g_stFrame = 100;
+        const int sxr = g_cfg.xr; g_cfg.xr = 4; ui::mode = ui::M_HUD; ui::flatNow = false; const FpCfg sfp = g_fp; g_fp = FpCfg{}; g_fp.vertTau = 0; g_fp.eyeUpCm = -3.0f; g_fp.eyeLeftCm = 0.0f; g_fp.headTau = 0.25f;   /* the anchor checks below were written for these */ fp::on = 1; g_stFrameOn = true; g_stFrame = 100;
         float gm[16]; ident(gm, 1000, 1700, 450);   // game camera 3 m behind
         bool ok = fp::update(gm) && fp::nJ == 30 && fp::headIdx == 28 && fp::countSrc == 1;
         ok &= fabsf(gm[12] - (1000 + g_fp.eyeFwdCm)) < 0.01f && fabsf(gm[13] - 2000) < 0.01f && fabsf(gm[14] - (300 + 168 + g_fp.eyeUpCm)) < 0.01f;   // eyes relative to the top of the head
@@ -5178,6 +5200,15 @@ extern "C" __declspec(dllexport) int GoTVR_SelfTest(const wchar_t *exePath) {
         ok &= dist(A[0].hand, T.pos) < 0.5f && fabsf(djj(A[0].sh, A[0].el) - 30.0f) < 0.1f && fabsf(djj(A[0].el, A[0].hand) - 27.0f) < 0.1f;   // reached, lengths kept
         ok &= pz[A[0].el * 16 + 14] < 0.5f * (pz[A[0].sh * 16 + 14] + T.pos[2]) && pz[A[0].el * 16 + 13] > 18.0f;   // elbow down and out (Jin's left = +y)
         ok &= fabsf(fbik::len3f(fr0) - djj(hands[0], hands[0] + 1)) < 0.05f;   // the finger root rides rigidly with the hand
+        {   // 0.18.23 forearm twist: the twist joint half way down the forearm takes half the hand's roll about the forearm
+            const int tj = hands[0] + 12; bool tw = A[0].nTw == 1 && A[0].tw[0] == tj && fabsf(A[0].twT[0] - 14.0f / 27.0f) < 0.02f;
+            const float ax[3] = {pz[A[0].hand * 16 + 12] - pz[A[0].el * 16 + 12], pz[A[0].hand * 16 + 13] - pz[A[0].el * 16 + 13], pz[A[0].hand * 16 + 14] - pz[A[0].el * 16 + 14]}; float axn[3] = {ax[0], ax[1], ax[2]}; fbik::norm3(axn);
+            float best = 2; int k = 0; for (int q = 0; q < 3; q++) { float v[3] = {pz[A[0].el * 16 + 4 * q], pz[A[0].el * 16 + 4 * q + 1], pz[A[0].el * 16 + 4 * q + 2]}; fbik::norm3(v); if (fabsf(fbik::dot3(v, axn)) < best) { best = fabsf(fbik::dot3(v, axn)); k = q; } }
+            float got = 0; tw &= fbik::twistAngle(pz + A[0].el * 16 + 4 * k, pz + tj * 16 + 4 * k, axn, got);
+            const float want = fbik::lastTwistDeg[0] * A[0].twT[0]; tw &= fabsf(got * 57.2957795f - want) < 1.0f && fabsf(fbik::lastTwistDeg[0]) > 5.0f;
+            tw &= fabsf(djj(tj, A[0].el) - 14.0f) < 0.05f;   // it stays on the forearm
+            ok &= tw; logf("   forearm twist: %s (hand roll %.1f deg, twist joint at %.0f %% turned %.1f deg)", tw ? "PASS" : "FAIL", fbik::lastTwistDeg[0], A[0].twT[0] * 100.0f, got * 57.2957795f);
+        }
         { float f[3] = {0, 0, 0}; int c = 0; for (int q = hands[0] + 1; q < hands[0] + 11; q++) if (par[q] == hands[0] && q != hands[0] + 9) { for (int k = 0; k < 3; k++) f[k] += pz[q * 16 + 12 + k] - pz[hands[0] * 16 + 12 + k]; c++; }
           fbik::norm3(f); ok &= f[0] > 0.95f; }   // the fingers point along the grip's finger direction (+x)
         float far2[3] = {80, 20, 145}; T.pos[0] = far2[0]; T.pos[1] = far2[1]; T.pos[2] = far2[2]; const float c0[3] = {pz[A[0].clav * 16 + 12], pz[A[0].clav * 16 + 13], pz[A[0].clav * 16 + 14]};

@@ -66,6 +66,7 @@ struct Arm {
     uint16_t sub[4][MAXSUB]; int nSub[4] = {0, 0, 0, 0};   // subtrees of clav / shoulder / elbow / hand (each includes the joint)
     float fl[3] = {0, 0, 0}, tl[3] = {0, 0, 0}; bool frame = false;   // hand-LOCAL finger and thumb directions (from the pose at analysis)
     float upper = 0, lower = 0;
+    int nTw = 0; uint16_t tw[8]; float twT[8];   // 0.18.23: forearm twist joints (on the elbow -> wrist line) and where along it (0..1)
 };
 static bool parentsOk(const int16_t *par, int n) {   // a parent table: -1 or an earlier index, for every joint; exactly one root among the first few
     if (n < 8) return false; int roots = 0;
@@ -140,6 +141,16 @@ static int findArms(const int16_t *par, int n, const float *pose, float headZ, c
                 A.frame = fabsf(dot3(f, t)) < 0.95f;
             }
         }
+        {   // 0.18.23 forearm twist joints: in the elbow's subtree, not the hand's, within 3 cm of the elbow -> wrist line, 15..105 % along
+            // it (Jin: 508 / 509 / 510 at 25 / 50 / 75 %, 511 / 512 at the wrist)
+            A.nTw = 0; const float *Ep = P(pose, A.el), *Wp = P(pose, A.hand); const float ew[3] = {Wp[0] - Ep[0], Wp[1] - Ep[1], Wp[2] - Ep[2]}; const float L2 = dot3(ew, ew);
+            for (int q = 0; q < A.nSub[2] && A.nTw < 8 && L2 > 1.0f; q++) {
+                const int j = A.sub[2][q]; if (j == A.el || j == A.hand) continue; bool inHand = false; for (int r = 0; r < A.nSub[3]; r++) if (A.sub[3][r] == j) { inHand = true; break; } if (inHand) continue;
+                if (!shownJ(pose, j)) continue; const float d[3] = {P(pose, j)[0] - Ep[0], P(pose, j)[1] - Ep[1], P(pose, j)[2] - Ep[2]}; const float t = dot3(d, ew) / L2;
+                const float off[3] = {d[0] - ew[0] * t, d[1] - ew[1] * t, d[2] - ew[2] * t};
+                if (t >= 0.15f && t <= 1.05f && len3f(off) < 3.0f) { A.tw[A.nTw] = (uint16_t)j; A.twT[A.nTw] = t > 1.0f ? 1.0f : t; A.nTw++; }
+            }
+        }
         (void)tmp; found++;
     }
     if (why) snprintf(why, (size_t)whyN, "%d chain candidates | left hand %d (elbow %d shoulder %d clavicle %d, group %d, %d joints below the hand, upper %.0f / lower %.0f cm, hand frame %d) | right hand %d (elbow %d shoulder %d clavicle %d, group %d, %d below, upper %.0f / lower %.0f cm, frame %d)",
@@ -149,12 +160,26 @@ static int findArms(const int16_t *par, int n, const float *pose, float headZ, c
 }
 // ---------- the solve ----------
 struct Target { float pos[3]; float fing[3], thumb[3]; bool orient; };   // model space: the WRIST position and the hand's finger / thumb directions
-struct Params { float reachFrac = 0.15f, clavMaxDeg = 20.0f, clavDown = 0.4f, poleOut = 1.0f, poleDown = 1.0f, poleBack = 0.5f, bodyYaw = 0.0f; };
+struct Params { float reachFrac = 0.15f, clavMaxDeg = 20.0f, clavDown = 0.4f, poleOut = 1.0f, poleDown = 1.0f, poleBack = 0.5f, bodyYaw = 0.0f, twist = 1.0f; };
+static float lastTwistDeg[2] = {0, 0};   // 0.18.23 diagnostics: the forearm twist of the last solve per side
+// signed angle from r to p about the unit axis a, both projected onto the plane across a; false when either lies along a
+static inline bool twistAngle(const float *r, const float *p, const float *a, float &out) {
+    float r2[3], p2[3]; const float dr = dot3(r, a), dp = dot3(p, a); for (int k = 0; k < 3; k++) { r2[k] = r[k] - dr * a[k]; p2[k] = p[k] - dp * a[k]; }
+    if (!norm3(r2) || !norm3(p2)) return false; float c[3]; cross3(r2, p2, c); out = atan2f(dot3(c, a), dot3(r2, p2)); return true; }
 static void solveArm(float *pose, const Arm &A, int side, const Target &T, float w, const Params &prm) {
     if (A.hand < 0 || w <= 0.0f) return; if (w > 1) w = 1;
     float S[3], E[3], W[3];
     auto get = [&]() { memcpy(S, P(pose, A.sh), 12); memcpy(E, P(pose, A.el), 12); memcpy(W, P(pose, A.hand), 12); };
     get();
+    // 0.18.23 forearm twist, before: the animated hand's roll about the forearm, measured from the forearm's own frame
+    float tw0 = 0; bool tw0ok = false; int hk = -1, ek = -1;
+    if (A.nTw > 0 && prm.twist > 0.0f && A.el >= 0) {
+        float a0[3] = {W[0] - E[0], W[1] - E[1], W[2] - E[2]};
+        if (norm3(a0)) { const float *Mh = pose + (size_t)A.hand * 16, *Me = pose + (size_t)A.el * 16; float bh = 2, be = 2;
+            for (int k = 0; k < 3; k++) { float v[3] = {Mh[4 * k], Mh[4 * k + 1], Mh[4 * k + 2]}, u[3] = {Me[4 * k], Me[4 * k + 1], Me[4 * k + 2]};
+                if (norm3(v) && fabsf(dot3(v, a0)) < bh) { bh = fabsf(dot3(v, a0)); hk = k; } if (norm3(u) && fabsf(dot3(u, a0)) < be) { be = fabsf(dot3(u, a0)); ek = k; } }
+            if (hk >= 0 && ek >= 0) tw0ok = twistAngle(Me + 4 * ek, Mh + 4 * hk, a0, tw0); }
+    }
     float tgt[3]; for (int k = 0; k < 3; k++) tgt[k] = W[k] + (T.pos[k] - W[k]) * w;   // blend in/out (w eased by the caller)
     const float a = A.upper, b = A.lower, reach = a + b;
     {   // clavicle: shrug toward farD targets only (FRIK reach fraction 0.15, <= 20 deg, downward x0.4)
@@ -190,6 +215,21 @@ static void solveArm(float *pose, const Arm &A, int side, const Target &T, float
         for (int k = 0; k < 3; k++) { fm[k] = A.fl[0] * M[k] + A.fl[1] * M[4 + k] + A.fl[2] * M[8 + k]; tm[k] = A.tl[0] * M[k] + A.tl[1] * M[4 + k] + A.tl[2] * M[8 + k]; }
         const Rot R = scaled(frameTo(fm, tm, T.fing, T.thumb), w);
         moveSet(pose, A.sub[3], A.nSub[3], R, W);
+    }
+    // 0.18.23 (owner: "when I rotate my wrist, have the forearm rotate a bit too, to a natural degree - otherwise the wrist joint becomes
+    // very small"): a real wrist cannot twist - turning the hand (pronation / supination) turns the forearm, the radius rolling round
+    // the ulna, most at the wrist and nothing at the elbow. The IK forearm is aimed rigidly, so all the roll sat in the wrist and the
+    // skin there pinched. Now the hand's extra roll about the forearm (after the solve, against the animated pose) is shared along the
+    // forearm's twist joints by where they sit (25 % along -> 25 % of the roll, the wrist joints all of it), times prm.twist.
+    if (tw0ok) {
+        const float *Mh = pose + (size_t)A.hand * 16, *Me = pose + (size_t)A.el * 16; float a1[3] = {P(pose, A.hand)[0] - P(pose, A.el)[0], P(pose, A.hand)[1] - P(pose, A.el)[1], P(pose, A.hand)[2] - P(pose, A.el)[2]}; float tw1 = 0;
+        if (norm3(a1) && twistAngle(Me + 4 * ek, Mh + 4 * hk, a1, tw1)) {
+            float d = tw1 - tw0; while (d > 3.14159265f) d -= 6.2831853f; while (d < -3.14159265f) d += 6.2831853f;
+            const float lim = 150.0f / 57.2957795f; d = d > lim ? lim : d < -lim ? -lim : d;
+            lastTwistDeg[side & 1] = d * 57.2957795f;
+            for (int i = 0; i < A.nTw; i++) { const int j = A.tw[i]; const float pv[3] = {P(pose, j)[0], P(pose, j)[1], P(pose, j)[2]}; const uint16_t one = (uint16_t)j;
+                moveSet(pose, &one, 1, axisAngle(a1, d * A.twT[i] * prm.twist), pv); }
+        }
     }
 }
 

@@ -1,4 +1,4 @@
-# GoTVR roadmap (updated at 0.18.22)
+# GoTVR roadmap (updated at 0.18.23)
 
 Done: synchronized native stereo 6DoF (xr=4), per-eye occlusion/TAA history, square render with 16:9 UI, theatre screen,
 HUD layer, first person anchored on the body with the head hidden in the render pose, pose-lead prediction, VR
@@ -69,6 +69,10 @@ did not buy a measured fix.
   shadows / AO test for the see-through arms (BUG-80). If it is screen-space shadows: keep them off in first person automatically, or
   find the pass and stop near pixels from marching into the background.
 - 0.18.22: movement always follows the headset; body follows the head past 7.5 deg standing and moving.
+- 0.18.23: AO held off in first person (BUG-80); arms through landings; forearm twist; headset recenter -> game recenter.
+- NEXT for movement: instant direction changes = lock-on / stance strafing (bldbrne-vr bloodborne_facing.h: the game believes Jin is
+  locked on to a point ahead along the VR heading) - needs RE of GoT's lock-on / stance state. Then AO could come back if its pass can
+  be told to reject near pixels.
 - Depth submission to the runtime (XR_KHR_composition_layer_depth) so Spacewarp can reproject near geometry (arms, body).
 - Later: room-scale beyond 60 cm should move Jin himself (feed the offset to the game as movement), not only the drawn body.
 - TODO (owner, 0.18.14): no attack HIT-REACTION animations in first person (Jin flinching / staggering when struck moves the body

@@ -63,3 +63,12 @@ finger chains below the wrist, thumb vs long fingers, bend = relaxed + (max - re
   curled index and middle, like a thumb in a fist.
 - Curl values tween on a critically damped spring (fp_finger_tween_s 0.15). The future per-item grips (katana, bow, tools) only change
   the angle tables and curl targets.
+
+## Forearm twist (0.18.23)
+
+- A real wrist does not twist: pronation / supination is the radius rolling round the ulna, nothing at the elbow, all of it at the
+  wrist. The IK aims the forearm rigidly, so the controller's roll sat in the wrist and the skin pinched.
+- Twist joints: in the elbow's subtree but not the hand's, within 3 cm of the elbow -> wrist line, 15-105 % along it (Jin: 508 / 509 /
+  510 at 25 / 50 / 75 %, 511 / 512 at the wrist).
+- Each solve measures the hand's roll about the forearm before (animated) and after the hand takes the controller frame, against the
+  elbow's own frame. Each twist joint turns about the forearm axis by (after - before) x its fraction x fp_forearm_twist (1.0).
