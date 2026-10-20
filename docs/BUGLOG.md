@@ -1596,6 +1596,86 @@ spaces, session, instance → TerminateProcess.
   report one eye or both.
 - Self-test PASS (selftest=0, 111): fingers with a shared palm joint and helper leaves (5 chains, index 3 joints), all earlier tests.
 
+## GoTVR 0.18.25 → 0.18.26 — katana draw stage 1, own-sound centring, room-scale off, crouched start, deadband, look-down 30, arm stretch
+- Owner: remove physical dodging (keep code); started in third person; improve hand smoothing; finish audio (gear / voice); push to
+  main as VR IK mostly complete + 8D audio; shadows / ghosting around the hands; look-down threshold 30; katana draw with sheath /
+  hilt grips, rails, haptics, input logging; arms stretch (editable).
+- Room-scale: fp_roomscale default 0 (drive, reference shift, block detection kept). Body-under drawing unchanged.
+- Third-person start: log - validate() skipped the node, "highest joint 99 cm" (loaded crouched); the head-height window 100-230 cm
+  -> 70-230 cm.
+- Hands: stab.h soft deadband after the One Euro (position 1.5 mm, rotation 0.25 deg: the output follows only the excess beyond it -
+  continuous, no lag for real moves; playbook ch01 micro-deadzone; SFU study: pointing suffers at +-0.25 deg rotational jitter);
+  rotation min cut-off 0.9 Hz. Self-test now measures frame-to-frame jitter (x0.01 still, 1.6 cm lag at 1 m/s).
+- Audio own sounds (God of War VR D-162): Audio_EmitterUpdate 0x5BC780 (emitter: Wwise id +0x18, source +0x28 -> owner +0x38, joint
+  +0x48, offset +0x50; position = owner world (node +0x150 or joint world) x offset, game's formula 0x5B5D90). After the game's
+  update an emitter within 35 cm of the head is re-sent (exported AK::SoundEngine::SetPosition, resolved by name) 25 cm ahead of the
+  head with the head's front / top (y mirrored), position through 0x1420A1CD0. AUDIO/s counts.
+- Look-down: head pitch from the eye frame; below -35 deg (back above -25) the dead zone is fp_body_head_deadzone_down_deg (30).
+- Arm stretch (fbik): a target beyond reach lengthens the upper arm by up to fp_arm_stretch x arm length (0.10); the elbow subtree
+  moves out along the upper arm, the bicep helper joints (within 6 cm of the shoulder -> elbow line) by their fraction.
+- Katana draw stage 1 (sword.h + fp::swordApply + swd): state machine (sheathed / drawing / drawn) with grab hysteresis (12 cm in,
+  x1.75 out; grip 0.5 / 0.3), hover ticks, grab pulses, rail s = hand travel along the draw axis minus the grab offset, rumble
+  0.06-0.35 by speed (pulses every 40 ms), free at 92 % of the blade (the katana keeps its hand-relative pose from that moment,
+  following the drawn right hand joint). Visual: the katana joint's subtree in the render pose (and so its world matrices) moved
+  rigidly. The katana joint is not identified yet: candidates 645-647 / 652-654 (lone gear at the hips, skeleton dump) + 586-594;
+  Ctrl+F7 probe (lift 15 cm), Ctrl+F8 keep, Ctrl+F10 calibrate the rail (left grip = mouth, right grip = hilt end, stored in the
+  joint's frame). Logs: katana: events with both hands' inputs, SWORD/s with holds and the inputs while held.
+- Hand shadows / ghosting: not reproduced; candidates - right-eye object motion vectors (the frozen tick's previous palette = this
+  tick's, its history = the previous right frame), or screen-space shadows (now forced on) on near geometry. Needs a photo.
+- Self-test PASS (selftest=0, 126): + own-sound centring, arm stretch, katana draw.
+
+## GoTVR 0.18.24 → 0.18.25 — 3D audio (Wwise listener = head), frozen-frame pose restore, view on the drawn body, room-scale speed, body turn spring
+- `[HEADSET]` owner: see-through arms fixed. Room-scale: Jin moves but "the headset slowly follows after"; "the camera kind of rotates
+  around the body"; the body snaps to the head past the threshold (wants a tween); Jin's head missing when not in first person
+  (cutscenes etc.); start 8D audio (God of War VR as reference).
+- Headless outside first person: log 0.18.24 - FLAT / paused contexts run 0 hero animation jobs, so the last mod-written pose (head
+  collapsed) stays in the pose buffer and world array. Fix: every pose the mod is about to change is snapshotted (pose buffer by
+  pointer, two alternating, + the joint world array); in flat-render ticks (hGameTick) the snapshot is written back once.
+- Orbit / slow follow: the eye anchor used the animated head offset from the root smoothed 1 s in WORLD axes; the room-scale drive
+  makes the game turn the node to the walking direction, the 5-15 cm head offset swings with it and the view drifted after it. Now
+  the offset is smoothed in the node's own axes (hideInPose, fresh poses) and placed along the drawn heading; the drawn pose is
+  shifted by T = R(bodyYaw) hzS - hzRaw so its head is where the eyes are (body and view rigid; no T while riding). Also: the
+  fp_follow_lean and fp_max_camera_distance_m reads sat inside a // comment since 0.18.16 (defaults were used) - fixed.
+- Room-scale: drive 0.5..1.0 stick (was 0.35..0.85), start 12 / stop 5 cm; fp_body_under_follow_s 0.5 -> 0.1.
+- Body turn: critically damped spring on Hw toward the head (fp_body_turn_s 0.35; 0 = instant) instead of the 0.08 s exponential.
+- 3D audio (playbook ch20, God of War VR D-159): GoT = Wwise (AK::SoundEngine exported). Boot 0x5B91A0 registers game objects 0-4,
+  SetDefaultListeners(0, 1, 2). Audio update 0x5B3E60 -> Audio_ListenerFromCamera 0x5BAC80 reads CAM-B (*0x141EDBCC8) +0x890
+  (camera matrix rows fwd / left / up / pos), lerps the position toward the audio focus (manager +0x4338 list), smooths 0.8, writes
+  the listener matrix + inverse into the manager (+0x90 / +0xD0); 0x5BA730 sends listeners 0-2 (front / top y mirrored, position via
+  0x1420A1CD0) and object 3 (fixed orientation). Hook 0x5BAC80: CAM-B +0x890 = the head (compose(S->head), the eyes' composition,
+  seqlock-published from hSlot43) for the call, restored after. First person in VR only; audio_head ini. Sig added.
+- Self-test PASS (selftest=0, 122): + body turn tween, 3D audio listener swap, frozen-frame restore.
+
+## GoTVR 0.18.23 → 0.18.24 — BUG-80 for real (apply path, AO off + SSS on), hand stabilisation, room-scale, flat observer, controls
+- `[HEADSET]` owner: forearm / view / jump / recenter / body turn good. "At load AO was off (menu) but the hands were still see-through;
+  screen-space shadows off: not solved; back on: fixed". Hands jitter (FEAR VR has "micro tremor stabilization"). Threshold 7.5 -> 20.
+  Wants flat play with logging (climbing, takedowns flags), Jin's real object to follow physical movement (dodge), new control scheme.
+- BUG-80: (1) a write into the settings block (app+0x7A8) is not applied: ApplyDisplay 0x421ED0 copies the new block to +0x7A8, posts
+  swapchain command 2, hands (old copy, new) to the render service (0x409460 object, vt+0x60) and saves (FUN_14045F140 compare ->
+  Settings_Dump 0x424AE0). The menu showed our 0 (it reads the block); the renderer kept AO. (2) After the owner's apply (AO 0, SSS 0)
+  the arms were still see-through; with SSS 1 fixed -> the artefact shows with AO on OR SSS off. Fix: in first-person gameplay the
+  mod calls ApplyDisplay(app, copy with AO 0, SSS >= 1) on the main thread after the pump (rsz path), once (<= 3 tries, 5 s apart);
+  F5 / Shift+F6 apply the player's values back. Self-test with a stand-in apply.
+- Hand stabilisation: FEAR VR's is closed source (repo = docs only: "fine-motion controller stability", RC3). Own One Euro filter
+  (stab.h) on the grip pose in LOCAL space before it becomes the wrist target: position min 1.2 Hz + 10 Hz per m/s, rotation 1.2 Hz +
+  3 Hz per rad/s, derivative 1 Hz; resets (playbook ch02 list): first pose, tracking lost, recenter (theaterRecenter bump), > 25 cm
+  jump, dt <= 0.5 ms or > 100 ms, non-finite. FINGERS/s logs filtered samples, hand speed and resets by reason. Self-test: still
+  jitter x0.29, lag 1.4 cm at 1 m/s.
+- Body follow threshold 20 deg (fp_body_head_deadzone_deg).
+- Controls: left_primary (Quest X) = wheel (any control bound to "wheel" now holds it: buttons, grips, triggers), left_trigger = none,
+  left_menu = start. Self-test drives the wheel with X.
+- Flat observer (play_mode=flat): xr forced 0 (no host, no stereo, game camera / pad), obs::tick in GameTick: Jin's world position from
+  hero+0x150, ground / vertical speed, pad buttons; per-tick diff of the hero's first 16 KB as dwords, changes between small ints (<
+  0x10000) logged with old / new / ms, fields that change > 6 ticks a second set aside as busy; F8 = MARK; other hotkeys off.
+- Room-scale: vrin drives the left stick toward the head (world offset fp::underW, published in cm) when > 15 cm, until < 6 cm, only
+  with the player's stick at rest, in gameplay, not riding / climbing (gateW) / jumping / airborne; magnitude 0.35..0.85. bodyStep
+  attributes Jin's step along the drive direction (clamped to the offset left) to a running total; hSlot43 shifts g_ref by the same
+  world distance in the game camera's level frame (rsShiftRef: delta = Rr kC g, g = level rows . dw / units), so anchor + offset stays
+  on your head. A drive that covers < 5 cm in 0.6 s pauses 1.5 s (wall). ROOMSCALE/s log. Self-tests: drive direction / hysteresis /
+  stick priority / block; reference shift exact for any reference and view yaw.
+- Self-test PASS (selftest=0, 118).
+- Pushed before this round: (WIP) 0.18.23 on gotvr-0.18.22-vrik-wip (merged the owner's README update from main).
+
 ## GoTVR 0.18.22 → 0.18.23 — BUG-80 = ambient occlusion, landing arms, eye trims, body speed, runtime recenter, forearm twist (host 0.14.4)
 - `[HEADSET]` owner: fingers good. Arms see-through only with SSAO Quality on, normal with it off; screen-space shadows no effect
   (log: the menu wrote AmbientOcclusionQuality +0x60 = 0..3, ScreenSpaceShadows +0x98 = 0/1). VR arms go back to the animation at the

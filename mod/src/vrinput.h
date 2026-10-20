@@ -32,9 +32,9 @@ enum Ctl { C_LSTICKCLICK, C_RSTICKCLICK, C_LPRIMARY, C_LSECONDARY, C_LMENU, C_RP
            C_GEST_RHEAD, C_GEST_LHEAD, C_N };
 static const struct { const char *key, *def, *what; } kCtl[C_N] = {
     {"left_stick_click", "l3", "run"}, {"right_stick_click", "r3", "crouch"},
-    {"left_primary", "start", "menu (Quest X)"}, {"left_secondary", "x+anim_short", "quick attack / assassinate (Quest Y)"}, {"left_menu", "start", "menu"},
+    {"left_primary", "wheel", "item wheel (Quest X, hold; 0.18.24 owner's scheme)"}, {"left_secondary", "x+anim_short", "quick attack / assassinate (Quest Y)"}, {"left_menu", "start", "menu (the three-line button)"},
     {"right_primary", "a", "jump (Quest A)"}, {"right_secondary", "b", "dodge (Quest B)"}, {"right_menu", "none", "-"},
-    {"left_trigger", "wheel", "item wheel"}, {"right_trigger", "rt", "fire / blowgun"},
+    {"left_trigger", "none", "fire the held item (later)"}, {"right_trigger", "rt", "fire / blowgun"},
     {"left_grip", "none", "grab (hands: later)"}, {"right_grip", "none", "grab (0.18.10: unbound - the physical sword comes next)"},
     {"right_hand_at_head_trigger", "dpad_right+rs_up", "guiding wind"}, {"left_hand_at_head_trigger", "hud+dpad_right+rs_up", "HUD in front + the game's objective (touchpad swipe up)"}};
 static const int NWHEEL = 8;   // 0.18.7: up to 8 options; wheel_count (default 5) of them are used
@@ -83,6 +83,13 @@ static void moveCapture(u64 delayMs) { moveCapAt = GetTickCount64() + delayMs + 
 // menus / theatre: saved on the way in, and on the way out the view offset is set so the view faces the same way again (the game
 // camera then catches up behind it as after a snap). 0.18.16 zeroed the offset in menus instead.
 static float flatViewYaw = 0; static bool flatSaved = false, wasFlat = false;
+// 0.18.24 room-scale (owner: "when I move in real life, I want Jin's actual game object to move too (colliders as well), so I could physically
+// dodge attacks"): the game DLL publishes how far your head is from Jin's head (world, cm) while it is safe to move him; when it is
+// more than rsDeadCm and you are not using the left stick, the stick walks Jin toward your head until he is within rsStopCm. The
+// game moves Jin (animation, collision, physics - his real collider), and the mod takes the distance he covered out of your head
+// offset so the view stays where your head is (gotvr.cpp: the tracking reference moves with him).
+static std::atomic<float> rsOff[2]; static std::atomic<u64> rsOkUntil{0}, rsDriveUntil{0}, rsBlockUntil{0}, nRsDrive{0}; static std::atomic<float> rsDir[2], rsMag{0};
+static int rsOn = 1; static float rsDeadCm = 12.0f, rsStopCm = 5.0f;
 static std::atomic<u64> lastAct{0};   // 0.18.13: last time the pad sent the game anything (idle hold)
 static std::atomic<u64> turnSeq{0};   // 0.18.15: counts snap / smooth turns (the body follow squares the hips after one)
 static std::atomic<u64> jumpAt{0};
@@ -180,6 +187,17 @@ static bool build(XINPUT_GAMEPAD &g, bool ctxFlat) {
                         : (moveYawOk.load() && gameYawOk.load()) ? wrap180(moveYaw.load() - gameYaw.load()) : viewHold.load();
     if (const float yo = yoStick; !ctxFlat && fabsf(yo) > 0.01f) {   // "forward" = the headset's forward at the last snap / start / menu exit (0.18.17)
         const float a = yo / 57.2957795f, c = cosf(a), sn = sinf(a), x = ls[0], y = ls[1]; ls[0] = x * c - y * sn; ls[1] = x * sn + y * c; }
+    {   // 0.18.24 room-scale drive (see rsOff): only while your own stick rests, in gameplay, when the game DLL says it is safe
+        static bool driving = false; const float ux = rsOff[0].load(), uy = rsOff[1].load(), d = sqrtf(ux * ux + uy * uy);
+        const bool userIdle = ls[0] * ls[0] + ls[1] * ls[1] < 0.0025f;
+        const bool allowed = rsOn && now < rsOkUntil.load() && !ctxFlat && !wheel.open && userIdle && gameYawOk.load() && now >= rsBlockUntil.load();
+        if (!allowed) driving = false; else { if (!driving && d > rsDeadCm) driving = true; if (driving && d < rsStopCm) driving = false; }
+        if (driving && d > 1e-3f) {
+            const float rel = wrap180(atan2f(uy, ux) * 57.2957795f - gameYaw.load()) / 57.2957795f;
+            float m = 0.5f + (d - rsStopCm) / 30.0f; m = m < 0.5f ? 0.5f : m > 1.0f ? 1.0f : m;   // 0.18.25: faster (0.35..0.85 -> 0.5..1)
+            ls[0] = -sinf(rel) * m; ls[1] = cosf(rel) * m; rsDir[0] = ux / d; rsDir[1] = uy / d; rsMag = m; rsDriveUntil = now + 100; nRsDrive++;
+        } else rsMag = 0.0f;
+    }
     g.sThumbLX = axis(ls[0]); g.sThumbLY = axis(ls[1]);
     auto btn = [&](int h, u32 bit) { return (hd[h].buttons & bit) != 0; };
     const bool lsc = btn(0, GV_BTN_STICK), rsc = btn(1, GV_BTN_STICK);
@@ -224,9 +242,17 @@ static bool build(XINPUT_GAMEPAD &g, bool ctxFlat) {
     };
     trig(0, C_LTRIGGER); trig(1, C_RTRIGGER);
     if (hd[0].squeeze > 0.6f) apply(cfg.out[C_LGRIP].m, g); if (hd[1].squeeze > 0.6f) apply(cfg.out[C_RGRIP].m, g);
-    // ---- item wheel: the trigger bound to "wheel" holds it open; the right stick picks; stick back to centre confirms ----
-    int wheelHand = -1; for (int h = 0; h < 2; h++) if (cfg.out[h ? C_RTRIGGER : C_LTRIGGER].m & OX_WHEEL) wheelHand = h;
-    const bool wheelHeld = wheelHand >= 0 && !atHead[wheelHand] && hd[wheelHand].trigger > 0.6f;
+    // ---- item wheel: the control bound to "wheel" (X by default) holds it open; the right stick picks; stick back to centre confirms ----
+    // 0.18.24 (owner's CONTROL_SCHEME: "X - weapon wheel"): any control bound to "wheel" holds it open - a trigger, a grip or a button
+    int wheelHand = -1; bool wheelHeld = false;
+    {   static const struct { int c, h; u32 bit; } wb[] = {{C_LPRIMARY, 0, GV_BTN_PRIMARY}, {C_LSECONDARY, 0, GV_BTN_SECONDARY}, {C_LMENU, 0, GV_BTN_MENU}, {C_LSTICKCLICK, 0, GV_BTN_STICK},
+                                                           {C_RPRIMARY, 1, GV_BTN_PRIMARY}, {C_RSECONDARY, 1, GV_BTN_SECONDARY}, {C_RMENU, 1, GV_BTN_MENU}, {C_RSTICKCLICK, 1, GV_BTN_STICK}};
+        for (auto &x : wb) if (cfg.out[x.c].m & OX_WHEEL) { if (wheelHand < 0) wheelHand = x.h; if (hd[x.h].buttons & x.bit) { wheelHeld = true; wheelHand = x.h; } }
+        for (int h = 0; h < 2; h++) {
+            if (cfg.out[h ? C_RTRIGGER : C_LTRIGGER].m & OX_WHEEL) { if (wheelHand < 0) wheelHand = h; if (!atHead[h] && hd[h].trigger > 0.6f) { wheelHeld = true; wheelHand = h; } }
+            if (cfg.out[h ? C_RGRIP : C_LGRIP].m & OX_WHEEL) { if (wheelHand < 0) wheelHand = h; if (hd[h].squeeze > 0.6f) { wheelHeld = true; wheelHand = h; } }
+        }
+    }
     if (wheelHeld && !wheel.open && !wheel.used) { wheel.open = true; wheel.sel = -1; nWheelOpen++; pulse(wheelHand, 0.25f, 15); }
     if (!wheelHeld) { wheel.open = false; wheel.used = false; wheel.sel = -1; }
     bool stickBusy = false;

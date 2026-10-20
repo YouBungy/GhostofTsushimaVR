@@ -25,7 +25,7 @@
 #include "gotvr_shared.h"
 
 typedef uint64_t u64; typedef uint32_t u32; typedef uint8_t u8;
-#define GOTVR_VERSION "GoTVR 0.18.23 (ambient occlusion held off in first person (see-through arms), VR arms kept through the landing, eyes 3 cm right / 2 cm up, body turns faster, headset recenter button recentres the game, forearm twist with the wrist, movement always follows the headset, body turns to the headset past 7.5 deg standing and moving, movement forward only when you start moving, fingers bend on one hinge each (no sideways fingers), thumb curls across like a fist, fingers ease into their poses, Shift+F6 arm shading test (screen-space shadows / AO), near clip back to the game, fingers: thumb by length + the hand's own palm, thumb / trigger touch, forward taken as you start moving, the body turns past the threshold while moving too, gesture indicator off, fingers from leaf paths + structure log, riding needs two markers (jumps keep the VR arms), movement forward taken at stops, Shift+F4 HUD-layer test, VR fingers: bind-pose fingers on the IK hands, grip curls a fist, trigger the index, movement forward = headset forward at snap / start / menu exit, view direction kept across menus, body dead zone 45 deg, body under the headset smoothed, body heading kept in world yaw with an even dead zone, movement faces the headset, body under the headset, smoother eye anchor, Shift+F7 near-plane A/B, standing hips squared to the body follow, hips turned square after a snap turn, Shift+F7 TAA A/B, 0.18.12-14 transparency changes removed, standing stance squared to face forward, idle animations held still in first person, near-focus stipple off in first person, snap turn without the catch-up wobble, wrist point from the grip (back / up / thumb, Ctrl+F1-F3), near clip in the environment too (TAA reprojection agrees), eyes 3 cm further back, each eye culled by its own view - no cross-eye occlusion (preset 7), eyes 5 cm further back, near plane 2 cm in first person, F1/F2/F3 hand trims saved to gotvr.ini, near stipple fade off in first person, hands pitched, grip unbound, per-eye occlusion by tracked slot ownership, hands flipped, near plane 4 cm, stand tall in the sword stance, arms handed to the game for flute / climbing / takedowns, arm chains by bone chain, F11 resets the per-eye histories, five-option wheel with flute and recenter, eyes centred on the head, AA diagnostics, motion blur off in VR, carried items turn with the body, body drawn facing forward when running back, eye-order swap diagnostic, head found by its joint cluster - lone gear above it is skipped, left eye composed before the tick, VR controllers for any OpenXR controller: virtual pad, snap turn, item wheel, head gestures, rumble; first person with the head hidden in the render pose, xr=4 SYNCHRONIZED-SEQUENTIAL stereo: both eyes from one simulation tick, pair-atomic presentation, per-eye occlusion + TAA history, left-eye monitor mirror, HUD on its own sharp layer that stays put in the room (lazy follow), cinematic letterbox bars and fades over the whole view, theatre screen for videos/pause/menus/loading (flat-rendered); xr=3 experimental)"
+#define GOTVR_VERSION "GoTVR 0.18.26 (katana draw stage 1: sheath + hilt grab, rail, rumble, logs, joint probe and calibration; Jin's own sounds centred; physical dodging off; crouched start; hand deadband; look-down threshold 30; arm stretch, 3D audio: the Wwise listener is your head, Jin's own pose back in frozen frames (head shown in pause / cutscene starts), view rigid on the drawn body (no orbit when Jin turns to walk), faster room-scale, body turn eases in, AO fix through the game's own settings apply (AO off + screen-space shadows on), hand stabilisation, body threshold 20 deg, X = item wheel, play_mode=flat with state / flag logging, room-scale: Jin walks under your head, ambient occlusion held off in first person (see-through arms), VR arms kept through the landing, eyes 3 cm right / 2 cm up, body turns faster, headset recenter button recentres the game, forearm twist with the wrist, movement always follows the headset, body turns to the headset past 7.5 deg standing and moving, movement forward only when you start moving, fingers bend on one hinge each (no sideways fingers), thumb curls across like a fist, fingers ease into their poses, Shift+F6 arm shading test (screen-space shadows / AO), near clip back to the game, fingers: thumb by length + the hand's own palm, thumb / trigger touch, forward taken as you start moving, the body turns past the threshold while moving too, gesture indicator off, fingers from leaf paths + structure log, riding needs two markers (jumps keep the VR arms), movement forward taken at stops, Shift+F4 HUD-layer test, VR fingers: bind-pose fingers on the IK hands, grip curls a fist, trigger the index, movement forward = headset forward at snap / start / menu exit, view direction kept across menus, body dead zone 45 deg, body under the headset smoothed, body heading kept in world yaw with an even dead zone, movement faces the headset, body under the headset, smoother eye anchor, Shift+F7 near-plane A/B, standing hips squared to the body follow, hips turned square after a snap turn, Shift+F7 TAA A/B, 0.18.12-14 transparency changes removed, standing stance squared to face forward, idle animations held still in first person, near-focus stipple off in first person, snap turn without the catch-up wobble, wrist point from the grip (back / up / thumb, Ctrl+F1-F3), near clip in the environment too (TAA reprojection agrees), eyes 3 cm further back, each eye culled by its own view - no cross-eye occlusion (preset 7), eyes 5 cm further back, near plane 2 cm in first person, F1/F2/F3 hand trims saved to gotvr.ini, near stipple fade off in first person, hands pitched, grip unbound, per-eye occlusion by tracked slot ownership, hands flipped, near plane 4 cm, stand tall in the sword stance, arms handed to the game for flute / climbing / takedowns, arm chains by bone chain, F11 resets the per-eye histories, five-option wheel with flute and recenter, eyes centred on the head, AA diagnostics, motion blur off in VR, carried items turn with the body, body drawn facing forward when running back, eye-order swap diagnostic, head found by its joint cluster - lone gear above it is skipped, left eye composed before the tick, VR controllers for any OpenXR controller: virtual pad, snap turn, item wheel, head gestures, rumble; first person with the head hidden in the render pose, xr=4 SYNCHRONIZED-SEQUENTIAL stereo: both eyes from one simulation tick, pair-atomic presentation, per-eye occlusion + TAA history, left-eye monitor mirror, HUD on its own sharp layer that stays put in the room (lazy follow), cinematic letterbox bars and fades over the whole view, theatre screen for videos/pause/menus/loading (flat-rendered); xr=3 experimental)"
 static const u32 EXPECTED_TIMESTAMP = 1782230973u;
 static const char EXPECTED_SHA[] = "ed0931b6f6d3ca3874baf39ebc16d95ff0e93296891182f96c3a790da7109f63";
 
@@ -48,7 +48,7 @@ enum : u32 {
     RVA_RCTX_BUILD = 0x9B2DD0, RVA_RCTX_FLUSH = 0x9B49E0,
     RVA_CAM_SETVPF = 0x806BA0, RVA_RES_TRANSITION_IMPL = 0x4FDED0, RVA_RES_TABLE = 0x1487D38, RVA_RES_MULTI = 0x1487EA8,
     RVA_RES_TRANSITION = 0x4FDD50, RVA_CTX_FLUSHBARRIERS = 0x4FE780, RVA_SWAPCHAIN_GET = 0x4093C0, RVA_RV_SNAPSHOT = 0x9B6AE0, RVA_PASS0_PRE = 0x60EDC0,
-    RVA_CLOCK_UPDATE = 0x56ED80, RVA_CLOCK = 0x1489DF0, RVA_CAM_TEMPORAL = 0x808EF0, RVA_CAMS_STOREPREV = 0x8085D0, RVA_RV_OCC = 0x9E5350, RVA_OCC_VIEW = 0x1EDBD70, RVA_OCC_VIEWFN = 0x9E5960, RVA_OCC_SLOTS = 0x3389240, RVA_OCC_DIMS = 0x33891A4, RVA_PARITY = 0x148A3F8, RVA_OCC_ENABLE = 0x1804010, RVA_AA_RESOLVE = 0x614EB0, RVA_AA_VELOCITY = 0x614720, RVA_TAA_DRAW = 0x7E7D10, RVA_FRAMEID = 0x19F1A50, RVA_AA_OBJ = 0x3376280, RVA_SL_CONSTS = 0x807140, RVA_NGX_CREATE = 0x4B91B0, RVA_NGX_EVAL = 0x4B9300, RVA_NGX_RELEASE = 0x4B96B0,
+    RVA_CLOCK_UPDATE = 0x56ED80, RVA_CLOCK = 0x1489DF0, RVA_CAM_TEMPORAL = 0x808EF0, RVA_CAMS_STOREPREV = 0x8085D0, RVA_RV_OCC = 0x9E5350, RVA_OCC_VIEW = 0x1EDBD70, RVA_OCC_VIEWFN = 0x9E5960, RVA_AUDIO_LISTENER = 0x5BAC80, RVA_CAMB = 0x1EDBCC8, RVA_AUDIO_EMITTER = 0x5BC780, RVA_AUDIO_W2A = 0x20A1CD0, RVA_OCC_SLOTS = 0x3389240, RVA_OCC_DIMS = 0x33891A4, RVA_PARITY = 0x148A3F8, RVA_OCC_ENABLE = 0x1804010, RVA_AA_RESOLVE = 0x614EB0, RVA_AA_VELOCITY = 0x614720, RVA_TAA_DRAW = 0x7E7D10, RVA_FRAMEID = 0x19F1A50, RVA_AA_OBJ = 0x3376280, RVA_SL_CONSTS = 0x807140, RVA_NGX_CREATE = 0x4B91B0, RVA_NGX_EVAL = 0x4B9300, RVA_NGX_RELEASE = 0x4B96B0,
     RVA_PASSJOB = 0x9B55B0, RVA_PASSBODY = 0x9B55D0, RVA_INLINE_RET = 0x9B5431, RVA_PASSTAB = 0x1210930, RVA_FN_NOP = 0x3FCBD0, NPASS = 69,
     RVA_RT_BIND = 0x7E34E0, RVA_SC_COMPUTESIZES = 0x46C840, RVA_POSTSCCMD = 0x4277D0, RVA_WND_PUMP = 0x446530, RVA_APPLY_DISPLAY = 0x421ED0, RVA_SC_RECREATE = 0x46E3D0, RVA_HERO = 0x34C6F20, RVA_ANIM_JOB = 0xB2DBC0, RVA_SERVICES_ROOT = 0x1998300, RVA_CTX_FLUSHRT = 0x4FEA80, RVA_FLUSHRT_DSV = 0x4FED6D, RVA_DSV_INC = 0x1CDFBD8, RVA_DSV_BASE = 0x1CDFB58, RVA_CTX_VIEWPORT = 0x50ECA0, RVA_CTX_SCISSOR = 0x50EC60, RVA_MOVIE_DRAW = 0x7EAF80, RVA_UI_TARGET = 0x3377510, RVA_WORLD_ON = 0x5A0450, RVA_UI60_PRE = 0x6E3790, RVA_PASS65_PRE = 0x610460, RVA_BATCH_DRAW = 0x5681A0, RVA_FADE = 0x149AF80, RVA_UI_WORLDDRAW = 0x6E37D0, RVA_STR_LETTERBOX = 0x1114870, RVA_SVC_DISPLAY = 0x409450,   // Reflex frame id: incremented first thing in GameTick; Present tags desc[0] with it
 };
@@ -69,6 +69,8 @@ typedef u64(WINAPI *FG)(u64, u64, u64, u64);
 // the previous state again and sees the change one tick later, on the next simulated (left-eye) tick.
 static std::atomic<int> g_freezeNow{0};
 static u8 g_padLast[2][4][16]; static bool g_padHave[2][4];
+static bool g_playFlat = false;   // 0.18.24 play_mode=flat
+static int g_audioHead = 1;        // 0.18.25 audio_head
 // 0.18.0: VR controllers merge into user 0 (vrin::padHook, set once the mod is up; null = pure passthrough)
 static bool (*g_padHook)(DWORD user, u8 *state, bool realOk) = nullptr;
 static void (*g_rumbleHook)(DWORD user, const void *vib) = nullptr;
@@ -178,6 +180,8 @@ static const Sig kSigs[] = {
     {"NxApp_PostSCCmd (synchronous swapchain-thread command; 2 = apply display)", RVA_POSTSCCMD, "48 89 5C 24 10 57 48 83 EC 20 48 83 B9 F0 06 00 00 00"},
     {"SC_Recreate (SCImpl vt+0x20: destroys and creates the swapchain)", RVA_SC_RECREATE, "48 89 5C 24 08 57 48 83 EC 20 48 8B DA 48 8B F9 E8 ?? ?? ?? ?? 4C 8D 05 ?? ?? ?? ??"},
     {"Occ_View (occlusion view getter: obj+0x40 when obj+0x34)", RVA_OCC_VIEWFN, "33 C0 48 8D 51 40 38 41 34 48 0F 45 C2 C3"},
+    {"Audio_ListenerFromCamera (Wwise listener 0-2 from CAM-B +0x890)", RVA_AUDIO_LISTENER, "4C 8B DC 55 41 56 49 8D 6B 98 48 81 EC 58 01 00 00 48 8B 05"},
+    {"Audio_EmitterUpdate (one Wwise emitter: id +0x18, source +0x28)", RVA_AUDIO_EMITTER, "48 89 5C 24 20 55 56 57 48 8D 6C 24 90 48 81 EC 70 01 00 00"},
     {"RV_OcclusionSetup caller: frame 0x141EBD2C0 + 0x1EAB0 = the occlusion view", 0x5A08A6, "48 8D AE B0 EA 01 00 48 8B CD E8"},
     {"Anim_Job (character animation job: job+0xE8 node, job+0xA8 render pose)", RVA_ANIM_JOB, "40 55 48 8D AC 24 50 FF FF FF 48 81 EC B0 01 00 00 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 85 A0 00 00 00 48 8B 51 48 48 8B 41 40"},
     {"Anim_Setup stores the node at job+0xE8", 0x9BB7B4, "48 89 B7 E8 00 00 00"},
@@ -229,12 +233,14 @@ struct UiCfg { int hud = 1; float hudDeg = 55.0f, hudDist = 1.6f, hudDown = 3.0f
 static UiCfg g_ui; static int g_hostStart = 1, g_renderSize = 2304; static float g_uiAspect = 16.0f / 9.0f;
 // 0.17.0 first person (playbook ch01/ch02/ch12; references: bldbrne-vr, BetterVR, FRIK - anchor on the body root, not the head bone)
 struct FpCfg { int on = 1; float nearCm = 0.0f, stanceMaxCm = 25.0f; int standTall = 0; float eyeUpCm = -1.0f, eyeFwdCm = 1.0f, eyeLeftCm = -3.0f, vertTau = 0.35f, horizTau = 1.0f, lean = 1.0f, maxCamDistM = 8.0f, hideRadiusCm = 22.0f; int hide = 1;
-                int idleHold = 1, stanceSquare = 1, fingers = 1, indexTrigger = 1; float gripFull = 0.35f, fingerSign = 1.0f, fingerRelaxed = 5.0f, fingerTween = 0.15f, forearmTwist = 1.0f; int bodyFollow = 1, bodyAttach = 1, bodyHead = 1, arms = 1; float headDeadDeg = 7.5f, headTau = 0.08f, moveTau = 0.15f, underMaxCm = 60.0f, underTau = 0.5f; int bodyUnder = 1; float idleSettle = 0.5f, handBackCm = 7.0f, handUpCm = 3.0f, handSideCm = 0.0f, handPitch = 0.0f, handYaw = 0.0f, handRoll = 0.0f; float bodyStartDeg = 80.0f, bodyFullDeg = 130.0f, bodyTurnSpeed = 1440.0f, bodyMaxSpeed = 8.0f; };
+                int idleHold = 1, stanceSquare = 1, fingers = 1, indexTrigger = 1; float gripFull = 0.35f, fingerSign = 1.0f, fingerRelaxed = 5.0f, fingerTween = 0.15f, forearmTwist = 1.0f, armStretch = 0.10f; int stab = 1, roomscale = 0, headRigid = 1; float bodyTurnS = 0.35f; float rsDeadCm = 12.0f, rsStopCm = 5.0f, stabMinHz = 1.2f, stabBeta = 10.0f, stabRotMinHz = 0.9f, stabRotBeta = 3.0f, stabDeadMm = 1.5f, stabDeadDeg = 0.25f; int bodyFollow = 1, bodyAttach = 1, bodyHead = 1, arms = 1; float headDeadDownDeg = 30.0f, headDeadDeg = 20.0f, headTau = 0.08f, moveTau = 0.15f, underMaxCm = 60.0f, underTau = 0.1f; int bodyUnder = 1; float idleSettle = 0.5f, handBackCm = 7.0f, handUpCm = 3.0f, handSideCm = 0.0f, handPitch = 0.0f, handYaw = 0.0f, handRoll = 0.0f; float bodyStartDeg = 80.0f, bodyFullDeg = 130.0f, bodyTurnSpeed = 1440.0f, bodyMaxSpeed = 8.0f; };
 static FpCfg g_fp;   // 0.12.0 UI/HUD/video settings (playbook ch04)
 static std::atomic<bool> g_flatRender{false};   // 0.13.0 xr=4: this tick is a flat context rendered as a normal flat frame (game thread decides at tick start)
 static std::atomic<int> g_eyeSwap{0}; static int g_eyeSwapLatched = 0;
 static std::atomic<int> g_mblurOff{1};   // 0.18.6: hold the game's motion blur at 0 while in VR
 namespace mblur { static void tick(bool force = false); static void restore(); }
+namespace obs { static void tick(); static void mark(); }
+namespace fp { static void snapRestore(); }
 namespace shade { static void tick(bool force = false); static void restore(); static std::atomic<int> mode{1}; }
 namespace stipple { static void tick(bool fpOn); }
 static std::atomic<int> g_flatCut{0};           // camera cuts still to force after a flat <-> stereo switch
@@ -245,6 +251,9 @@ static void loadConfig() {
         const char *def =
             "; GoTVR 0.6 settings. Restart the game after editing.\r\n"
             "[gotvr]\r\n"
+            "; audio_self_centre (1): Jin's own sounds within audio_self_radius_cm (35) of your head (his voice, gear at his head) are heard centred, audio_self_ahead_cm (25) in front of you; 0 = where the game puts them\r\n"
+            "; audio_head (xr=4): 1 = 3D audio - the game's sound listener is your head in first person, so sounds stay put in the world when you turn (default); 0 = the game's camera\r\n"
+            "; play_mode: vr (default) = the VR mod; flat = play on the monitor with the game's own camera and pad while the log records Jin's state and flags (F8 = MARK)\r\n"
             "; xr: 0 = off (flat game, census only)\r\n"
             ";     1 = mono 6DoF: camera follows your head, same image in both eyes (comfort fallback)\r\n"
             ";     2 = stereo 6DoF, alternate-eye (left eye on even frames, right eye on odd frames)\r\n"
@@ -284,10 +293,13 @@ static void loadConfig() {
             "; fp_body_follow: 1 = when Jin faces away from your forward direction (running backwards) his body is drawn facing it (default), 0 = off;\r\n"
             ";   fp_body_follow_start_deg / _full_deg (80 / 130), fp_body_turn_speed (1440 deg/s, 0 = instant), fp_body_follow_max_speed (8 m/s; off above it and while riding)\r\n"
             ";   fp_body_follow_items: 1 = the sword and other carried items turn with the body (default; the joint world matrices are turned), 0 = only the body\r\n"
-            "; fp_body_follows_head: 1 = Jin's body turns to where you look once you look more than fp_body_head_deadzone_deg (7.5) away, standing and moving (default; fp_body_head_follow_s 0.08)\r\n"
+            "; fp_body_follows_head: 1 = Jin's body turns to where you look once you look more than fp_body_head_deadzone_deg (20; fp_body_head_deadzone_down_deg 30 while you look down at yourself) away, standing and moving (default), easing round in fp_body_turn_s (0.35 s)\r\n"
             "; [controls] move_follows_head: 1 = the left stick's forward is always where the headset looks (default); 0 = taken when you start moving / snap turn / leave a menu\r\n"
+            "; fp_arm_stretch (0.10): how far Jin's arm may stretch past its length to reach your hand (a fraction of the arm: 0.10 = 5 cm), in the upper arm / elbow; 0 = never\r\n"
             "; fp_forearm_twist (1): how much of the wrist's roll the forearm takes, shared along its twist joints like a real forearm (0 = off, the roll stays in the wrist)\r\n"
-            "; fp_ao_off (xr=4): 1 = the game's ambient occlusion is held off while first person runs (it printed the grass onto Jin's arms; default; Shift+F6 toggles), 0 = left as set in the menu\r\n"
+            "; fp_roomscale (0 = off, default since 0.18.26; 1 = on): when you step away from Jin (more than fp_roomscale_start_cm 12) and the left stick rests, Jin walks under your head (his real collider moves: dodge for real) until within fp_roomscale_stop_cm 5; 0 = off\r\n"
+            "; fp_hand_stab (1): steadies the hands when held still (One Euro filter: fp_hand_stab_min_hz 1.2 = smoothing at rest, lower = steadier; fp_hand_stab_beta 10 = how fast it lets go when the hand moves; fp_hand_stab_rot_min_hz 0.9 / fp_hand_stab_rot_beta 3 for turning; fp_hand_stab_dead_mm 1.5 / fp_hand_stab_dead_deg 0.25 = a soft deadband: tremor smaller than that is held still)\r\n"
+            "; fp_ao_off (xr=4): 1 = in first person the mod sets ambient occlusion OFF and screen-space shadows ON through the game's own settings apply (the see-through arms fix; default; Shift+F6 toggles), 0 = left as set in the menu\r\n"
             "; fp_near_cm (xr=4): the camera's near clip plane in first person (0 = the game's own 10 cm, default since 0.18.20; 2 = arms closer than 10 cm not cut open, but grass then draws over them; Shift+F7 toggles)\r\n"
             "; fp_stand_tall: 1 = when the game crouches him a little (the sword stance, up to fp_stand_tall_max_cm 25) he is drawn standing tall, feet planted (0 = off, default)\r\n"
             "; fp_arms: 1 = Jin's arms follow your controllers (full-body IK stage 1, default; Shift+F10 toggles), 0 = the game's animation\r\n"
@@ -310,6 +322,11 @@ static void loadConfig() {
         if (f != INVALID_HANDLE_VALUE) { DWORD w; WriteFile(f, def, (DWORD)strlen(def), &w, nullptr); CloseHandle(f); }
     }
     g_cfg.xr = GetPrivateProfileIntW(L"gotvr", L"xr", 0, ini);
+    g_audioHead = GetPrivateProfileIntW(L"gotvr", L"audio_head", 1, ini) ? 1 : 0;   // 0.18.25 3D audio
+    {   // 0.18.24 play_mode: vr (default) or flat (no headset, the game's own camera and pad, the observer logs Jin's state and flags)
+        wchar_t pm[32]; GetPrivateProfileStringW(L"gotvr", L"play_mode", L"vr", pm, 32, ini);
+        if (!_wcsicmp(pm, L"flat")) { g_playFlat = true; g_cfg.xr = 0; }
+    }
     g_cfg.census = GetPrivateProfileIntW(L"gotvr", L"census", 1, ini);
     g_cfg.hotkeys = GetPrivateProfileIntW(L"gotvr", L"hotkeys", 1, ini);
     g_cfg.unitsPerM = (float)GetPrivateProfileIntW(L"gotvr", L"units_per_m", 100, ini);
@@ -350,10 +367,10 @@ static void loadConfig() {
         g_fp.eyeUpCm = fl(L"fp_eye_up_cm", -1.0f, -60.0f, 40.0f); /* 0.18.23 owner: "make the view 2 cm higher" (-3 -> -1) */ g_fp.nearCm = fl(L"fp_near_cm", 0.0f, 0.0f, 50.0f);   /* 0.18.20: back to the game's 10 cm - grass was drawn over the arms with 2 cm (photo) */ g_fp.standTall = GetPrivateProfileIntW(L"gotvr", L"fp_stand_tall", 0, ini) ? 1 : 0; g_fp.stanceMaxCm = fl(L"fp_stand_tall_max_cm", 25.0f, 0.0f, 80.0f); g_fp.eyeLeftCm = fl(L"fp_eye_left_cm", -3.0f, -30.0f, 30.0f); /* 0.18.23 owner: "still a bit to the left of Jin's head (maybe 3 cm)" -> 3 cm to his right */   // 0.18.7: -11 -> -8 ("a tiny bit higher")
         g_fp.eyeFwdCm = fl(L"fp_eye_forward_cm", 1.0f, -40.0f, 60.0f);   // 0.18.12 owner: "back a few cm, still too far out" (4 -> 1); 0.18.11: 9 -> 4
         g_fp.bodyHead = GetPrivateProfileIntW(L"gotvr", L"fp_body_follows_head", 1, ini) ? 1 : 0; g_fp.arms = GetPrivateProfileIntW(L"gotvr", L"fp_arms", 1, ini) ? 1 : 0;
-        g_fp.headDeadDeg = fl(L"fp_body_head_deadzone_deg", 7.5f, 1.0f, 120.0f); /* 0.18.17 owner: 35 -> 45; 0.18.22 owner: "always rotate to match the headset after a small threshold (5-10 deg)" -> 7.5 */ g_fp.headTau = fl(L"fp_body_head_follow_s", 0.08f, 0.0f, 3.0f); /* 0.18.23 owner: "Jin's body must face the headset faster - in large turns I can see his body" (0.25 -> 0.08) */ g_fp.moveTau = fl(L"fp_body_move_follow_s", 0.15f, 0.0f, 3.0f);
-        g_fp.bodyUnder = GetPrivateProfileIntW(L"gotvr", L"fp_body_under_hmd", 1, ini) ? 1 : 0; g_fp.underMaxCm = fl(L"fp_body_under_max_cm", 60.0f, 0.0f, 200.0f); g_fp.underTau = fl(L"fp_body_under_follow_s", 0.5f, 0.0f, 5.0f);
+        g_fp.headDeadDeg = fl(L"fp_body_head_deadzone_deg", 20.0f, 1.0f, 120.0f); g_fp.headDeadDownDeg = fl(L"fp_body_head_deadzone_down_deg", 30.0f, 1.0f, 120.0f); /* 0.18.24 owner: 7.5 -> 20 */ /* 0.18.17 owner: 35 -> 45; 0.18.22 owner: "always rotate to match the headset after a small threshold (5-10 deg)" -> 7.5 */ g_fp.headTau = fl(L"fp_body_head_follow_s", 0.08f, 0.0f, 3.0f); /* 0.18.23 owner: "Jin's body must face the headset faster - in large turns I can see his body" (0.25 -> 0.08) */ g_fp.moveTau = fl(L"fp_body_move_follow_s", 0.15f, 0.0f, 3.0f);
+        g_fp.bodyUnder = GetPrivateProfileIntW(L"gotvr", L"fp_body_under_hmd", 1, ini) ? 1 : 0; g_fp.underMaxCm = fl(L"fp_body_under_max_cm", 60.0f, 0.0f, 200.0f); g_fp.underTau = fl(L"fp_body_under_follow_s", 0.1f, 0.0f, 5.0f); /* 0.18.25: 0.5 -> 0.1 (owner: "the headset should follow the body's displacement faster") */
         g_fp.fingers = GetPrivateProfileIntW(L"gotvr", L"fp_fingers", 1, ini) ? 1 : 0; g_fp.indexTrigger = GetPrivateProfileIntW(L"gotvr", L"fp_finger_index_trigger", 1, ini) ? 1 : 0;
-        g_fp.gripFull = fl(L"fp_grip_fist_full", 0.35f, 0.1f, 1.0f); g_fp.fingerSign = fl(L"fp_finger_bend_sign", 1.0f, -1.0f, 1.0f) < 0.0f ? -1.0f : 1.0f; g_fp.fingerRelaxed = fl(L"fp_finger_relaxed_deg", 5.0f, -20.0f, 40.0f); g_fp.fingerTween = fl(L"fp_finger_tween_s", 0.15f, 0.02f, 1.0f); g_fp.forearmTwist = fl(L"fp_forearm_twist", 1.0f, 0.0f, 1.5f); shade::mode = GetPrivateProfileIntW(L"gotvr", L"fp_ao_off", 1, ini) ? 1 : 0;
+        g_fp.gripFull = fl(L"fp_grip_fist_full", 0.35f, 0.1f, 1.0f); g_fp.fingerSign = fl(L"fp_finger_bend_sign", 1.0f, -1.0f, 1.0f) < 0.0f ? -1.0f : 1.0f; g_fp.fingerRelaxed = fl(L"fp_finger_relaxed_deg", 5.0f, -20.0f, 40.0f); g_fp.fingerTween = fl(L"fp_finger_tween_s", 0.15f, 0.02f, 1.0f); g_fp.forearmTwist = fl(L"fp_forearm_twist", 1.0f, 0.0f, 1.5f); g_fp.armStretch = fl(L"fp_arm_stretch", 0.10f, 0.0f, 0.4f); g_fp.roomscale = GetPrivateProfileIntW(L"gotvr", L"fp_roomscale", 0, ini) ? 1 : 0; /* 0.18.26 owner: "remove the physical dodging, it causes too many problems; keep the code" -> off by default */ g_fp.rsDeadCm = fl(L"fp_roomscale_start_cm", 12.0f, 5.0f, 100.0f); g_fp.rsStopCm = fl(L"fp_roomscale_stop_cm", 5.0f, 1.0f, 50.0f); g_fp.headRigid = GetPrivateProfileIntW(L"gotvr", L"fp_view_on_drawn_body", 1, ini) ? 1 : 0; g_fp.bodyTurnS = fl(L"fp_body_turn_s", 0.35f, 0.0f, 3.0f); g_fp.stab = GetPrivateProfileIntW(L"gotvr", L"fp_hand_stab", 1, ini) ? 1 : 0; g_fp.stabMinHz = fl(L"fp_hand_stab_min_hz", 1.2f, 0.1f, 30.0f); g_fp.stabBeta = fl(L"fp_hand_stab_beta", 10.0f, 0.0f, 200.0f); g_fp.stabRotMinHz = fl(L"fp_hand_stab_rot_min_hz", 0.9f, 0.1f, 30.0f); g_fp.stabDeadMm = fl(L"fp_hand_stab_dead_mm", 1.5f, 0.0f, 20.0f); g_fp.stabDeadDeg = fl(L"fp_hand_stab_dead_deg", 0.25f, 0.0f, 5.0f); g_fp.stabRotBeta = fl(L"fp_hand_stab_rot_beta", 3.0f, 0.0f, 100.0f); shade::mode = GetPrivateProfileIntW(L"gotvr", L"fp_ao_off", 1, ini) ? 1 : 0;
         g_fp.idleHold = GetPrivateProfileIntW(L"gotvr", L"fp_idle_hold", 1, ini) ? 1 : 0; g_fp.idleSettle = fl(L"fp_idle_settle_s", 0.5f, 0.1f, 5.0f); g_fp.stanceSquare = GetPrivateProfileIntW(L"gotvr", L"fp_stance_square", 1, ini) ? 1 : 0;
         g_fp.handBackCm = fl(L"fp_hand_back_cm", 7.0f, -10.0f, 20.0f); g_fp.handUpCm = fl(L"fp_hand_up_cm", 3.0f, -10.0f, 10.0f); g_fp.handSideCm = fl(L"fp_hand_side_cm", 0.0f, -10.0f, 10.0f); g_fp.handPitch = fl(L"fp_hand_pitch_deg", 0.0f, -180.0f, 180.0f); g_fp.handYaw = fl(L"fp_hand_yaw_deg", 0.0f, -180.0f, 180.0f); g_fp.handRoll = fl(L"fp_hand_roll_deg", 0.0f, -180.0f, 180.0f);
         g_fp.bodyFollow = GetPrivateProfileIntW(L"gotvr", L"fp_body_follow", 1, ini) ? 1 : 0; g_fp.bodyAttach = GetPrivateProfileIntW(L"gotvr", L"fp_body_follow_items", 1, ini) ? 1 : 0;
@@ -361,7 +378,7 @@ static void loadConfig() {
         if (g_fp.bodyFullDeg < g_fp.bodyStartDeg + 5.0f) g_fp.bodyFullDeg = fminf(180.0f, g_fp.bodyStartDeg + 5.0f);
         g_fp.bodyTurnSpeed = fl(L"fp_body_turn_speed", 1440.0f, 0.0f, 5000.0f); /* 0.18.23: 540 -> 1440 deg/s */ g_fp.bodyMaxSpeed = fl(L"fp_body_follow_max_speed", 8.0f, 0.5f, 100.0f);
         g_fp.hideRadiusCm = fl(L"fp_hide_radius_cm", 22.0f, 5.0f, 60.0f); g_fp.vertTau = fl(L"fp_vertical_smoothing_s", 0.35f, 0.0f, 3.0f);
-        g_fp.horizTau = fl(L"fp_lean_smoothing_s", 1.0f, 0.0f, 3.0f);   // 0.18.16: 0.3 -> 1.0 (owner: "stuttering and jittering when I look down") g_fp.lean = fl(L"fp_follow_lean", 1.0f, 0.0f, 1.0f); g_fp.maxCamDistM = fl(L"fp_max_camera_distance_m", 8.0f, 2.0f, 100.0f);
+        g_fp.horizTau = fl(L"fp_lean_smoothing_s", 1.0f, 0.0f, 3.0f); /* 0.18.16: 0.3 -> 1.0 (owner: "stuttering and jittering when I look down") */ g_fp.lean = fl(L"fp_follow_lean", 1.0f, 0.0f, 1.0f); g_fp.maxCamDistM = fl(L"fp_max_camera_distance_m", 8.0f, 2.0f, 100.0f);
         g_uiAspect = fl(L"ui_aspect", 16.0f / 9.0f, 0.0f, 4.0f); if (g_uiAspect > 0 && g_uiAspect < 0.5f) g_uiAspect = 16.0f / 9.0f;
         g_ui.followDeg = fl(L"hud_follow_deg", 35.0f, 5.0f, 120.0f); g_ui.followSpeed = fl(L"hud_follow_speed", 90.0f, 10.0f, 720.0f);
         { wchar_t b[32]; GetPrivateProfileStringW(L"gotvr", L"pause_channels", L"0x80", b, 32, ini); g_ui.pauseMask = (u32)wcstoul(b, nullptr, 0) & 0x0FFFFFFFu; } }
@@ -420,6 +437,8 @@ struct XINPUT_VIBRATION { WORD wLeftMotorSpeed, wRightMotorSpeed; };
 #include "vrinput.h"
 #include "fbik.h"
 #include "fingers.h"
+#include "stab.h"
+#include "sword.h"
 
 // One packet per game frame, built on the game thread the first time the frame touches the render
 // camera, and found again at Present by the frame id the engine tags its Present with (desc[0]).
@@ -1161,9 +1180,9 @@ static void waitPresented(u32 f) {
 // sessions and the pop-in stayed `[HEADSET]` -> removed in 0.18.5 (owner: no cost without a fix).
 static void hGameTick() {
     c_tick++; t_tick = GetCurrentThreadId();
-    if (g_cfg.xr != 4) { oGameTick(); return; }
+    if (g_cfg.xr != 4) { oGameTick(); obs::tick(); return; }
     uiDecide();   // 0.13.0: flat context for this tick (pause / video / no world / F10)
-    if (g_flatRender.load()) { g_simTicks++; oGameTick(); g_pairPhase = 0; return; }   // every tick simulated and shown; the next stereo pair starts with the left eye
+    if (g_flatRender.load()) { fp::snapRestore(); g_simTicks++; oGameTick(); g_pairPhase = 0; return; }   // 0.18.25: Jin's own pose back in frozen frames   // every tick simulated and shown; the next stereo pair starts with the left eye
     const bool freeze = g_pairPhase == 1 && S && hostFresh() && S->imagesOk && !S->gameRefuse;
     float *clk = (float *)(g_base + RVA_CLOCK); float saved[24];
     if (g_renderSync && t_present && t_present != t_tick && (freeze || g_renderSync >= 2)) waitPresented(frameCtr());   // the previous frame left the render thread
@@ -1211,6 +1230,18 @@ static void poseLocal(const GvPose &h, float Rg[3][3], float dg[3]) {
     for (int i = 0; i < 3; i++) { dg[i] = 0; for (int k = 0; k < 3; k++) dg[i] += kC[k][i] * d[k]; for (int j = 0; j < 3; j++) { Rg[i][j] = 0; for (int k = 0; k < 3; k++) Rg[i][j] += kC[k][i] * T[k][j]; } }
 }
 
+// 0.18.24 room-scale: move the tracking reference so the head offset loses the world displacement dw (game units, horizontal) - the view
+// (anchor + offset) then stays put while the anchor (Jin) moved by dw. gm = the game camera (its level forward), viewHoldDeg = the
+// VR-owned yaw; the same frame compose() maps the head offset with (dg . rows).
+static bool rsShiftRef(const float *gm, float viewHoldDeg, const float dw[2]) {
+    float fx = gm[0], fy = gm[1]; const float n = sqrtf(fx * fx + fy * fy); if (!(n > 1e-4f)) return false; fx /= n; fy /= n;
+    const float hdg = viewHoldDeg / 57.2957795f, c = cosf(hdg), sn = sinf(hdg);
+    const float r0[2] = {fx * c - fy * sn, fx * sn + fy * c}, r1[2] = {-r0[1], r0[0]};   // level forward / left, turned by the VR-owned view yaw
+    const float g[3] = {(r0[0] * dw[0] + r0[1] * dw[1]) / g_cfg.unitsPerM, (r1[0] * dw[0] + r1[1] * dw[1]) / g_cfg.unitsPerM, 0.0f};
+    float kg[3]; for (int i = 0; i < 3; i++) { kg[i] = 0; for (int k = 0; k < 3; k++) kg[i] += kC[i][k] * g[k]; }
+    float Rr[3][3]; quatMat(g_ref.q, Rr); for (int i = 0; i < 3; i++) { float v = 0; for (int j = 0; j < 3; j++) v += Rr[i][j] * kg[j]; g_ref.p[i] += v; }
+    return true;
+}
 // Build this frame's packet from the host's latest located views (game thread).
 static void buildPacket(u32 f, FramePkt &p) {
     p.frame = f; p.valid = false; p.eye = -1; p.phase = -1; p.stereo = false; p.flat = false;
@@ -1386,9 +1417,9 @@ static u8 *findModel(u8 *h, int &off, int &off2, int &cnt) {
         const float *r = (const float *)(p + 0x150); const float d[3] = {r[12] - hr[12], r[13] - hr[13], r[14] - hr[14]};
         if (len3(d) > 60.0f) return true;   // the hero's own model shares its root (a horse or a held weapon does not)
         const int c = countJoints(p, j); if (c <= cnt) return true;
-        {   // a standing human: the highest joint near the body axis 1.0..2.3 m above the root
+        {   // a human: the highest joint near the body axis 0.7..2.3 m above the root (standing or crouched)
             float top = -1e9f; pickHead(j, c, r, top);   // BUG-75: the head, not lone gear above it
-            if (top < 100.0f || top > 230.0f) { static int told = 0; if (told++ < 8) logf("first person: node %p (%d joints) at hero+0x%X skipped: highest joint %.0f cm", (void *)p, c, o1 < 0 ? 0 : o1, top); return true; }
+            if (top < 70.0f || top > 230.0f) {   /* 0.18.26: 100 -> 70 (log: loading in crouched, 99 cm, kept third person for 6 s) */ static int told = 0; if (told++ < 8) logf("first person: node %p (%d joints) at hero+0x%X skipped: highest joint %.0f cm", (void *)p, c, o1 < 0 ? 0 : o1, top); return true; }
         }
         cnt = c; best = p; off = o1; off2 = o2;
         return true;
@@ -1426,8 +1457,12 @@ static void findLone() {   // validation: tail joints with no other shown joint 
 // tail joint high was enough, and a jump lifts gear carried on the body (joint 600) past 150 cm above the root - the arms were
 // switched off and the body snapped to the node's facing as if mounted. On the horse BOTH reins/saddle markers (644 / 651, ~202 cm)
 // are up. Now at least two markers must be high (or the only one there is), for 0.25 s on and 0.25 s off.
+static std::atomic<float> underW[2]; static std::atomic<float> underCm{0}; static bool underMoved = false;
+static float hzS[2] = {0, 0}; static std::atomic<float> hzOut[2], hzT[2]; static std::atomic<int> hzOk{0};   // 0.18.25 head offset in Jin's own axes (model units), the drawn-body move
 static std::atomic<float> vertMs{0}; static std::atomic<u64> airAt{0}, nJumpHeld{0};   // 0.18.23
-static std::atomic<int> rideMarkersHigh{0}; static std::atomic<u64> nStopCaps{0}, nDeadTurns{0}, nSnapTurns{0}; static std::atomic<float> moveOffDeg{0};
+static std::atomic<float> rsCons[2], rsApplied{0}; static std::atomic<u64> nRsBlocked{0};   // 0.18.24 room-scale: distance Jin walked for you (world units, running total)
+static std::atomic<u64> stabResets[8], stabFiltered{0}; static int stabLost[2] = {0, 0}; static std::atomic<float> stabSpeed[2];   // 0.18.24 hand stabilisation
+static std::atomic<int> rideMarkersHigh{0}; static std::atomic<u64> nStopCaps{0}, nDeadTurns{0}, nSnapTurns{0}; static std::atomic<float> moveOffDeg{0}; static std::atomic<float> headPitchDeg{0}; static std::atomic<int> lookDownNow{0};   // 0.18.26
 static bool ridingRaw(const float *root, const float *U) {
     const float s = g_cfg.unitsPerM * 0.01f; int high = 0;
     for (int k = 0; k < nLone; k++) { const float *m = J(lone[k]); if (!shown(m)) continue; const float d[3] = {m[12] - root[12], m[13] - root[13], m[14] - root[14]};
@@ -1452,6 +1487,18 @@ static void bodyStep(const float *root, const float *U, const float *F, bool was
         // landing comes > 1.2 s after the press on longer falls, so the jump window now lasts while Jin is in the air (+ 0.6 s)
         float vz = 0; if (lastRootOk && dt > 0.0f) vz = ((root[12] - lastRoot[0]) * U[0] + (root[13] - lastRoot[1]) * U[1] + (root[14] - lastRoot[2]) * U[2]) / dt / g_cfg.unitsPerM;
         vertMs = vz; if (fabsf(vz) > 0.8f) airAt = GetTickCount64();
+    }
+    {   // 0.18.24 room-scale: while the drive walks Jin toward your head, the part of his step along that direction (never more than the
+        // offset left) is "yours" - gotvr's camera code takes it out of the head offset. A drive that gets him nowhere (a wall) pauses.
+        static float driveFor = 0.0f, gotFor = 0.0f;
+        if (GetTickCount64() < vrin::rsDriveUntil.load() && lastRootOk && dt > 0.0f) {
+            const float dx = root[12] - lastRoot[0], dy = root[13] - lastRoot[1]; const float ex = vrin::rsDir[0].load(), ey = vrin::rsDir[1].load();
+            const float left = sqrtf(underW[0].load() * underW[0].load() + underW[1].load() * underW[1].load());
+            float a = dx * ex + dy * ey; a = a < 0.0f ? 0.0f : a > left ? left : a;
+            if (std::isfinite(a) && a > 0.0f) { rsCons[0] = rsCons[0].load() + a * ex; rsCons[1] = rsCons[1].load() + a * ey; }
+            driveFor += dt; gotFor += a / (g_cfg.unitsPerM * 0.01f);
+            if (driveFor > 0.6f) { if (gotFor < 5.0f) { vrin::rsBlockUntil = GetTickCount64() + 1500; nRsBlocked++; } driveFor = 0.0f; gotFor = 0.0f; }
+        } else { driveFor = 0.0f; gotFor = 0.0f; }
     }
     lastRoot[0] = root[12]; lastRoot[1] = root[13]; lastRoot[2] = root[14]; lastRootOk = true; speedMs = sp;
     if (!wasActive) bodyYawCur = 0;
@@ -1489,9 +1536,19 @@ static void bodyStep(const float *root, const float *U, const float *F, bool was
         else if ((sp < 0.6f || vrin::cfg.moveHead) && g_fp.bodyHead) {
             const float e = wrapPi(headYaw - Hw);
             { static u64 seenTurn = 0; const u64 tn = vrin::turnSeq.load(); if (tn != seenTurn) { seenTurn = tn; if (fabsf(e) * D > 2.0f && !headTurning) { headTurning = true; nSnapTurns++; } } }
-            if (!headTurning && fabsf(e) * D > g_fp.headDeadDeg) { headTurning = true; nDeadTurns++; }
+            // 0.18.26 (owner: "if the player is looking down at the body, increase the follow threshold to 30"): below -35 deg pitch the
+            // threshold is fp_body_head_deadzone_down_deg (30), back above -25 deg it is the normal one again
+            static bool lookDown = false; { const float pt = headPitchDeg.load(); if (pt < -35.0f) lookDown = true; else if (pt > -25.0f) lookDown = false; }
+            const float dead = lookDown ? fmaxf(g_fp.headDeadDeg, g_fp.headDeadDownDeg) : g_fp.headDeadDeg; lookDownNow = lookDown ? 1 : 0;
+            if (!headTurning && fabsf(e) * D > dead) { headTurning = true; nDeadTurns++; }
             if (headTurning && fabsf(e) * D < 0.5f) headTurning = false;   // 0.18.22: 2 -> 0.5 deg, the body ends square to the view
-            if (headTurning) Hw = wrapPi(Hw + e * (g_fp.headTau > 0.0f ? 1.0f - expf(-dt / g_fp.headTau) : 1.0f));
+            // 0.18.25 (owner: "when I first pass the threshold, have Jin's body rotate a bit slower - tween - until it catches up; now it snaps"):
+            // the turn is a critically damped spring (eases in and out, no overshoot), ~90 % there after fp_body_turn_s (0.35 s)
+            static float hv = 0.0f;
+            if (headTurning && g_fp.bodyTurnS <= 0.0f) { Hw = headYaw; hv = 0.0f; }   // 0 = at once
+            else if (headTurning && dt > 0.0f) { const float om = 3.9f / fmaxf(0.05f, g_fp.bodyTurnS), x = -e, tmp = (hv + om * x) * dt, ex = expf(-om * dt);
+                const float x1 = (x + tmp) * ex; hv = (hv - om * tmp) * ex; Hw = wrapPi(headYaw + x1); if (!std::isfinite(Hw) || !std::isfinite(hv)) { Hw = headYaw; hv = 0.0f; } }
+            else if (headTurning) {} else hv = 0.0f;
         }
         else { headTurning = false;   // 0.18.17: moving, the body faces the MOVEMENT forward (your headset's forward at the last snap / start / menu exit)
             // 0.18.20 (owner: "when moving, Jin's body and sword must still rotate when the player exceeds the look threshold, like standing
@@ -1609,13 +1666,45 @@ static std::atomic<float> hipYawDeg{0};   // 0.18.15: the drawn hips' yaw relati
 // The headset's horizontal offset (world, game thread) is turned into Jin's model space and added to every joint of the render pose and
 // to the world matrices of everything but the head set (the eye anchor reads those - no feedback), so carried items move along.
 // Clamped to fp_body_under_max_cm (60): beyond that you are leaving Jin's body; the game still decides where Jin actually is.
-static std::atomic<float> underW[2]; static std::atomic<float> underCm{0}; static bool underMoved = false;
+// (0.18.24: underW / underCm / underMoved declared earlier, with the room-scale state)
 static std::atomic<u64> animUntil{0}, raisedUntil{0}; static std::atomic<int> animMove{0}; static std::atomic<u64> nAnimHolds{0}, nRaised{0};
 static std::atomic<float> gateW{0}, standDz{0}, standApplied{0}; static std::atomic<u64> nStand{0};
 struct ArmPub { float pos[2][3], fing[2][3], thumb[2][3]; float w[2]; int ok[2]; float palm[2][3], grip[2], trig[2], thumbC[2]; };
 // 0.18.18 VR fingers (fingers.h): the hands' finger chains with their bind pose, found with the arms
 static fing::Hand fingD[2]; static std::atomic<int> fingState{0}; static std::atomic<u64> nFingPosed{0}; static std::atomic<float> fingCurlOut[2], thumbOut[2];
 static ArmPub apub[2]; static std::atomic<int> apubIdx{-1};
+// 0.18.26 the katana draw (sword.h; game-thread logic in namespace swd): the job reads the state and moves the katana joint's subtree
+struct SwordPub { int state = 0; float s = 0; float axisW[3] = {0, 0, 0}; int probe = -1; int joint = -1; };
+static SwordPub spub[2]; static std::atomic<int> spubIdx{-1};
+static volatile LONG kSeq = 0; static float kGameW[16]; static std::atomic<int> kGameOk{0}; static std::atomic<u64> nSwordMoves{0};
+static bool kGameRead(float *m) { for (int t = 0; t < 4; t++) { const LONG a = kSeq; if (a & 1) continue; MemoryBarrier(); memcpy(m, kGameW, 64); MemoryBarrier(); if (a == kSeq) return kGameOk.load() != 0; } return false; }
+static bool swordApply(u8 *nd, float *pose, int cnt) {   // job thread, after the arms, before the world matrices
+    const int k = spubIdx.load(std::memory_order_acquire); if (k < 0) return false; const SwordPub sp = spub[k];
+    const float *N = (const float *)(nd + 0x150); const int j = sp.joint;
+    if (j >= 0 && j < cnt) {   // the rail frame: the katana joint as drawn (body turn / shifts included), BEFORE the mod moves it
+        const float *M = pose + (size_t)j * 16; float W[16];
+        for (int r = 0; r < 4; r++) { const float *v = M + 4 * r; for (int c = 0; c < 3; c++) W[4 * r + c] = v[0] * N[c] + v[1] * N[4 + c] + v[2] * N[8 + c] + (r == 3 ? N[12 + c] : 0.0f); W[4 * r + 3] = r == 3 ? 1.0f : 0.0f; }
+        InterlockedIncrement(&kSeq); MemoryBarrier(); memcpy(kGameW, W, 64); kGameOk = 1; MemoryBarrier(); InterlockedIncrement(&kSeq);
+    }
+    static uint16_t sub[512]; static fing::Aff Trel; static bool trelOk = false;
+    auto moveSub = [&](int root, const fing::Aff &D) { const int n = fbik::subtree(parents, cnt, root, sub, 512); if (n <= 0) return false;
+        for (int i = 0; i < n; i++) { float *m = pose + (size_t)sub[i] * 16; const fing::Aff a = fing::fromPose(m); fing::toPose(fing::mul(D, a), m); } return true; };
+    if (sp.probe >= 0 && sp.probe < cnt && parState.load() > 0) {   // the joint probe: lift the candidate 15 cm so you can see what it carries
+        fing::Aff D; for (int i = 0; i < 9; i++) D.R[i] = (i % 4 == 0) ? 1.0f : 0.0f; D.t[0] = D.t[1] = 0; D.t[2] = 15.0f * g_cfg.unitsPerM * 0.01f; return moveSub(sp.probe, D); }
+    if (sp.state == sword::S_SHEATHED || j < 0 || j >= cnt || parState.load() <= 0) { trelOk = false; return false; }
+    const float n00 = N[0] * N[0] + N[1] * N[1] + N[2] * N[2], n11 = N[4] * N[4] + N[5] * N[5] + N[6] * N[6], n22 = N[8] * N[8] + N[9] * N[9] + N[10] * N[10]; if (!(n00 > 1e-6f && n11 > 1e-6f && n22 > 1e-6f)) return false;
+    const float u = g_cfg.unitsPerM * 0.01f;
+    const float am[3] = {(sp.axisW[0] * N[0] + sp.axisW[1] * N[1] + sp.axisW[2] * N[2]) / n00, (sp.axisW[0] * N[4] + sp.axisW[1] * N[5] + sp.axisW[2] * N[6]) / n11, (sp.axisW[0] * N[8] + sp.axisW[1] * N[9] + sp.axisW[2] * N[10]) / n22};
+    const fing::Aff Pj = fing::fromPose(pose + (size_t)j * 16); fing::Aff Mt = Pj; for (int c = 0; c < 3; c++) Mt.t[c] += am[c] * sp.s * u;
+    if (sp.state == sword::S_DRAWN) {   // free in the right hand: the katana keeps the place in the hand it had when it left the rails
+        const int hj = armsD[1].hand; if (hj < 0 || hj >= cnt) return false; const fing::Aff Ph = fing::fromPose(pose + (size_t)hj * 16);
+        if (!trelOk) { fing::Aff Hi; if (!fing::inv(Ph, Hi)) return false; Trel = fing::mul(Hi, Mt); trelOk = true; }
+        Mt = fing::mul(Ph, Trel);
+    } else trelOk = false;
+    fing::Aff PjI; if (!fing::inv(Pj, PjI)) return false;
+    if (moveSub(j, fing::mul(Mt, PjI))) { nSwordMoves++; return true; }
+    return false;
+}
 static std::atomic<u64> nArmSolves{0}, nArmSkipped{0}; static std::atomic<float> armW[2];
 static bool tryParentTable(u8 *obj, int n, const float *pose, int depth, char *where, int whereN) {
     if (!obj || ((u64)obj & 7) || (u64)obj < 0x10000 || (u64)obj > 0x7FFFFFFFFFFFull || !readable(obj, 0x200)) return false;
@@ -1691,7 +1780,7 @@ static bool solveArms(u8 *nd, float *pose, int cnt, float bodyA) {   // job thre
     if (!fbik::norm3(n0) || !fbik::norm3(n1) || !fbik::norm3(n2)) return false;
     auto toModelP = [&](const float *w, float *o) { const float d[3] = {w[0] - N[12], w[1] - N[13], w[2] - N[14]}; o[0] = fbik::dot3(d, n0); o[1] = fbik::dot3(d, n1); o[2] = fbik::dot3(d, n2); };
     auto toModelD = [&](const float *w, float *o) { o[0] = fbik::dot3(w, n0); o[1] = fbik::dot3(w, n1); o[2] = fbik::dot3(w, n2); };
-    fbik::Params prm; prm.bodyYaw = bodyA; prm.twist = g_fp.forearmTwist; bool any = false;
+    fbik::Params prm; prm.bodyYaw = bodyA; prm.twist = g_fp.forearmTwist; prm.stretch = g_fp.armStretch; bool any = false;
     for (int side = 0; side < 2; side++) {
         const fbik::Arm &A = armsD[side]; if (!ap.ok[side] || ap.w[side] <= 0.0f || A.hand < 0 || A.hand >= cnt || A.clav < 0) continue;
         fbik::Target T; toModelP(ap.pos[side], T.pos); toModelD(ap.fing[side], T.fing); toModelD(ap.thumb[side], T.thumb); T.orient = true;
@@ -1769,6 +1858,26 @@ static void hideInPose(u8 *nd, float *pose) {
                 const float k = g_fp.underTau > 0.0f ? 1.0f - expf(-dts / g_fp.underTau) : 1.0f; shF[0] += (sh[0] - shF[0]) * k; shF[1] += (sh[1] - shF[1]) * k; }
             sh[0] = shF[0]; sh[1] = shF[1]; underCm = sqrtf(sh[0] * sh[0] + sh[1] * sh[1]) / s;
         }
+        {   // 0.18.25 (owner: "when I move and Jin's body moves too, the camera kind of rotates around the body"; "the headset follows the
+            // body slowly"): the eyes sat on Jin's animated head offset from his root, smoothed for 1 s in WORLD axes. When Jin walks
+            // somewhere (the room-scale drive, a sidestep) the game turns his node to the walking direction, his head offset (5-15 cm in
+            // front of the root) swings round with it and the view slowly orbited after it. Now the head offset is smoothed in Jin's OWN
+            // axes (a node turn does not change it) and placed along the DRAWN body's heading (the one facing your headset); the drawn
+            // body is moved by the difference so its head is exactly there (body and view rigid to each other, as animated).
+            static float T[2] = {0, 0}; static u64 hzMs = 0;
+            if (!copied) {
+                const u64 nw = GetTickCount64(); const float dz2 = hzMs ? fminf((float)(nw - hzMs) * 0.001f, 0.1f) : 0.0f; hzMs = nw;
+                if (!hzOk.load() || !std::isfinite(hzS[0])) { hzS[0] = H0[0]; hzS[1] = H0[1]; }
+                else { const float k = g_fp.horizTau > 0.0f ? 1.0f - expf(-dz2 / g_fp.horizTau) : 1.0f; hzS[0] += (H0[0] - hzS[0]) * k; hzS[1] += (H0[1] - hzS[1]) * k; }
+                hzOut[0] = hzS[0]; hzOut[1] = hzS[1]; hzOk = 1;
+                T[0] = T[1] = 0.0f;
+                if (!ridingNow.load() && g_fp.headRigid) { const float b = bodyYaw.load(std::memory_order_relaxed), c = cosf(b), sn = sinf(b);
+                    T[0] = (c * hzS[0] - sn * hzS[1]) - H0[0]; T[1] = (sn * hzS[0] + c * hzS[1]) - H0[1];
+                    const float l = sqrtf(T[0] * T[0] + T[1] * T[1]), mx = 40.0f * s; if (!(l < mx)) { T[0] = T[1] = 0.0f; } }   // fail closed on nonsense
+                hzT[0] = T[0]; hzT[1] = T[1];
+            }
+            sh[0] += T[0]; sh[1] += T[1];
+        }
         auto shiftPose = [&](float dx, float dy) { if (dx == 0.0f && dy == 0.0f) return; for (int j = 0; j < cnt; j++) { pose[(size_t)j * 16 + 12] += dx; pose[(size_t)j * 16 + 13] += dy; } };
         if (!copied) {
             jobApplied = 0;
@@ -1789,6 +1898,7 @@ static void hideInPose(u8 *nd, float *pose) {
         const float dz = standDz.load();
         if (legsReady.load() && dz > 0.05f && g_fp.standTall) { const float ap = fbik::standTall(pose, cnt, legsD, dz, jobApplied); standApplied = ap; if (ap > 0.0f) { moved = true; nStand++; } } else standApplied = 0.0f;
         moved |= solveArms(nd, pose, cnt, jobApplied);
+        moved |= swordApply(nd, pose, cnt);   // 0.18.26 the katana draw
         moved |= idleMoved.load() != 0;   // 0.18.13: the held idle pose (carried items follow it)
         moved |= underMoved;               // 0.18.16: the body moved under the headset
         if (moved) worldFromPose(nd, pose, cnt, p);
@@ -1863,6 +1973,32 @@ static bool idleApply(u8 *nd, float *pose, int cnt, bool inputQuiet) {   // job 
     }
     return true;
 }
+// 0.18.25 (owner: "make Jin's head come back when not in first person - cutscenes etc."; log 0.18.24: during FLAT / paused frames - the
+// pause menu, the map, the frozen first frame of a cutscene - the hero's animation job does not run (0 jobs/s), so the LAST pose the mod
+// wrote (head collapsed, body turned, VR arms) is what the game keeps drawing, headless). Every hero pose the mod is about to change is
+// copied first (the job's pose buffer - two alternate - and the joint world matrices); when the game renders flat frames without re-
+// animating, the copies are put back, so the frozen frame shows the game's own Jin, head and all.
+struct Snap { float *pose = nullptr; int cnt = 0; u8 *nd = nullptr; float *W = nullptr; u64 seq = 0; bool dirty = false; float p[JOINT_CAP * 16]; float w[(JOINT_CAP + 1) * 16]; };
+static Snap snap[2]; static u64 snapSeq = 0; static std::atomic<u64> nSnapRestores{0};
+static void snapTake(u8 *nd, float *pose) {
+    const bool willChange = (u32)(frameCtr() - hideFrame.load(std::memory_order_relaxed)) <= 2u;
+    int sl = pose == snap[0].pose ? 0 : pose == snap[1].pose ? 1 : -1;
+    if (!willChange) { if (sl >= 0) snap[sl].dirty = false; return; }   // a fresh pose the mod leaves alone
+    if (sl < 0) sl = snap[0].seq <= snap[1].seq ? 0 : 1;
+    int cnt = nJ; for (int b = 0; b < 2; b++) if (*(float **)(nd + 0x508 + b * 0x18) == pose) { const int c = *(int *)(nd + 0x510 + b * 0x18); if (c > 0 && c < cnt) cnt = c; }
+    if (cnt <= 0 || cnt >= JOINT_CAP) return;
+    Snap &S = snap[sl]; S.pose = pose; S.cnt = cnt; S.nd = nd; memcpy(S.p, pose, (size_t)cnt * 64);
+    float *W = *(float **)(nd + 0x278); S.W = W; if (W) memcpy(S.w, W, (size_t)(cnt + 1) * 64);
+    S.seq = ++snapSeq; S.dirty = true;
+}
+static void snapRestore() {   // game thread, while the game renders frozen / flat frames (the hero's job is not running)
+    int last = -1; for (int i = 0; i < 2; i++) if (snap[i].dirty && (last < 0 || snap[i].seq > snap[last].seq)) last = i;
+    if (last < 0) return;
+    for (int i = 0; i < 2; i++) { Snap &S = snap[i]; if (!S.dirty || !S.pose || S.nd != snap[last].nd) { S.dirty = false; continue; }
+        if (readable(S.pose, (size_t)S.cnt * 64)) memcpy(S.pose, S.p, (size_t)S.cnt * 64); S.dirty = false; }
+    const Snap &L = snap[last]; if (L.W && L.W == *(float **)(L.nd + 0x278) && readable(L.W, (size_t)(L.cnt + 1) * 64)) memcpy(L.W, L.w, (size_t)(L.cnt + 1) * 64);
+    nSnapRestores++; logf("first person: the game froze on a frame the mod had changed (pause / map / cutscene start) -> Jin's own pose put back (head shown)");
+}
 static void hAnimJob(u8 *job) {
     oAnimJob(job);
     if (!job) return;
@@ -1870,6 +2006,7 @@ static void hAnimJob(u8 *job) {
     const int k = hpubIdx.load(std::memory_order_acquire); if (k < 0 || hpub[k].node != nd) return;
     nHeroJobs++;
     float *pose = *(float **)(job + 0xA8); if (!pose) { nJobsNoBuf++; return; }
+    snapTake(nd, pose);   // 0.18.25: the game's own pose / world matrices, before the mod changes them (put back when the game freezes)
     if (g_fp.arms && !armsReady.load() && parState.load() >= 0) { int cnt = nJ; for (int b = 0; b < 2; b++) if (*(float **)(nd + 0x508 + b * 0x18) == pose) { const int c = *(int *)(nd + 0x510 + b * 0x18); if (c > 0 && c < cnt) cnt = c; } analyseArms(job, nd, pose, cnt); }
     if (armsReady.load()) {   // 0.18.9: the ANIMATION lifts a hand to head height (climbing, ledges, grappling, the flute) -> the game owns the arms
         const int k2 = hpubIdx.load(std::memory_order_acquire); if (k2 >= 0 && hpub[k2].head >= 0 && hpub[k2].head < nJ) {
@@ -1925,7 +2062,14 @@ static bool anchorFrom(float out[3]) {
     relUpF = relUpC + (up - relUpC) * frameAv; for (int c = 0; c < 3; c++) relHF[c] = relHC[c] + (hz[c] - relHC[c]) * frameAh;
     const float s = g_cfg.unitsPerM * 0.01f;   // cm -> game units
     const float rz = standApplied.load();   // 0.18.9: the drawn body raised by stand tall - the eyes go with it
-    for (int c = 0; c < 3; c++) out[c] = root[12 + c] + U[c] * (relUpF + g_fp.eyeUpCm * s + rz) + relHF[c] * g_fp.lean + F[c] * (g_fp.eyeFwdCm * s) + Lw[c] * lat;
+    float hw[3] = {relHF[0], relHF[1], relHF[2]};
+    if (hzOk.load() && g_fp.headRigid) {   // 0.18.25: the smoothed head offset in Jin's own axes, along the drawn heading (see hideInPose)
+        const float sc = sqrtf(root[0] * root[0] + root[1] * root[1] + root[2] * root[2]); const float hx = hzOut[0].load() * sc, hy = hzOut[1].load() * sc;
+        if (ridingNow.load()) { float Fn[3] = {root[0], root[1], root[2]}; { const float d = Fn[0] * U[0] + Fn[1] * U[1] + Fn[2] * U[2]; for (int c = 0; c < 3; c++) Fn[c] -= d * U[c]; float l = len3(Fn); if (l > 1e-4f) for (auto &x : Fn) x /= l; }
+            const float Ln[3] = {U[1] * Fn[2] - U[2] * Fn[1], U[2] * Fn[0] - U[0] * Fn[2], U[0] * Fn[1] - U[1] * Fn[0]}; for (int c = 0; c < 3; c++) hw[c] = Fn[c] * hx + Ln[c] * hy; }
+        else for (int c = 0; c < 3; c++) hw[c] = F[c] * hx + Lw[c] * hy;
+    }
+    for (int c = 0; c < 3; c++) out[c] = root[12 + c] + U[c] * (relUpF + g_fp.eyeUpCm * s + rz) + hw[c] * g_fp.lean + F[c] * (g_fp.eyeFwdCm * s) + Lw[c] * lat;
     return true;
 }
 // render-camera update (hSlot43, CAM-A, VR pose present): true = first person; gm translation becomes the eye anchor
@@ -2021,6 +2165,201 @@ static bool update(float *gm) {
     return true;
 }
 } // namespace fp
+
+// 0.18.24 FLAT PLAY with logging (owner: "an ini setting that lets me play totally flat screen but keeps recording logs, so I can play more and
+// run into climbing, takedowns etc. that you can log and see the flags for"). play_mode=flat in gotvr.ini: no headset, no stereo, the
+// game's own camera and controls (xr forced to 0) - and an observer on the game thread:
+//  - STATE/s: Jin's position, ground speed, vertical speed (in the air?), the pad's buttons / triggers;
+//  - every small-integer field of the hero object (16 KB) that CHANGES is logged with its old and new value and the time (fields that
+//    change on most ticks - timers, counters - are found automatically and left out): climbing, takedowns, stances, riding, the bow,
+//    swimming... each switches flags there, and the log shows which, next to the button that started it;
+//  - F8 writes a numbered MARK line ("I'm climbing now") so the moments are easy to find.
+namespace obs {
+static std::atomic<int> on{0}; static std::atomic<u64> nMarks{0};
+static const int NB = 0x4100, NW = NB / 4;
+static u32 prevW[NW]; static uint16_t chg[NW]; static uint8_t noisy[NW]; static bool have = false; static u8 *lastHero = nullptr; static int nNoisy = 0;
+struct Ev { u32 off, a, b; u32 ms; }; static Ev ev[192]; static int nEv = 0, nDropped = 0;
+static float lastP[3] = {0, 0, 0}; static bool lastPOk = false; static LARGE_INTEGER fq{}, lastQ{}, secQ{}; static float vzMax = 0, spMax = 0, vzMin = 0; static u32 btnOr = 0; static u8 ltMax = 0, rtMax = 0;
+static inline bool small(u32 v) { return v < 0x10000u; }
+static void tick() {   // game thread (GameTick), flat play only
+    if (!on.load()) return;
+    if (!fq.QuadPart) QueryPerformanceFrequency(&fq); LARGE_INTEGER qn; QueryPerformanceCounter(&qn); if (!secQ.QuadPart) secQ = qn;
+    const float dt = lastQ.QuadPart ? (float)(qn.QuadPart - lastQ.QuadPart) / (float)fq.QuadPart : 0.0f; lastQ = qn;
+    u8 *h = fp::heroPtr();
+    if (!h || !readable(h, NB)) { if (have) logf("OBS: the hero is gone (loading / menu)"); have = false; lastPOk = false; return; }
+    const u32 *W = (const u32 *)h;
+    if (h != lastHero || !have) { lastHero = h; memcpy(prevW, W, NB); memset(chg, 0, sizeof chg); have = true; lastPOk = false; logf("OBS: hero %p (class id %d) - watching its first %d KB for flag changes", (void *)h, fp::classId(h), NB / 1024); return; }
+    {   // where he is and how fast
+        const float *M = (const float *)(h + 0x150); const float p[3] = {M[12], M[13], M[14]};
+        if (std::isfinite(p[0]) && std::isfinite(p[1]) && std::isfinite(p[2])) {
+            if (lastPOk && dt > 0.0005f && dt < 0.2f) { const float dx = p[0] - lastP[0], dy = p[1] - lastP[1], dz = p[2] - lastP[2];
+                const float sp = sqrtf(dx * dx + dy * dy) / dt / g_cfg.unitsPerM, vz = dz / dt / g_cfg.unitsPerM; spMax = fmaxf(spMax, sp); vzMax = fmaxf(vzMax, vz); vzMin = fminf(vzMin, vz); }
+            memcpy(lastP, p, 12); lastPOk = true; }
+    }
+    if (g_padHave[0][0]) { btnOr |= *(const uint16_t *)(g_padLast[0][0] + 4); ltMax = g_padLast[0][0][6] > ltMax ? g_padLast[0][0][6] : ltMax; rtMax = g_padLast[0][0][7] > rtMax ? g_padLast[0][0][7] : rtMax; }
+    const u32 ms = (u32)((qn.QuadPart - secQ.QuadPart) * 1000 / fq.QuadPart);
+    for (int i = 0; i < NW; i++) { const u32 v = W[i]; if (v == prevW[i]) continue;
+        if (chg[i] < 0xFFFF) chg[i]++;
+        if (!noisy[i] && small(v) && small(prevW[i])) { if (nEv < (int)(sizeof ev / sizeof ev[0])) ev[nEv++] = {(u32)(i * 4), prevW[i], v, ms}; else nDropped++; }
+        prevW[i] = v; }
+    if ((qn.QuadPart - secQ.QuadPart) >= fq.QuadPart) {   // once a second
+        int newNoisy = 0; for (int i = 0; i < NW; i++) { if (chg[i] > 6 && !noisy[i]) { noisy[i] = 1; nNoisy++; newNoisy++; } chg[i] = 0; }
+        logf("   STATE/s: Jin %.0f %.0f %.0f | ground speed up to %.1f m/s, vertical %+.1f..%+.1f m/s%s | pad buttons 0x%04x LT %d RT %d | hero flag changes %d (%d dropped; %d busy fields ignored, %d new)",
+             lastP[0], lastP[1], lastP[2], spMax, vzMin, vzMax, (vzMax > 0.8f || vzMin < -0.8f) ? " (in the air)" : "", btnOr, ltMax, rtMax, nEv, nDropped, nNoisy, newNoisy);
+        int shown = 0;
+        for (int k = 0; k < nEv && shown < 60; k++) { const Ev &e = ev[k]; if (noisy[e.off / 4]) continue; shown++; logf("      hero+0x%04x: %u -> %u (+%u ms)", e.off, e.a, e.b, e.ms); }
+        nEv = 0; nDropped = 0; spMax = 0; vzMax = 0; vzMin = 0; btnOr = 0; ltMax = rtMax = 0; secQ = qn;
+    }
+}
+static void mark() { const u64 n = ++nMarks; logf("==================== MARK %llu (F8) ====================", (unsigned long long)n); }
+} // namespace obs
+
+// 0.18.25 3D ("8D") AUDIO (owner: "begin on 8D spatial audio for VR"; playbook ch20 "the listener is another tracked camera": steer the
+// game's own audio engine with the same transformed head basis the eyes use, keep its mix; God of War VR D-159 does exactly that for
+// Wwise). Ghost of Tsushima runs Wwise too (AK::SoundEngine exported: SetDefaultListeners(0, 1, 2) at boot 0x5B91A0, SetPosition
+// 0xF12BF0). Static RE: the audio update 0x5B3E60 calls Audio_ListenerFromCamera 0x5BAC80, which reads CAM-B's (*0x141EDBCC8) camera
+// matrix at +0x890 (rows forward, left, up, position - the game's third-person camera), blends the position toward the audio focus,
+// smooths it (0.8 per update) and stores the listener matrix + its inverse in the audio manager (+0x90.. / +0xD0..); 0x5BA730 then
+// hands it to Wwise for listeners 0-2 (front y mirrored, position through the world->audio matrix 0x1420A1CD0). In VR that camera
+// does not turn with your head, so sounds kept their side whatever way you looked. The hook lends that function your HEAD (the eye
+// midpoint in the game world, composed exactly like the eyes: anchor + level yaw + head pose) for the duration of the call, so the
+// game itself derives every listener value from it; CAM-B's matrix is put back right after. First person in VR only (cutscenes and
+// third person keep the game's listener); audio_head = 0 turns it off.
+namespace aud {
+typedef void (*FnL)(u8 *); static FnL oListener = nullptr;
+static std::atomic<int> on{1}; static std::atomic<u64> nHead{0}, nGame{0};
+static volatile LONG seq = 0; static float head[16]; static std::atomic<u64> headMs{0};
+static void publish(const float *m) { InterlockedIncrement(&seq); MemoryBarrier(); memcpy(head, m, 64); head[3] = head[7] = head[11] = 0.0f; head[15] = 1.0f; MemoryBarrier(); InterlockedIncrement(&seq); headMs = GetTickCount64(); }
+static bool read(float *m) { for (int t = 0; t < 4; t++) { const LONG a = seq; if (a & 1) continue; MemoryBarrier(); memcpy(m, head, 64); MemoryBarrier(); if (a == seq) return true; } return false; }
+static u8 *camBNow() { return *(u8 **)(g_base + RVA_CAMB); }
+static u8 *(*camB)() = camBNow;   // self-test: a stand-in camera
+static bool (*useHead)() = []() -> bool { return g_cfg.xr == 4 && fp::activeNow && GetTickCount64() - headMs.load() < 250; };
+static void hListener(u8 *mgr) {
+    u8 *cam = on.load() ? camB() : nullptr; float H[16];
+    if (!cam || !useHead() || !readable(cam + 0x890, 64) || !read(H)) { nGame++; oListener(mgr); return; }
+    float save[16]; memcpy(save, cam + 0x890, 64); memcpy(cam + 0x890, H, 64);
+    oListener(mgr);
+    memcpy(cam + 0x890, save, 64); nHead++;
+    { static int told = 0; if (!told++) logf("3D audio: the game's listener now follows your head (first person in VR; head %.0f %.0f %.0f, the game's camera was %.0f %.0f %.0f)", H[12], H[13], H[14], save[12], save[13], save[14]); }
+}
+// 0.18.26 (owner: "finish the audio with the gear / Jin's voice"; God of War VR D-162): with the listener on your head, an emitter on Jin's
+// own head / face (his voice, breath, hat and collar gear) sits a few cm from it, so the smallest head turn swung it from ear to ear.
+// Static RE: the audio update 0x5BA70E loops emitters through Audio_EmitterUpdate 0x5BC780(emitter): Wwise game object id +0x18,
+// source +0x28 -> owner node +0x38, owner joint +0x48 (-1 = the node), local offset +0x50; the position is owner world (node +0x150
+// or joint world array +0x278 [joint + 1]) x offset; the game sends SetPosition(id, AkTransform{front, top, position}) with front / top
+// y mirrored and the position through the world -> audio matrix 0x1420A1CD0. After the game's update, an emitter within
+// audio_self_radius_cm (35) of your head gets one more SetPosition (Wwise applies them in order): audio_self_ahead_cm (25) straight in
+// front of your head, facing as your head - heard centred, in both ears. Further emitters (footsteps, the sword on your hip, other
+// people) keep their real place: below / beside you is where they are.
+typedef void (*FnE)(u8 *); static FnE oEmitter = nullptr;
+typedef int (*FnSetPos)(u64, const float *); static FnSetPos setPos = nullptr;
+static float selfRadiusCm = 35.0f, selfAheadCm = 25.0f; static std::atomic<int> selfOn{1}; static std::atomic<u64> nSelf{0}, nEmit{0};
+static bool emitterWorld(u8 *src, float *p) {   // the game's own formula (0x5B5D90)
+    if (!src || !readable(src, 0x60)) return false; u8 *own = *(u8 **)(src + 0x38); const int j = *(int *)(src + 0x48); const float *L = (const float *)(src + 0x50);
+    if (!own || !readable(own, 0x288)) return false; const int cid = fp::classId(own); if (cid < 10 || cid > 219) return false;
+    const float *M = (const float *)(own + 0x150);
+    if (j >= 0) { const float *W = *(const float **)(own + 0x278); if (!W || j > 4096 || !readable(W + (size_t)(j + 1) * 16, 64)) return false; M = W + (size_t)(j + 1) * 16; }
+    for (int c = 0; c < 3; c++) p[c] = L[0] * M[c] + L[1] * M[4 + c] + L[2] * M[8 + c] + M[12 + c];
+    return std::isfinite(p[0]) && std::isfinite(p[1]) && std::isfinite(p[2]);
+}
+static const float *w2a = nullptr;   // the game's world -> audio matrix (self-test: a stand-in)
+static void toAudio(const float *w, float *a) {   // world -> audio position (the game's matrix)
+    if (!w2a) w2a = (const float *)(g_base + RVA_AUDIO_W2A); const float *X = w2a;
+    for (int c = 0; c < 3; c++) a[c] = w[0] * X[c] + w[1] * X[4 + c] + w[2] * X[8 + c] + X[12 + c]; }
+static bool (*selfUse)() = []() -> bool { return g_cfg.xr == 4 && fp::activeNow && GetTickCount64() - headMs.load() < 250; };
+static void hEmitter(u8 *e) {
+    oEmitter(e); nEmit++;
+    if (!e || !selfOn.load() || !on.load() || !setPos || !selfUse()) return;
+    float H[16]; if (!read(H)) return;
+    u8 *src = readable(e, 0x30) ? *(u8 **)(e + 0x28) : nullptr; float w[3]; if (!emitterWorld(src, w)) return;
+    const float sc = g_cfg.unitsPerM * 0.01f; const float d[3] = {w[0] - H[12], w[1] - H[13], w[2] - H[14]};
+    if (d[0] * d[0] + d[1] * d[1] + d[2] * d[2] > selfRadiusCm * selfRadiusCm * sc * sc) return;
+    const u64 id = *(const u64 *)(e + 0x18); if (id == 0 || id >= (u64)-32) return;
+    const float wp[3] = {H[12] + H[0] * selfAheadCm * sc, H[13] + H[1] * selfAheadCm * sc, H[14] + H[2] * selfAheadCm * sc};
+    float t[9] = {H[0], -H[1], H[2], H[8], -H[9], H[10], 0, 0, 0}; toAudio(wp, t + 6);
+    setPos(id, t); nSelf++;
+    { static int told = 0; if (!told++) logf("3D audio: Jin's own sound (game object %llx, %.0f cm from your head) centred %.0f cm in front of you", (unsigned long long)id, sqrtf(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]) / sc, selfAheadCm); }
+}
+} // namespace aud
+
+// 0.18.26 the katana draw, game thread (see sword.h and fp::swordApply). The katana is a joint of Jin's own skeleton: one of the lone
+// "gear" joints at his left hip (the skeleton dump: 645 / 646 / 647 at 87-96 cm, 25 cm to his left; 652-654 the same on his right).
+// Which one carries the katana is a guess until seen in the headset, so a probe is built in: Ctrl+F7 lifts the next candidate 15 cm
+// (watch what moves on Jin's hips), Ctrl+F8 keeps the lifted one as the katana (saved as sword_joint). The rail: the sheath mouth and
+// the draw direction (out of the sheath, along the hilt); a default from the joint and Jin's body until Ctrl+F10 calibrates it: hold
+// your LEFT hand where the sheath mouth is and your RIGHT hand at the end of the hilt and press Ctrl+F10 (saved to gotvr.ini, in the
+// katana joint's own frame, so it rides with his hip).
+namespace swd {
+static float grip[2][3]; static int gripOk[2] = {0, 0}; static float squeeze[2] = {0, 0}, trigger[2] = {0, 0}, stick[2][2] = {{0, 0}, {0, 0}}; static u32 btns[2] = {0, 0};
+static sword::Sys sys; static sword::Cfg cfg; static int on = 1, joint = 646, calOk = 0; static float mouthL[3] = {0, 0, 0}, axisL[3] = {1, 0, 0};
+static std::atomic<int> probeIdx{-1}; static const int kCand[] = {646, 647, 645, 653, 654, 652, 591, 592, 593, 594, 586, 587, 588, 589, 590};
+static float railMouth[3], railAxis[3]; static bool railOk = false; static std::atomic<int> calReq{0};
+// per-second log accumulators
+static u32 secBtn[2] = {0, 0}; static float secTrig[2] = {0, 0}, secGrip[2] = {0, 0}, secStick[2][2]; static u64 secHeldS = 0, secHeldH = 0, secFrames = 0; static float secMaxS = 0;
+static void iniWrite(const wchar_t *k, float v) { wchar_t ini[MAX_PATH]; swprintf(ini, MAX_PATH, L"%ls\\gotvr.ini", g_dir); wchar_t b[32]; swprintf(b, 32, L"%.3f", v); WritePrivateProfileStringW(L"gotvr", k, b, ini); }
+static void load(const wchar_t *ini) {
+    auto f = [&](const wchar_t *k, float d) { wchar_t b[32]; GetPrivateProfileStringW(L"gotvr", k, L"", b, 32, ini); return b[0] ? (float)_wtof(b) : d; };
+    on = GetPrivateProfileIntW(L"gotvr", L"sword_draw", 1, ini) ? 1 : 0; joint = GetPrivateProfileIntW(L"gotvr", L"sword_joint", 646, ini);
+    cfg.bladeCm = f(L"sword_blade_cm", 72.0f); cfg.hiltCm = f(L"sword_hilt_cm", 25.0f); cfg.grabCm = f(L"sword_grab_cm", 12.0f); cfg.needSheathHand = GetPrivateProfileIntW(L"gotvr", L"sword_need_sheath_hand", 1, ini) ? 1 : 0;
+    calOk = GetPrivateProfileIntW(L"gotvr", L"sword_calibrated", 0, ini);
+    mouthL[0] = f(L"sword_mouth_x", 0); mouthL[1] = f(L"sword_mouth_y", 0); mouthL[2] = f(L"sword_mouth_z", 0); axisL[0] = f(L"sword_axis_x", 1); axisL[1] = f(L"sword_axis_y", 0); axisL[2] = f(L"sword_axis_z", 0);
+    logf("katana draw: %s, katana joint %d, %s (blade %.0f cm, hilt %.0f cm, grab radius %.0f cm%s)", on ? "ON" : "off (sword_draw = 0)", joint, calOk ? "rail calibrated" : "rail from the default guess (Ctrl+F10 calibrates)", cfg.bladeCm, cfg.hiltCm, cfg.grabCm, cfg.needSheathHand ? ", left hand on the sheath needed" : "");
+}
+static void calibrate(const float *W) {   // left grip = the sheath mouth, right grip = the end of the hilt -> in the joint's own frame
+    if (!gripOk[0] || !gripOk[1]) { logf("katana draw: Ctrl+F10 needs both controllers tracked"); return; }
+    fing::Aff A = fing::fromPose(W), Ai; if (!fing::inv(A, Ai)) return;
+    fing::Aff Lm; for (int i = 0; i < 9; i++) Lm.R[i] = (i % 4 == 0) ? 1.0f : 0.0f; for (int c = 0; c < 3; c++) Lm.t[c] = grip[0][c];
+    fing::Aff Rp = Lm; for (int c = 0; c < 3; c++) Rp.t[c] = grip[1][c];
+    const fing::Aff ml = fing::mul(Ai, Lm), pl = fing::mul(Ai, Rp); float ax[3] = {pl.t[0] - ml.t[0], pl.t[1] - ml.t[1], pl.t[2] - ml.t[2]}; const float L = sqrtf(ax[0] * ax[0] + ax[1] * ax[1] + ax[2] * ax[2]);
+    if (!(L > 3.0f)) { logf("katana draw: Ctrl+F10 - the hands are only %.1f units apart, hold them at the sheath mouth and the hilt end", L); return; }
+    for (auto &x : ax) x /= L; const float u = g_cfg.unitsPerM * 0.01f;
+    memcpy(mouthL, ml.t, 12); memcpy(axisL, ax, 12); cfg.hiltCm = L / u; calOk = 1;
+    iniWrite(L"sword_mouth_x", mouthL[0]); iniWrite(L"sword_mouth_y", mouthL[1]); iniWrite(L"sword_mouth_z", mouthL[2]); iniWrite(L"sword_axis_x", axisL[0]); iniWrite(L"sword_axis_y", axisL[1]); iniWrite(L"sword_axis_z", axisL[2]);
+    iniWrite(L"sword_hilt_cm", cfg.hiltCm); iniWrite(L"sword_calibrated", 1.0f);
+    logf("katana draw: CALIBRATED - sheath mouth (%.1f %.1f %.1f) in joint %d, draw direction (%.2f %.2f %.2f), hilt %.0f cm (saved to gotvr.ini)", mouthL[0], mouthL[1], mouthL[2], joint, axisL[0], axisL[1], axisL[2], cfg.hiltCm);
+    vrin::pulse(0, 0.6f, 40); vrin::pulse(1, 0.6f, 40);
+}
+static void frame() {   // game thread, pair phase 0, first person active, after the controller poses
+    const int pr = probeIdx.load();
+    float W[16]; const bool kOk = fp::kGameRead(W);
+    if (calReq.exchange(0) && kOk) calibrate(W);
+    static LARGE_INTEGER fq{}, lq{}; if (!fq.QuadPart) QueryPerformanceFrequency(&fq); LARGE_INTEGER qn; QueryPerformanceCounter(&qn);
+    const float dt = lq.QuadPart ? fminf((float)(qn.QuadPart - lq.QuadPart) / (float)fq.QuadPart, 0.1f) : 0.0f; lq = qn;
+    railOk = false;
+    if (on && kOk && fp::node) {
+        if (calOk) { for (int c = 0; c < 3; c++) { railMouth[c] = mouthL[0] * W[c] + mouthL[1] * W[4 + c] + mouthL[2] * W[8 + c] + W[12 + c]; railAxis[c] = axisL[0] * W[c] + axisL[1] * W[4 + c] + axisL[2] * W[8 + c]; } }
+        else {   // the default guess: the joint is the mouth, the hilt points forward and 25 deg up along the drawn body's heading
+            const float *N = (const float *)(fp::node + 0x150); float F[3] = {N[0], N[1], 0}; float l = sqrtf(F[0] * F[0] + F[1] * F[1]); if (l > 1e-4f) { F[0] /= l; F[1] /= l; }
+            const float b = fp::bodyYawCur, c = cosf(b), sn = sinf(b); const float Fd[2] = {F[0] * c - F[1] * sn, F[0] * sn + F[1] * c};
+            const float a = 25.0f / 57.2957795f; railAxis[0] = Fd[0] * cosf(a); railAxis[1] = Fd[1] * cosf(a); railAxis[2] = sinf(a); for (int c2 = 0; c2 < 3; c2++) railMouth[c2] = W[12 + c2]; }
+        float l = sqrtf(railAxis[0] * railAxis[0] + railAxis[1] * railAxis[1] + railAxis[2] * railAxis[2]); if (l > 1e-4f) { for (auto &x : railAxis) x /= l; railOk = true; }
+    }
+    sword::Out o{}; const int st0 = sys.state; const bool hs0 = sys.onSheath, hh0 = sys.onHilt;
+    if (railOk && pr < 0) {
+        sword::In in{}; for (int h = 0; h < 2; h++) { memcpy(in.hand[h], grip[h], 12); in.grip[h] = squeeze[h]; in.valid[h] = gripOk[h] != 0; }
+        memcpy(in.mouth, railMouth, 12); memcpy(in.axis, railAxis, 12); in.dt = dt; in.unitsPerCm = g_cfg.unitsPerM * 0.01f;
+        sys.step(in, cfg, o);
+        for (int h = 0; h < 2; h++) if (o.pulseHand[h]) vrin::pulse(h, o.pulseAmp[h], (u32)o.pulseMs[h]);
+        { static float acc = 0; acc += dt; if (o.rumble > 0.0f && acc >= 0.04f) { acc = 0; vrin::pulse(1, o.rumble, 45); vrin::pulse(0, o.rumble * 0.5f, 45); } }   // the blade rasping out of the sheath
+    } else if (sys.state != sword::S_SHEATHED || sys.onHilt || sys.onSheath) { sys.reset(); o.event = true; o.what = "katana draw paused (no rail / probe on)"; }
+    {   // publish for the job
+        const int k = fp::spubIdx.load() == 0 ? 1 : 0; fp::SwordPub &sp = fp::spub[k]; sp.state = sys.state; sp.s = sys.s; memcpy(sp.axisW, railAxis, 12); sp.probe = pr; sp.joint = on ? joint : -1; fp::spubIdx.store(k, std::memory_order_release);
+    }
+    // logging (owner: "log player input when holding the katana in the sheath and out of it; log when the player holds the hilt and / or the sheath")
+    const bool holding = sys.onSheath || sys.onHilt || sys.state != sword::S_SHEATHED;
+    if (o.event) logf("katana: %s | state %s, left on sheath %d, right on hilt %d, blade out %.0f of %.0f cm | left: grip %.2f trigger %.2f buttons 0x%x stick %.2f %.2f | right: grip %.2f trigger %.2f buttons 0x%x stick %.2f %.2f",
+                      o.what, sword::kStateName[sys.state], (int)sys.onSheath, (int)sys.onHilt, sys.s, cfg.bladeCm, squeeze[0], trigger[0], btns[0], stick[0][0], stick[0][1], squeeze[1], trigger[1], btns[1], stick[1][0], stick[1][1]);
+    (void)st0; (void)hs0; (void)hh0;
+    if (holding) { secFrames++; if (sys.onSheath) secHeldS++; if (sys.onHilt) secHeldH++; secMaxS = fmaxf(secMaxS, sys.s);
+        for (int h = 0; h < 2; h++) { secBtn[h] |= btns[h]; secTrig[h] = fmaxf(secTrig[h], trigger[h]); secGrip[h] = fmaxf(secGrip[h], squeeze[h]); for (int a = 0; a < 2; a++) if (fabsf(stick[h][a]) > fabsf(secStick[h][a])) secStick[h][a] = stick[h][a]; } }
+}
+static void perSecond() {
+    logf("   SWORD/s: %s | joint %d%s, rail %s | left hand %.0f cm from the sheath mouth, right hand %.0f cm from the hilt | frames held %llu (sheath %llu, hilt %llu), blade out up to %.0f cm | input while held - left: buttons 0x%x trigger %.2f grip %.2f stick %.2f %.2f; right: buttons 0x%x trigger %.2f grip %.2f stick %.2f %.2f | katana moves %llu",
+         on ? sword::kStateName[sys.state] : "off", joint, probeIdx.load() >= 0 ? " (PROBE: the lifted candidate)" : "", railOk ? (calOk ? "calibrated" : "default guess") : "none", sys.dSheath > 1e8f ? -1.0f : sys.dSheath, sys.dHilt > 1e8f ? -1.0f : sys.dHilt,
+         (unsigned long long)secFrames, (unsigned long long)secHeldS, (unsigned long long)secHeldH, secMaxS, secBtn[0], secTrig[0], secGrip[0], secStick[0][0], secStick[0][1], secBtn[1], secTrig[1], secGrip[1], secStick[1][0], secStick[1][1], (unsigned long long)fp::nSwordMoves.exchange(0));
+    secFrames = secHeldS = secHeldH = 0; secMaxS = 0; for (int h = 0; h < 2; h++) { secBtn[h] = 0; secTrig[h] = secGrip[h] = 0; secStick[h][0] = secStick[h][1] = 0; }
+}
+} // namespace swd
 namespace rsz { static std::atomic<int> applying{0}; }   // 0.16.3: the game is applying a new render size (main thread blocked)
 // 0.18.9 / 0.18.11: the first-person near clip plane (see apply); state shared by both eyes, restored when first person ends
 namespace nearp {
@@ -2102,12 +2441,25 @@ static void hSlot43(void *cam) {
             };
             float o[16]; compose(vr ? &epose : nullptr, o);
             if (vr) {   // 0.18.7 FBIK inputs (game thread)
-                { const float n = sqrtf(o[0] * o[0] + o[1] * o[1]); if (n > 1e-4f) { fp::headF[0] = o[0] / n; fp::headF[1] = o[1] / n; fp::headOk = true;
+                { const float n = sqrtf(o[0] * o[0] + o[1] * o[1]); fp::headPitchDeg = atan2f(o[2], n) * 57.2957795f; if (n > 1e-4f) { fp::headF[0] = o[0] / n; fp::headF[1] = o[1] / n; fp::headOk = true;
                     vrin::headYawNow = atan2f(fp::headF[1], fp::headF[0]) * 57.2957795f; vrin::headYawOk = 1; const u64 mc = vrin::moveCapAt.load(); if (mc && GetTickCount64() >= mc) { vrin::moveCapAt = 0; vrin::moveYaw = atan2f(fp::headF[1], fp::headF[0]) * 57.2957795f; vrin::moveYawOk = 1; vrin::nMoveCaps++; } } }   // 0.18.7: where your head looks (0.18.17: + the movement forward)
                 if (S && fp::activeNow && g_pairPhase == 0) {   // 0.18.16 body under the headset: your head's horizontal offset from the eye anchor (world)
                     GvPose hc{}; u32 hv = 0; gvRead(&S->poseSeq, [&] { hc = S->head; hv = S->poseValid; });
-                    if (hv && g_fp.bodyUnder && g_cfg.headPos) { float oc[16]; compose(&hc, oc); fp::underW[0] = oc[12] - gm[12]; fp::underW[1] = oc[13] - gm[13]; }
+                    {   // 0.18.24 room-scale: Jin's distance covered while the stick walked him under your head comes off your head offset
+                        // (the tracking reference moves with him in the game camera's level frame), so the view stays where your head is
+                        static float applied[2] = {0, 0}; const float t0 = fp::rsCons[0].load(), t1 = fp::rsCons[1].load(); const float dw[2] = {t0 - applied[0], t1 - applied[1]}; applied[0] = t0; applied[1] = t1;
+                        if (g_refValid && (dw[0] != 0.0f || dw[1] != 0.0f) && std::isfinite(dw[0]) && std::isfinite(dw[1])) {
+                            if (rsShiftRef(gm, vrin::viewHold.load(), dw)) fp::rsApplied = fp::rsApplied.load() + sqrtf(dw[0] * dw[0] + dw[1] * dw[1]) / (g_cfg.unitsPerM * 0.01f); }
+                    }
+                    if (hv) { float oa[16]; compose(&hc, oa); aud::publish(oa); }   // 0.18.25 3D audio: the listener = your head
+                    if (hv && (g_fp.bodyUnder || g_fp.roomscale) && g_cfg.headPos) { float oc[16]; compose(&hc, oc); fp::underW[0] = oc[12] - gm[12]; fp::underW[1] = oc[13] - gm[13]; }
                     else { fp::underW[0] = 0.0f; fp::underW[1] = 0.0f; }
+                    {   // 0.18.24 room-scale: publish the offset (cm) and whether it is safe to walk Jin now
+                        const float s0 = g_cfg.unitsPerM * 0.01f; vrin::rsOff[0] = fp::underW[0].load() / s0; vrin::rsOff[1] = fp::underW[1].load() / s0;
+                        const u64 tn = GetTickCount64(), sinceJ = tn - vrin::jumpAt.load(), sinceAir = tn - fp::airAt.load();
+                        const bool jumpWin = sinceJ < 1200 || (sinceJ < 4000 && sinceAir < 600);
+                        if (g_fp.roomscale && hv && !fp::ridingNow.load() && fp::gateW.load() < 0.5f && !jumpWin && fabsf(fp::vertMs.load()) < 0.8f) vrin::rsOkUntil = tn + 100;
+                    }
                 }
                 if (S && fp::activeNow && g_pairPhase == 0) {   // 0.18.7 FBIK: the controllers' grip poses -> world wrist targets (the same composition as the eyes)
                     GvHand hd[2]; u32 act = 0; const bool got = gvRead(&S->inSeq, [&] { hd[0] = S->hand[0]; hd[1] = S->hand[1]; act = S->inActive; });
@@ -2116,8 +2468,21 @@ static void hSlot43(void *cam) {
                     for (int h = 0; h < 2; h++) {
                         const bool ok = got && act && (hd[h].poseValid & 1);
                         tw[h] = fminf(1.0f, fmaxf(0.0f, tw[h] + (ok ? dt : -dt) / 0.25f)); ap.w[h] = 0.5f - 0.5f * cosf(tw[h] * 3.14159265f); fp::armW[h] = ap.w[h];   // 1 - cos blend in / out
-                        ap.ok[h] = ok || ap.w[h] > 0.0f; if (!ok) continue;
+                        if (!ok) swd::gripOk[h] = 0;
+                        ap.ok[h] = ok || ap.w[h] > 0.0f; if (!ok) { fp::stabLost[h] = 1; continue; }
+                        {   // 0.18.24 hand stabilisation (stab.h): One Euro on the grip pose in tracking space, reset on every discontinuity
+                            static stab::Filt sf[2]; static LARGE_INTEGER sq0{}, sfq{}; static LARGE_INTEGER lastS[2]{}; static LONG seenRc = 0;
+                            if (!sfq.QuadPart) QueryPerformanceFrequency(&sfq); LARGE_INTEGER qn; QueryPerformanceCounter(&qn); (void)sq0;
+                            const float sdt = lastS[h].QuadPart ? (float)(qn.QuadPart - lastS[h].QuadPart) / (float)sfq.QuadPart : 0.0f; lastS[h] = qn;
+                            static bool rcPend[2] = {false, false}; { const LONG rc = S->theaterRecenter; if (rc != seenRc) { seenRc = rc; rcPend[0] = rcPend[1] = true; } }
+                            if (g_fp.stab) { stab::Cfg sc2; sc2.minHz = g_fp.stabMinHz; sc2.beta = g_fp.stabBeta; sc2.rotMinHz = g_fp.stabRotMinHz; sc2.rotBeta = g_fp.stabRotBeta; sc2.deadMm = g_fp.stabDeadMm; sc2.deadDeg = g_fp.stabDeadDeg;
+                                if (fp::stabLost[h]) { fp::stabLost[h] = 0; sf[h].init = false; fp::stabResets[stab::R_LOST]++; }
+                                const int r = stab::step(sf[h], hd[h].grip.q, hd[h].grip.p, true, sdt, sc2, rcPend[h] ? stab::R_RECENTER : stab::R_NONE); rcPend[h] = false;
+                                if (r != stab::R_NONE) { fp::stabResets[r]++; } else fp::stabFiltered++; fp::stabSpeed[h] = sf[h].v; }
+                            else sf[h].init = false;
+                        }
                         float oh[16]; compose(&hd[h].grip, oh);   // rows: fwd = grip -Z, left = grip -X, up = grip +Y (world)
+                        memcpy(swd::grip[h], oh + 12, 12); swd::gripOk[h] = 1; swd::squeeze[h] = hd[h].squeeze; swd::trigger[h] = hd[h].trigger; swd::btns[h] = hd[h].buttons; swd::stick[h][0] = hd[h].stick[0]; swd::stick[h][1] = hd[h].stick[1];   // 0.18.26 katana draw
                         // hand frame from the grip (rows: fwd = -Z, left = -X, up = +Y). [HEADSET] 0.18.7 (-Y fingers, -Z thumb): upside down; 0.18.9 (+Y, -Z):
                         // "only right when the controller points straight down" -> 0.18.10 = 0.18.9 pitched up 90 deg: fingers along -Z, thumb along -Y
                         // 0.18.12 (owner: "the hands rotate around a point near the wrist, not the wrist itself; palms down the controllers are a
@@ -2154,6 +2519,7 @@ static void hSlot43(void *cam) {
                     }
                     // the controller hand order is left = 0, right = 1, the same as fbik's sides (Jin's left arm = +y)
                     fp::apubIdx.store(k, std::memory_order_release);
+                    swd::frame();   // 0.18.26 the katana draw
                 }
             }
             if (right && ((vr && pk.stereo) || offT)) {
@@ -2734,27 +3100,49 @@ static void tick(bool force) {   // main thread (message pump)
 }
 static void restore() { if (st0 && orig > 0 && readable(st0 + 0x64, 4) && *(float *)(st0 + 0x64) == 0.0f) *(float *)(st0 + 0x64) = orig; }
 }
-// 0.18.21 / 0.18.23 see-through arms (BUG-80). Owner, 0.18.22: "the hands are only semi-transparent when I have ambient occlusion on
-// (SSAO Quality), normal when it is off (screen-space shadows had no positive nor negative effect)". The game's AO prints the grass
-// behind a near arm onto it (photo: grass-shaped shade on the forearm, view-dependent). Until that pass is found and fixed for near
-// pixels, ambient occlusion is held OFF while first person runs in VR (fp_ao_off = 1, Shift+F6 toggles) - it also saves GPU time.
-// The PC settings block (reflection table 0x1404600F0): AmbientOcclusionQuality +0x60 (int; the menu writes 0..3 there - log 0.18.22).
-// Main thread (message pump), every 0.5 s; whatever the player picks in the menu meanwhile is remembered and put back when first
-// person ends (F5), Shift+F6 turns it off, or the game exits.
+// 0.18.21-0.18.24 see-through arms (BUG-80). Owner, 0.18.22: "only see-through when ambient occlusion (SSAO Quality) is on, normal
+// when off; screen-space shadows no effect". 0.18.23 held AO at 0 by writing the settings block: "when I loaded in, AO was off but my
+// hands were still see-through; I turned screen-space shadows off - not solved; turned them back on - fixed". Reading of that:
+//  1. a write into the settings block is NOT applied: the menu showed AO off (it reads the block) but the renderer kept AO on. Only the
+//     game's apply (ApplyDisplay 0x421ED0: copies the new settings to app+0x7A8 and hands old + new to the render service, vt+0x60 of
+//     0x409460's object, then saves them) changes the renderer - the owner's menu toggle ran it, with our AO 0 inside.
+//  2. after that apply (AO off, SSS off) the arms were STILL see-through; with SSS back on they were fixed: screen-space shadows OFF
+//     shows the artefact as well (its fallback), so the clean state is AO OFF + SSS ON.
+// So in first person (VR) the mod now asks for AO 0 and SSS >= 1 THROUGH THE GAME'S OWN APPLY, like the menu, on the main thread right
+// after the message pump (the F2 render-size path, BUG-63/64), once, in gameplay; the player's values come back the same way on F5 /
+// Shift+F6. The game saves its settings on apply, so they stay that way if you quit in VR (fp_ao_off = 0: the mod leaves them alone).
 namespace shade {
-static int oA = -1; static u8 *st0 = nullptr; static std::atomic<int> seenS{-1}, seenA{-1}; static std::atomic<u64> writes{0};
+static int oA = -1, oS = -1; static bool forced = false; static u64 nextTry = 0; static std::atomic<int> seenS{-1}, seenA{-1}; static std::atomic<u64> writes{0}, applies{0};
+static bool gameplayNow();   // after ui (below)
 static bool sane(int v) { return v >= 0 && v <= 8; }
+static bool applyWith(u8 *app, u8 *st, int ao, int sss, const char *why) {   // main thread: the game's own apply with AO / SSS changed
+    if (!rsz::apply || !app || !st) return false;
+    alignas(16) static u8 copy[0x200]; memcpy(copy, st, 0x148); *(int *)(copy + 0x60) = ao; *(int *)(copy + 0x98) = sss;
+    const u64 t0 = GetTickCount64(); rsz::applying = 1; const char r = rsz::apply(app, copy); rsz::applying = 0; applies++; writes++;
+    logf("ambient occlusion: %s -> applied through the game's own settings path (AO %d, screen-space shadows %d; %llu ms, result %d)", why, ao, sss, (unsigned long long)(GetTickCount64() - t0), (int)r);
+    return true;
+}
 static void tick(bool force) {   // main thread (message pump)
     static u64 next = 0; const u64 now = GetTickCount64(); if (now < next && !force) return; next = now + 500;
-    u8 *st = rsz::settingsOf(rsz::getApp()); if (!st || !readable(st + 0x60, 4) || !readable(st + 0x98, 4)) return;
-    int *pA = (int *)(st + 0x60); seenS = *(int *)(st + 0x98); seenA = *pA;
+    u8 *app = rsz::getApp(); u8 *st = rsz::settingsOf(app); if (!st || !readable(st + 0x60, 4) || !readable(st + 0x98, 4)) return;
+    const int A = *(int *)(st + 0x60), Ss = *(int *)(st + 0x98); seenS = Ss; seenA = A;
+    if (!sane(A) || !sane(Ss)) { static int told = 0; if (!told++) logf("ambient occlusion: the settings block holds AO %d / SSS %d - not settings we know -> left alone", A, Ss); return; }
     const bool on = g_cfg.xr == 4 && mode.load() && fp::on.load();
-    if (!on) { if (st0 == st && oA > 0 && *pA == 0) *pA = oA; oA = -1; st0 = nullptr; return; }
-    if (!sane(*pA)) { static int told = 0; if (!told++) logf("ambient occlusion: the settings block holds %d - not a setting we know -> left alone", *pA); return; }
-    if (st0 != st) { st0 = st; oA = -1; }
-    if (*pA != 0) { if (oA != *pA) logf("ambient occlusion: the game's setting is %d -> held off while first person runs in VR (fp_ao_off = 1; the arm see-through fix; Shift+F6 toggles)", *pA); oA = *pA; *pA = 0; writes++; }
+    if (on) {
+        if (A == 0 && Ss != 0) return;   // already clean
+        if (!force && (now < nextTry || !gameplayNow())) return;   // not while a menu / loading screen is up (the player may be in the settings)
+        static int tries = 0; if (!forced) tries = 0;
+        if (tries >= 3) { static int told = 0; if (!told++) logf("ambient occlusion: the game did not take AO off after 3 applies -> stopped (set SSAO Quality = Off yourself)"); return; }
+        tries++; nextTry = now + 5000;
+        if (!forced) { oA = A; oS = Ss; forced = true; }
+        else { if (A != 0) oA = A; }   // the player changed AO in the menu meanwhile: remember it for later, keep it off now
+        applyWith(app, st, 0, Ss != 0 ? Ss : 1, "first person in VR: AO off, screen-space shadows on (see-through arms fix)");
+    } else if (forced) {
+        if (!force && !gameplayNow() && g_cfg.xr == 4 && fp::on.load()) return;
+        forced = false; applyWith(app, st, oA >= 0 ? oA : A, oS >= 0 ? oS : Ss, "first person off: your own AO / screen-space shadow settings back");
+    }
 }
-static void restore() { if (st0 && readable(st0 + 0x60, 4) && oA > 0 && *(int *)(st0 + 0x60) == 0) *(int *)(st0 + 0x60) = oA; }
+static void restore() { /* settings are applied and saved by the game itself; nothing to undo at exit */ }
 }
 
 // ---------------- UI, HUD and videos (0.12.0, playbook ch04 HUD-002/003/004) ----------------
@@ -3176,6 +3564,7 @@ static void endPost() {   // game thread: the flat-context decision for this fra
 static u32 flagsOf(u32 frame) { const Flag &x = ring[frame & 31]; return x.frame == frame ? x.flags : 0u; }
 static u32 uiFlagsOf(u32 frame) { const Flag &x = uiRing[frame & 31]; return x.frame == frame ? x.flags : 0u; }
 } // namespace ui
+static bool shade::gameplayNow() { return ui::fpBlockReason() == 0 && fp::activeNow && !rsz::applying.load(); }   // 0.18.24
 // ---------------- 0.18.0 VR controllers: the virtual pad (vrinput.h) wired into the XInput exports ----------------
 void vrin::animHold(int sh) {
     const u64 now = GetTickCount64(); fp::nAnimHolds++;
@@ -4498,11 +4887,15 @@ static DWORD WINAPI worker(void *) {
         {RVA_SC_RECREATE, (void *)pub::hRecreate, (void **)&pub::oRecreate, "SC_Recreate (swapchain re-creation)"},
         {RVA_ANIM_JOB, (void *)fp::hAnimJob, (void **)&fp::oAnimJob, "Anim_Job (first-person head hiding in the render pose)"},
         {RVA_OCC_VIEWFN, (void *)occ::hOccView, (void **)&occ::oOccView, "Occ_View (foliage culling gets the engine view)"},
+        {RVA_AUDIO_LISTENER, (void *)aud::hListener, (void **)&aud::oListener, "Audio_ListenerFromCamera (3D audio: the listener is your head)"},
+        {RVA_AUDIO_EMITTER, (void *)aud::hEmitter, (void **)&aud::oEmitter, "Audio_EmitterUpdate (3D audio: Jin's own voice / gear centred)"},
     };
     for (auto &h : hooks) { MH_STATUS st = MH_CreateHook(g_base + h.rva, h.det, h.orig); logf("hook %s -> %s", h.name, MH_StatusToString(st)); if (st != MH_OK) { logf("hook failed -> aborting all hooks"); MH_Uninitialize(); return 0; } }
     // the shared block must exist before any hook can read it
     if (g_cfg.xr && !startHost()) { logf("xr disabled for this run"); if (!S) g_cfg.xr = 0; }
     if (g_cfg.xr == 4 && S) { wchar_t ini[MAX_PATH]; swprintf(ini, MAX_PATH, L"%ls\\gotvr.ini", g_dir); vrin::install(ini); }
+    { wchar_t ini[MAX_PATH]; swprintf(ini, MAX_PATH, L"%ls\\gotvr.ini", g_dir); swd::load(ini); }
+    vrin::rsOn = g_fp.roomscale; vrin::rsDeadCm = g_fp.rsDeadCm; vrin::rsStopCm = g_fp.rsStopCm < g_fp.rsDeadCm ? g_fp.rsStopCm : g_fp.rsDeadCm * 0.5f;
     r1::capturePassTable();
     {   // F2 result from an earlier session: the second render takes this pass from the first render
         wchar_t ini[MAX_PATH]; swprintf(ini, MAX_PATH, L"%ls\\gotvr.ini", g_dir);
@@ -4517,6 +4910,12 @@ static DWORD WINAPI worker(void *) {
     fp::on = g_fp.on; if (g_cfg.xr == 4) logf("first person: %s (F5 toggles; eye %.0f cm up / %.0f cm forward of the head joint, head hiding %s)", g_fp.on ? "ON" : "off", g_fp.eyeUpCm, g_fp.eyeFwdCm, g_fp.hide ? "on" : "off");
     if (g_cfg.xr == 4) { rsz::want = g_renderSize; logf("render size: %s", g_renderSize ? "square headset render size set before the swapchain exists (render_size in gotvr.ini, F2 cycles)" : "the game's own size (render_size=0)"); if (g_renderSize) logf("render size: %d x %d per eye", g_renderSize, g_renderSize); }
     MH_STATUS st = MH_EnableHook(MH_ALL_HOOKS); logf("hooks enabled: %s", MH_StatusToString(st));
+    aud::setPos = (aud::FnSetPos)GetProcAddress(GetModuleHandleW(nullptr), "?SetPosition@SoundEngine@AK@@YA?AW4AKRESULT@@_KAEBVAkTransform@@@Z"); logf("3D audio: Wwise SetPosition %s", aud::setPos ? "found (export)" : "NOT found -> Jin's own sounds stay where the game puts them");
+    { wchar_t ini[MAX_PATH]; swprintf(ini, MAX_PATH, L"%ls\\gotvr.ini", g_dir); wchar_t b[32]; GetPrivateProfileStringW(L"gotvr", L"audio_self_centre", L"1", b, 32, ini); aud::selfOn = _wtoi(b) != 0;
+      GetPrivateProfileStringW(L"gotvr", L"audio_self_radius_cm", L"35", b, 32, ini); { const float v = (float)_wtof(b); if (v >= 0 && v <= 200) aud::selfRadiusCm = v; }
+      GetPrivateProfileStringW(L"gotvr", L"audio_self_ahead_cm", L"25", b, 32, ini); { const float v = (float)_wtof(b); if (v >= 0 && v <= 200) aud::selfAheadCm = v; } }
+    aud::on = g_audioHead; logf("3D audio: %s", g_audioHead ? "the Wwise listener follows your head in first person (audio_head = 1)" : "the game's own listener (audio_head = 0)");
+    if (g_playFlat) { obs::on = 1; logf("PLAY MODE FLAT (play_mode=flat): no headset - the game's own camera and controls; the log records Jin's state and hero flag changes every second (STATE/s), F8 writes a MARK line"); }
     if (g_cfg.xr == 4) {
         dlss::mode = g_cfg.dlssMode; if (g_cfg.dlssMode) dlss::install();
         logf("per-eye DLSS mode %d (0 = off: recommended, use the game's TAA; 1/2 experimental)", g_cfg.dlssMode);
@@ -4540,7 +4939,17 @@ static DWORD WINAPI worker(void *) {
             const int keys[11] = {VK_F7, VK_F8, VK_F9, VK_F10, VK_F11, VK_F6, VK_F5, VK_F4, VK_F3, VK_F2, VK_F1};
             for (int i = 0; i < 11; i++) {
                 bool down = (GetAsyncKeyState(keys[i]) & 0x8000) != 0;
-                if (down && !prev[i]) {
+                if (down && !prev[i] && (!g_playFlat || i == 1)) {   // 0.18.24 flat play: only F8 (MARK); the VR test keys stay off
+                    if (g_cfg.xr == 4 && (GetAsyncKeyState(VK_CONTROL) & 0x8000) && !(GetAsyncKeyState(VK_MENU) & 0x8000) && (i == 0 || i == 1 || i == 3)) {   // 0.18.26 katana draw tools
+                        if (i == 0) { const int n = (int)(sizeof swd::kCand / sizeof swd::kCand[0]); static int ci = -1; ci = (ci + 1) % (n + 1);
+                            if (ci == n) { swd::probeIdx = -1; logf("HOTKEY Ctrl+F7 katana joint probe OFF"); }
+                            else { swd::probeIdx = swd::kCand[ci]; logf("HOTKEY Ctrl+F7 katana joint probe: joint %d lifted 15 cm - look at Jin's hips; Ctrl+F8 keeps it as the katana, Ctrl+F7 the next one", swd::kCand[ci]); } }
+                        else if (i == 1) { const int pj = swd::probeIdx.load(); if (pj >= 0) { swd::joint = pj; swd::probeIdx = -1; swd::calOk = 0; swd::iniWrite(L"sword_joint", (float)pj); swd::iniWrite(L"sword_calibrated", 0.0f);
+                                               logf("HOTKEY Ctrl+F8 katana joint = %d (saved; the rail is the default guess until Ctrl+F10)", pj); }
+                                           else logf("HOTKEY Ctrl+F8: no probe running (Ctrl+F7 first) - the katana joint stays %d", swd::joint); }
+                        else { swd::calReq = 1; logf("HOTKEY Ctrl+F10 katana rail calibration: left hand at the sheath mouth, right hand at the end of the hilt"); }
+                        prev[i] = down; continue;
+                    }
                     if (i == 0 && g_cfg.xr == 4 && (GetAsyncKeyState(VK_SHIFT) & 0x8000)) {   // 0.18.16: the TAA A/B made no difference (owner) -> near-plane A/B
                         static float saved = 2.0f; if (g_fp.nearCm > 0.0f) { saved = g_fp.nearCm; g_fp.nearCm = 0.0f; } else g_fp.nearCm = saved > 0.0f ? saved : 2.0f;
                         logf("HOTKEY Shift+F7 first-person near clip -> %s %.1f cm", g_fp.nearCm > 0.0f ? "ours" : "the game's own (10 cm), was", g_fp.nearCm > 0.0f ? g_fp.nearCm : saved); }
@@ -4548,7 +4957,8 @@ static DWORD WINAPI worker(void *) {
                         if (g_cfg.xr == 4) { m_cullHead ^= 1; logf("HOTKEY F7 culling/shadow camera follows your head -> %d", m_cullHead.load()); }
                         else { m_armed ^= 1; logf("HOTKEY F7 armed zero-delta -> %d", m_armed.load()); }
                     }
-                    if (i == 1 && g_cfg.xr == 4 && (GetAsyncKeyState(VK_SHIFT) & 0x8000)) {
+                    if (i == 1 && g_playFlat) { obs::mark(); }
+                    else if (i == 1 && g_cfg.xr == 4 && (GetAsyncKeyState(VK_SHIFT) & 0x8000)) {
                         const int m = (occ::viewMode.load() + 1) % 3; occ::viewMode = m;
                         logf("HOTKEY Shift+F8 foliage/grass culling view -> %s", m == 1 ? "1 the engine's own view" : m == 2 ? "2 no occlusion view (default)" : "0 the per-eye-rewritten view (0.17.4)");
                     } else if (i == 1) {
@@ -4601,7 +5011,7 @@ static DWORD WINAPI worker(void *) {
                     else if (i == 6) { r1::on ^= 1; slDump = 2; logf("HOTKEY F5 R1-A second render-graph run (same camera) -> %d", r1::on.load()); }
                     if (i == 5 && g_cfg.xr == 4 && (GetAsyncKeyState(VK_SHIFT) & 0x8000)) {   // 0.18.21 arm shading test (see namespace shade)
                         const int m = shade::mode.load() ? 0 : 1; shade::mode = m;
-                        logf("HOTKEY Shift+F6 ambient occlusion in first person -> %s (the game holds %d)", m ? "held OFF (arms solid)" : "the game's own setting", shade::seenA.load());
+                        logf("HOTKEY Shift+F6 first-person AO fix -> %s (the game holds AO %d, screen-space shadows %d; applied at the next gameplay frame)", m ? "ON: AO off + screen-space shadows on" : "off: your own settings back", shade::seenA.load(), shade::seenS.load());
                     }
                     else if (i == 5) {
                         if (g_cfg.xr == 4 && cutp::applied) { applyPreset(g_preset.load() + 1); logf("HOTKEY F6 history preset %s", kPresets[g_preset.load()].name); }
@@ -4684,15 +5094,18 @@ static DWORD WINAPI worker(void *) {
                          (unsigned long long)(g7 - f7), (unsigned long long)(g8 - f8), g8 > f8 ? (double)(g10 - f10) / (double)(g8 - f8) : 0.0, (unsigned long long)(g9 - f9), (unsigned long long)(g5 - f5), (unsigned long long)(g6 - f6), fp::headUp.load() / (g_cfg.unitsPerM * 0.01f), fp::camDist.load(), fp::headLat.load());
                     (void)g4; (void)f4;
                     { const u64 ca = camA(); const float cn = isCam(ca) ? *(const float *)(ca + 0x664) : -1.0f;
-                    logf("   NEAR/s: first-person near plane %.1f cm (0 = game's own; camera now %.1f, environment entries set %llu) applied left %llu right %llu, projection not recognised %llu | hand trims pitch %.1f yaw %.1f roll %.1f deg (F1/F2/F3, Shift = back), wrist back %.1f up %.1f thumb %.1f cm (Ctrl+F1/F2/F3) | ambient occlusion held off (fp_ao_off, Shift+F6) %d: the game holds screen-space shadows %d, ambient occlusion %d (writes %llu)", g_fp.nearCm, cn, (unsigned long long)stipple::nNear.exchange(0),
+                    logf("   NEAR/s: first-person near plane %.1f cm (0 = game's own; camera now %.1f, environment entries set %llu) applied left %llu right %llu, projection not recognised %llu | hand trims pitch %.1f yaw %.1f roll %.1f deg (F1/F2/F3, Shift = back), wrist back %.1f up %.1f thumb %.1f cm (Ctrl+F1/F2/F3) | AO fix (fp_ao_off, Shift+F6) %d: the game holds screen-space shadows %d, ambient occlusion %d (applies %llu)", g_fp.nearCm, cn, (unsigned long long)stipple::nNear.exchange(0),
                          (unsigned long long)fp::nearHits[0].exchange(0), (unsigned long long)fp::nearHits[1].exchange(0), (unsigned long long)fp::nearMiss.exchange(0), g_fp.handPitch, g_fp.handYaw, g_fp.handRoll, g_fp.handBackCm, g_fp.handUpCm, g_fp.handSideCm, shade::mode.load(), shade::seenS.load(), shade::seenA.load(), (unsigned long long)shade::writes.exchange(0)); }
                     { static const char *iw[] = {"holding", "off", "pad input", "moving", "game owns the arms", "riding", "animation moving", "pose size"}; const int w = fp::idleWhy.load();
                       logf("   UNDER/s: body under the headset %s, offset %.1f cm (max %.0f)", g_fp.bodyUnder ? "on" : "off (fp_body_under_hmd)", fp::underCm.load(), g_fp.underMaxCm);
                       logf("   IDLE/s: idle hold %s | weight %.2f | stance turned %.1f deg to face forward | held poses %llu, let go %llu", w >= 0 && w <= 7 ? iw[w] : "-", fp::idleWOut.load(), -fp::idleSquareDeg.load(), (unsigned long long)fp::nIdleHeld.exchange(0), (unsigned long long)fp::nIdleRelease.exchange(0)); }
-                    logf("   FINGERS/s: %s | posed %llu | grip curl left %.2f right %.2f | thumb down left %.2f right %.2f", fp::fingState.load() == 1 ? (g_fp.fingers ? "VR fingers on" : "off (fp_fingers)") : fp::fingState.load() < 0 ? "not usable (animated)" : "not analysed yet", (unsigned long long)fp::nFingPosed.exchange(0), fp::fingCurlOut[0].load(), fp::fingCurlOut[1].load(), fp::thumbOut[0].load(), fp::thumbOut[1].load());
-                    logf("   ARMS/s: %s | solves %llu, held off %llu | hand blend left %.2f right %.2f | parent table %d | game owns the arms %.2f (input holds %llu, animation raised a hand %llu) | stand tall %.1f cm applied %.1f (%llu poses) | forearm twist left %.0f right %.0f deg (%d / %d twist joints), jump windows held %llu", fp::armsReady.load() ? (fp::armsWant.load() && g_fp.arms ? "VR arms ON" : "VR arms off (Shift+F10 / fp_arms)") : "arm chains not found yet",
+                    logf("   FINGERS/s: %s | posed %llu | grip curl left %.2f right %.2f | thumb down left %.2f right %.2f | hand stabilisation %s: filtered %llu, hand speed left %.2f right %.2f m/s, resets: first %llu lost %llu recenter %llu jump %llu time step %llu non-finite %llu", fp::fingState.load() == 1 ? (g_fp.fingers ? "VR fingers on" : "off (fp_fingers)") : fp::fingState.load() < 0 ? "not usable (animated)" : "not analysed yet", (unsigned long long)fp::nFingPosed.exchange(0), fp::fingCurlOut[0].load(), fp::fingCurlOut[1].load(), fp::thumbOut[0].load(), fp::thumbOut[1].load(), g_fp.stab ? "on" : "off", (unsigned long long)fp::stabFiltered.exchange(0), fp::stabSpeed[0].load(), fp::stabSpeed[1].load(), (unsigned long long)fp::stabResets[1].exchange(0), (unsigned long long)fp::stabResets[2].exchange(0), (unsigned long long)fp::stabResets[3].exchange(0), (unsigned long long)fp::stabResets[4].exchange(0), (unsigned long long)fp::stabResets[5].exchange(0), (unsigned long long)fp::stabResets[6].exchange(0));
+                    logf("   ARMS/s: %s | solves %llu, held off %llu | hand blend left %.2f right %.2f | parent table %d | game owns the arms %.2f (input holds %llu, animation raised a hand %llu) | stand tall %.1f cm applied %.1f (%llu poses) | forearm twist left %.0f right %.0f deg (%d / %d twist joints), arm stretch left %.1f right %.1f cm, jump windows held %llu", fp::armsReady.load() ? (fp::armsWant.load() && g_fp.arms ? "VR arms ON" : "VR arms off (Shift+F10 / fp_arms)") : "arm chains not found yet",
                          (unsigned long long)fp::nArmSolves.exchange(0), (unsigned long long)fp::nArmSkipped.exchange(0), fp::armW[0].load(), fp::armW[1].load(), fp::parState.load(),
-                         fp::gateW.load(), (unsigned long long)fp::nAnimHolds.exchange(0), (unsigned long long)fp::nRaised.exchange(0), fp::standDz.load() / (g_cfg.unitsPerM * 0.01f), fp::standApplied.load() / (g_cfg.unitsPerM * 0.01f), (unsigned long long)fp::nStand.exchange(0), fbik::lastTwistDeg[0], fbik::lastTwistDeg[1], fp::armsD[0].nTw, fp::armsD[1].nTw, (unsigned long long)fp::nJumpHeld.exchange(0));
+                         fp::gateW.load(), (unsigned long long)fp::nAnimHolds.exchange(0), (unsigned long long)fp::nRaised.exchange(0), fp::standDz.load() / (g_cfg.unitsPerM * 0.01f), fp::standApplied.load() / (g_cfg.unitsPerM * 0.01f), (unsigned long long)fp::nStand.exchange(0), fbik::lastTwistDeg[0], fbik::lastTwistDeg[1], fp::armsD[0].nTw, fp::armsD[1].nTw, fbik::lastStretchCm[0] / (g_cfg.unitsPerM * 0.01f), fbik::lastStretchCm[1] / (g_cfg.unitsPerM * 0.01f), (unsigned long long)fp::nJumpHeld.exchange(0));
+                    swd::perSecond();
+                    logf("   AUDIO/s: listener %s: head %llu / game camera %llu updates | emitters %llu, Jin's own centred %llu", aud::on.load() ? "head (first person)" : "the game's camera (audio_head = 0)", (unsigned long long)aud::nHead.exchange(0), (unsigned long long)aud::nGame.exchange(0), (unsigned long long)aud::nEmit.exchange(0), (unsigned long long)aud::nSelf.exchange(0));
+                    logf("   ROOMSCALE/s: %s | your head %.0f cm from Jin's | walks %llu, covered for you %.0f cm, blocked %llu", g_fp.roomscale ? (GetTickCount64() < vrin::rsOkUntil.load() ? "on" : "on (held: riding / climbing / jump / menu)") : "off (fp_roomscale)", sqrtf(vrin::rsOff[0].load() * vrin::rsOff[0].load() + vrin::rsOff[1].load() * vrin::rsOff[1].load()), (unsigned long long)vrin::nRsDrive.exchange(0), fp::rsApplied.exchange(0), (unsigned long long)fp::nRsBlocked.exchange(0));
                     logf("   BODY/s: body drawn facing your forward: frames %llu, render poses turned %llu (items %llu), now %.0f deg | Jin faces %.0f deg from your forward, speed %.1f m/s | stance hips %.0f deg (squared while standing) | turns: dead zone %llu, snap %llu; body turned past the forward while moving %.0f deg, forward taken at move starts %llu (all %llu) | held off: riding %llu, fast %llu, refused %llu (fp_body_follow %d)",
                          (unsigned long long)fp::nBodyFrames.exchange(0), (unsigned long long)fp::nBodyJobs.exchange(0), (unsigned long long)fp::nWorldTurned.exchange(0), fp::bodyDeg.load(), fp::facingDeg.load(), fp::speedMs.load(), fp::hipYawDeg.load(), (unsigned long long)fp::nDeadTurns.exchange(0), (unsigned long long)fp::nSnapTurns.exchange(0), fp::moveOffDeg.load(), (unsigned long long)vrin::nMoveStarts.load(), (unsigned long long)vrin::nMoveCaps.load(),
                          (unsigned long long)fp::nBodyRiding.exchange(0), (unsigned long long)fp::nBodyFast.exchange(0), (unsigned long long)fp::nBodyRefused.exchange(0), g_fp.bodyFollow);
@@ -5065,16 +5478,20 @@ extern "C" __declspec(dllexport) int GoTVR_SelfTest(const wchar_t *exePath) {
             g_cfg.xr = 0; mblur::tick(true); mb &= *(float *)(st + 0x64) == 0.75f;                        // not in VR: untouched
             g_cfg.xr = sx; mblur::orig = -1.0f; mblur::st0 = nullptr; mblur::forced = 0; *(float *)(st + 0x64) = 0;
             ok &= mb; logf("motion blur test (held at 0 in VR, restored at exit, untouched when off / not in VR): %s", mb ? "PASS" : "FAIL");
-            {   // 0.18.23 ambient occlusion held off in first person (VR), the menu's choice remembered and put back; odd values left alone
-                const int sx2 = g_cfg.xr, so = fp::on.load(); g_cfg.xr = 4; fp::on = 1; *(int *)(st + 0x98) = 1; *(int *)(st + 0x60) = 2;
-                shade::mode = 1; shade::tick(true); bool sh = *(int *)(st + 0x60) == 0 && *(int *)(st + 0x98) == 1;
-                *(int *)(st + 0x60) = 3; shade::tick(true); sh &= *(int *)(st + 0x60) == 0;                     // the player picks 3 in the menu: off again
-                fp::on = 0; shade::tick(true); sh &= *(int *)(st + 0x60) == 3;                                    // first person off (F5): the player's 3
-                fp::on = 1; shade::tick(true); shade::restore(); sh &= *(int *)(st + 0x60) == 3;                  // exit
-                *(int *)(st + 0x60) = 77; shade::tick(true); sh &= *(int *)(st + 0x60) == 77;                     // not a setting we know
-                shade::mode = 0; *(int *)(st + 0x60) = 2; shade::tick(true); sh &= *(int *)(st + 0x60) == 2;      // fp_ao_off = 0: untouched
-                g_cfg.xr = sx2; fp::on = so; *(int *)(st + 0x98) = 0; *(int *)(st + 0x60) = 0; shade::writes = 0; shade::mode = 1;
-                ok &= sh; logf("ambient occlusion test (held off in first person, the menu's choice put back after F5 / exit, unknown values and fp_ao_off = 0 untouched): %s", sh ? "PASS" : "FAIL");
+            {   // 0.18.24 first-person AO fix through the game's own apply: AO 0 + SSS >= 1 applied once, the menu's later choice remembered, the
+                // player's values applied back when first person ends, unknown values / fp_ao_off = 0 untouched
+                static u8 *stP; static int nAp; stP = st; nAp = 0; const auto sa2 = rsz::apply;
+                rsz::apply = [](u8 *, u8 *c) -> char { nAp++; memcpy(stP, c, 0x148); return 1; };   // ApplyDisplay copies the new settings in
+                const int sx2 = g_cfg.xr, so = fp::on.load(); g_cfg.xr = 4; fp::on = 1; *(int *)(st + 0x98) = 0; *(int *)(st + 0x60) = 2; shade::forced = false; shade::oA = shade::oS = -1;
+                shade::mode = 1; shade::tick(true); bool sh = *(int *)(st + 0x60) == 0 && *(int *)(st + 0x98) == 1 && nAp == 1;
+                shade::tick(true); sh &= nAp == 1;                                                                 // clean: no second apply
+                *(int *)(st + 0x60) = 3; shade::tick(true); sh &= *(int *)(st + 0x60) == 0 && nAp == 2;           // the player picks 3 in the menu: off again
+                fp::on = 0; shade::tick(true); sh &= *(int *)(st + 0x60) == 3 && *(int *)(st + 0x98) == 0 && nAp == 3;   // first person off: the player's own
+                shade::tick(true); sh &= nAp == 3;
+                fp::on = 1; *(int *)(st + 0x60) = 77; shade::tick(true); sh &= *(int *)(st + 0x60) == 77 && nAp == 3;   // not a setting we know
+                shade::mode = 0; *(int *)(st + 0x60) = 2; shade::tick(true); sh &= *(int *)(st + 0x60) == 2 && nAp == 3;   // fp_ao_off = 0: untouched
+                rsz::apply = sa2; g_cfg.xr = sx2; fp::on = so; *(int *)(st + 0x98) = 0; *(int *)(st + 0x60) = 0; shade::writes = 0; shade::applies = 0; shade::mode = 1; shade::forced = false; shade::oA = shade::oS = -1;
+                ok &= sh; logf("first-person AO fix test (AO off + screen-space shadows on through the game's apply, once; the menu's choice kept; your settings back after F5; unknown values and fp_ao_off = 0 untouched): %s (applies %d)", sh ? "PASS" : "FAIL", nAp);
             }
             {   // 0.18.10 near stipple fade: switched off in the active environment sets while first person is on, the game's value back after
                 static u8 fset[0x2C58]; memset(fset, 0, sizeof fset); u8 *e = fset + 106 * 0x20; *(int *)(e + 0x10) = 106; *(int *)(e + 0x14) = 3; e[0] = 0; e[0x1C] = 0;
@@ -5139,7 +5556,7 @@ extern "C" __declspec(dllexport) int GoTVR_SelfTest(const wchar_t *exePath) {
         ui::mode = ui::M_HUD; ui::camCut = 0; g_stFrame = 108; anim(100); ident(gm2, 1000, 1700 - 2000, 450); ok &= !fp::update(gm2) && fp::lastReason.load() == 6;   // camera 20 m away: scripted
         {   // 0.18.5 body follow: Jin runs back towards you (faces +x, your forward is -x) -> his pose is drawn turned round
             // 0.18.16: moving, the body faces your HEAD's forward (world heading); here you look back (-x) while Jin runs at 2 m/s
-            float g4[16]; g_fp.bodyTurnSpeed = 0; const float smt = g_fp.moveTau, sht = g_fp.headTau; g_fp.moveTau = 0; g_fp.headTau = 0; const float sdd = g_fp.headDeadDeg; g_fp.headDeadDeg = 45.0f; const int smh = vrin::cfg.moveHead; vrin::cfg.moveHead = 1; fp::refF[0] = -1; fp::refF[1] = 0; fp::refOk = true; fp::nLone = 0;
+            float g4[16]; g_fp.bodyTurnSpeed = 0; const float smt = g_fp.moveTau, sht = g_fp.headTau; g_fp.moveTau = 0; g_fp.headTau = 0; const float sbts = g_fp.bodyTurnS; g_fp.bodyTurnS = 0.0f; const float sdd = g_fp.headDeadDeg; g_fp.headDeadDeg = 45.0f; const int smh = vrin::cfg.moveHead; vrin::cfg.moveHead = 1; fp::refF[0] = -1; fp::refF[1] = 0; fp::refOk = true; fp::nLone = 0;
             const bool sho = fp::headOk; fp::headOk = true; fp::headF[0] = -1; fp::headF[1] = 0; const int sbu = g_fp.bodyUnder; g_fp.bodyUnder = 0;
             const float *rt = (const float *)(fp::node + 0x150); fp::lastRoot[0] = rt[12] - 20.0f; fp::lastRoot[1] = rt[13]; fp::lastRoot[2] = rt[14]; fp::lastRootOk = true; fp::bodyLastMs = GetTickCount64() - 100;
             g_stFrame = 109; ident(g4, 1000, 1700, 450); bool b = fp::update(g4) && fabsf(fabsf(fp::bodyDeg.load()) - 180.0f) < 0.5f;
@@ -5165,7 +5582,7 @@ extern "C" __declspec(dllexport) int GoTVR_SelfTest(const wchar_t *exePath) {
                 b &= bu && bm; if (!(bu && bm)) logf("   body under the headset: FAIL (pose y %.2f, world y %.2f)", pose[0][20 * 16 + 13], jt[21 * 16 + 13]);
                 fp::underW[1] = 0.0f; fp::underCm = 0; g_fp.underTau = sut;
             }
-            g_fp.moveTau = smt; g_fp.headTau = sht; g_fp.headDeadDeg = sdd; vrin::cfg.moveHead = smh; fp::headOk = sho; g_fp.bodyUnder = sbu; fp::lastRootOk = false; fp::bodyLastMs = 0; vrin::moveYawOk = 0; vrin::moveCapAt = 0;
+            g_fp.moveTau = smt; g_fp.headTau = sht; g_fp.bodyTurnS = sbts; g_fp.headDeadDeg = sdd; vrin::cfg.moveHead = smh; fp::headOk = sho; g_fp.bodyUnder = sbu; fp::lastRootOk = false; fp::bodyLastMs = 0; vrin::moveYawOk = 0; vrin::moveCapAt = 0;
             fp::refOk = false; fp::bodyYawCur = 0; fp::bodyYaw = 0; fp::jobApplied = 0; fp::nBodyRiding = 0; fp::nBodyFrames = 0; fp::nBodyJobs = 0; fp::nWorldTurned = 0;
             ok &= b; if (!b) logf("   first-person body follow: FAIL (body %.1f deg, eye x %.2f)", fp::bodyDeg.load(), g4[12]);
         }
@@ -5216,6 +5633,13 @@ extern "C" __declspec(dllexport) int GoTVR_SelfTest(const wchar_t *exePath) {
         fbik::solveArm(pz, A[0], 0, T, 1.0f, prm);
         ok &= dist(A[0].hand, far2) > 1.0f && fabsf(djj(A[0].sh, A[0].el) - 30.0f) < 0.1f && fabsf(djj(A[0].el, A[0].hand) - 27.0f) < 0.1f;   // out of reach: stops short, no stretch
         ok &= dist(A[0].clav, c0) < 0.01f && dist(A[0].sh, s0) > 0.5f;   // the clavicle shrugged toward it (the shoulder moved, the clavicle root did not)
+        {   // 0.18.26 arm stretch: the same far target with 10 % stretch - the hand gets closer, the upper arm is longer, the forearm is not
+            const float dShort = dist(A[0].hand, far2); fbik::Params p2 = prm; p2.stretch = 0.10f; fbik::solveArm(pz, A[0], 0, T, 1.0f, p2);
+            const float up = djj(A[0].sh, A[0].el), lo = djj(A[0].el, A[0].hand);
+            const bool st = dist(A[0].hand, far2) < dShort - 1.0f && up > 30.5f && up <= 30.0f + 5.7f + 0.05f && fabsf(lo - 27.0f) < 0.1f && fbik::lastStretchCm[0] > 0.5f;
+            ok &= st; logf("   arm stretch: %s (upper arm %.1f cm, forearm %.1f cm, %.1f cm closer)", st ? "PASS" : "FAIL", up, lo, dShort - dist(A[0].hand, far2));
+            fbik::solveArm(pz, A[0], 0, T, 1.0f, prm);
+        }
         {   // 0.18.9 stand tall: legs found, the body raised 5 cm, the feet stay where they were planted, knees straighter, lengths kept
             static fbik::Leg L[2]; char lw[300]; bool lg = fbik::findLegs(par, n, pz, 165.0f, nullptr, L, lw, sizeof lw) == 2 && L[0].foot == feetJ[0] && L[1].knee == kneeJ[1] && L[0].hip == hipJ[0];
             float f0[3] = {pz[feetJ[0] * 16 + 12], pz[feetJ[0] * 16 + 13], pz[feetJ[0] * 16 + 14]}; const float h0 = pz[hipJ[0] * 16 + 14], kx0 = pz[kneeJ[0] * 16 + 12];
@@ -5253,6 +5677,19 @@ extern "C" __declspec(dllexport) int GoTVR_SelfTest(const wchar_t *exePath) {
             tb &= fabsf(fp::bodyYawCur - a) < 2.5f / 57.2957795f;   // after the snap: the body faces the view
             fp::refOk = sro; fp::headOk = sho; g_fp.bodyFollow = sbf; g_fp.bodyHead = sbh; fp::bodyYawCur = sby; fp::nLone = sln; fp::headTurning = false; fp::bodyLastMs = 0; fp::lastRootOk = false; fp::bodyYaw = 0; g_fp.headDeadDeg = sdd;
             ok &= tb; logf("snap-turn body test (inside the dead zone nothing turns; after a snap the hips come round to the view): %s", tb ? "PASS" : "FAIL");
+        }
+        {   // 0.18.25 the body turn eases in (no snap) and settles on the view: 40 deg look past the 20 deg threshold
+            float root[16] = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1}; const float U[3] = {0, 0, 1}, F[3] = {1, 0, 0};
+            const bool sro = fp::refOk, sho = fp::headOk; const int sbf = g_fp.bodyFollow, sbh = g_fp.bodyHead; const float sby = fp::bodyYawCur, sdd = g_fp.headDeadDeg, sbts = g_fp.bodyTurnS; const int sln = fp::nLone;
+            g_fp.bodyFollow = 1; g_fp.bodyHead = 1; g_fp.headDeadDeg = 20.0f; g_fp.bodyTurnS = 0.35f; fp::refOk = true; fp::headOk = true; fp::refF[0] = 1; fp::refF[1] = 0; fp::nLone = 0; fp::bodyYawCur = 0; fp::headTurning = false; fp::lastRootOk = false;
+            fp::headF[0] = 1; fp::headF[1] = 0; for (int i = 0; i < 80; i++) { fp::bodyLastMs = GetTickCount64() - 50; fp::bodyStep(root, U, F, true); }
+            const float b0 = fp::bodyYawCur, a = 40.0f / 57.2957795f; fp::headF[0] = cosf(a); fp::headF[1] = sinf(a);
+            fp::bodyLastMs = GetTickCount64() - 50; fp::bodyStep(root, U, F, true); const float b1 = fp::bodyYawCur - b0;
+            for (int i = 0; i < 7; i++) { fp::bodyLastMs = GetTickCount64() - 50; fp::bodyStep(root, U, F, true); } const float b8 = fp::bodyYawCur - b0;
+            for (int i = 0; i < 40; i++) { fp::bodyLastMs = GetTickCount64() - 50; fp::bodyStep(root, U, F, true); } const float bEnd = fp::bodyYawCur - b0;
+            const float tgt = a - b0; const bool tw = b1 < 0.25f * tgt && b8 > 0.8f * tgt && fabsf(bEnd - tgt) < 1.0f / 57.2957795f;
+            fp::refOk = sro; fp::headOk = sho; g_fp.bodyFollow = sbf; g_fp.bodyHead = sbh; fp::bodyYawCur = sby; g_fp.headDeadDeg = sdd; g_fp.bodyTurnS = sbts; fp::nLone = sln; fp::headTurning = false; fp::bodyLastMs = 0; fp::lastRootOk = false; fp::bodyYaw = 0;
+            ok &= tw; logf("body turn tween test (past the threshold the body eases round: %.0f %% after 50 ms, %.0f %% after 0.4 s, settled %.1f deg): %s", 100.0f * b1 / tgt, 100.0f * b8 / tgt, bEnd * 57.2957795f, tw ? "PASS" : "FAIL");
         }
         {   // 0.18.21 moving: the forward is NOT rewritten when the body turns past the threshold; a new forward squares the body to it
             float root[16] = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1}; const float U[3] = {0, 0, 1}, F[3] = {1, 0, 0};
@@ -5382,6 +5819,112 @@ extern "C" __declspec(dllexport) int GoTVR_SelfTest(const wchar_t *exePath) {
             }
             ok &= jf; logf("Jin's hands test (grip = a fist on his own bind fingers, each finger bending in its own plane, the thumb across the fist, both hands; the tween eases in and settles): %s (left thumb end %.1f %.1f %.1f, index end height %.1f; %s)", jf ? "PASS" : "FAIL", rep[0], rep[1], rep[2], rep[3], fw2[0]);
         }
+        {   // 0.18.24 hand stabilisation (stab.h): a still hand's jitter shrinks, a moving hand is followed closely, every discontinuity resets
+            stab::Filt F; stab::Cfg c; float q[4], p[3]; const float dt = 1.0f / 90.0f; uint32_t rs = 12345; auto rnd = [&]() { rs = rs * 1664525u + 1013904223u; return ((rs >> 8) / 16777216.0f) - 0.5f; };
+            double eRaw = 0, eOut = 0; bool st = true;
+            float pr[3] = {0, 0, 0}, po[3] = {0, 0, 0};   // 0.18.26: jitter = frame-to-frame motion (the deadband may hold a still hand a mm off centre)
+            for (int i = 0; i < 400; i++) { q[0] = 0; q[1] = 0; q[2] = 0; q[3] = 1; p[0] = 0.002f * rnd(); p[1] = 1.0f + 0.002f * rnd(); p[2] = -0.3f + 0.002f * rnd();
+                const float r0[3] = {p[0], p[1], p[2]}; stab::step(F, q, p, true, dt, c);
+                if (i > 100) for (int k = 0; k < 3; k++) { eRaw += (r0[k] - pr[k]) * (r0[k] - pr[k]); eOut += (p[k] - po[k]) * (p[k] - po[k]); }
+                for (int k = 0; k < 3; k++) { pr[k] = r0[k]; po[k] = p[k]; } }
+            const float ratio = (float)sqrt(eOut / eRaw); st &= ratio < 0.5f;
+            float lag = 0; for (int i = 0; i < 90; i++) { q[0] = 0; q[1] = 0; q[2] = 0; q[3] = 1; const float x = 0.01f + i * dt * 1.0f; p[0] = x; p[1] = 1.0f; p[2] = -0.3f; stab::step(F, q, p, true, dt, c); lag = x - p[0]; }   // 1 m/s
+            st &= lag < 0.02f && lag > 0.0f;
+            p[0] = 0.6f; p[1] = 1.0f; p[2] = -0.3f; st &= stab::step(F, q, p, true, dt, c) == stab::R_JUMP && p[0] == 0.6f;   // a 50 cm jump: raw
+            p[0] = 0.61f; st &= stab::step(F, q, p, true, dt, c, stab::R_RECENTER) == stab::R_RECENTER && p[0] == 0.61f;
+            p[0] = NAN; st &= stab::step(F, q, p, true, dt, c) == stab::R_NONFINITE && !F.init;
+            p[0] = 0.2f; st &= stab::step(F, q, p, true, dt, c) == stab::R_FIRST && p[0] == 0.2f;
+            p[0] = 0.2f; st &= stab::step(F, q, p, true, 0.5f, c) == stab::R_DT;
+            {   // rotation: 0.3 deg jitter about a still orientation shrinks
+                stab::Filt G; double aR = 0, aO = 0; const float base[4] = {0, 0.3826834f, 0, 0.9238795f};
+                for (int i = 0; i < 300; i++) { const float e = 0.3f / 57.2957795f * rnd(); float qq[4] = {base[0] + e * 0.5f, base[1], base[2] + e * 0.5f, base[3]}; stab::qnorm(qq); const float ar = stab::qangle(qq, base);
+                    static float lr[4], lo[4]; float raw4[4] = {qq[0], qq[1], qq[2], qq[3]}; (void)ar;
+                    float pp[3] = {0, 1, 0}; stab::step(G, qq, pp, true, dt, c); if (i > 100) { const float a1 = stab::qangle(raw4, lr), a2 = stab::qangle(qq, lo); aR += a1 * a1; aO += a2 * a2; }
+                    memcpy(lr, raw4, 16); memcpy(lo, qq, 16); }
+                st &= sqrt(aO / aR) < 0.6;
+            }
+            ok &= st; logf("hand stabilisation test (One Euro: still-hand jitter x%.2f, lag at 1 m/s %.1f cm, resets on jump / recenter / non-finite / first pose / bad time step): %s", ratio, lag * 100.0f, st ? "PASS" : "FAIL");
+        }
+        {   // 0.18.24 flat play observer: a hero flag flipping is logged with old / new values; a field changing every tick is set aside
+            static u8 hb[0x4100]; memset(hb, 0, sizeof hb); *(int *)(hb + 0x200) = 3; float *M = (float *)(hb + 0x150); M[0] = M[5] = M[10] = M[15] = 1.0f;
+            const auto shp = fp::heroPtr; fp::heroPtr = []() -> u8 * { return hb; }; obs::on = 1; obs::have = false; obs::nEv = 0; obs::nNoisy = 0; memset(obs::noisy, 0, sizeof obs::noisy);
+            obs::tick();                                                     // snapshot
+            *(int *)(hb + 0x200) = 7; *(float *)(hb + 0x300) = 1.5f; obs::tick();   // a flag 3 -> 7 (logged); a float (not a flag: ignored)
+            bool ob = obs::nEv == 1 && obs::ev[0].off == 0x200 && obs::ev[0].a == 3 && obs::ev[0].b == 7;
+            for (int k = 0; k < 10; k++) { *(int *)(hb + 0x204) = k + 1; obs::tick(); }   // a counter
+            obs::secQ.QuadPart -= obs::fq.QuadPart; obs::tick();                            // the second is over: the counter is set aside
+            ob &= obs::noisy[0x204 / 4] == 1 && obs::noisy[0x200 / 4] == 0 && obs::nEv == 0;
+            fp::heroPtr = shp; obs::on = 0; obs::have = false; obs::lastHero = nullptr; obs::nNoisy = 0; memset(obs::noisy, 0, sizeof obs::noisy); obs::secQ.QuadPart = 0; obs::lastQ.QuadPart = 0;
+            ok &= ob; logf("flat play observer test (a hero flag change logged with old / new value, floats ignored, a per-tick counter set aside): %s", ob ? "PASS" : "FAIL");
+        }
+        {   // 0.18.26 katana draw state machine: sheath + hilt grabs with hysteresis, the blade rides the rail, rumbles while moving, frees at the top
+            sword::Sys S2; sword::Cfg c; sword::In in{}; sword::Out o{}; in.unitsPerCm = 1.0f; in.dt = 1.0f / 90.0f; in.valid[0] = in.valid[1] = true; in.axis[0] = 1;
+            auto at = [&](int h, float x, float y, float g) { in.hand[h][0] = x; in.hand[h][1] = y; in.hand[h][2] = 0; in.grip[h] = g; };
+            at(0, 0, 0, 0.0f); at(1, 50, 30, 0.0f); S2.step(in, c, o); bool sw = !S2.onSheath && !S2.onHilt;
+            at(0, 2, 0, 0.8f); S2.step(in, c, o); sw &= S2.onSheath && o.pulseHand[0];                                   // left hand takes the sheath (a pulse)
+            at(0, 15, 0, 0.8f); S2.step(in, c, o); sw &= S2.onSheath;                                                   // 15 cm: still held (leaves at 21)
+            at(0, 2, 0, 0.8f); at(1, 12.5f, 2, 0.8f); S2.step(in, c, o); sw &= S2.onHilt && S2.s == 0.0f && o.pulseHand[1];   // right hand on the hilt
+            at(1, 40.0f, 2, 0.8f); S2.step(in, c, o); sw &= S2.state == sword::S_DRAWING && fabsf(S2.s - 27.5f) < 0.01f && o.rumble > 0.0f;
+            at(1, 30.0f, 2, 0.8f); S2.step(in, c, o); sw &= fabsf(S2.s - 17.5f) < 0.01f;                                 // back along the rail
+            at(1, 12.5f + 70.0f, 2, 0.8f); S2.step(in, c, o); sw &= S2.state == sword::S_DRAWN && o.pulseAmp[1] > 0.8f;    // near the top: free
+            at(1, 0, 60, 0.8f); S2.step(in, c, o); sw &= S2.state == sword::S_DRAWN;                                      // in the hand anywhere
+            at(1, 0, 60, 0.0f); S2.step(in, c, o); sw &= S2.state == sword::S_SHEATHED && S2.s == 0.0f;                   // let go (stage 1: back in the sheath)
+            sword::Sys S3; at(0, 50, 50, 0.0f); at(1, 12.5f, 0, 0.8f); S3.step(in, c, o); at(1, 40, 0, 0.8f); S3.step(in, c, o); sw &= S3.onHilt && S3.s == 0.0f;   // no hand on the sheath: no slide
+            ok &= sw; logf("katana draw test (grab sheath + hilt with hysteresis and pulses, blade rides the rail with rumble, free at the top, no slide without the sheath hand): %s", sw ? "PASS" : "FAIL");
+        }
+        {   // 0.18.24 room-scale: shifting the reference takes exactly Jin's step out of the head offset (any reference yaw, any view yaw)
+            const GvPose sref = g_ref; const bool sv = g_refValid; bool rs = true;
+            for (int t = 0; t < 3; t++) {
+                const float ry = 0.7f * t - 0.5f, vh = 25.0f * t - 10.0f, cy = 1.1f * t + 0.3f; const float gm[16] = {cosf(cy), sinf(cy), 0, 0, -sinf(cy), cosf(cy), 0, 0, 0, 0, 1, 0, 100, 200, 160, 1};
+                g_ref.q[0] = 0; g_ref.q[1] = sinf(ry / 2); g_ref.q[2] = 0; g_ref.q[3] = cosf(ry / 2); g_ref.p[0] = 0.1f; g_ref.p[1] = 1.6f; g_ref.p[2] = -0.2f; g_refValid = true;
+                GvPose hd{}; hd.q[3] = 1; hd.p[0] = 0.4f; hd.p[1] = 1.7f; hd.p[2] = -0.5f;
+                auto world = [&](float *w) { float Rg[3][3], dg[3]; poseLocal(hd, Rg, dg); float fx = gm[0], fy = gm[1]; const float h = vh / 57.2957795f, c = cosf(h), sn = sinf(h);
+                    const float r[3][3] = {{fx * c - fy * sn, fx * sn + fy * c, 0}, {-(fx * sn + fy * c), fx * c - fy * sn, 0}, {0, 0, 1}};
+                    for (int k = 0; k < 3; k++) w[k] = 0; for (int k = 0; k < 3; k++) for (int c2 = 0; c2 < 3; c2++) w[c2] += dg[k] * r[k][c2] * g_cfg.unitsPerM; };
+                float w1[3], w2[3]; world(w1); const float dw[2] = {12.0f, -7.0f}; rs &= rsShiftRef(gm, vh, dw); world(w2);
+                rs &= fabsf(w2[0] - (w1[0] - 12.0f)) < 0.01f && fabsf(w2[1] - (w1[1] + 7.0f)) < 0.01f && fabsf(w2[2] - w1[2]) < 0.01f;
+            }
+            g_ref = sref; g_refValid = sv;
+            ok &= rs; logf("room-scale reference test (Jin's step comes off the head offset exactly, for any reference / view yaw): %s", rs ? "PASS" : "FAIL");
+        }
+        {   // 0.18.25 3D audio: during the game's listener update CAM-B's matrix is your head; right after it is the game's again; off = untouched
+            static float camb[0x900 / 4]; static float seen[16]; memset(camb, 0, sizeof camb); float *cm = camb + 0x890 / 4; for (int k = 0; k < 16; k++) cm[k] = (float)(100 + k);
+            const auto sc = aud::camB; const auto so = aud::oListener; const auto su = aud::useHead; const int son = aud::on.load();
+            aud::camB = []() -> u8 * { return (u8 *)camb; }; aud::oListener = [](u8 *) { memcpy(seen, camb + 0x890 / 4, 64); }; aud::useHead = []() -> bool { return true; }; aud::on = 1;
+            float H[16] = {0, 1, 0, 7, -1, 0, 0, 7, 0, 0, 1, 7, 500, 600, 170, 7}; aud::publish(H);
+            aud::hListener(nullptr); bool au = seen[0] == 0.0f && seen[1] == 1.0f && seen[12] == 500.0f && seen[14] == 170.0f && seen[3] == 0.0f && seen[15] == 1.0f && cm[0] == 100.0f && cm[12] == 112.0f;
+            aud::on = 0; aud::hListener(nullptr); au &= seen[12] == 112.0f && cm[12] == 112.0f;   // off: the game's camera
+            aud::on = 1; aud::useHead = []() -> bool { return false; }; aud::hListener(nullptr); au &= seen[12] == 112.0f;   // not first person: the game's camera
+            aud::camB = sc; aud::oListener = so; aud::useHead = su; aud::on = son; aud::nHead = 0; aud::nGame = 0;
+            ok &= au; logf("3D audio test (the listener is the head during the game's listener update, the game's camera restored after; off / third person untouched): %s", au ? "PASS" : "FAIL");
+        }
+        {   // 0.18.26 Jin's own sounds: an emitter 10 cm from the head is re-sent 25 cm in front of the head (both ears); one 1 m away is left
+            static u8 code[8] = {0xB8, 40, 0, 0, 0, 0xC3, 0, 0}; static void *vt[8]; vt[4] = code; static u8 own[0x300]; memset(own, 0, sizeof own); *(void ***)own = vt;
+            float *OM = (float *)(own + 0x150); OM[0] = OM[5] = OM[10] = OM[15] = 1.0f; OM[12] = 1000; OM[13] = 2000; OM[14] = 160;
+            static u8 src[0x80]; memset(src, 0, sizeof src); *(u8 **)(src + 0x38) = own; *(int *)(src + 0x48) = -1; float *Lo = (float *)(src + 0x50); Lo[0] = 10; Lo[3] = 1;
+            static u8 em[0x40]; memset(em, 0, sizeof em); *(u64 *)(em + 0x18) = 0x1234; *(u8 **)(em + 0x28) = src;
+            static float I4[16] = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1}; static float got[9]; static u64 gid; static int nset;
+            const auto so = aud::oEmitter; const auto ssp = aud::setPos; const auto su = aud::selfUse; const auto sw = aud::w2a; const int son = aud::on.load(), sso = aud::selfOn.load(); nset = 0;
+            aud::oEmitter = [](u8 *) {}; aud::setPos = [](u64 id, const float *t) -> int { gid = id; memcpy(got, t, 36); nset++; return 1; }; aud::selfUse = []() -> bool { return true; }; aud::w2a = I4; aud::on = 1; aud::selfOn = 1;
+            const float sup = g_cfg.unitsPerM; g_cfg.unitsPerM = 100.0f;
+            float H[16] = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1000, 2000, 160, 1}; aud::publish(H);
+            aud::hEmitter(em); bool vs = nset == 1 && gid == 0x1234 && fabsf(got[6] - 1025.0f) < 0.01f && fabsf(got[7] - 2000.0f) < 0.01f && got[0] == 1.0f && got[5] == 1.0f;
+            Lo[0] = 100; aud::hEmitter(em); vs &= nset == 1;                    // 1 m away: where the game put it
+            Lo[0] = 10; aud::selfOn = 0; aud::hEmitter(em); vs &= nset == 1;    // off
+            aud::oEmitter = so; aud::setPos = ssp; aud::selfUse = su; aud::w2a = sw; aud::on = son; aud::selfOn = sso; aud::nSelf = 0; aud::nEmit = 0; g_cfg.unitsPerM = sup;
+            ok &= vs; logf("3D audio own-sound test (an emitter at the head is heard centred in front, one a metre away keeps its place, off = untouched): %s", vs ? "PASS" : "FAIL");
+        }
+        {   // 0.18.25 frozen frames: the game's own pose and world matrices come back (head shown) when the mod had changed them
+            static float P[40 * 16], Wd[41 * 16]; static u8 ndb[0x600]; memset(ndb, 0, sizeof ndb); *(float **)(ndb + 0x278) = Wd;
+            for (int k = 0; k < 40 * 16; k++) P[k] = (float)k; for (int k = 0; k < 41 * 16; k++) Wd[k] = (float)(10000 + k);
+            const int snj = fp::nJ; fp::nJ = 40; const u32 shf = fp::hideFrame.load(); g_stFrameOn = true; g_stFrame = 500; fp::hideFrame = 500; for (auto &q : fp::snap) { q.pose = nullptr; q.dirty = false; q.seq = 0; q.nd = nullptr; q.W = nullptr; q.cnt = 0; }
+            fp::snapTake(ndb, P); P[5 * 16 + 12] = 0.0f; Wd[6 * 16 + 12] = -1.0f;   // the mod hides a joint
+            fp::snapRestore(); bool sr = P[5 * 16 + 12] == (float)(5 * 16 + 12) && Wd[6 * 16 + 12] == (float)(10000 + 6 * 16 + 12);
+            P[5 * 16 + 12] = 0.0f; fp::snapRestore(); sr &= P[5 * 16 + 12] == 0.0f;   // once only
+            g_stFrame = 510; fp::snapTake(ndb, P); P[5 * 16 + 12] = 3.0f; fp::snapRestore(); sr &= P[5 * 16 + 12] == 3.0f;   // a fresh pose the mod leaves alone: nothing to undo
+            fp::nJ = snj; fp::hideFrame = shf; g_stFrameOn = false; for (auto &q : fp::snap) { q.pose = nullptr; q.dirty = false; q.seq = 0; q.nd = nullptr; q.W = nullptr; q.cnt = 0; } fp::nSnapRestores = 0;
+            ok &= sr; logf("frozen-frame restore test (the game's own pose / world matrices put back once, nothing done for a pose the mod left alone): %s", sr ? "PASS" : "FAIL");
+        }
         {   // 0.18.11 F1/F2/F3 hand trims: 5-degree steps, wrap at +-180, saved to gotvr.ini and read back as the default
             const float sp0 = g_fp.handPitch, sy0 = g_fp.handYaw, sr0 = g_fp.handRoll; g_fp.handPitch = 0; g_fp.handYaw = 175.0f; g_fp.handRoll = 0;
             handTrim(0, 5.0f); handTrim(0, 5.0f); handTrim(1, 5.0f); handTrim(2, -5.0f);
@@ -5418,7 +5961,7 @@ extern "C" __declspec(dllexport) int GoTVR_SelfTest(const wchar_t *exePath) {
         vrin::gameTick(-29.8f); tNow += 10; vrin::build(g, false); ok &= fabsf(vrin::viewHold.load() + 0.2f) < 0.01f && g.sThumbRX == 0;   // caught up
         tNow += 10; vrin::build(g, false); ok &= g.sThumbRX == 0 && fabsf(vrin::viewHold.load() + 0.2f) < 0.01f;   // holding the stick does not repeat
         push([&] { fake.hand[0].stick[1] = 0; fake.hand[1].stick[0] = 0; }); tNow += 300; vrin::gameTick(-40.0f); vrin::build(g, false); ok &= fabsf(vrin::viewHold.load() + 0.2f) < 0.01f;   // the game's own turns pass through
-        push([&] { fake.hand[1].stick[0] = 0; fake.hand[0].trigger = 1.0f; });   // wheel opens; right stick up = option 1
+        push([&] { fake.hand[1].stick[0] = 0; fake.hand[0].buttons |= GV_BTN_PRIMARY; });   // wheel opens (X held, 0.18.24); right stick up = option 1
         tNow += 10; vrin::build(g, false); ok &= vrin::wheel.open && g.bLeftTrigger == 0;
         push([&] { fake.hand[1].stick[1] = 1.0f; }); tNow += 10; vrin::build(g, false); ok &= vrin::wheel.sel == 0 && g.sThumbRY == 0 && g.sThumbRX == 0;
         push([&] { fake.hand[1].stick[1] = 0.0f; }); tNow += 10; vrin::build(g, false); ok &= (g.wButtons & vrin::XB_DOWN) && !vrin::wheel.open;   // released onto Heal
@@ -5426,19 +5969,19 @@ extern "C" __declspec(dllexport) int GoTVR_SelfTest(const wchar_t *exePath) {
         {   // 0.18.7: five options (90 - i*72 deg); Play flute = D-pad right, then the right stick flicked left; Recenter view = F11
             vrin::cfg.nWheel = 5; vrin::cfg.wheel[3] = vrin::parseOut("dpad_right+rs_left"); vrin::cfg.wheel[4] = vrin::parseOut("recenter"); m_recenter = 0;
             bool w5 = true;
-            push([&] { fake.hand[0].trigger = 0; }); tNow += 10; vrin::build(g, false);
-            push([&] { fake.hand[0].trigger = 1.0f; }); tNow += 10; vrin::build(g, false); w5 &= vrin::wheel.open;
+            push([&] { fake.hand[0].buttons &= ~GV_BTN_PRIMARY; }); tNow += 10; vrin::build(g, false);
+            push([&] { fake.hand[0].buttons |= GV_BTN_PRIMARY; }); tNow += 10; vrin::build(g, false); w5 &= vrin::wheel.open;
             push([&] { fake.hand[1].stick[0] = -0.588f; fake.hand[1].stick[1] = -0.809f; }); tNow += 10; vrin::build(g, false); w5 &= vrin::wheel.sel == 3;
             push([&] { fake.hand[1].stick[0] = 0; fake.hand[1].stick[1] = 0; }); tNow += 10; vrin::build(g, false); w5 &= (g.wButtons & vrin::XB_RIGHT) && g.sThumbRX == 0;   // flute: D-pad first
             push([&] {}); tNow += 150; vrin::build(g, false); w5 &= (g.wButtons & vrin::XB_RIGHT) && g.sThumbRX < -30000;   // ...then the flick left
             push([&] {}); tNow += 320; vrin::build(g, false); w5 &= !(g.wButtons & vrin::XB_RIGHT) && g.sThumbRX == 0;
-            push([&] { fake.hand[0].trigger = 0; }); tNow += 10; vrin::build(g, false);
-            push([&] { fake.hand[0].trigger = 1.0f; }); tNow += 10; vrin::build(g, false);
+            push([&] { fake.hand[0].buttons &= ~GV_BTN_PRIMARY; }); tNow += 10; vrin::build(g, false);
+            push([&] { fake.hand[0].buttons |= GV_BTN_PRIMARY; }); tNow += 10; vrin::build(g, false);
             push([&] { fake.hand[1].stick[0] = -0.951f; fake.hand[1].stick[1] = 0.309f; }); tNow += 10; vrin::build(g, false); w5 &= vrin::wheel.sel == 4;
             push([&] { fake.hand[1].stick[0] = 0; fake.hand[1].stick[1] = 0; }); tNow += 10; vrin::build(g, false); w5 &= m_recenter.load() == 1 && g.wButtons == 0;   // recenter, no pad output
             m_recenter = 0; vrin::cfg.nWheel = 3; ok &= w5; if (!w5) logf("   five-option wheel (flute, recenter): FAIL");
         }
-        push([&] { fake.hand[0].trigger = 0; fake.hand[1].grip.p[1] = 1.6f; fake.hand[1].grip.p[0] = 0.1f; fake.hand[1].trigger = 1.0f; });   // right hand at the head + trigger
+        push([&] { fake.hand[0].trigger = 0; fake.hand[0].buttons &= ~GV_BTN_PRIMARY; fake.hand[1].grip.p[1] = 1.6f; fake.hand[1].grip.p[0] = 0.1f; fake.hand[1].trigger = 1.0f; });   // right hand at the head + trigger
         tNow += 10; vrin::build(g, false); ok &= (g.wButtons & vrin::XB_RIGHT) && g.sThumbRY == 0 && g.bRightTrigger == 0;   // guiding wind: D-pad right first, no shot
         push([&] {}); tNow += 150; vrin::build(g, false); ok &= (g.wButtons & vrin::XB_RIGHT) && g.sThumbRY > 30000 && g.bRightTrigger == 0;   // ...then the flick up while it is held
         push([&] {}); tNow += 140; vrin::build(g, false); push([&] {}); tNow += 140; vrin::build(g, false); ok &= (g.wButtons & vrin::XB_RIGHT) && g.sThumbRY == 0;   // the flick ends before the D-pad
@@ -5468,6 +6011,20 @@ extern "C" __declspec(dllexport) int GoTVR_SelfTest(const wchar_t *exePath) {
                 vrin::cfg.moveHead = 0; tNow += 10; vrin::build(g, false); const bool h3 = abs(g.sThumbLX) < 2000 && g.sThumbLY > 30000;   // captured mode: the old forward (0)
                 push([&] { fake.hand[0].stick[1] = 0.0f; }); tNow += 10; vrin::build(g, false); vrin::moveYawOk = 0; vrin::headYawOk = 0; vrin::cfg.moveHead = smh;
                 mf &= h1 && h2 && h3; if (!(h1 && h2 && h3)) logf("   movement follows the headset: FAIL (%d %d %d)", h1, h2, h3);
+            }
+            {   // 0.18.24 room-scale drive: your head 30 cm to the world's +y (game camera along +x) -> the stick walks left; within 6 cm it stops;
+                // your own stick wins; a blocked drive pauses
+                const int so = vrin::rsOn; vrin::rsOn = 1; vrin::rsDeadCm = 15.0f; vrin::rsStopCm = 6.0f; vrin::gameTick(0.0f); vrin::headYawOk = 0; vrin::moveYawOk = 0; vrin::viewHold = 0.0f;
+                vrin::rsOff[0] = 0.0f; vrin::rsOff[1] = 30.0f; vrin::rsOkUntil = tNow + 100000; vrin::rsBlockUntil = 0;
+                push([&] { fake.hand[0].stick[0] = 0; fake.hand[0].stick[1] = 0; }); tNow += 10; vrin::build(g, false); bool r1 = g.sThumbLX < -9000 && abs(g.sThumbLY) < 1500;
+                vrin::rsOff[1] = 10.0f; tNow += 10; vrin::build(g, false); r1 &= g.sThumbLX < -9000;                       // still walking (hysteresis)
+                vrin::rsOff[1] = 4.0f; tNow += 10; vrin::build(g, false); r1 &= g.sThumbLX == 0;                            // arrived
+                vrin::rsOff[1] = 10.0f; tNow += 10; vrin::build(g, false); r1 &= g.sThumbLX == 0;                           // below the start distance: stays
+                vrin::rsOff[1] = 30.0f; push([&] { fake.hand[0].stick[1] = 1.0f; }); tNow += 10; vrin::build(g, false); r1 &= g.sThumbLY > 20000 && abs(g.sThumbLX) < 2000;   // your stick wins
+                push([&] { fake.hand[0].stick[1] = 0.0f; }); vrin::rsBlockUntil = tNow + 1000; tNow += 10; vrin::build(g, false); r1 &= g.sThumbLX == 0;   // blocked: pauses
+                vrin::rsOkUntil = 0; vrin::rsBlockUntil = 0; tNow += 10; vrin::build(g, false); r1 &= g.sThumbLX == 0;      // not safe (riding / climbing): nothing
+                vrin::rsOff[0] = vrin::rsOff[1] = 0.0f; vrin::rsOn = so;
+                mf &= r1; if (!r1) logf("   room-scale drive: FAIL (LX %d LY %d)", g.sThumbLX, g.sThumbLY);
             }
             ok &= mf; if (!mf) logf("   menu direction / movement forward: FAIL (hold %.2f, LX %d LY %d)", vrin::viewHold.load(), g.sThumbLX, g.sThumbLY);
         }

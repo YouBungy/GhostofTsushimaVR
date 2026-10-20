@@ -160,8 +160,8 @@ static int findArms(const int16_t *par, int n, const float *pose, float headZ, c
 }
 // ---------- the solve ----------
 struct Target { float pos[3]; float fing[3], thumb[3]; bool orient; };   // model space: the WRIST position and the hand's finger / thumb directions
-struct Params { float reachFrac = 0.15f, clavMaxDeg = 20.0f, clavDown = 0.4f, poleOut = 1.0f, poleDown = 1.0f, poleBack = 0.5f, bodyYaw = 0.0f, twist = 1.0f; };
-static float lastTwistDeg[2] = {0, 0};   // 0.18.23 diagnostics: the forearm twist of the last solve per side
+struct Params { float reachFrac = 0.15f, clavMaxDeg = 20.0f, clavDown = 0.4f, poleOut = 1.0f, poleDown = 1.0f, poleBack = 0.5f, bodyYaw = 0.0f, twist = 1.0f, stretch = 0.0f; };
+static float lastTwistDeg[2] = {0, 0}, lastStretchCm[2] = {0, 0};   // 0.18.23 diagnostics: the forearm twist of the last solve per side
 // signed angle from r to p about the unit axis a, both projected onto the plane across a; false when either lies along a
 static inline bool twistAngle(const float *r, const float *p, const float *a, float &out) {
     float r2[3], p2[3]; const float dr = dot3(r, a), dp = dot3(p, a); for (int k = 0; k < 3; k++) { r2[k] = r[k] - dr * a[k]; p2[k] = p[k] - dp * a[k]; }
@@ -193,17 +193,34 @@ static void solveArm(float *pose, const Arm &A, int side, const Target &T, float
         }
     }
     float D[3] = {tgt[0] - S[0], tgt[1] - S[1], tgt[2] - S[2]}; float d = len3f(D); if (!(d > 1e-3f)) return; for (auto &x : D) x /= d;
-    const float dmin = fabsf(a - b) * 1.01f + 0.5f, dmax = reach * 0.999f; d = d < dmin ? dmin : d > dmax ? dmax : d;   // out of reach: the hand stops short
+    // 0.18.26 (owner: "let Jin's arms stretch a bit beyond how far they normally go, for players with longer arms; around the elbow /
+    // bicep; the amount editable"): a target beyond reach lengthens the UPPER arm by up to prm.stretch x the arm's length (the elbow
+    // moves out along the upper arm, the bicep's own helper joints spread with it), so the hand still arrives
+    float extra = 0.0f; if (prm.stretch > 0.0f && d > reach * 0.999f) { extra = d - reach * 0.999f; const float mx = prm.stretch * reach; extra = extra > mx ? mx : extra; }
+    const float a2 = a + extra, reach2 = a2 + b;
+    lastStretchCm[side & 1] = extra;
+    const float dmin = fabsf(a2 - b) * 1.01f + 0.5f, dmax = reach2 * 0.999f; d = d < dmin ? dmin : d > dmax ? dmax : d;   // out of reach: the hand stops short
     // elbow pole in BODY space (out, down, back) turned with the drawn body (BetterVR); model y = Jin's left
     const float c = cosf(prm.bodyYaw), s = sinf(prm.bodyYaw), ox = -prm.poleBack, oy = (side == 0 ? 1.0f : -1.0f) * prm.poleOut;
     float pole[3] = {c * ox - s * oy, s * ox + c * oy, -prm.poleDown};
     float pd = dot3(pole, D); for (int k = 0; k < 3; k++) pole[k] -= pd * D[k];
     if (!norm3(pole)) { pole[0] = 0; pole[1] = 0; pole[2] = -1; pd = dot3(pole, D); for (int k = 0; k < 3; k++) pole[k] -= pd * D[k]; if (!norm3(pole)) return; }
-    const float x = (a * a - b * b + d * d) / (2 * d), h = sqrtf(fmaxf(0.0f, a * a - x * x));
+    const float x = (a2 * a2 - b * b + d * d) / (2 * d), h = sqrtf(fmaxf(0.0f, a2 * a2 - x * x));
     const float E2[3] = {S[0] + D[0] * x + pole[0] * h, S[1] + D[1] * x + pole[1] * h, S[2] + D[2] * x + pole[2] * h};
     {   // upper arm: aim the elbow (moves everything below the shoulder)
         const float from[3] = {E[0] - S[0], E[1] - S[1], E[2] - S[2]}, to[3] = {E2[0] - S[0], E2[1] - S[1], E2[2] - S[2]};
         moveSet(pose, A.sub[1], A.nSub[1], arc(from, to), S); get();
+        if (extra > 0.0f) {   // the stretch: the elbow (and everything below it) out along the upper arm; the bicep's helpers in between by their place
+            float u[3] = {E[0] - S[0], E[1] - S[1], E[2] - S[2]}; const float lu = len3f(u);
+            if (lu > 1e-3f) { for (auto &q : u) q /= lu;
+                static uint8_t inEl[MAXJ]; for (int i = 0; i < A.nSub[1]; i++) if (A.sub[1][i] < MAXJ) inEl[A.sub[1][i]] = 0; for (int i = 0; i < A.nSub[2]; i++) if (A.sub[2][i] < MAXJ) inEl[A.sub[2][i]] = 1;
+                for (int i = 0; i < A.nSub[1]; i++) { const int j = A.sub[1][i]; float *m = pose + (size_t)j * 16; float f;
+                    if (j < MAXJ && inEl[j]) f = 1.0f;
+                    else { const float dj[3] = {m[12] - S[0], m[13] - S[1], m[14] - S[2]}; const float t = dot3(dj, u) / lu; const float off[3] = {dj[0] - u[0] * t * lu, dj[1] - u[1] * t * lu, dj[2] - u[2] * t * lu};
+                           f = (t > 0.0f && t < 1.0f && len3f(off) < 6.0f) ? t : 0.0f; }
+                    if (f > 0.0f) { m[12] += u[0] * extra * f; m[13] += u[1] * extra * f; m[14] += u[2] * extra * f; } }
+                get(); }
+        }
     }
     {   // forearm: aim the wrist
         const float W2[3] = {S[0] + D[0] * d, S[1] + D[1] * d, S[2] + D[2] * d};

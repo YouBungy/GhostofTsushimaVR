@@ -1,4 +1,4 @@
-# GoTVR 0.18.23 — SYNCHRONIZED STEREO 6DoF (xr=4): both eyes from the same moment of the game
+# GoTVR 0.18.26 — SYNCHRONIZED STEREO 6DoF (xr=4): both eyes from the same moment of the game
 
 Single-player only. Never enter Legends (online) with any GoTVR file installed.
 What changed and why: `docs/BUGLOG.md` (BUG-5, BUG-6).
@@ -21,6 +21,100 @@ refused to send images ("FRAME GENERATION is on" in the log, although it was off
 "R1 census" every 5 s (or on F10): the list of views the engine renders each frame. That decides how true
 same-frame stereo (both eyes every frame) gets built. Please press **F10** once in each of: main menu, standing
 outdoors, riding, a cutscene, photo mode.
+
+## 0.18.26: katana draw (stage 1), Jin's own sounds centred, dodging off, smoother hands, arm stretch
+
+**Install:** `xinput1_4.dll` (the host is unchanged).
+
+- **Drawing the katana (first stage):**
+  - Grip your **left** controller near the top of the sheath on Jin's left hip (a light tick tells you when you are there), and grip the
+    **hilt** with your **right** hand. Then pull: the blade slides out along the sheath as if on rails, with a light rumble that grows
+    with the speed. Near the end of the blade it comes free in your hand (a strong pulse).
+  - Letting go of the hilt mid-draw slides the blade home. Letting go of a drawn katana puts it back for now; real sheathing comes in
+    the next stage, and so does the game knowing the sword is out, for combat.
+  - **Finding the katana (please do this once):** I know the katana is one of a few gear joints at Jin's hip, but not which.
+    1. **Ctrl+F7** lifts one candidate 15 cm. Look down at Jin's hips and see what jumps; press Ctrl+F7 again for the next one.
+    2. When the **katana** jumps, press **Ctrl+F8** to keep it (saved to gotvr.ini).
+    3. Then hold your left hand at the sheath mouth and your right hand at the end of the hilt and press **Ctrl+F10** to calibrate the
+       rail (saved too).
+  - Until then it uses joint 646 and a guessed direction.
+  - The log records everything while you hold the sheath or the hilt: grabs and releases, how far the blade is out, and all buttons,
+    triggers, grips and sticks of both hands (`katana:` and `SWORD/s` lines).
+- **3D audio:** Jin's own sounds close to your head (his voice, the gear at his head) are now heard centred, 25 cm in front of you, so
+  they no longer swing from ear to ear when you turn your head. His footsteps, his hip gear and everyone else keep their real place.
+  Settings: `audio_self_centre`, `audio_self_radius_cm`, `audio_self_ahead_cm`.
+- **Physical dodging off:** Jin's body is drawn moving under your head again, without moving the character itself. The code stays;
+  `fp_roomscale=1` turns it back on.
+- **Started in third person:** you loaded in crouched (Jin's head at 99 cm). The mod only accepted a standing height (1 m and up),
+  so it waited 6 s for him to stand. Crouched now counts too.
+- **Hand smoothing:** a small "soft deadband" on top of the filter. Tremor smaller than 1.5 mm / 0.25 deg is held completely still,
+  and anything bigger passes straight through. Rotation is filtered a little more than position, because small wrist wobble shows the
+  most. Settings: `fp_hand_stab_dead_mm`, `fp_hand_stab_dead_deg`.
+- **Looking down at yourself:** the body follows your head only past **30 deg** while you look down (20 deg otherwise).
+  `fp_body_head_deadzone_down_deg` sets it.
+- **Arm stretch:** if your arms are longer than Jin's, his upper arm stretches up to 10% (about 5 cm) so his hand still reaches yours,
+  spread through the bicep up to the elbow. `fp_arm_stretch` (0.10) sets it; 0 turns it off.
+- **Shadows / ghosting around the hands:** not fixed yet. Please send a headset photo and tell me if it is in one eye or both and
+  whether it trails behind the hand when you move it.
+
+## 0.18.25: 3D audio, head back in pauses / cutscenes, no camera orbit, faster room-scale, eased body turn
+
+**Install:** `xinput1_4.dll` (the host is unchanged).
+
+- **3D audio:** the game's sound "ears" now sit on your head in first person. Turn your head and a voice on your left moves to your right
+  ear, the same way God of War VR does it. It uses the game's own audio engine (Wwise) and mix: the mod only changes where the
+  listener is, so all the game's distance and occlusion effects stay. Use headphones. Cutscenes and third person keep the game's
+  camera as the listener. `audio_head=0` turns it off.
+  - Not done yet: Jin's own sounds (his voice) may still pan a little when you turn your head. God of War VR centres the player's own
+    sounds in front of you, and that is the next audio step.
+- **Jin's head in pauses / cutscenes:** when the game freezes on a frame (pause menu, map, the first frame of a cutscene) it stops
+  animating Jin and keeps drawing the last pose the mod made, with the head hidden. The mod now puts the game's own pose back for those
+  frames.
+- **Camera orbiting when Jin walks:** when Jin walks to follow you, the game turns him to face the walking direction. His head is a few
+  cm in front of his hips, so the view slowly swung round with it. The view is now tied to Jin's drawn body (the one facing your
+  headset), so turning him to walk no longer moves it. `fp_view_on_drawn_body=0` brings back the old behaviour.
+- **Room-scale catches up faster:** Jin walks faster to get under you and starts at 12 cm (was 15). His drawn body follows your
+  head in 0.1 s instead of 0.5 s (`fp_body_under_follow_s`).
+- **Body turn past the threshold:** it now eases in and out over about 0.35 s instead of snapping (`fp_body_turn_s`, 0 = at once).
+
+## 0.18.24: see-through arms fixed properly, hand stabilisation, room-scale Jin, flat play with logging, new controls
+
+**Install:** `xinput1_4.dll` (the host is unchanged since 0.18.23).
+
+- **See-through arms:** what you saw explains it:
+  - At load the menu said AO was off, but the arms were still see-through. 0.18.23 only wrote "AO off" into the game's settings
+    (which the menu displays); the game's renderer only takes settings when the game *applies* them, so AO was really still on.
+  - Your first toggle (screen-space shadows off) made the game apply everything, which turned AO off for real. The arms were still
+    see-through, so **screen-space shadows OFF shows the same problem**.
+  - Turning screen-space shadows back on applied again with **AO off + SSS on**, and the arms were fixed.
+
+  So the mod now sets exactly that, **AO off and screen-space shadows on**, through the game's own settings apply (the same path the
+  menu uses), once, when first person starts in gameplay. The game saves it like a menu change. F5 (third person) or Shift+F6 put your
+  own settings back; `fp_ao_off=0` leaves them alone. If the game ever refuses, the log says so and you can set SSAO Quality off
+  in the menu.
+- **Hand stabilisation:** when you hold a hand still, the jitter is smoothed out; when you move it, the filter lets go at once so
+  swings don't lag. It is a One Euro filter, the standard for this; FEAR VR's own code isn't public. In the test its jitter is
+  about 3.5x smaller with ~1 cm of lag at 1 m/s. It resets on recenter, tracking loss and jumps. Tune it with `fp_hand_stab_min_hz`
+  (1.2: lower = steadier) and `fp_hand_stab_beta` (10: higher = less lag when moving). `fp_hand_stab=0` turns it off.
+- **Body turn threshold:** 20 deg (`fp_body_head_deadzone_deg`).
+- **Room-scale:** step away from Jin (more than 15 cm) with the left stick at rest, and the stick walks Jin under your head. His
+  real collider moves, so you can sidestep an attack for real. The view stays where your head is while he catches up.
+  - It is off while riding, climbing, jumping and in menus.
+  - If he can't get there (a wall), it pauses for 1.5 s.
+  - `fp_roomscale_start_cm` (15) / `fp_roomscale_stop_cm` (6) set the distances; `fp_roomscale=0` turns it off.
+
+  This uses the game's own walking, so he catches up in a fraction of a second rather than instantly.
+- **Controls (your new scheme):**
+  - **X (hold)** opens the item wheel: pick with the right stick, let go of the stick to use the option, or let go of X to close it.
+  - **Left menu button (three lines)** opens the game menu.
+  - **Left trigger** is unbound for now (it will fire the held item later).
+  - Everything else is as before: Y quick attack / assassinate, A jump, B dash, stick clicks run / crouch, hand at head + trigger
+    for wind / HUD.
+- **Flat play with logging:** put `play_mode=flat` in `[gotvr]` of `gotvr.ini` to play on the monitor with your normal camera and pad,
+  no headset. The log then records Jin's state every second plus every change of the game's internal "flag" values for Jin, with
+  their old and new values. Press **F8** to drop a numbered MARK line at a moment worth looking at ("climbing now"). Climb, do
+  takedowns, swim, use the bow, get hit, then send me `gotvr.log` with what you did after each MARK. Delete the line (or set
+  `play_mode=vr`) for VR again.
 
 ## 0.18.23: solid arms (AO), arms through landings, eye position, faster body, headset recenter, forearm twist
 

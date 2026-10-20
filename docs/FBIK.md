@@ -72,3 +72,10 @@ finger chains below the wrist, thumb vs long fingers, bend = relaxed + (max - re
   510 at 25 / 50 / 75 %, 511 / 512 at the wrist).
 - Each solve measures the hand's roll about the forearm before (animated) and after the hand takes the controller frame, against the
   elbow's own frame. Each twist joint turns about the forearm axis by (after - before) x its fraction x fp_forearm_twist (1.0).
+
+## Hand stabilisation (0.18.24, stab.h)
+
+- One Euro filter on each controller's grip pose (tracking space) before it becomes the wrist target: the cut-off rises with hand speed
+  (position 1.2 Hz + 10 Hz per m/s, rotation 1.2 Hz + 3 Hz per rad/s), so a still hand is steady and a swing is not delayed.
+- Resets (playbook ch02): first pose, tracking lost / regained, recenter, a > 25 cm jump in one frame, a bad time step, non-finite.
+- ini: fp_hand_stab, fp_hand_stab_min_hz, fp_hand_stab_beta, fp_hand_stab_rot_min_hz, fp_hand_stab_rot_beta.

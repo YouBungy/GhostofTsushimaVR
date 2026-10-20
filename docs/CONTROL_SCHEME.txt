@@ -1,0 +1,22 @@
+[GENERAL]
+Hold right hand up to head and press trigger - wind sense
+Hold left hand up to head and press trigger - HUD/Quest objectives
+
+[QUEST 3]
+Left stick - movement
+Left stick down - run
+Right stick - snap turn
+Right stick down - crouch
+Right grip - grab
+Left grip - grab
+Y - quick attack/assassinate
+X - weapon wheel
+B - dash
+A - jump
+three line button (left controller) - menu
+Right trigger - Fire/shoot blowdart
+Left trigger - Fire/shoot held item
+
+[WHEEL OPTIONS]
+Heal, Photomode, call horse, play flute, and recenter view
+Use right stick to select wheel option, release to confirm choice and close wheel, otherwise release left trigger to close wheel 

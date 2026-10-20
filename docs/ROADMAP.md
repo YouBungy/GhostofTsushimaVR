@@ -1,8 +1,25 @@
-# GoTVR roadmap (updated at 0.18.23)
+# GoTVR roadmap (updated at 0.18.26)
 
 Done: synchronized native stereo 6DoF (xr=4), per-eye occlusion/TAA history, square render with 16:9 UI, theatre screen,
 HUD layer, first person anchored on the body with the head hidden in the render pose, pose-lead prediction, VR
 controllers for any OpenXR controller (0.18.0: virtual pad, snap turn, item wheel logic, head gestures, rumble).
+
+## CURRENT TASK LIST (reset at 0.18.26 - VR IK + 3D audio done, combat begins)
+
+1. Katana draw stage 1 in the headset: identify the katana joint (Ctrl+F7 / Ctrl+F8), calibrate the rail (Ctrl+F10), check feel
+   (grab radius, rumble, free point). Logs: SWORD/s, katana:.
+2. Katana draw stage 2: the game's own "sword out" state when the blade comes free (RE: what the game's draw sets - flat-play
+   observer logs of a game draw / sheathe, input-owner stack), a real sheathe (blade tip to the mouth, slide home), the held katana
+   for both hands (two-handed grip, HAND-017), grip-adjust trim.
+3. Physical swings: swing detector (blade tip speed, travel, cooldown, re-arm) emitting the game's light / heavy attacks; gate all
+   synthetic input on the drawn sword. Then blocking / parry from blade contact, stances.
+4. Hit reactions in first person: keep the body / eye anchor steady, damage as haptics (owner TODO 0.18.14).
+5. Shadows / ghosting around the hands (owner 0.18.25, needs a photo): right-eye object motion vectors vs per-eye history, or
+   screen-space shadows on near geometry.
+6. Camera policy for takedowns / photo mode (input-owner stack, below) - the flat-play observer (play_mode=flat) logs help.
+7. Audio stage 3: HRTF (Wwise binaural / Steam Audio plug-in if shipped), positional UI sounds.
+8. Room-scale that moves the real character (off since 0.18.26; needs the character controller's position write, not the stick).
+9. Later: bow, kunai, blowgun; climbing / grappling hands; mounted combat.
 
 Rules for every phase (playbook ch03 / ch08): own one channel at a time, prove it flat (self-test / log) before the
 headset, let the game's own systems do the work, keep every addition behind its own switch, and never ship a cost that
@@ -73,6 +90,15 @@ did not buy a measured fix.
 - NEXT for movement: instant direction changes = lock-on / stance strafing (bldbrne-vr bloodborne_facing.h: the game believes Jin is
   locked on to a point ahead along the VR heading) - needs RE of GoT's lock-on / stance state. Then AO could come back if its pass can
   be told to reject near pixels.
+- 0.18.24: AO / SSS through the game's apply (BUG-80); hand stabilisation; room-scale via the stick (Jin's collider follows you);
+  flat play observer (play_mode=flat) to find climbing / takedown / stance flags from the owner's logs.
+- NEXT room-scale: an instant version needs the character controller's position write (RE: who moves the hero's collider); the stick
+  drive is the safe first step.
+- 0.18.25: 3D audio phase 1 (listener = head). NEXT audio: Jin's own emitters (voice, sword, gear) centred in front of the head
+  (God of War VR D-162: after the game's emitter update, one more SetPosition 0.25 m ahead of the listener for the player's own
+  emitters) - needs GoT's emitter update / owner RE (Wwise SetPosition 0xF12BF0 callers); then HRTF (playbook #hrtf-in-the-mixer:
+  Wwise's own binaural / a Steam Audio plug-in if the game ships one).
+- Then: combat rework (physical sword).
 - Depth submission to the runtime (XR_KHR_composition_layer_depth) so Spacewarp can reproject near geometry (arms, body).
 - Later: room-scale beyond 60 cm should move Jin himself (feed the offset to the game as movement), not only the drawn body.
 - TODO (owner, 0.18.14): no attack HIT-REACTION animations in first person (Jin flinching / staggering when struck moves the body
