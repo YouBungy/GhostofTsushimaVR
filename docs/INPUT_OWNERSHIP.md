@@ -80,3 +80,24 @@ screen into this table at the first launch; it is not inferred here.
 Haptics: XInput rumble (2 motors) is the native semantic return today; map lo → left hand, hi → right hand,
 or both for impacts. DualSense adaptive-trigger effects run through libScePad and are not reachable via
 XInput.
+
+## 0.18.0 implementation (supersedes the proposal above where they differ)
+
+```
+OpenXR (GoTVRHost xrinput.h)          shared block v12 (seqlock)          game DLL (vrinput.h)                  game
+profile table -> canonical controller -> GvHand[2] + profile + time  ->  [controls] mapping, context,     -> virtual Xbox pad (user 0)
+  per hand: stick, stick click,          inActive (focused + synced)        snap turn loop, wheel, gestures     merged with a real pad
+  trigger, grip, lower/upper button,                                        neutral after 250 ms stale      <- XInputSetState rumble
+  menu, thumbrest, grip/aim pose     <- hapLevel[2], pulses           <- rumble (low -> left, high -> right)
+```
+- Profiles: oculus/touch, meta/touch_controller_plus*, facebook/touch_controller_pro*, valve/index, htc/vive,
+  microsoft/motion, hp/mixed_reality*, bytedance/pico4*, khr/simple (* when the runtime offers the extension).
+  New controller = one table entry in xrinput.h.
+- Context: gameplay (ui mode HUD, not flat) gets snap turn / wheel / gestures; menus, theatre and cutscenes get the plain pad.
+- Neutral state: host not focused or sync failed -> inActive 0; game side: no new sample for 250 ms -> all released, pad stays
+  connected (BioshockVR rule: one slot for the process lifetime after the first activation).
+- Snap turn: the right stick is driven into the game until the game camera's own yaw (hSlot43, before composition) has
+  turned snap_turn_deg (700 ms cap); the composed view is held back meanwhile and lands at once.
+- 0.18.2: the PC port's touchpad substitute is confirmed (hold D-pad right + flick the right stick = touchpad swipe; up =
+  guiding wind / objective); the left-hand gesture also shows the HUD head-locked for 6 s. Was open: guiding wind / HUD outputs (Xbox: hold D-pad right + right stick direction = touchpad
+  swipe); item wheel has no picture yet (roadmap phase 1).

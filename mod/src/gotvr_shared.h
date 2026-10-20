@@ -7,7 +7,7 @@
 #include <stdint.h>
 
 #define GV_MAGIC 0x52565447u /* 'GTVR' */
-#define GV_VERSION 10u
+#define GV_VERSION 14u
 #define GV_TEXCOUNT 6        /* 2 eyes x 3 buffers (game writes round-robin, never waits on the host) */
 #define GV_UITEX 3           /* v8: UI-layer images, own size (the UI target's), names Local\GoTVR_<pid>_u<uiGen>_ui<i> */
 
@@ -18,6 +18,20 @@ static inline void gvName(wchar_t *out, size_t n, uint32_t pid, const wchar_t *s
 }
 
 struct GvPose { float q[4]; float p[3]; };   // OpenXR LOCAL space: x right, y up, -z forward, metres
+// v12 canonical controller (one per hand). Buttons are physical roles, not game meanings:
+//   PRIMARY = the lower face button (A on the right Touch, X on the left; Index A; WMR/Vive: trackpad click)
+//   SECONDARY = the upper face button (B / Y; Index B; Vive / WMR: menu button)
+//   MENU = the system-style menu button where a controller has a separate one (left Touch menu)
+//   STICK = thumbstick click (Vive: trackpad click), TRIGGER / GRIP = digital versions of the analog values
+enum : uint32_t { GV_BTN_PRIMARY = 1u, GV_BTN_SECONDARY = 2u, GV_BTN_MENU = 4u, GV_BTN_STICK = 8u, GV_BTN_TRIGGER = 16u, GV_BTN_GRIP = 32u, GV_BTN_THUMBREST = 64u,
+                   GV_BTN_THUMBTOUCH = 128u, GV_BTN_TRIGTOUCH = 256u };   // v14+: the thumb resting on the stick / face buttons / thumb rest; the index on the trigger (VR fingers)
+struct GvHand {
+    GvPose grip, aim;                 // LOCAL space (grip = palm, for hands and held objects; aim = pointing ray)
+    uint32_t poseValid;               // 1 = grip valid, 2 = aim valid
+    float stick[2];                   // thumbstick (or trackpad) x right, y up, -1..1, raw (the game DLL applies deadzones)
+    float trigger, squeeze;           // 0..1
+    uint32_t buttons;                 // GV_BTN_*
+};
 // fov as OpenXR angles in radians: left (<0), right (>0), up (>0), down (<0)
 
 enum GvHostState : int32_t { GV_HOST_STARTING = 0, GV_HOST_NO_RUNTIME = 1, GV_HOST_SESSION = 2, GV_HOST_RUNNING = 3, GV_HOST_FAILED = 4, GV_HOST_EXITED = 5 };
@@ -90,6 +104,32 @@ struct GvShared {
     // the game "16:9" while the image is square): every image is ANAMORPHIC - stretched vertically by dispAspect. The host shows
     // the UI image and theatre (flat) frames at this display aspect (width / height); 0 = the images' own pixel aspect.
     float dispAspect;
+    // v11 (BUG-69: black edges / judder on fast head turns while the game itself keeps its frame rate). The image of a pair
+    // reaches the display a whole pair (or more) after its pose was predicted, so the compositor warps it across that gap
+    // and the frustum edge shows. The host predicts the pose for its display time PLUS the measured pipeline lag.
+    float poseLeadCfgMs;              // game -> host: < 0 = automatic (measured), 0 = off, > 0 = fixed milliseconds
+    volatile LONG poseLeadUs;         // host -> game: the lead in use (microseconds)
+    volatile LONG poseLagUs;          // host -> game: how late new pairs reach the display relative to their prediction
+    volatile LONG hostGpuPrio;        // host -> game: the host's GPU scheduling class (D3DKMT, -1 = could not set)
+    // v12: VR controllers (playbook ch03 / INPUT-001: the host transports PHYSICAL controls of one canonical controller per
+    // hand; the game DLL owns every game meaning). Each interaction profile (Touch, Touch Plus, Index, Vive, WMR, HP Reverb,
+    // Pico, KHR simple) is bound onto the same canonical controls in GoTVRHost's profile table (xrinput.h).
+    volatile LONG inSeq;              // seqlock over the input snapshot below
+    uint32_t inActive;                // 1 = session focused and actions synced this frame (else: neutral)
+    int64_t inTime;                   // XrTime the hand poses were located for (= the pose packet's display time)
+    volatile LONG64 inSamples;        // snapshots written (diagnostics)
+    GvHand hand[2];                   // 0 = left, 1 = right
+    char inProfile[2][96];            // current interaction profile per hand ("" = none)
+    // game -> host haptics
+    float hapLevel[2];                // continuous rumble per hand 0..1 (the game's XInput motors: low -> left, high -> right)
+    volatile LONG hapPulseSeq[2];     // bumped per one-shot pulse request
+    float hapPulseAmp[2]; uint32_t hapPulseMs[2];
+    // v13 overlay (game -> host, seqlock): GoTVRHost draws the item wheel at the hand and the head-gesture test indicator
+    volatile LONG ovSeq;
+    uint32_t ovWheelOpen; int32_t ovWheelSel; uint32_t ovWheelN; int32_t ovWheelHand; char ovWheelName[8][24];   // v14: up to 8 options
+    uint32_t ovDebug;                 // 1 = show the head-gesture indicator (gameplay, [controls] gesture_indicator)
+    uint32_t ovAtHead;                // bit 0 left hand, bit 1 right hand in the gesture zone
+    uint32_t ovGestSeq[2]; char ovGestName[2][24];   // bumped per fired gesture, with its name
 };
 // head-locked HUD quad / world-locked panel / v9 FULL: the UI covers the whole view of each eye exactly like on the monitor
 // (cinematics: letterbox bars, fades and subtitles at the screen edges) - one quad per eye on the frustum its image used

@@ -16,6 +16,9 @@
 #include <cstring>
 #include <cstdint>
 #include <cmath>
+#include <vector>
+#include <string>
+#include <atomic>
 #define XR_NO_PROTOTYPES
 #define XR_USE_GRAPHICS_API_D3D12
 #define XR_USE_PLATFORM_WIN32
@@ -24,7 +27,7 @@
 #include "gotvr_shared.h"
 
 typedef uint64_t u64; typedef uint32_t u32;
-#define HOST_VERSION "GoTVRHost 0.13.0 (pair-atomic xr=4, theatre screen, sharp UI layer: room-fixed HUD panel from the game, full-view cinematic UI, anamorphic 16:9 UI and flat frames of the square render)"
+#define HOST_VERSION "GoTVRHost 0.14.3 (thumb / trigger touch for the VR fingers, five-option item wheel, shared block v14, item wheel + gesture indicator overlay, VR controllers: canonical controller per hand for Touch / Touch Plus / Index / Vive / WMR / HP / Pico / simple, haptics, pose prediction lead = measured pipeline lag, high GPU priority, pair-atomic xr=4, theatre screen, sharp UI layer: room-fixed HUD panel from the game, full-view cinematic UI, anamorphic 16:9 UI and flat frames of the square render)"
 
 static FILE *g_log; static wchar_t g_dir[MAX_PATH];
 static void logf(const char *fmt, ...) {
@@ -59,6 +62,8 @@ static bool ok(XrResult r, const char *what) {
     lastWhat = what; lastR = (int)r; rep = 0;
     logf("XR FAIL %s -> %d %s", what, (int)r, s); return false;
 }
+
+#include "xrinput.h"
 
 // ---------------- D3D12 ----------------
 static ID3D12Device *dev; static ID3D12CommandQueue *queue; static LUID hostLuid;
@@ -233,11 +238,12 @@ static bool initXr() {
     gipa(XR_NULL_HANDLE, "xrCreateInstance", (PFN_xrVoidFunction *)&xrCreateInstance_);
     gipa(XR_NULL_HANDLE, "xrEnumerateApiLayerProperties", (PFN_xrVoidFunction *)&xrEnumerateApiLayerProperties_);
     layerCensus();
-    const char *ext[] = {XR_KHR_D3D12_ENABLE_EXTENSION_NAME};
+    xin::pickExtensions(gipa);
+    std::vector<const char *> ext{XR_KHR_D3D12_ENABLE_EXTENSION_NAME}; for (auto *e : xin::enabledExt) ext.push_back(e);
     XrInstanceCreateInfo ici{XR_TYPE_INSTANCE_CREATE_INFO};
     strcpy(ici.applicationInfo.applicationName, "GoTVR"); ici.applicationInfo.applicationVersion = 6;
     strcpy(ici.applicationInfo.engineName, "GoTVRHost"); ici.applicationInfo.apiVersion = XR_MAKE_VERSION(1, 0, 0);
-    ici.enabledExtensionCount = 1; ici.enabledExtensionNames = ext;
+    ici.enabledExtensionCount = (u32)ext.size(); ici.enabledExtensionNames = ext.data();
     for (int i = 0;; i++) {   // the runtime (Virtual Desktop / SteamVR) may be started after the game
         XrResult r = xrCreateInstance_(&ici, &inst);
         if (XR_SUCCEEDED(r)) break;
@@ -266,7 +272,9 @@ static bool initXr() {
     DXGI_ADAPTER_DESC1 add{}; ad->GetDesc1(&add); logf("adapter %ls LUID %08lx:%08lx", add.Description, req.adapterLuid.HighPart, req.adapterLuid.LowPart);
     hostLuid = req.adapterLuid;
     if (FAILED(D3D12CreateDevice(ad, req.minFeatureLevel < D3D_FEATURE_LEVEL_11_0 ? D3D_FEATURE_LEVEL_11_0 : req.minFeatureLevel, IID_PPV_ARGS(&dev)))) { setState(GV_HOST_FAILED, "D3D12CreateDevice failed"); return false; }
-    D3D12_COMMAND_QUEUE_DESC qd{}; qd.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
+    // 0.13.1 (BUG-66): the game keeps the GPU busy; the per-frame copies into the XR swapchains must not wait behind it, or
+    // xrEndFrame is late, the runtime halves the rate and turning the head judders with black edges (playbook ch19)
+    D3D12_COMMAND_QUEUE_DESC qd{}; qd.Type = D3D12_COMMAND_LIST_TYPE_DIRECT; qd.Priority = D3D12_COMMAND_QUEUE_PRIORITY_HIGH;
     if (FAILED(dev->CreateCommandQueue(&qd, IID_PPV_ARGS(&queue)))) return false;
     for (auto &a : alloc) if (FAILED(dev->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&a)))) return false;
     if (FAILED(dev->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, alloc[0], nullptr, IID_PPV_ARGS(&cl)))) return false; cl->Close();
@@ -284,22 +292,25 @@ static bool initXr() {
     // small placeholder chains (black / test pattern) so a projection layer exists from the first frame
     u32 bw = vcv[0].recommendedImageRectWidth / 2, bh = vcv[0].recommendedImageRectHeight / 2;
     for (int e = 0; e < 2; e++) if (!makeChain(blank[e], bw, bh, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB)) return false;
+    if (!xin::init()) logf("controllers: unavailable this session (the game keeps keyboard / gamepad)");
     setState(GV_HOST_SESSION, "session created, waiting for READY");
     return true;
 }
 
-static bool running = false, quit = false;
+static bool running = false, quit = false, focused = false;
 static void invalidatePose() { gvWriteBegin(&S->poseSeq); S->poseValid = 0; gvWriteEnd(&S->poseSeq); }
 static void pollEvents() {
     XrEventDataBuffer ev{XR_TYPE_EVENT_DATA_BUFFER};
     while (xrPollEvent_(inst, &ev) == XR_SUCCESS) {
         if (ev.type == XR_TYPE_EVENT_DATA_SESSION_STATE_CHANGED) {
             auto *s = (XrEventDataSessionStateChanged *)&ev; logf("session state -> %d", (int)s->state);
+            focused = s->state == XR_SESSION_STATE_FOCUSED; if (!focused && xin::ready) xin::neutral();
             if (s->state == XR_SESSION_STATE_READY) {
                 XrSessionBeginInfo bi{XR_TYPE_SESSION_BEGIN_INFO}; bi.primaryViewConfigurationType = XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO;
                 if (ok(xrBeginSession_(sess, &bi), "xrBeginSession")) { running = true; setState(GV_HOST_RUNNING, "session running"); }
             } else if (s->state == XR_SESSION_STATE_STOPPING) { ok(xrEndSession_(sess), "xrEndSession"); running = false; invalidatePose(); setState(GV_HOST_SESSION, "session stopped"); }
             else if (s->state == XR_SESSION_STATE_EXITING || s->state == XR_SESSION_STATE_LOSS_PENDING) { running = false; quit = true; invalidatePose(); }
+        } else if (ev.type == XR_TYPE_EVENT_DATA_INTERACTION_PROFILE_CHANGED) { xin::profDirty = true;
         } else if (ev.type == XR_TYPE_EVENT_DATA_INSTANCE_LOSS_PENDING) { running = false; quit = true; invalidatePose(); }
         ev = {XR_TYPE_EVENT_DATA_BUFFER};
     }
@@ -349,24 +360,53 @@ static XrRect2Di screenRect(u32 w, u32 h, bool crop) {   // the part of the game
     return r;
 }
 
+// v11 (BUG-69) pose lead: every published pose is remembered with the time it was predicted for; when a new stereo pair is
+// first shown, its pose is looked up and (this frame's display time - that time) is how late the pipeline delivered it. The
+// lead integrates that lag, so the game renders for the moment its image is actually on the display (playbook ch09
+// #runtime-owns-pacing / XR-005: one wait, one prediction, declare what you rendered; the declared pose stays the rendered one).
+#include "xroverlay.h"
+
+struct LeadRec { XrTime t; GvPose e0; };
+static LeadRec leadRing[128]; static u32 leadPos = 0; static double leadNs = 0, lagEma = 0; static u64 lagN = 0; static u32 lastLeadFrame = 0xFFFFFFFFu;
+static double leadLimitNs() { return 45e6; }
+static void leadNote(XrTime now, const Shown &first) {   // a new pair is on the display this frame
+    if (!first.valid || (first.flags & GV_SLOT_FLAT) || first.frame == lastLeadFrame) return;
+    lastLeadFrame = first.frame;
+    for (u32 k = 0; k < 128; k++) {
+        const LeadRec &r = leadRing[(leadPos - 1 - k) & 127];
+        if (r.t && !memcmp(&r.e0, &first.pose, sizeof(GvPose))) {
+            const double lag = (double)(now - r.t); lagN++;
+            lagEma = lagN == 1 ? lag : lagEma + (lag - lagEma) * 0.05;
+            const float cfg = S->poseLeadCfgMs;
+            if (cfg < 0) { leadNs += lag * 0.1; if (leadNs < 0) leadNs = 0; if (leadNs > leadLimitNs()) leadNs = leadLimitNs(); }
+            else leadNs = (double)cfg * 1e6;
+            S->poseLeadUs = (LONG)(leadNs / 1000.0); S->poseLagUs = (LONG)(lagEma / 1000.0);
+            return;
+        }
+    }
+}
 static void frame() {
     XrFrameState fs{XR_TYPE_FRAME_STATE}; XrFrameWaitInfo fw{XR_TYPE_FRAME_WAIT_INFO};
     if (!ok(xrWaitFrame_(sess, &fw, &fs), "xrWaitFrame")) { Sleep(5); return; }
-    // publish the pose packet for the game (predicted for this display time)
-    XrViewLocateInfo li{XR_TYPE_VIEW_LOCATE_INFO}; li.viewConfigurationType = XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO; li.displayTime = fs.predictedDisplayTime; li.space = local;
+    // publish the pose packet for the game: predicted for this display time + the pipeline lead (v11)
+    if (S->poseLeadCfgMs == 0.0f) leadNs = 0; else if (S->poseLeadCfgMs > 0) leadNs = (double)S->poseLeadCfgMs * 1e6;
+    const XrTime target = fs.predictedDisplayTime + (XrTime)leadNs;
+    XrViewLocateInfo li{XR_TYPE_VIEW_LOCATE_INFO}; li.viewConfigurationType = XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO; li.displayTime = target; li.space = local;
     XrViewState vs{XR_TYPE_VIEW_STATE}; XrView v[2] = {{XR_TYPE_VIEW}, {XR_TYPE_VIEW}}; u32 nv = 0;
     XrSpaceLocation hl{XR_TYPE_SPACE_LOCATION};
     bool views = XR_SUCCEEDED(xrLocateViews_(sess, &li, &vs, 2, &nv, v)) && nv == 2 && (vs.viewStateFlags & XR_VIEW_STATE_ORIENTATION_VALID_BIT);
-    bool headOk = XR_SUCCEEDED(xrLocateSpace_(viewSp, local, fs.predictedDisplayTime, &hl)) && (hl.locationFlags & XR_SPACE_LOCATION_ORIENTATION_VALID_BIT);
+    bool headOk = XR_SUCCEEDED(xrLocateSpace_(viewSp, local, target, &hl)) && (hl.locationFlags & XR_SPACE_LOCATION_ORIENTATION_VALID_BIT);
     if (views && headOk) {
         gvWriteBegin(&S->poseSeq);
-        S->displayTime = fs.predictedDisplayTime;
+        S->displayTime = target;
         auto put = [](GvPose &d, const XrPosef &p) { d.q[0] = p.orientation.x; d.q[1] = p.orientation.y; d.q[2] = p.orientation.z; d.q[3] = p.orientation.w; d.p[0] = p.position.x; d.p[1] = p.position.y; d.p[2] = p.position.z; };
         put(S->head, hl.pose);
         for (int e = 0; e < 2; e++) { put(S->eye[e], v[e].pose); S->fov[e][0] = v[e].fov.angleLeft; S->fov[e][1] = v[e].fov.angleRight; S->fov[e][2] = v[e].fov.angleUp; S->fov[e][3] = v[e].fov.angleDown; }
         S->poseValid = 1;
         gvWriteEnd(&S->poseSeq);
+        LeadRec &r = leadRing[leadPos++ & 127]; r.t = target; r.e0 = S->eye[0];
     }
+    xin::frame(target, focused && views && headOk);   // v12: controllers, located for the same time as the head
     S->hostBeat = (LONG64)GetTickCount64();
 
     XrFrameBeginInfo fb{XR_TYPE_FRAME_BEGIN_INFO}; if (!ok(xrBeginFrame_(sess, &fb), "xrBeginFrame")) return;
@@ -394,6 +434,7 @@ static void frame() {
         if (bl >= 0 && (!shown[0].valid || !shown[1].valid || shown[0].frame != shown[1].frame || (int)(cand[0][bl].frame - shown[0].frame) >= 0)) {
             if (!shown[0].valid || cand[0][bl].frame != shown[0].frame || cand[1][br].frame != shown[1].frame) S->hostPairs++;
             pick[0] = cand[0][bl]; pick[1] = cand[1][br];
+            leadNote(fs.predictedDisplayTime, pick[0]);
         }
     } else for (int e = 0; e < 2; e++) for (int b = 0; b < 3; b++) if (cand[e][b].valid && (!pick[e].valid || cand[e][b].fence > pick[e].fence)) pick[e] = cand[e][b];
     // v7 UI layer: newest completed UI image of this generation, from (about) the frame the eyes show
@@ -405,7 +446,9 @@ static void frame() {
     }
     const bool uiFresh = uiPick.valid && shown[0].valid && (int)(uiPick.frame - pick[0].frame) >= -3 && (uiFlags & (GV_UI_HEAD | GV_UI_WORLD | GV_UI_FULL));
     u32 uiIdx = 0; const bool uiAcq = uiFresh && acquire(uiSc, uiIdx);
+    const u64 ovNow = GetTickCount64(); const bool ovNeed = useGame && ov::wantDraw(ovNow); u32 ovIdx = 0; const bool ovAcq = ovNeed && acquire(ov::sc, ovIdx);   // v13 overlay
     auto *c = beginCl();
+    if (ovAcq) ov::record(c, ov::sc.img[ovIdx], ring, ovNow);
     if (uiAcq) {
         D3D12_RESOURCE_BARRIER br = barrier(uiSc.img[uiIdx], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_DEST); c->ResourceBarrier(1, &br);
         D3D12_TEXTURE_COPY_LOCATION dst{uiSc.img[uiIdx], D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX, {}}, src{uiTex[uiPick.tex], D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX, {}};
@@ -430,6 +473,7 @@ static void frame() {
     submitCl();                                                       // work is on the queue BEFORE release (review #1)
     for (int e = 0; e < 2; e++) if (acq[e]) release(*ch[e]);
     if (uiAcq) release(uiSc);
+    if (ovAcq) { release(ov::sc); ov::sigDrawn = ov::sigOf(ovNow); ov::haveImage = true; }
     XrCompositionLayerProjectionView pv[2]; bool layerOk = true;
     for (int e = 0; e < 2; e++) {
         pv[e] = {XR_TYPE_COMPOSITION_LAYER_PROJECTION_VIEW};
@@ -451,7 +495,7 @@ static void frame() {
         }
     }
     XrCompositionLayerProjection pl{XR_TYPE_COMPOSITION_LAYER_PROJECTION}; pl.space = local; pl.viewCount = 2; pl.views = pv;
-    const XrCompositionLayerBaseHeader *layers[4] = {(XrCompositionLayerBaseHeader *)&pl, nullptr, nullptr, nullptr}; u32 nLayers = layerOk ? 1 : 0;
+    const XrCompositionLayerBaseHeader *layers[8] = {(XrCompositionLayerBaseHeader *)&pl, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr}; u32 nLayers = layerOk ? 1 : 0;
     // theatre: the left image of a flat-context pair goes on the screen; the projection layer is dropped (black room)
     // unless theaterBackdrop = 1. The eye-0 chain holds exactly that image (copied above this frame, or still shown).
     XrCompositionLayerQuad ql{XR_TYPE_COMPOSITION_LAYER_QUAD};
@@ -520,6 +564,26 @@ static void frame() {
         }
         static u32 wasUi = 0; static float wasDa = -1; if (uiFlags != wasUi || da != wasDa) { logf("UI layer: %s quad %.2f x %.2f m (%ux%u%s)", how, w, h, uiSc.w, uiSc.h, da > 0.5f ? ", anamorphic: shown at the game's layout aspect" : ""); wasUi = uiFlags; wasDa = da; }
     }
+    // v13 overlay: the item wheel above the hand that holds it open, the head-gesture indicator low in the view (both premultiplied)
+    XrCompositionLayerQuad wq{XR_TYPE_COMPOSITION_LAYER_QUAD}, gq{XR_TYPE_COMPOSITION_LAYER_QUAD};
+    if (!theatre && useGame && ov::haveImage && ov::sc.everReleased && headOk && layerOk && nLayers + 2 <= 8) {
+        if (ov::cur.wheelOpen) {
+            GvHand hd{}; u32 act = 0; gvRead(&S->inSeq, [&] { hd = S->hand[ov::cur.hand & 1]; act = S->inActive; });
+            if (act && (hd.poseValid & 1)) {
+                const float pos[3] = {hd.grip.p[0], hd.grip.p[1] + 0.13f, hd.grip.p[2]}, eye[3] = {hl.pose.position.x, hl.pose.position.y, hl.pose.position.z};
+                wq.layerFlags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT; wq.space = local; wq.eyeVisibility = XR_EYE_VISIBILITY_BOTH;
+                wq.subImage.swapchain = ov::sc.sc; wq.subImage.imageRect = {{0, 0}, {(int32_t)ov::HALF, (int32_t)ov::H}};
+                wq.pose.position = {pos[0], pos[1], pos[2]}; wq.pose.orientation = ov::faceTo(pos, eye); wq.size = {0.26f, 0.26f};
+                layers[nLayers++] = (XrCompositionLayerBaseHeader *)&wq;
+            }
+        }
+        if (ov::cur.dbg && (ov::cur.atHead || ovNow < ov::flashUntil[0] || ovNow < ov::flashUntil[1])) {   // only while a hand is at the head or a gesture just fired
+            gq.layerFlags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT; gq.space = viewSp; gq.eyeVisibility = XR_EYE_VISIBILITY_BOTH;
+            gq.subImage.swapchain = ov::sc.sc; gq.subImage.imageRect = {{(int32_t)ov::HALF, 0}, {(int32_t)ov::HALF, (int32_t)ov::H}};
+            gq.pose.orientation.w = 1; gq.pose.position = {0.0f, -0.24f, -0.8f}; gq.size = {0.22f, 0.22f};
+            layers[nLayers++] = (XrCompositionLayerBaseHeader *)&gq;
+        }
+    }
     {   static bool was = false; static u32 wasFlags = 0;
         if (theatre != was || (theatre && shown[0].flags != wasFlags)) {
             if (theatre) logf("theatre: ON (%s%s, image %dx%d at %d,%d of %ux%u, %u layer(s), display aspect %.3f)", (shown[0].flags & GV_SLOT_CROP169) ? "video, cropped to 16:9" : "full frame", (shown[0].flags & GV_SLOT_FLAT) ? ", flat-rendered" : ", stereo image",
@@ -532,9 +596,9 @@ static void frame() {
     fe.layerCount = nLayers; fe.layers = layers;   // 0 only if not even a placeholder was ever released (first-frame failure)
     ok(xrEndFrame_(sess, &fe), "xrEndFrame");
     u64 nf = ++S->hostFrames;
-    if (nf % 900 == 1) logf("frame %llu: shouldRender=%d useGame=%d gameFresh=%d copied=%lld reused=%lld published=%lld mismatch=%lld eyeFrames=%u/%u",
+    if (nf % 900 == 1) logf("frame %llu: shouldRender=%d useGame=%d gameFresh=%d copied=%lld reused=%lld published=%lld mismatch=%lld eyeFrames=%u/%u | pose lead %.1f ms (new pairs reach the display %.1f ms after their prediction, %llu measured)",
                             (unsigned long long)nf, (int)fs.shouldRender, (int)useGame, (int)gameFresh, (long long)S->hostCopied, (long long)S->hostReused,
-                            (long long)S->gamePublished, (long long)S->gameMismatch, shown[0].frame, shown[1].frame);
+                            (long long)S->gamePublished, (long long)S->gameMismatch, shown[0].frame, shown[1].frame, leadNs / 1e6, lagEma / 1e6, (unsigned long long)lagN);
 }
 
 int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR cmd, int) {
@@ -558,6 +622,15 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR cmd, int) {
     S = (GvShared *)MapViewOfFile(m, FILE_MAP_ALL_ACCESS, 0, 0, sizeof(GvShared));
     if (!S || S->magic != GV_MAGIC || S->version != GV_VERSION) { logf("shared block version mismatch (game DLL and host must be the same build)"); return 1; }
     S->hostPid = GetCurrentProcessId(); logf("attached to game pid %u, mode %u", g_pid, S->mode);
+    {   // v11 (BUG-69): the host's copies and the runtime's submission must not queue behind a GPU-bound game (playbook ch19
+        // host starvation). WDDM GPU scheduling class: HIGH (4), else ABOVE_NORMAL (3).
+        typedef LONG(APIENTRY * FnPrio)(HANDLE, int); S->hostGpuPrio = -1;
+        if (FnPrio f = (FnPrio)GetProcAddress(GetModuleHandleW(L"gdi32.dll") ? GetModuleHandleW(L"gdi32.dll") : LoadLibraryW(L"gdi32.dll"), "D3DKMTSetProcessSchedulingPriorityClass")) {
+            LONG st = f(GetCurrentProcess(), 4); if (st == 0) S->hostGpuPrio = 4; else { LONG st2 = f(GetCurrentProcess(), 3); if (st2 == 0) S->hostGpuPrio = 3; logf("GPU priority HIGH refused (0x%08lX)", (unsigned long)st); }
+        }
+        logf("host GPU scheduling priority: %s", S->hostGpuPrio == 4 ? "HIGH" : S->hostGpuPrio == 3 ? "ABOVE NORMAL" : "unchanged (not available)");
+        logf("pose prediction lead: %s", S->poseLeadCfgMs < 0 ? "automatic (measured pipeline lag)" : S->poseLeadCfgMs == 0 ? "off" : "fixed");
+    }
     if (!initXr()) { if (S->hostState != GV_HOST_NO_RUNTIME && S->hostState != GV_HOST_FAILED) setState(GV_HOST_FAILED, "init failed"); logf("exit: init failed (%s)", S->hostMsg); return 2; }
     while (!quit && gameAlive()) {
         pollEvents();

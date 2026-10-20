@@ -25,7 +25,7 @@
 #include "gotvr_shared.h"
 
 typedef uint64_t u64; typedef uint32_t u32; typedef uint8_t u8;
-#define GOTVR_VERSION "GoTVR 0.16.5 (xr=4 SYNCHRONIZED-SEQUENTIAL stereo: both eyes from one simulation tick, pair-atomic presentation, per-eye occlusion + TAA history, left-eye monitor mirror, HUD on its own sharp layer that stays put in the room (lazy follow), cinematic letterbox bars and fades over the whole view, theatre screen for videos/pause/menus/loading (flat-rendered); xr=3 experimental)"
+#define GOTVR_VERSION "GoTVR 0.18.22 (movement always follows the headset, body turns to the headset past 7.5 deg standing and moving, movement forward only when you start moving, fingers bend on one hinge each (no sideways fingers), thumb curls across like a fist, fingers ease into their poses, Shift+F6 arm shading test (screen-space shadows / AO), near clip back to the game, fingers: thumb by length + the hand's own palm, thumb / trigger touch, forward taken as you start moving, the body turns past the threshold while moving too, gesture indicator off, fingers from leaf paths + structure log, riding needs two markers (jumps keep the VR arms), movement forward taken at stops, Shift+F4 HUD-layer test, VR fingers: bind-pose fingers on the IK hands, grip curls a fist, trigger the index, movement forward = headset forward at snap / start / menu exit, view direction kept across menus, body dead zone 45 deg, body under the headset smoothed, body heading kept in world yaw with an even dead zone, movement faces the headset, body under the headset, smoother eye anchor, Shift+F7 near-plane A/B, standing hips squared to the body follow, hips turned square after a snap turn, Shift+F7 TAA A/B, 0.18.12-14 transparency changes removed, standing stance squared to face forward, idle animations held still in first person, near-focus stipple off in first person, snap turn without the catch-up wobble, wrist point from the grip (back / up / thumb, Ctrl+F1-F3), near clip in the environment too (TAA reprojection agrees), eyes 3 cm further back, each eye culled by its own view - no cross-eye occlusion (preset 7), eyes 5 cm further back, near plane 2 cm in first person, F1/F2/F3 hand trims saved to gotvr.ini, near stipple fade off in first person, hands pitched, grip unbound, per-eye occlusion by tracked slot ownership, hands flipped, near plane 4 cm, stand tall in the sword stance, arms handed to the game for flute / climbing / takedowns, arm chains by bone chain, F11 resets the per-eye histories, five-option wheel with flute and recenter, eyes centred on the head, AA diagnostics, motion blur off in VR, carried items turn with the body, body drawn facing forward when running back, eye-order swap diagnostic, head found by its joint cluster - lone gear above it is skipped, left eye composed before the tick, VR controllers for any OpenXR controller: virtual pad, snap turn, item wheel, head gestures, rumble; first person with the head hidden in the render pose, xr=4 SYNCHRONIZED-SEQUENTIAL stereo: both eyes from one simulation tick, pair-atomic presentation, per-eye occlusion + TAA history, left-eye monitor mirror, HUD on its own sharp layer that stays put in the room (lazy follow), cinematic letterbox bars and fades over the whole view, theatre screen for videos/pause/menus/loading (flat-rendered); xr=3 experimental)"
 static const u32 EXPECTED_TIMESTAMP = 1782230973u;
 static const char EXPECTED_SHA[] = "ed0931b6f6d3ca3874baf39ebc16d95ff0e93296891182f96c3a790da7109f63";
 
@@ -48,9 +48,9 @@ enum : u32 {
     RVA_RCTX_BUILD = 0x9B2DD0, RVA_RCTX_FLUSH = 0x9B49E0,
     RVA_CAM_SETVPF = 0x806BA0, RVA_RES_TRANSITION_IMPL = 0x4FDED0, RVA_RES_TABLE = 0x1487D38, RVA_RES_MULTI = 0x1487EA8,
     RVA_RES_TRANSITION = 0x4FDD50, RVA_CTX_FLUSHBARRIERS = 0x4FE780, RVA_SWAPCHAIN_GET = 0x4093C0, RVA_RV_SNAPSHOT = 0x9B6AE0, RVA_PASS0_PRE = 0x60EDC0,
-    RVA_CLOCK_UPDATE = 0x56ED80, RVA_CLOCK = 0x1489DF0, RVA_CAM_TEMPORAL = 0x808EF0, RVA_CAMS_STOREPREV = 0x8085D0, RVA_RV_OCC = 0x9E5350, RVA_OCC_SLOTS = 0x3389240, RVA_OCC_DIMS = 0x33891A4, RVA_PARITY = 0x148A3F8, RVA_OCC_ENABLE = 0x1804010, RVA_AA_RESOLVE = 0x614EB0, RVA_AA_VELOCITY = 0x614720, RVA_TAA_DRAW = 0x7E7D10, RVA_FRAMEID = 0x19F1A50, RVA_AA_OBJ = 0x3376280, RVA_SL_CONSTS = 0x807140, RVA_NGX_CREATE = 0x4B91B0, RVA_NGX_EVAL = 0x4B9300, RVA_NGX_RELEASE = 0x4B96B0,
+    RVA_CLOCK_UPDATE = 0x56ED80, RVA_CLOCK = 0x1489DF0, RVA_CAM_TEMPORAL = 0x808EF0, RVA_CAMS_STOREPREV = 0x8085D0, RVA_RV_OCC = 0x9E5350, RVA_OCC_VIEW = 0x1EDBD70, RVA_OCC_VIEWFN = 0x9E5960, RVA_OCC_SLOTS = 0x3389240, RVA_OCC_DIMS = 0x33891A4, RVA_PARITY = 0x148A3F8, RVA_OCC_ENABLE = 0x1804010, RVA_AA_RESOLVE = 0x614EB0, RVA_AA_VELOCITY = 0x614720, RVA_TAA_DRAW = 0x7E7D10, RVA_FRAMEID = 0x19F1A50, RVA_AA_OBJ = 0x3376280, RVA_SL_CONSTS = 0x807140, RVA_NGX_CREATE = 0x4B91B0, RVA_NGX_EVAL = 0x4B9300, RVA_NGX_RELEASE = 0x4B96B0,
     RVA_PASSJOB = 0x9B55B0, RVA_PASSBODY = 0x9B55D0, RVA_INLINE_RET = 0x9B5431, RVA_PASSTAB = 0x1210930, RVA_FN_NOP = 0x3FCBD0, NPASS = 69,
-    RVA_RT_BIND = 0x7E34E0, RVA_SC_COMPUTESIZES = 0x46C840, RVA_POSTSCCMD = 0x4277D0, RVA_WND_PUMP = 0x446530, RVA_APPLY_DISPLAY = 0x421ED0, RVA_SC_RECREATE = 0x46E3D0, RVA_SERVICES_ROOT = 0x1998300, RVA_CTX_FLUSHRT = 0x4FEA80, RVA_FLUSHRT_DSV = 0x4FED6D, RVA_DSV_INC = 0x1CDFBD8, RVA_DSV_BASE = 0x1CDFB58, RVA_CTX_VIEWPORT = 0x50ECA0, RVA_CTX_SCISSOR = 0x50EC60, RVA_MOVIE_DRAW = 0x7EAF80, RVA_UI_TARGET = 0x3377510, RVA_WORLD_ON = 0x5A0450, RVA_UI60_PRE = 0x6E3790, RVA_PASS65_PRE = 0x610460, RVA_BATCH_DRAW = 0x5681A0, RVA_FADE = 0x149AF80, RVA_UI_WORLDDRAW = 0x6E37D0, RVA_STR_LETTERBOX = 0x1114870, RVA_SVC_DISPLAY = 0x409450,   // Reflex frame id: incremented first thing in GameTick; Present tags desc[0] with it
+    RVA_RT_BIND = 0x7E34E0, RVA_SC_COMPUTESIZES = 0x46C840, RVA_POSTSCCMD = 0x4277D0, RVA_WND_PUMP = 0x446530, RVA_APPLY_DISPLAY = 0x421ED0, RVA_SC_RECREATE = 0x46E3D0, RVA_HERO = 0x34C6F20, RVA_ANIM_JOB = 0xB2DBC0, RVA_SERVICES_ROOT = 0x1998300, RVA_CTX_FLUSHRT = 0x4FEA80, RVA_FLUSHRT_DSV = 0x4FED6D, RVA_DSV_INC = 0x1CDFBD8, RVA_DSV_BASE = 0x1CDFB58, RVA_CTX_VIEWPORT = 0x50ECA0, RVA_CTX_SCISSOR = 0x50EC60, RVA_MOVIE_DRAW = 0x7EAF80, RVA_UI_TARGET = 0x3377510, RVA_WORLD_ON = 0x5A0450, RVA_UI60_PRE = 0x6E3790, RVA_PASS65_PRE = 0x610460, RVA_BATCH_DRAW = 0x5681A0, RVA_FADE = 0x149AF80, RVA_UI_WORLDDRAW = 0x6E37D0, RVA_STR_LETTERBOX = 0x1114870, RVA_SVC_DISPLAY = 0x409450,   // Reflex frame id: incremented first thing in GameTick; Present tags desc[0] with it
 };
 
 // ---------------- XInput forwarding ----------------
@@ -69,16 +69,31 @@ typedef u64(WINAPI *FG)(u64, u64, u64, u64);
 // the previous state again and sees the change one tick later, on the next simulated (left-eye) tick.
 static std::atomic<int> g_freezeNow{0};
 static u8 g_padLast[2][4][16]; static bool g_padHave[2][4];
+// 0.18.0: VR controllers merge into user 0 (vrin::padHook, set once the mod is up; null = pure passthrough)
+static bool (*g_padHook)(DWORD user, u8 *state, bool realOk) = nullptr;
+static void (*g_rumbleHook)(DWORD user, const void *vib) = nullptr;
+static bool (*g_capsHook)(DWORD user, u8 *caps) = nullptr;
 static u64 padGet(int which, FARPROC f, u64 a, u64 b, u64 c, u64 d) {
     DWORD i = (DWORD)a; u8 *st = (u8 *)b;
     if (i < 4 && st && g_freezeNow.load() && g_padHave[which][i]) { memcpy(st, g_padLast[which][i], 16); return 0; }
     u64 r = f ? ((FG)f)(a, b, c, d) : 1167;
+    if (g_padHook && i == 0 && st && g_padHook(i, st, r == 0)) r = 0;
     if (r == 0 && i < 4 && st) { memcpy(g_padLast[which][i], st, 16); g_padHave[which][i] = true; }
     return r;
 }
 extern "C" u64 WINAPI XInputGetState(u64 a, u64 b, u64 c, u64 d) { return padGet(0, xreal("XInputGetState"), a, b, c, d); }
 extern "C" u64 WINAPI Ord100(u64 a, u64 b, u64 c, u64 d) { return padGet(1, xreal((const char *)(uintptr_t)100), a, b, c, d); }
-FWD(XInputSetState, 1167) FWD(XInputGetCapabilities, 1167) FWD(XInputEnable, 0)
+extern "C" u64 WINAPI XInputSetState(u64 a, u64 b, u64 c, u64 d) {
+    if (g_rumbleHook && (DWORD)a == 0 && b) g_rumbleHook((DWORD)a, (const void *)b);
+    FG f = (FG)xreal("XInputSetState"); const u64 r = f ? f(a, b, c, d) : 1167;
+    return (r != 0 && g_capsHook && (DWORD)a == 0 && g_capsHook(0, nullptr)) ? 0 : r;   // the virtual pad takes rumble too
+}
+extern "C" u64 WINAPI XInputGetCapabilities(u64 a, u64 b, u64 c, u64 d) {
+    FG f = (FG)xreal("XInputGetCapabilities"); u64 r = f ? f(a, b, c, d) : 1167;
+    if (r != 0 && g_capsHook && (DWORD)a == 0 && c && g_capsHook(0, (u8 *)c)) r = 0;
+    return r;
+}
+FWD(XInputEnable, 0)
 FWD(XInputGetAudioDeviceIds, 1167) FWD(XInputGetBatteryInformation, 1167) FWD(XInputGetKeystroke, 1167)
 FWDORD(Ord101, 101, 1167) FWDORD(Ord102, 102, 1167) FWDORD(Ord103, 103, 1167) FWDORD(Ord104, 104, 1167) FWDORD(Ord108, 108, 1167)
 
@@ -162,6 +177,14 @@ static const Sig kSigs[] = {
     {"SC_ComputeSizes (window/output/render size records of the swapchain object)", RVA_SC_COMPUTESIZES, "40 55 53 56 57 41 54 41 55 41 56 41 57 48 8D 6C 24 E1 48 81 EC D8 00 00 00"},
     {"NxApp_PostSCCmd (synchronous swapchain-thread command; 2 = apply display)", RVA_POSTSCCMD, "48 89 5C 24 10 57 48 83 EC 20 48 83 B9 F0 06 00 00 00"},
     {"SC_Recreate (SCImpl vt+0x20: destroys and creates the swapchain)", RVA_SC_RECREATE, "48 89 5C 24 08 57 48 83 EC 20 48 8B DA 48 8B F9 E8 ?? ?? ?? ?? 4C 8D 05 ?? ?? ?? ??"},
+    {"Occ_View (occlusion view getter: obj+0x40 when obj+0x34)", RVA_OCC_VIEWFN, "33 C0 48 8D 51 40 38 41 34 48 0F 45 C2 C3"},
+    {"RV_OcclusionSetup caller: frame 0x141EBD2C0 + 0x1EAB0 = the occlusion view", 0x5A08A6, "48 8D AE B0 EA 01 00 48 8B CD E8"},
+    {"Anim_Job (character animation job: job+0xE8 node, job+0xA8 render pose)", RVA_ANIM_JOB, "40 55 48 8D AC 24 50 FF FF FF 48 81 EC B0 01 00 00 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 85 A0 00 00 00 48 8B 51 48 48 8B 41 40"},
+    {"Anim_Setup stores the node at job+0xE8", 0x9BB7B4, "48 89 B7 E8 00 00 00"},
+    {"Anim_Setup stores the current render pose node+0x508[cur] at job+0xA8", 0x9BB8D6, "48 8B 84 C6 08 05 00 00 48 89 87 A8 00 00 00"},
+    {"Skin palette job reads node+0x2DA / node+0x508[cur] / node+0x280", 0x59EC15, "48 0F BE 82 DA 02 00 00"},
+    {"Skin palette job: current render pose", 0x59EC38, "4C 8B 9C CA 08 05 00 00"},
+    {"Skin palette job: joint count node+0x280 - 1", 0x59EC42, "8B 92 80 02 00 00 FF CA"},
     {"GameWindow_Pump (main thread: queued window messages -> display changes)", RVA_WND_PUMP, "48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 18 57 41 54 41 55 41 56 41 57 48 83 EC 50 0F 29 74 24 40"},
     {"NxApp_ApplyDisplay (the game's own display apply: flags, PostSCCmd 2, window + Reflex follow-ups)", RVA_APPLY_DISPLAY, "48 89 5C 24 08 48 89 74 24 10 48 89 7C 24 18 4C 89 74 24 20 55 48 8D AC 24 40 FE FF FF"},
     {"Ctx_FlushRT (binds the colour/depth targets: OMSetRenderTargets)", RVA_CTX_FLUSHRT, "4C 8B DC 41 57 48 83 EC 70 F6 81 40 03 00 00 01 4C 8B F9 0F 84 3C 03 00 00"},
@@ -200,10 +223,20 @@ static void sha256File(const wchar_t *path, char *out) {
 struct Config { int xr = 0; int census = 1; int hotkeys = 1; float unitsPerM = 100.0f; int headPos = 1; int level = 1; int queueFallback = 1; int widen = 1; int histReset = 0; int histMode = 0; int mirrorLeft = 1; int dlssMode = 0; };
 static Config g_cfg;
 static std::atomic<int> m_cullHead{1}; static std::atomic<u64> c_cullHead{0};   // F7 (xr=4): world copy +0x850 follows the eye camera
-static float g_fastTurnDeg = 2.0f; static int g_fastTurnMode = 1; static float g_fovMarginDeg = 3.0f;
+static float g_poseLeadMs = -1.0f; static int g_gameGpuPrio = 1, g_renderSync = 0, g_foliageOcc = 2;
+static float g_fastTurnDeg = 2.0f, g_fastTurnDegLeft = 2.0f; static int g_fastTurnMode = 1; static float g_fovMarginDeg = 3.0f;
 struct UiCfg { int hud = 1; float hudDeg = 55.0f, hudDist = 1.6f, hudDown = 3.0f; int theater = 1; float thDist = 3.0f, thWidth = 3.2f, thHeight = 0.0f; int thBackdrop = 0; int thCrop = 0; int flatRender = 1; u32 pauseMask = 0x80; int layer = 1; int premul = 1; int titleReason = 27; int follow = 1; float followDeg = 35.0f, followSpeed = 90.0f; int loadTheater = 1, menuTheater = 1, crop = 0; };
-static UiCfg g_ui; static int g_hostStart = 1, g_renderSize = 2560; static float g_uiAspect = 16.0f / 9.0f;   // 0.12.0 UI/HUD/video settings (playbook ch04)
+static UiCfg g_ui; static int g_hostStart = 1, g_renderSize = 2304; static float g_uiAspect = 16.0f / 9.0f;
+// 0.17.0 first person (playbook ch01/ch02/ch12; references: bldbrne-vr, BetterVR, FRIK - anchor on the body root, not the head bone)
+struct FpCfg { int on = 1; float nearCm = 0.0f, stanceMaxCm = 25.0f; int standTall = 0; float eyeUpCm = -3.0f, eyeFwdCm = 1.0f, eyeLeftCm = 0.0f, vertTau = 0.35f, horizTau = 1.0f, lean = 1.0f, maxCamDistM = 8.0f, hideRadiusCm = 22.0f; int hide = 1;
+                int idleHold = 1, stanceSquare = 1, fingers = 1, indexTrigger = 1; float gripFull = 0.35f, fingerSign = 1.0f, fingerRelaxed = 5.0f, fingerTween = 0.15f; int bodyFollow = 1, bodyAttach = 1, bodyHead = 1, arms = 1; float headDeadDeg = 7.5f, headTau = 0.25f, moveTau = 0.15f, underMaxCm = 60.0f, underTau = 0.5f; int bodyUnder = 1; float idleSettle = 0.5f, handBackCm = 7.0f, handUpCm = 3.0f, handSideCm = 0.0f, handPitch = 0.0f, handYaw = 0.0f, handRoll = 0.0f; float bodyStartDeg = 80.0f, bodyFullDeg = 130.0f, bodyTurnSpeed = 540.0f, bodyMaxSpeed = 8.0f; };
+static FpCfg g_fp;   // 0.12.0 UI/HUD/video settings (playbook ch04)
 static std::atomic<bool> g_flatRender{false};   // 0.13.0 xr=4: this tick is a flat context rendered as a normal flat frame (game thread decides at tick start)
+static std::atomic<int> g_eyeSwap{0}; static int g_eyeSwapLatched = 0;
+static std::atomic<int> g_mblurOff{1};   // 0.18.6: hold the game's motion blur at 0 while in VR
+namespace mblur { static void tick(bool force = false); static void restore(); }
+namespace shade { static void tick(bool force = false); static void restore(); static std::atomic<int> mode{0}; }
+namespace stipple { static void tick(bool fpOn); }
 static std::atomic<int> g_flatCut{0};           // camera cuts still to force after a flat <-> stereo switch
 static float g_ipd = 0.064f;   // metres between the eyes (from the runtime's eye poses; game thread)
 static void loadConfig() {
@@ -227,28 +260,49 @@ static void loadConfig() {
             "head_position=1\r\n"
             "; 1 = remove the game camera's pitch/roll (your head owns pitch and roll), 0 = keep it\r\n"
             "level_camera=1\r\n"
-            "; history_mode (xr=4): 1..5 (see README), default 1; F6 cycles them, the number shows as squares in the headset\r\n"
+            "; history_mode (xr=4): 1..7 (see README), default 7 (each eye culled by its own view); 4 = cross-eye (0.18.10); F6 cycles them, the number shows as squares in the headset\r\n"
             "; monitor_left_eye (xr=4): 1 = the game window shows the left eye only (default), 0 = every rendered frame\r\n"
             "; cull_follows_head (xr=4): 1 = distance/shadow culling uses your eye camera (default; F7 toggles), 0 = the game camera\r\n"
             "; fov_margin_deg (xr=4): render each eye this many degrees wider than the lens on every side (3.0) so fast turns never show an edge\r\n"
             "; dlss_per_eye (xr=4): 0 = off (default; use the game's TAA, DLSS is not supported in VR), 1/2 = experimental per-eye DLSS\r\n"
             "; hud (xr=4): 1 = HUD and menus drawn on a flat panel in front of you at the right aspect ratio (default), 0 = stretched over the lens\r\n"
             "; hud_width_deg / hud_distance / hud_down_deg: panel width in degrees (55), distance it converges at in metres (1.6), centre below eye level (3); F9 cycles sizes\r\n"
-            "; theater (xr=4): 1 = videos and world-less menus on a world-locked 16:9 screen (default), 0 = never; F10 cycles auto/always/never\r\n"
+            "; theater (xr=4): 1 = videos and world-less menus on a world-locked 16:9 screen (default), 0 = never; F10 toggles auto/always (0.18.2: never only from the ini)\r\n"
             "; theater_distance / theater_width / theater_height: screen distance (3.0 m), width (3.2 m), centre height vs your eyes (0.0 m)\r\n"
             "; theater_backdrop: 0 = black room around the screen (default), 1 = the game world behind it\r\n"
             "; theater_flat_render: 1 = while the screen is up the game renders a normal flat frame (default), 0 = the stereo image\r\n"
             "; pause_channels: game time-scale reasons that put the game on the screen (bit mask, 0x80 = pausing menus)\r\n"
-            "; hud_layer: 1 = the HUD on its own sharp layer (default; F1 toggles), 0 = drawn into the 3D image (0.14 panel)\r\n"
+            "; hud_layer: 1 = the HUD on its own sharp layer (default; Ctrl+Alt+F1 toggles), 0 = drawn into the 3D image (0.14 panel)\r\n"
             "; hud_follow: 1 = the HUD/menu panel stays put in the room and only follows when you look away (default), 0 = fixed to your view\r\n"
             "; hud_follow_deg / hud_follow_speed: how far you can look away before it follows (35) and how fast it follows (90 deg/s)\r\n"
             "; loading_theater / menu_theater: loading screens / the start screen on the theatre screen (1 = default)\r\n"
-            "; render_size (xr=4): square render size per eye in pixels (2560 default, 0.16.5; the game must be in WINDOWED mode), 0 = the game's own size; F2 cycles\r\n"
+            "; render_size (xr=4): square render size per eye in pixels (2304 default, 0.17.1; the game must be in WINDOWED mode), 0 = the game's own size; Ctrl+Alt+F2 cycles\r\n"
             "; ui_aspect (with render_size): the aspect the game lays out its HUD, menus and flat frames for (1.7778 = 16:9 default;\r\n"
             ";   the square image is shown at this aspect in the headset), 0 = square like the image\r\n"
+            "; first_person (xr=4): 1 = first person (default; F5 toggles, Shift+F5 logs the hero skeleton), 0 = the game's third-person camera\r\n"
+            "; fp_eye_up_cm / fp_eye_forward_cm / fp_eye_left_cm: your eyes relative to the top of the hero's head (-3 / 1 / 0; sideways they sit on the head's centre); fp_hide_head: 1 = hide the head (default), 0 = off\r\n"
+            "; fp_body_follow: 1 = when Jin faces away from your forward direction (running backwards) his body is drawn facing it (default), 0 = off;\r\n"
+            ";   fp_body_follow_start_deg / _full_deg (80 / 130), fp_body_turn_speed (540 deg/s, 0 = instant), fp_body_follow_max_speed (8 m/s; off above it and while riding)\r\n"
+            ";   fp_body_follow_items: 1 = the sword and other carried items turn with the body (default; the joint world matrices are turned), 0 = only the body\r\n"
+            "; fp_body_follows_head: 1 = Jin's body turns to where you look once you look more than fp_body_head_deadzone_deg (7.5) away, standing and moving (default; fp_body_head_follow_s 0.25)\r\n"
+            "; [controls] move_follows_head: 1 = the left stick's forward is always where the headset looks (default); 0 = taken when you start moving / snap turn / leave a menu\r\n"
+            "; fp_near_cm (xr=4): the camera's near clip plane in first person (0 = the game's own 10 cm, default since 0.18.20; 2 = arms closer than 10 cm not cut open, but grass then draws over them; Shift+F7 toggles)\r\n"
+            "; fp_stand_tall: 1 = when the game crouches him a little (the sword stance, up to fp_stand_tall_max_cm 25) he is drawn standing tall, feet planted (0 = off, default)\r\n"
+            "; fp_arms: 1 = Jin's arms follow your controllers (full-body IK stage 1, default; Shift+F10 toggles), 0 = the game's animation\r\n"
+            ";   fp_fingers (1): Jin's fingers detached from the animation (bind pose on the VR hands); fp_grip_fist_full (0.35): grip at which the fist is closed; fp_finger_index_trigger (1): the index also follows the trigger; fp_finger_bend_sign (1; -1 if the fingers bend backwards); fp_finger_relaxed_deg (5); fp_finger_tween_s (0.15): how long the fingers take to move to a new pose\r\n"
+            ";   fp_idle_hold (1): standing still, Jin's idle animations are held still (fp_idle_settle_s 0.5: how long he stands before the pose is taken); fp_stance_square (1): that pose turned to face straight forward\r\n"
+
+            ";   fp_hand_back_cm (7) / fp_hand_up_cm (3) / fp_hand_side_cm (0): where your wrist is from the controller grip - behind it, toward the back of the hand, toward the thumb (Ctrl+F1 / F2 / F3 change them 1 cm, Ctrl+Shift back); fp_hand_pitch_deg / _yaw_deg / _roll_deg (0): hand angle trims - F1 / F2 / F3 change them in 5-degree steps (Shift = back) and save them here\r\n"
+            "; motion_blur_off (xr=4): 1 = the game's motion blur is set to 0 while in VR and restored on exit (default; playbook ch14: required for this stereo), 0 = leave it\r\n"
             "; host_start: 1 = start the headset session at the game's first frame (default; the launcher shows in Virtual Desktop / SteamVR), 0 = at once\r\n"
-            "; letterbox_crop: 0 = the whole window image goes to the headset (default), 1 = only a 16:9 picture inside it (F3 toggles)\r\n"
+            "; letterbox_crop: 0 = the whole window image goes to the headset (default), 1 = only a 16:9 picture inside it (Ctrl+Alt+F3 toggles)\r\n"
             "; fast_turn_deg / fast_turn_mode (xr=4): head turn per eye frame pair above which culling memory is not trusted (2.0);\r\n"
+            "; fast_turn_deg_left: the same for the left eye (2.0; 0.17.3 tried 0.6 - no effect on the pop-in, reverted)\r\n"
+            "; pose_lead_ms (xr=4): predict the head pose this much past the display time: auto (default, the measured pipeline lag), 0 = off, 1..60 = fixed\r\n"
+            "; game_gpu_priority_below_normal: 1 = the game yields the GPU to the headset streamer/compositor and GoTVRHost (default), 0 = leave it\r\n"
+            "; foliage_occlusion (xr=4): 2 = grass/foliage culling without the previous frame's occlusion (default: no left-eye pop-in), 1 = the engine's own view, 0 = the per-eye one (0.17.4); Shift+F8 cycles\r\n"
+                        "; eye_order_swap (xr=4): 0 = the simulated tick renders the left eye (default), 1 = the right eye (pop-in diagnostic; Shift+F9 toggles)\r\n"
+            "; render_sync (xr=4): 0 = off (default; 0.17.4 measured no effect on the pop-in), 1 = the right-eye tick waits for the left-eye frame, 2 = every eye\r\n"
             ";   mode 1 = off during the turn (default), 2 = game's own memory during the turn, 0 = no special handling (F8 cycles)\r\n";
         HANDLE f = CreateFileW(ini, GENERIC_WRITE, 0, nullptr, CREATE_NEW, 0, nullptr);
         if (f != INVALID_HANDLE_VALUE) { DWORD w; WriteFile(f, def, (DWORD)strlen(def), &w, nullptr); CloseHandle(f); }
@@ -273,7 +327,7 @@ static void loadConfig() {
     g_cfg.histReset = GetPrivateProfileIntW(L"gotvr", L"history_reset", g_cfg.xr == 3 ? 1 : 0, ini);
     g_cfg.mirrorLeft = GetPrivateProfileIntW(L"gotvr", L"monitor_left_eye", 1, ini);
     g_hostStart = GetPrivateProfileIntW(L"gotvr", L"host_start", 1, ini) ? 1 : 0;
-    g_renderSize = GetPrivateProfileIntW(L"gotvr", L"render_size", 2560, ini); if (g_renderSize != 0 && (g_renderSize < 512 || g_renderSize > 4096)) g_renderSize = 2560;
+    g_renderSize = GetPrivateProfileIntW(L"gotvr", L"render_size", 2304, ini); if (g_renderSize != 0 && (g_renderSize < 512 || g_renderSize > 4096)) g_renderSize = 2304;
     g_cfg.dlssMode = GetPrivateProfileIntW(L"gotvr", L"dlss_per_eye", 0, ini); if (g_cfg.dlssMode < 0 || g_cfg.dlssMode > 2) g_cfg.dlssMode = 0;
     {   auto fl = [&](const wchar_t *k, float def, float lo, float hi) { wchar_t b[32], d[32]; swprintf(d, 32, L"%g", def); GetPrivateProfileStringW(L"gotvr", k, d, b, 32, ini); float v = (float)_wtof(b); return (v >= lo && v <= hi) ? v : def; };
         g_ui.hud = GetPrivateProfileIntW(L"gotvr", L"hud", 1, ini) ? 1 : 0;
@@ -290,15 +344,38 @@ static void loadConfig() {
         g_ui.follow = GetPrivateProfileIntW(L"gotvr", L"hud_follow", 1, ini) ? 1 : 0;
         g_ui.loadTheater = GetPrivateProfileIntW(L"gotvr", L"loading_theater", 1, ini) ? 1 : 0; g_ui.menuTheater = GetPrivateProfileIntW(L"gotvr", L"menu_theater", 1, ini) ? 1 : 0;
         g_ui.crop = GetPrivateProfileIntW(L"gotvr", L"letterbox_crop", 0, ini) ? 1 : 0;   // 0.15.0: off by default (BUG-56: F3 off = no stretch)
+        g_fp.on = GetPrivateProfileIntW(L"gotvr", L"first_person", 1, ini) ? 1 : 0; g_fp.hide = GetPrivateProfileIntW(L"gotvr", L"fp_hide_head", 1, ini) ? 1 : 0;
+        g_fp.eyeUpCm = fl(L"fp_eye_up_cm", -3.0f, -60.0f, 40.0f); g_fp.nearCm = fl(L"fp_near_cm", 0.0f, 0.0f, 50.0f);   /* 0.18.20: back to the game's 10 cm - grass was drawn over the arms with 2 cm (photo) */ g_fp.standTall = GetPrivateProfileIntW(L"gotvr", L"fp_stand_tall", 0, ini) ? 1 : 0; g_fp.stanceMaxCm = fl(L"fp_stand_tall_max_cm", 25.0f, 0.0f, 80.0f); g_fp.eyeLeftCm = fl(L"fp_eye_left_cm", 0.0f, -30.0f, 30.0f);   // 0.18.7: -11 -> -8 ("a tiny bit higher")
+        g_fp.eyeFwdCm = fl(L"fp_eye_forward_cm", 1.0f, -40.0f, 60.0f);   // 0.18.12 owner: "back a few cm, still too far out" (4 -> 1); 0.18.11: 9 -> 4
+        g_fp.bodyHead = GetPrivateProfileIntW(L"gotvr", L"fp_body_follows_head", 1, ini) ? 1 : 0; g_fp.arms = GetPrivateProfileIntW(L"gotvr", L"fp_arms", 1, ini) ? 1 : 0;
+        g_fp.headDeadDeg = fl(L"fp_body_head_deadzone_deg", 7.5f, 1.0f, 120.0f); /* 0.18.17 owner: 35 -> 45; 0.18.22 owner: "always rotate to match the headset after a small threshold (5-10 deg)" -> 7.5 */ g_fp.headTau = fl(L"fp_body_head_follow_s", 0.25f, 0.0f, 3.0f); g_fp.moveTau = fl(L"fp_body_move_follow_s", 0.15f, 0.0f, 3.0f);
+        g_fp.bodyUnder = GetPrivateProfileIntW(L"gotvr", L"fp_body_under_hmd", 1, ini) ? 1 : 0; g_fp.underMaxCm = fl(L"fp_body_under_max_cm", 60.0f, 0.0f, 200.0f); g_fp.underTau = fl(L"fp_body_under_follow_s", 0.5f, 0.0f, 5.0f);
+        g_fp.fingers = GetPrivateProfileIntW(L"gotvr", L"fp_fingers", 1, ini) ? 1 : 0; g_fp.indexTrigger = GetPrivateProfileIntW(L"gotvr", L"fp_finger_index_trigger", 1, ini) ? 1 : 0;
+        g_fp.gripFull = fl(L"fp_grip_fist_full", 0.35f, 0.1f, 1.0f); g_fp.fingerSign = fl(L"fp_finger_bend_sign", 1.0f, -1.0f, 1.0f) < 0.0f ? -1.0f : 1.0f; g_fp.fingerRelaxed = fl(L"fp_finger_relaxed_deg", 5.0f, -20.0f, 40.0f); g_fp.fingerTween = fl(L"fp_finger_tween_s", 0.15f, 0.02f, 1.0f);
+        g_fp.idleHold = GetPrivateProfileIntW(L"gotvr", L"fp_idle_hold", 1, ini) ? 1 : 0; g_fp.idleSettle = fl(L"fp_idle_settle_s", 0.5f, 0.1f, 5.0f); g_fp.stanceSquare = GetPrivateProfileIntW(L"gotvr", L"fp_stance_square", 1, ini) ? 1 : 0;
+        g_fp.handBackCm = fl(L"fp_hand_back_cm", 7.0f, -10.0f, 20.0f); g_fp.handUpCm = fl(L"fp_hand_up_cm", 3.0f, -10.0f, 10.0f); g_fp.handSideCm = fl(L"fp_hand_side_cm", 0.0f, -10.0f, 10.0f); g_fp.handPitch = fl(L"fp_hand_pitch_deg", 0.0f, -180.0f, 180.0f); g_fp.handYaw = fl(L"fp_hand_yaw_deg", 0.0f, -180.0f, 180.0f); g_fp.handRoll = fl(L"fp_hand_roll_deg", 0.0f, -180.0f, 180.0f);
+        g_fp.bodyFollow = GetPrivateProfileIntW(L"gotvr", L"fp_body_follow", 1, ini) ? 1 : 0; g_fp.bodyAttach = GetPrivateProfileIntW(L"gotvr", L"fp_body_follow_items", 1, ini) ? 1 : 0;
+        g_fp.bodyStartDeg = fl(L"fp_body_follow_start_deg", 80.0f, 10.0f, 170.0f); g_fp.bodyFullDeg = fl(L"fp_body_follow_full_deg", 130.0f, 20.0f, 180.0f);
+        if (g_fp.bodyFullDeg < g_fp.bodyStartDeg + 5.0f) g_fp.bodyFullDeg = fminf(180.0f, g_fp.bodyStartDeg + 5.0f);
+        g_fp.bodyTurnSpeed = fl(L"fp_body_turn_speed", 540.0f, 0.0f, 5000.0f); g_fp.bodyMaxSpeed = fl(L"fp_body_follow_max_speed", 8.0f, 0.5f, 100.0f);
+        g_fp.hideRadiusCm = fl(L"fp_hide_radius_cm", 22.0f, 5.0f, 60.0f); g_fp.vertTau = fl(L"fp_vertical_smoothing_s", 0.35f, 0.0f, 3.0f);
+        g_fp.horizTau = fl(L"fp_lean_smoothing_s", 1.0f, 0.0f, 3.0f);   // 0.18.16: 0.3 -> 1.0 (owner: "stuttering and jittering when I look down") g_fp.lean = fl(L"fp_follow_lean", 1.0f, 0.0f, 1.0f); g_fp.maxCamDistM = fl(L"fp_max_camera_distance_m", 8.0f, 2.0f, 100.0f);
         g_uiAspect = fl(L"ui_aspect", 16.0f / 9.0f, 0.0f, 4.0f); if (g_uiAspect > 0 && g_uiAspect < 0.5f) g_uiAspect = 16.0f / 9.0f;
         g_ui.followDeg = fl(L"hud_follow_deg", 35.0f, 5.0f, 120.0f); g_ui.followSpeed = fl(L"hud_follow_speed", 90.0f, 10.0f, 720.0f);
         { wchar_t b[32]; GetPrivateProfileStringW(L"gotvr", L"pause_channels", L"0x80", b, 32, ini); g_ui.pauseMask = (u32)wcstoul(b, nullptr, 0) & 0x0FFFFFFFu; } }
     m_cullHead = GetPrivateProfileIntW(L"gotvr", L"cull_follows_head", 1, ini) ? 1 : 0;
     { wchar_t b[32]; GetPrivateProfileStringW(L"gotvr", L"fast_turn_deg", L"2.0", b, 32, ini); g_fastTurnDeg = (float)_wtof(b); if (!(g_fastTurnDeg > 0.1f && g_fastTurnDeg < 90.0f)) g_fastTurnDeg = 2.0f; }
+    { wchar_t b[32]; GetPrivateProfileStringW(L"gotvr", L"pose_lead_ms", L"auto", b, 32, ini); g_poseLeadMs = (_wcsicmp(b, L"auto") == 0 || !b[0]) ? -1.0f : (float)_wtof(b); if (!(g_poseLeadMs >= -1.0f && g_poseLeadMs <= 60.0f)) g_poseLeadMs = -1.0f; }
+    g_gameGpuPrio = GetPrivateProfileIntW(L"gotvr", L"game_gpu_priority_below_normal", 1, ini) ? 1 : 0;
+    g_eyeSwap = GetPrivateProfileIntW(L"gotvr", L"eye_order_swap", 0, ini) ? 1 : 0;
+    g_mblurOff = GetPrivateProfileIntW(L"gotvr", L"motion_blur_off", 1, ini) ? 1 : 0;
+    g_foliageOcc = GetPrivateProfileIntW(L"gotvr", L"foliage_occlusion", 2, ini); if (g_foliageOcc < 0 || g_foliageOcc > 2) g_foliageOcc = 2;
+    g_renderSync = GetPrivateProfileIntW(L"gotvr", L"render_sync", 0, ini); if (g_renderSync < 0 || g_renderSync > 2) g_renderSync = 0;
+    { wchar_t b[32]; GetPrivateProfileStringW(L"gotvr", L"fast_turn_deg_left", L"2.0", b, 32, ini); g_fastTurnDegLeft = (float)_wtof(b); if (!(g_fastTurnDegLeft > 0.05f && g_fastTurnDegLeft < 90.0f)) g_fastTurnDegLeft = 2.0f; }
     { wchar_t b[32]; GetPrivateProfileStringW(L"gotvr", L"fov_margin_deg", L"3.0", b, 32, ini); g_fovMarginDeg = (float)_wtof(b); if (!(g_fovMarginDeg >= 0.0f && g_fovMarginDeg <= 15.0f)) g_fovMarginDeg = 3.0f; }
     g_fastTurnMode = GetPrivateProfileIntW(L"gotvr", L"fast_turn_mode", 1, ini); if (g_fastTurnMode < 0 || g_fastTurnMode > 2) g_fastTurnMode = 1;
     // xr=4 (0.9.2, BUG-23): history preset 1..5 (see kPresets / README); default 1 = HYBRID
-    g_cfg.histMode = GetPrivateProfileIntW(L"gotvr", L"history_mode", 1, ini) - 1; if (g_cfg.histMode < 0 || g_cfg.histMode > 4) g_cfg.histMode = 0;
+    g_cfg.histMode = GetPrivateProfileIntW(L"gotvr", L"history_mode", 7, ini) - 1; if (g_cfg.histMode < 0 || g_cfg.histMode > 6) g_cfg.histMode = 6;   // 0.18.11: 7 (per-eye frustum culling, no pop-in, nothing culled in one eye only); 0.18.10 owner: 4 removed the pop-in
 }
 
 // ---------------- census state ----------------
@@ -333,11 +410,22 @@ static std::atomic<u64> c_engineCuts{0};  // camera cuts the ENGINE raised itsel
 // ---------------- shared block with GoTVRHost.exe ----------------
 static GvShared *S; static HANDLE g_map, g_hostProc;
 static bool hostFresh() { return S && S->hostState == GV_HOST_RUNNING && (u64)GetTickCount64() - (u64)S->hostBeat < 1000; }
+#ifndef _XINPUT_H_
+struct XINPUT_GAMEPAD { WORD wButtons; BYTE bLeftTrigger, bRightTrigger; SHORT sThumbLX, sThumbLY, sThumbRX, sThumbRY; };
+struct XINPUT_VIBRATION { WORD wLeftMotorSpeed, wRightMotorSpeed; };
+#endif
+#include "vrinput.h"
+#include "fbik.h"
+#include "fingers.h"
 
 // One packet per game frame, built on the game thread the first time the frame touches the render
 // camera, and found again at Present by the frame id the engine tags its Present with (desc[0]).
-struct FramePkt { volatile LONG seq; u32 frame; int eye; bool valid; GvPose pose; float fov[4]; bool stereo; GvPose pose2; float fov2[4]; bool flat; };
+struct FramePkt { volatile LONG seq; u32 frame; int eye; int phase; bool valid; GvPose pose; float fov[4]; bool stereo; GvPose pose2; float fov2[4]; bool flat; };
 static int g_pairPhase = 0;   // xr=4: 0 = left eye, simulated tick; 1 = right eye, frozen tick (game thread)
+// 0.18.5 diagnostic (BUG-74): which eye the SIMULATED tick renders. 0 = left (default), 1 = right (Shift+F9 / eye_order_swap).
+// The pop-in has been left-eye-only through every fix; if it follows the swap to the right eye, it belongs to "the eye drawn
+// right after the simulation step" (its previous frame is the other eye of the previous pair - playbook ch14
+// #cpu-visibility-history); if it stays in the left eye, it belongs to the left eye itself. Latched at a pair start.
 struct PairSample { bool ok; GvPose e[2]; float f[2][4]; }; static PairSample g_pairSample{};
 static std::atomic<u64> g_frozenTicks{0}, g_simTicks{0}; static bool g_lockGame = false;
 static int g_runEye = 0; static std::atomic<u64> g_rfixCalls{0}; static float g_lastDelta[3];
@@ -345,7 +433,12 @@ static int g_fixCulprit = -1;   // pass the second render takes from the first (
 static std::atomic<int> m_offTest{0};   // F1: second render's camera 50 cm to the right (flat proof of a real second camera)
 static FramePkt g_ring[32];
 static FramePkt g_cur; static u32 g_curFrame = 0xFFFFFFFFu;   // game thread only
+#ifdef GOTVR_SELFTEST
+static u32 g_stFrame = 0; static bool g_stFrameOn = false;
+static u32 frameCtr() { return g_stFrameOn ? g_stFrame : *(volatile u32 *)(g_base + RVA_FRAMECTR); }
+#else
 static u32 frameCtr() { return *(volatile u32 *)(g_base + RVA_FRAMECTR); }
+#endif
 static std::atomic<u64> c_pktValid{0}, c_slot43BeforeFV{0}, c_slot43AfterFV{0};
 
 // ---------------- hooks ----------------
@@ -391,6 +484,9 @@ static void hCamT(u8 *cam) {
 namespace occ {
 struct Bank { bool ok; float vp[16]; float pos[4]; u8 w180[0x80]; u8 w380[0x80]; u8 w560[0x10]; u32 t674; };
 static Bank bank[2]; static std::atomic<int> on{0};
+struct SlotOwner { bool ok; int eye; u32 frame; float vp[16]; float pos[4]; };
+static SlotOwner owner[2]; static std::atomic<u64> trkOwn{0}, trkEngine{0}, parEye[2][2];
+
 static std::atomic<u64> calls{0}, fixed{0}, skipBranch{0}, skipDims{0}, skipBank{0};
 typedef void (*FnSP)(u8 *); static FnSP oSP;
 static void hStorePrev(u8 *cam) {
@@ -400,20 +496,47 @@ static void hStorePrev(u8 *cam) {
     Bank &b = bank[e]; memcpy(b.vp, cam + 0x380, 64); memcpy(b.pos, cam + 0x560, 16);
     memcpy(b.w180, cam + 0x180, 0x80); memcpy(b.w380, cam + 0x380, 0x80); memcpy(b.w560, cam + 0x560, 0x10); b.t674 = *(u32 *)(cam + 0x674); b.ok = true;
 }
-static void reseed() { bank[0].ok = bank[1].ok = false; }
+static void reseed() { bank[0].ok = bank[1].ok = false; owner[0].ok = owner[1].ok = false; }
 // BUG-36 (0.10.3, playbook ch14 "treat a pose gap as a camera cut" / STR-015 "detect your own pose gaps"): the per-eye
 // occlusion history is two ticks old. A fast head turn makes that gap large: the HiZ test reprojects across a big
 // rotation, objects entering from outside the old view test against clamped edge depth and are culled until the turn
 // slows ("only when I move my head fast, even if I look at the object"). When this eye's rotation since its previous
 // frame exceeds fast_turn_deg, this tick's occlusion history is declared invalid (the engine's own cut path for the
 // occlusion setup, as on a camera cut): everything is drawn for that frame.
-static float fastDeg = 2.0f; static std::atomic<int> fastMode{1};   // 1 = occlusion history invalid, 2 = engine's cross-eye (1 frame) history
+static float fastDeg = 2.0f, fastDegLeft = 2.0f; static std::atomic<int> fastMode{1};   // 1 = occlusion history invalid, 2 = engine's cross-eye (1 frame) history
 static std::atomic<bool> fast{false}; static std::atomic<u64> fastTicks{0}; static float lastAngle = 0;
 static void setVoFast(bool f);   // defined after the cut overrides
+// BUG-67 (0.17.1: "objects pop in and out in the LEFT eye when I move my head fast"): the angle compared this eye's camera at
+// Cam_TemporalUpdate - the start of the tick, before this tick's head pose is composed - with the banked camera. On the
+// simulated (left) tick the game has just rewritten its camera, so a head-only turn was invisible there; on the frozen
+// (right) tick the camera still carries the composed head. The headset's own rotation since this eye's previous frame is
+// now measured too (from the pose packet), and the larger of the two decides.
+static float headQ[2][4]; static bool headQok[2] = {false, false}; static std::atomic<float> lastHeadAngle{0};
+static float headTurnSince(int e) {
+    if (!S) return 0.0f; GvPose h{}; u32 v = 0;
+    if (!gvRead(&S->poseSeq, [&] { h = S->head; v = S->poseValid; }) || !v) return 0.0f;
+    float a = 0.0f;
+    if (headQok[e]) { float d = fabsf(h.q[0] * headQ[e][0] + h.q[1] * headQ[e][1] + h.q[2] * headQ[e][2] + h.q[3] * headQ[e][3]); a = 2.0f * acosf(fminf(1.0f, d)) * 57.2957795f; }
+    memcpy(headQ[e], h.q, 16); headQok[e] = true; lastHeadAngle = a; return a;
+}
+// BUG-67b (0.17.3: "still only in the LEFT eye, worse facing grass/flowers when looking side to side somewhat fast"). RE
+// (re/decomp_anim 62a530 / 79ada0, the grass and foliage culling passes): besides the RV occlusion test (per-eye banked
+// above), six GPU culling passes test against the PREVIOUS frame's HiZ pyramid (0x1433891A4 + (1-parity)*0x34) through
+// Occ_View 0x9E5960(0x141EDBD70). Under synchronized-sequential stereo the previous frame of the RIGHT eye is the left eye
+// of the same pair (same head pose, 6 cm apart); the previous frame of the LEFT eye is the right eye of the PREVIOUS pair,
+// one whole pair of head motion earlier (playbook ch14 #cpu-visibility-history: "eye zero reads the previous pair's
+// eye-one set"). Foliage near the leading edge is culled against depth from a view that did not see it. The left eye's
+// pose gap is real, the right eye's is not, so the left eye declares the history invalid (the engine's cut path: the
+// passes then test nothing and draw everything) at a much smaller turn (fast_turn_deg_left, 0.6 deg per pair = 36 deg/s).
+static std::atomic<u64> fastL{0}, fastR{0};
 static void fastCheck(u8 *cam) {
     bool f = false;
     const int e = g_pairPhase;
-    if (on.load() && g_cfg.xr == 4 && bank[e].ok) {
+    const float lim = e == 0 ? fastDegLeft : fastDeg;
+    const float ha = (g_cfg.xr == 4 && e >= 0 && e <= 1) ? headTurnSince(e) : 0.0f;
+    const int om = on.load(); const bool hist = om == 1 || om == 2;   // 0.18.11: mode 3 (per-eye frustum culling) has no history to protect
+    if (hist && g_cfg.xr == 4 && ha > lim && fastMode.load() != 0) { lastAngle = ha; f = true; }
+    else if (hist && g_cfg.xr == 4 && bank[e].ok) {
         const float *cw = (const float *)(cam + 0x140), *pw = (const float *)(bank[e].w180 + 0x40);   // +0x1C0 = that tick's world
         float worst = 1.0f;
         for (int r = 0; r < 3; r++) {
@@ -421,14 +544,67 @@ static void fastCheck(u8 *cam) {
             if (la > 1e-6f && lb > 1e-6f) worst = fminf(worst, d / sqrtf(la * lb));
         }
         lastAngle = acosf(fmaxf(-1.0f, fminf(1.0f, worst))) * 57.2957795f;
-        f = fastMode.load() != 0 && lastAngle > fastDeg;
+        f = fastMode.load() != 0 && lastAngle > lim;
     }
-    if (f) fastTicks++;
+    if (f) { fastTicks++; if (e == 0) fastL++; else fastR++; }
     if (f != fast.load()) { fast = f; setVoFast(f); }
 }
+// BUG-71 (0.17.5: the left-eye pop-in survived the 0.17.3 history cut and the 0.17.4 render sync - both reverted). RE
+// (ADDR-144/146): RV_OcclusionSetup's object IS the occlusion view 0x141EDBD70 (frame 0x141EBD2C0 + 0x1EAB0) that six GPU
+// culling passes - grass, foliage, terrain tiles - read through Occ_View 0x9E5960: they take the HiZ record +0xF0 (table B,
+// slot 1-parity = the PREVIOUS frame, i.e. the other eye) and reproject it with +0xA0 (position) and +0xB0..+0xEC (rows).
+// Since 0.9.4 hOcc overwrites those fields with THIS eye's camera of two ticks ago (right for RV's own table-A source,
+// which it also swaps) - so the foliage passes reprojected the other eye's depth with this eye's old camera. Near
+// geometry (first person: grass and flowers at arm's length) turns that 6 cm-plus-a-pair mismatch into large angles.
+// Now the foliage passes get the ENGINE's own view of that tick (record + matrices of the same previous frame, the
+// engine's design), saved before hOcc rewrites it; RV's per-eye fix stays as it was. Zero cost. Shift+F8 cycles
+// foliage_occlusion: 1 = engine view (default), 0 = 0.17.4 behaviour, 2 = no occlusion view (diagnostic, costs GPU).
+static u8 engView[2][0x140]; static std::atomic<int> engViewIdx{-1}; static std::atomic<int> viewMode{2};
+static std::atomic<u64> viewCalls{0}, viewEngine{0}, viewNull{0};
+typedef u8 *(*FnOccView)(u8 *); static FnOccView oOccView;
+static u8 *hOccView(u8 *obj) {
+    if (obj == g_base + RVA_OCC_VIEW && g_cfg.xr == 4 && on.load()) {
+        viewCalls++; const int m = on.load() == 3 ? 2 : viewMode.load();   // 0.18.11: mode 3 = no cross-eye occlusion anywhere
+        if (m == 2) { viewNull++; return nullptr; }
+        const int k = engViewIdx.load(std::memory_order_acquire);
+        if (m == 1 && k >= 0) { viewEngine++; return engView[k][0x34] ? engView[k] + 0x40 : nullptr; }
+    }
+    return oOccView(obj);
+}
 typedef void (*FnOcc)(u8 *); static FnOcc oOcc;
+// 0.18.9 (BUG-74, owner's F6 test: preset 4 - cross-eye occlusion - removes the left-eye pop-in but leaves objects missing in one eye;
+// preset 1 - the 0.9.4 per-eye bank - pops in the left eye): the 0.9.4 bank ASSUMES that slot (1-p) holds this eye's HiZ from two
+// frames ago and pairs it with this eye's camera from two ticks ago. Under first person that pairing is wrong for the left eye. Now
+// (occ mode 2, default) nothing is assumed: every frame records which eye wrote which HiZ slot (its destination is slot 1-p) and with
+// which camera (+0x430 view-projection rows, +0x550 position - what Cam_StorePrev copies). An eye tests against a slot only if its OWN
+// last frame wrote it (at most 4 frames old), reprojected with the camera that drew it; otherwise the engine's own pairing is kept.
 static void hOcc(u8 *v) {
     oOcc(v); calls++;
+    { static int told = 0; if (!told++) logf("occlusion: RV_OcclusionSetup object %p %s the foliage culling view %p", (void *)v, v == g_base + RVA_OCC_VIEW ? "IS" : "is NOT", (void *)(g_base + RVA_OCC_VIEW)); }
+    if (v == g_base + RVA_OCC_VIEW) { const int k = engViewIdx.load() == 0 ? 1 : 0; memcpy(engView[k], v, sizeof engView[k]); engViewIdx.store(k, std::memory_order_release); }
+    if (on.load() == 3) return;   // 0.18.11 per-eye frustum culling: the setup is left exactly as the engine made it (nobody reads it)
+    if (on.load() == 2 && g_cfg.xr == 4 && v) {   // tracked: works with or without the fast-turn rule, records every frame
+        const int p = *(int *)(g_base + RVA_PARITY); const int e = g_camEye.load(); u8 *cam = *(u8 **)(g_base + RVA_CAMA);
+        if ((p == 0 || p == 1) && (e == 0 || e == 1) && cam) {
+            parEye[e][p]++;
+            const u32 N = frameCtr(); int src = -1; u32 best = 0;
+            for (int q = 0; q < 2; q++) if (owner[q].ok && owner[q].eye == e && N - owner[q].frame <= 4 && N != owner[q].frame && owner[q].frame + 1 > best) { best = owner[q].frame + 1; src = q; }
+            SlotOwner mine{true, e, N, {}, {}}; memcpy(mine.vp, cam + 0x430, 64); memcpy(mine.pos, cam + 0x550, 16);
+            const bool steady = *(u8 *)(v + 0x120) == 0 && *(u8 *)(g_base + RVA_OCC_ENABLE) != 0 && *(u8 **)(v + 0x110) == g_base + RVA_OCC_SLOTS + p * 0x20;
+            const u32 dP = *(u32 *)(g_base + RVA_OCC_DIMS + p * 0x34), dW = *(u32 *)(g_base + RVA_OCC_DIMS + (1 - p) * 0x34);
+            if (steady && !fast.load() && src >= 0 && dP == dW && dW) {
+                const SlotOwner &o = owner[src];
+                *(u8 **)(v + 0x110) = g_base + RVA_OCC_SLOTS + src * 0x20;
+                const float f27 = (float)(dW & 0xFFFF) * 0.5f, f32 = (float)(dW >> 16) * 0.5f, f33 = -f32;
+                for (int k = 0; k < 4; k++) { const float *r = o.vp + 4 * k; float *ov = (float *)(v + 0x60 + 0x10 * k); ov[0] = r[0] * f27 + r[3] * f27; ov[1] = r[1] * f33 + r[3] * f32; ov[2] = r[2]; ov[3] = r[3]; }
+                memcpy(v + 0xA0, o.pos, 16); memcpy(v + 0xB0, o.vp, 48); memcpy(v + 0xE0, o.vp + 12, 16);
+                fixed++; trkOwn++;
+            } else if (steady) { trkEngine++; if (src < 0) skipBank++; }
+            else skipBranch++;
+            owner[1 - p] = mine;   // this frame draws into slot 1-p
+        }
+        return;
+    }
     if (!on.load() || g_cfg.xr != 4 || !v || fast.load()) return;
     const int p = *(int *)(g_base + RVA_PARITY); if (p != 0 && p != 1) return;
     u8 *slotP = g_base + RVA_OCC_SLOTS + p * 0x20, *slotW = g_base + RVA_OCC_SLOTS + (1 - p) * 0x20;
@@ -921,11 +1097,22 @@ static const HistPreset kPresets[] = {
     // the private velocity is the broken piece: AA_Velocity reprojects the PREVIOUS frame's depth from the ring
     // [frame+0x18]+0x88 + (+0x620)*0xA8, i.e. the other eye's depth; with this eye's matrices that is garbage.
     // Final per-eye TAA = this eye's history + this eye's reprojection constants; engine velocity untouched.
-    {"1 PER-EYE OCCLUSION + PER-EYE TAA (this eye's history and reprojection)", 0, 0, 0, 0, 0, 0, 1, 3},
-    {"2 PER-EYE OCCLUSION, engine TAA (the 'great' one)", 0, 0, 0, 0, 0, 0, 1, 0},
-    {"3 PER-EYE OCCLUSION, TAA reset every frame", 0, 0, 0, 0, 1, 0, 1, 0},
+    // 0.18.9: occ 2 = per-eye occlusion by TRACKED slot ownership (default); occ 1 = the 0.9.4 parity-assumed bank (preset 6, for A/B)
+    {"1 PER-EYE OCCLUSION (tracked) + PER-EYE TAA", 0, 0, 0, 0, 0, 0, 2, 3},
+    {"2 PER-EYE OCCLUSION (tracked), engine TAA", 0, 0, 0, 0, 0, 0, 2, 0},
+    {"3 PER-EYE OCCLUSION (tracked), TAA reset every frame", 0, 0, 0, 0, 1, 0, 2, 0},
     {"4 KEPT: everything cross-eye", 0, 0, 0, 0, 0, 0, 0, 0},
     {"5 RESET: global cut every frame (0.9.0)", 1, 0, 0, 0, 0, 0, 0, 0},
+    {"6 PER-EYE OCCLUSION (0.9.4 bank, parity assumed) + PER-EYE TAA", 0, 0, 0, 0, 0, 0, 1, 3},
+    // 0.18.11 (BUG-76, owner: "if grass or other objects is in the centre of one eye but not the other, it gets culled in the other
+    // eye"): preset 4 tests every object against the OTHER eye's depth pyramid (its previous frame). Whatever that eye could not see -
+    // behind Jin's arm, a grass clump, a post at arm's length (6.4 cm of parallax is large that close) - is culled in this eye. The
+    // presets with per-eye occlusion already returned no occlusion view to all ~60 Occ_View callers per frame (OCCVIEW/s "none"), so
+    // their left-eye pop-in was never the depth test: it came with the fast-head-turn rule (an occlusion cut forced on the first eye of
+    // a pair during fast turns, whose cut path tests with the CURRENT camera against an old pyramid). Preset 7: no previous-frame
+    // occlusion test for any pass and no fast-turn cut: every object is culled only by THIS eye's own frustum (playbook ch14:
+    // "reporting visible can never wrongly delete geometry, only fail to save work"), engine TAA as in preset 4.
+    {"7 PER-EYE CULLING: own frustum per eye, no cross-eye occlusion, engine TAA", 0, 0, 0, 0, 0, 0, 3, 0},
 };
 static const int NPRESET = (int)(sizeof kPresets / sizeof kPresets[0]);
 static std::atomic<int> g_preset{0}; static std::atomic<u64> g_presetShownAt{0};
@@ -943,6 +1130,32 @@ static void hClock(float *c) {
     c[0] = 1e-4f; c[10] = c[0xc] * 1e-4f; c[2] = 0; c[6] = 0; c[0xe] = 0; c[0x12] = 0;
 }
 static void uiDecide();
+// BUG-70 (0.17.4: left-eye-only pop-in and stutter that a left-eye history cut did not fix). The engine presents on its own
+// render thread (census: tick tid != present tid), so frame N's render passes are recorded WHILE the game thread already runs
+// tick N+1. Those passes read game-thread globals at record time: the occlusion view 0x141EDBD70 (RV_OcclusionSetup writes it
+// every tick; the grass / foliage / tile culling passes read it through Occ_View 0x9E5960), CAM-A itself, the eye id. Under
+// xr=4 tick N+1 of the left frame N is the FROZEN right tick, which is short: it composes the right eye into CAM-A and rewrites
+// the occlusion view while the left frame is still being recorded, so the left eye is culled and lit with right-eye data (the
+// right frame is recorded during the long simulated tick, before its globals change). Fix (playbook STR-012: carry the eye with
+// the frame, never let the next eye's state leak into it): the right tick starts only once the left frame has been presented
+// (render_sync = 1, default; 2 = before every stereo tick; 0 = off). Timeout 40 ms; SYNC/s logs waits and their cost.
+static std::atomic<u32> g_presFrame{0}; static HANDLE g_presEv = nullptr;
+static std::atomic<u64> g_syncNeeded{0}, g_syncAlready{0}, g_syncTimeouts{0}, g_syncWaitUs{0};
+static int g_syncMiss = 0, g_syncPause = 0;
+static void waitPresented(u32 f) {
+    if (g_syncPause > 0) { g_syncPause--; return; }   // presents stalled (loading, minimised): do not slow every tick down
+    if ((int)(g_presFrame.load() - f) >= 0) { g_syncAlready++; g_syncMiss = 0; return; }
+    g_syncNeeded++; LARGE_INTEGER q0, q1, fq; QueryPerformanceCounter(&q0); QueryPerformanceFrequency(&fq);
+    for (;;) {
+        if (g_presEv) WaitForSingleObject(g_presEv, 2); else Sleep(1);
+        if ((int)(g_presFrame.load() - f) >= 0) break;
+        QueryPerformanceCounter(&q1); if ((q1.QuadPart - q0.QuadPart) * 1000 > fq.QuadPart * 40) { g_syncTimeouts++; if (++g_syncMiss >= 3) { g_syncMiss = 0; g_syncPause = 300; } break; }
+    }
+    if ((int)(g_presFrame.load() - f) >= 0) g_syncMiss = 0;
+    QueryPerformanceCounter(&q1); g_syncWaitUs += (u64)((q1.QuadPart - q0.QuadPart) * 1000000 / fq.QuadPart);
+}
+// BUG-74 (0.18.2): pre_compose (the left-eye camera composed before the simulated tick) ran ~60 times/s in the 0.18.3/0.18.4
+// sessions and the pop-in stayed `[HEADSET]` -> removed in 0.18.5 (owner: no cost without a fix).
 static void hGameTick() {
     c_tick++; t_tick = GetCurrentThreadId();
     if (g_cfg.xr != 4) { oGameTick(); return; }
@@ -950,6 +1163,7 @@ static void hGameTick() {
     if (g_flatRender.load()) { g_simTicks++; oGameTick(); g_pairPhase = 0; return; }   // every tick simulated and shown; the next stereo pair starts with the left eye
     const bool freeze = g_pairPhase == 1 && S && hostFresh() && S->imagesOk && !S->gameRefuse;
     float *clk = (float *)(g_base + RVA_CLOCK); float saved[24];
+    if (g_renderSync && t_present && t_present != t_tick && (freeze || g_renderSync >= 2)) waitPresented(frameCtr());   // the previous frame left the render thread
     if (freeze) { memcpy(saved, clk, sizeof saved); clk[2] = 0; clk[6] = 0; clk[0xe] = 0; clk[0x12] = 0; g_lockGame = true; g_freezeNow = 1; g_frozenTicks++; }
     else g_simTicks++;
     oGameTick();
@@ -996,7 +1210,7 @@ static void poseLocal(const GvPose &h, float Rg[3][3], float dg[3]) {
 
 // Build this frame's packet from the host's latest located views (game thread).
 static void buildPacket(u32 f, FramePkt &p) {
-    p.frame = f; p.valid = false; p.eye = -1; p.stereo = false; p.flat = false;
+    p.frame = f; p.valid = false; p.eye = -1; p.phase = -1; p.stereo = false; p.flat = false;
     if (g_cfg.xr == 4 && g_flatRender.load()) { p.flat = true; return; }   // flat context: the game renders its own flat frame (HUD-003)
     if (!S || (g_cfg.xr != 1 && g_cfg.xr != 2 && g_cfg.xr != 3 && g_cfg.xr != 4) || !hostFresh() || !S->imagesOk || S->gameRefuse) return;
     GvPose head{}, eye[2]{}; float fov[2][4]; u32 valid = 0;
@@ -1014,7 +1228,8 @@ static void buildPacket(u32 f, FramePkt &p) {
             const float m = g_fovMarginDeg / 57.2957795f;
             if (m > 0) for (int k = 0; k < 2; k++) { float *f = g_pairSample.f[k]; f[0] = fmaxf(f[0] - m, -1.45f); f[1] = fminf(f[1] + m, 1.45f); f[2] = fminf(f[2] + m, 1.45f); f[3] = fmaxf(f[3] - m, -1.45f); }
         }
-        int e = g_pairPhase; p.eye = e; p.pose = g_pairSample.e[e]; memcpy(p.fov, g_pairSample.f[e], 16);
+        if (g_pairPhase == 0 && g_eyeSwapLatched != g_eyeSwap.load()) { g_eyeSwapLatched = g_eyeSwap.load(); g_flatCut = 2; }   // no history across the swap
+        int e = g_eyeSwapLatched ? 1 - g_pairPhase : g_pairPhase; p.eye = e; p.phase = g_pairPhase; p.pose = g_pairSample.e[e]; memcpy(p.fov, g_pairSample.f[e], 16);
     }
     else if (g_cfg.xr == 3) { p.eye = 0; p.pose = eye[0]; memcpy(p.fov, fov[0], 16); p.stereo = true; p.pose2 = eye[1]; memcpy(p.fov2, fov[1], 16); }
     else {   // mono: head pose, frustum = union of both eyes
@@ -1028,7 +1243,7 @@ static void currentPacket() {   // game thread: (re)build when the engine's fram
     u32 f = frameCtr(); if (f == g_curFrame) return;
     g_curFrame = f; buildPacket(f, g_cur); if (g_cur.valid) c_pktValid++;
     FramePkt &r = g_ring[f & 31];
-    gvWriteBegin(&r.seq); r.frame = g_cur.frame; r.eye = g_cur.eye; r.valid = g_cur.valid; r.flat = g_cur.flat; r.pose = g_cur.pose; memcpy(r.fov, g_cur.fov, 16);
+    gvWriteBegin(&r.seq); r.frame = g_cur.frame; r.eye = g_cur.eye; r.phase = g_cur.phase; r.valid = g_cur.valid; r.flat = g_cur.flat; r.pose = g_cur.pose; memcpy(r.fov, g_cur.fov, 16);
     r.stereo = g_cur.stereo; r.pose2 = g_cur.pose2; memcpy(r.fov2, g_cur.fov2, 16); gvWriteEnd(&r.seq);
 }
 
@@ -1052,7 +1267,772 @@ static float *cacheIn(Cache &c, u64 cam, float *live) {   // the game's values (
 static void cacheOut(Cache &c, const float *v) { memcpy(c.live, v, 4 * c.n); memcpy(c.last, v, 4 * c.n); }
 static void cacheOffFor(Cache &c, u64) { cacheOff(c); }
 
+
+// ---------------- 0.17.0 first person ----------------
+// RE (STEREO_ROUTE session 19): the hero is *(0x1434C6F20) (627 readers; cleared/set by 0x8F6120..); a scene-node object
+// (class id = vt[4] "mov eax, imm; ret" in [10, 220)): world matrix at +0x150 (rows fwd, left, up, pos; camera driver 0xA33720
+// reads node+0x150 for those classes), joint WORLD matrices at *(+0x278) + (joint+1)*0x40 (entry 0 = the node itself;
+// Node_JointWorld 0x93AE40), and two per-character joint indices +0x7F8 / +0x7FC that the UI uses as the bottom / TOP of the
+// character's screen bounds (0x6E9433 / 0x6EFB90 -> the head end). Method (playbook ch01 + bldbrne-vr / BetterVR): the eye is
+// anchored on the hero's ROOT, not the animated head bone - horizontal = root + a forward offset along the hero's facing,
+// vertical = root + the head joint's height above it, low-passed (stairs, crouch) so walk/attack animations do not bob the
+// view; the HMD pose is added on top as before. The game's camera keeps owning yaw (stick/mouse) and everything else.
+// Head hiding v1 (FRIK's bHidePlayerHead family, as bone collapse): the joints within fp_hide_radius of the head joint in the
+// first observed pose are collapsed onto the head joint (rotation rows x0.001) right before each render-camera update and the
+// frame snapshot; a joint that later strays > 35 cm from the head is not part of the head (a hand) and is dropped for good.
+// Cost: no head in the shadow (bldbrne-vr's colour-pass draw filter is the follow-up that keeps it).
+namespace ui { static int fpBlockReason(); }
+static float len3_st(const float *v) { return sqrtf(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]); }   // 0 = allowed; else why the game camera keeps the view (flat / cutscene / title)
+namespace fp {
+static std::atomic<int> on{1}, dumpReq{0};
+static std::atomic<u64> nearHits[2], nearMiss{0};   // 0.18.11: near clip plane applied per eye (left/simulated, right/frozen) / projection not recognised
+static u8 *hero = nullptr, *node = nullptr; static float *joints = nullptr; static int nJ = 0, headIdx = -1, botIdx = -1; static bool valid = false;
+static int nodeOff = -1, nodeOff2 = -1, nodeClass = -1; static u64 retryAt = 0;
+// 0.17.3 (BUG-68: "the head is still there"): the joint WORLD matrices at +0x278 are not what the renderer skins with. RE
+// (re/decomp_anim): Anim_Setup 0x9BB4F0 queues the character's animation job FUN_140B2DBC0(job) with job+0xE8 = the node,
+// job+0xA8 = the node's CURRENT render-pose buffer (node+0x508 + cur*0x18, cur = node+0x2DA toggled per update; joint i at
+// +i*0x40, MODEL space), job+0xD8 = the previous one (velocity), job+0x98 = the world array (+0x278 + 0x40). The job writes
+// the model-space poses and world = pose * node world; the skinning palette job (0x59EB30, waits for the job's ready flag)
+// builds the GPU palette from node+0x508[cur] * inverse bind - the world array never reaches the GPU. 0.17.2 also capped the
+// head set at 96 joints (487 of the 500 counted joints are face/head joints) and the joint count at 500 (node+0x280 - 1 is
+// the real count). Now: the head set (every shown joint within fp_hide_radius of the top-of-head joint in the first pose) is
+// collapsed in the CURRENT render-pose buffer right after the hero's animation job, before the palette job can run: rows
+// zeroed (the engine's own way of hiding a gear joint) and moved onto the neck joint below the head. The world array (game
+// logic: aim, AI, attachments, our eye anchor) is left alone. No head in shadows (bldbrne-vr's colour-pass filter keeps it).
+enum { HIDE_CAP = 2048, JOINT_CAP = 4096 };
+struct HidePub { u8 *node; int target, head, n; uint16_t idx[HIDE_CAP]; };
+static HidePub hpub[2]; static std::atomic<int> hpubIdx{-1}; static std::atomic<u32> hideFrame{0}; static std::atomic<u8> strayFlag[JOINT_CAP];
+static int hideSet[HIDE_CAP]; static int nHide = 0, neckIdx = -1; static bool calibrated = false; static u8 strayed[JOINT_CAP];
+static u32 lastFrame = 0xFFFFFFFFu; static bool activeNow = false; static float anchor[3] = {0, 0, 0}, relUpF = 0, relHF[3] = {0, 0, 0}; static bool relInit = false; static u64 lastT = 0;
+static std::atomic<int> lastReason{-1};
+static std::atomic<u64> nActive{0}, nBlockedUi{0}, nNoHero{0}, nFar{0}, nOff{0}, nCollapse{0}, nSeenCollapsed{0}, nSeenRestored{0}, nDropped{0}, nRevalidate{0};
+static std::atomic<u64> nHeroJobs{0}, nJobsHidden{0}, nJobsNoBuf{0}, nJointsHidden{0};
+static std::atomic<float> camDist{0}, headUp{0}; static std::atomic<u64> nJointSwaps{0};
+static int countSrc = 0;   // 1 = node+0x280, 2 = scan
+static const float *J(int i) { return joints + (size_t)(i + 1) * 16; }
+static u8 *heroNow() { return *(u8 **)(g_base + RVA_HERO); }
+static u8 *(*heroPtr)() = heroNow;   // self-test: a stand-in hero
+static int classId(u8 *o) {   // vt[4] = "mov eax, imm32; ret" (decoded, never called)
+    u8 *vt = *(u8 **)o; u8 *f = vt && readable(vt + 0x20, 8) ? *(u8 **)(vt + 0x20) : nullptr;
+#ifndef GOTVR_SELFTEST
+    if (vt < g_base || vt > g_base + 0x4000000 || f < g_base || f > g_base + 0x1400000) return -1;
+#endif
+    if (!f || !readable(f, 6)) return -1;
+    return (f[0] == 0xB8 && f[5] == 0xC3) ? *(int *)(f + 1) : -1;
+}
+static float len3(const float *v) { return sqrtf(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]); }
+// BUG-65b (0.17.1): hidden pieces (gear slots it does not show) are ZERO-scale joints: finite, rows shorter than 50 (zero
+// allowed), within 10 m of the root are joints.
+static bool saneLoose(const float *m, const float *root) {
+    for (int i = 0; i < 16; i++) if (!std::isfinite(m[i])) return false;
+    for (int r = 0; r < 3; r++) if (!(len3(m + 4 * r) < 50.0f)) return false;
+    const float d[3] = {m[12] - root[12], m[13] - root[13], m[14] - root[14]}; return len3(d) < 1000.0f;
+}
+static bool shown(const float *m) { return len3(m) > 0.01f && len3(m + 4) > 0.01f && len3(m + 8) > 0.01f; }   // not a hidden (zero-scale) joint
+static int countJoints(u8 *n, float *j) {
+    // the node's own count (palette job 0x59EC42: count = node+0x280 - 1) when it is plausible and readable
+    const int c280 = *(int *)(n + 0x280) - 1;
+    if (c280 >= 8 && c280 <= JOINT_CAP && readable(j, (size_t)(c280 + 1) * 64)) { countSrc = 1; return c280; }
+    const float *root = (const float *)(n + 0x150); int last = -1, gap = 0;
+    for (int c = 0; c < JOINT_CAP; c++) {
+        const float *m = j + (size_t)(c + 1) * 16; if (!readable(m, 0x40)) break;
+        if (saneLoose(m, root)) { last = c; gap = 0; } else if (++gap > 8) break;
+    }
+    countSrc = 2; return last + 1;
+}
+static bool exePtr(const void *p) { return (const u8 *)p >= g_base && (const u8 *)p < g_base + 0x4000000; }
+// BUG-75 (0.18.4: started on the horse -> "a bit above Jin's head", the head visible again, the view on the floor after getting
+// off): the head was "the highest shown joint near the body axis". On the horse two gear joints (644 / 651: something carried
+// only while riding) sat 40 cm above the head, alone - no other joint within 22 cm - and won; on foot joint 644 drops to the
+// root, so the eyes went to the floor, and the head set was that 1 joint instead of the ~480 face / head joints. The head is now
+// the highest near-axis joint with a DENSE neighbourhood: at least half the densest near-axis joint's count (capped at 40)
+// shown joints within fp_hide_radius. Measured on both receipts (horse + standing): picks the head (22 / 123), never 644.
+static int pickHead(const float *jarr, int c, const float *r, float &topUp, int *denseOut = nullptr) {
+    static float P[JOINT_CAP][3]; static int cand[JOINT_CAP], cnt[JOINT_CAP]; static float cu[JOINT_CAP];
+    topUp = -1e9f; if (denseOut) *denseOut = 0;
+    float U[3] = {r[8], r[9], r[10]}; { const float l = len3(U); if (!(l > 1e-4f)) return -1; for (auto &x : U) x /= l; }
+    const float s = g_cfg.unitsPerM * 0.01f, rad = g_fp.hideRadiusCm * s, rad2 = rad * rad;
+    int nS = 0, nC = 0; static int sIdx[JOINT_CAP];
+    for (int i = 0; i < c && i < JOINT_CAP; i++) { const float *m = jarr + (size_t)(i + 1) * 16; if (!saneLoose(m, r) || !shown(m)) continue;
+        P[nS][0] = m[12]; P[nS][1] = m[13]; P[nS][2] = m[14]; sIdx[nS] = i;
+        const float e[3] = {m[12] - r[12], m[13] - r[13], m[14] - r[14]}; const float u = e[0] * U[0] + e[1] * U[1] + e[2] * U[2];
+        const float hz[3] = {e[0] - u * U[0], e[1] - u * U[1], e[2] - u * U[2]};
+        if (len3(hz) < 40.0f * s) { cand[nC] = nS; cu[nC] = u; nC++; }
+        nS++; }
+    int maxCnt = 0;
+    for (int k = 0; k < nC; k++) { const float *a = P[cand[k]]; int n = 0;
+        for (int t = 0; t < nS; t++) { const float d0 = P[t][0] - a[0], d1 = P[t][1] - a[1], d2 = P[t][2] - a[2]; if (d0 * d0 + d1 * d1 + d2 * d2 <= rad2) n++; }
+        cnt[k] = n; if (n > maxCnt) maxCnt = n; }
+    int need = maxCnt / 2; if (need > 40) need = 40; if (need < 3) need = 3;
+    int best = -1, dense = 0;
+    for (int k = 0; k < nC; k++) if (cnt[k] >= need && cu[k] > topUp) { topUp = cu[k]; best = sIdx[cand[k]]; dense = cnt[k]; }
+    if (denseOut) *denseOut = dense;
+    return best;
+}
+// BUG-65 (0.17.0): the skinned model is searched on the hero and one level down (in practice: the hero itself, class 15).
+static u8 *findModel(u8 *h, int &off, int &off2, int &cnt) {
+    const float *hr = (const float *)(h + 0x150); u8 *best = nullptr; cnt = 0; off = off2 = -1; int probes = 0;
+    auto consider = [&](u8 *p, int o1, int o2) {
+        if (((u64)p & 7) || (u64)p < 0x10000 || (u64)p > 0x7FFFFFFFFFFFull || exePtr(p) || !readable(p, 0x800)) return false;
+        probes++;
+#ifndef GOTVR_SELFTEST
+        if (!exePtr(*(u8 **)p)) return false;   // a game object: its vtable is in the exe
+#endif
+        const int cid = classId(p); if (cid < 10 || cid >= 220) return true;   // an object, not a scene node (searched one level down)
+        float *j = *(float **)(p + 0x278); if (!j || ((u64)j & 3) || !readable(j, 0x80)) return true;
+        const float *r = (const float *)(p + 0x150); const float d[3] = {r[12] - hr[12], r[13] - hr[13], r[14] - hr[14]};
+        if (len3(d) > 60.0f) return true;   // the hero's own model shares its root (a horse or a held weapon does not)
+        const int c = countJoints(p, j); if (c <= cnt) return true;
+        {   // a standing human: the highest joint near the body axis 1.0..2.3 m above the root
+            float top = -1e9f; pickHead(j, c, r, top);   // BUG-75: the head, not lone gear above it
+            if (top < 100.0f || top > 230.0f) { static int told = 0; if (told++ < 8) logf("first person: node %p (%d joints) at hero+0x%X skipped: highest joint %.0f cm", (void *)p, c, o1 < 0 ? 0 : o1, top); return true; }
+        }
+        cnt = c; best = p; off = o1; off2 = o2;
+        return true;
+    };
+    consider(h, -1, -1);
+    if (cnt < 20) {   // not the hero itself: its objects, and one level down
+        u8 *lvl1[64]; int o1s[64], n1 = 0;
+        for (int o = 8; o < 0x4100; o += 8) { u8 *p = *(u8 **)(h + o); if (p == h) continue; if (consider(p, o, -1) && n1 < 64 && classId(p) < 10) { lvl1[n1] = p; o1s[n1++] = o; } }
+        for (int i = 0; i < n1; i++) for (int o = 8; o < 0x400; o += 8) { u8 *p = *(u8 **)(lvl1[i] + o); if (p != h && p != lvl1[i]) consider(p, o1s[i], o); }
+        { static int once = 0; if (once++ < 3) logf("first person: model search probed %d objects (hero +0x0..+0x4100, then %d objects one level down)", probes, n1); }
+    }
+    return cnt >= 20 ? best : nullptr;
+}
+// 0.18.5 body follow (owner: "when moving backwards, because there is no backpedalling animation, you see Jin's body. Could you have
+// Jin's animation play forwards"). GoT has no backpedal: the stick pulled back turns Jin round to run at the camera, so in first person
+// his chest is in front of you. Render-only fix in the same write point as the head hiding (Anim_Job, before the skin palette job):
+// when Jin's facing is more than fp_body_follow_start_deg away from YOUR forward direction (the game camera's yaw + the VR turn - not
+// the head's yaw, playbook ch12: looking aside must not swing the body), the whole render pose is turned about the vertical axis
+// through the head, fully at fp_body_follow_full_deg, rate-limited - so his run animation plays facing forward while he moves back.
+// Gameplay (world array: aim, AI, collisions, attachments) is untouched. Off while riding (lone gear joints in the skeleton's tail
+// sit ~2 m up on the horse and at the root on foot: 644 / 651 in both skeleton dumps) and above fp_body_follow_max_speed.
+static float refF[2] = {0, 0}; static bool refOk = false; static float headF[2] = {0, 0}; static bool headOk = false, headTurning = false; static std::atomic<int> ridingNow{0};   // game thread (hSlot43): your forward direction (world, horizontal)
+static float bodyYawCur = 0; static std::atomic<float> bodyYaw{0}; static u64 bodyLastMs = 0; static float lastRoot[3] = {0, 0, 0}; static bool lastRootOk = false;
+static int lone[16]; static int nLone = 0;
+static std::atomic<u64> nBodyFrames{0}, nBodyRiding{0}, nBodyFast{0}, nBodyRefused{0}, nBodyJobs{0};
+static std::atomic<float> bodyDeg{0}, facingDeg{0}, speedMs{0};
+static float jobApplied = 0, jobPivot[2] = {0, 0};   // job thread: what the last render pose got (a job that copies the previous pose)
+static void findLone() {   // validation: tail joints with no other shown joint within 15 cm (gear helpers: riding markers)
+    nLone = 0; const float s = g_cfg.unitsPerM * 0.01f, r2 = (15.0f * s) * (15.0f * s); const float *root = (const float *)(node + 0x150);
+    for (int i = nJ - nJ / 10; i < nJ && nLone < 16; i++) { if (i < 0) continue; const float *m = J(i); if (!saneLoose(m, root) || !shown(m)) continue; bool alone = true;
+        for (int k = 0; k < nJ && alone; k++) { if (k == i) continue; const float *q = J(k); if (!shown(q)) continue; const float d0 = q[12] - m[12], d1 = q[13] - m[13], d2 = q[14] - m[14]; if (d0 * d0 + d1 * d1 + d2 * d2 <= r2) alone = false; }
+        if (alone) lone[nLone++] = i; }
+}
+// 0.18.19 (owner: "at the beginning of the jump animation the VR IK arms stop working"; log: "held off: riding 27" on foot): ONE lone
+// tail joint high was enough, and a jump lifts gear carried on the body (joint 600) past 150 cm above the root - the arms were
+// switched off and the body snapped to the node's facing as if mounted. On the horse BOTH reins/saddle markers (644 / 651, ~202 cm)
+// are up. Now at least two markers must be high (or the only one there is), for 0.25 s on and 0.25 s off.
+static std::atomic<int> rideMarkersHigh{0}; static std::atomic<u64> nStopCaps{0}, nDeadTurns{0}, nSnapTurns{0}; static std::atomic<float> moveOffDeg{0};
+static bool ridingRaw(const float *root, const float *U) {
+    const float s = g_cfg.unitsPerM * 0.01f; int high = 0;
+    for (int k = 0; k < nLone; k++) { const float *m = J(lone[k]); if (!shown(m)) continue; const float d[3] = {m[12] - root[12], m[13] - root[13], m[14] - root[14]};
+        if (d[0] * U[0] + d[1] * U[1] + d[2] * U[2] > 150.0f * s) high++; }
+    rideMarkersHigh = high;
+    return high >= (nLone >= 2 ? 2 : 1) && high > 0;
+}
+static bool rideState = false; static float rideFor = 0.0f;
+static bool riding(const float *root, const float *U, float dt) {
+    const bool raw = ridingRaw(root, U);
+    if (raw != rideState) { rideFor += dt; if (rideFor >= 0.25f || dt <= 0.0f) { rideState = raw; rideFor = 0.0f; } } else rideFor = 0.0f;
+    return rideState;
+}
+static void bodyStep(const float *root, const float *U, const float *F, bool wasActive) {   // game thread, once per simulated tick
+    const float PI = 3.14159265f, D = 57.2957795f;
+    const u64 now = GetTickCount64(); const float dt = bodyLastMs ? fminf((float)(now - bodyLastMs) * 0.001f, 0.1f) : 0.0f; bodyLastMs = now;
+    float sp = 0; if (lastRootOk && dt > 0.0f) { float d[3] = {root[12] - lastRoot[0], root[13] - lastRoot[1], root[14] - lastRoot[2]}; const float u = d[0] * U[0] + d[1] * U[1] + d[2] * U[2]; for (int c = 0; c < 3; c++) d[c] -= u * U[c]; sp = len3(d) / dt / g_cfg.unitsPerM; }
+    lastRoot[0] = root[12]; lastRoot[1] = root[13]; lastRoot[2] = root[14]; lastRootOk = true; speedMs = sp;
+    if (!wasActive) bodyYawCur = 0;
+    float target = 0; bool expo = false;
+    const bool ride = riding(root, U, dt); ridingNow = ride ? 1 : 0;
+    // 0.18.21 (owner: "the forward vector is being updated every frame I move - I only want it once I start moving"): the 0.18.19
+    // capture at stops is gone, and so is 0.18.20's rewrite of the forward while the body turns past the threshold during a run. The
+    // movement forward is now taken ONLY when you start moving from rest (vrinput.h), at a snap / smooth turn, at the start, after a
+    // menu and at a recenter.
+    // 0.18.16 (owner: "the body turns too much at the slightest turn either direction - keep the 35 deg threshold (editable) but even in
+    // both directions; all movement animations in any direction should face the headset's forward, otherwise looking forward and moving
+    // sideways shows the inside of Jin's shoulder"): the drawn body's heading is now kept in WORLD yaw (Hw) instead of relative to Jin's
+    // node, which the game itself turns (to the run direction, toward the camera after a snap catch-up, turn-in-place): with a node-
+    // relative heading every node turn dragged the drawn body along, and the dead zone sat wherever the node happened to point.
+    //   standing (< 0.6 m/s): Hw keeps still while you look around; once your head is more than fp_body_head_deadzone_deg (35) away -
+    //            either side, measured from where the hips are drawn - it turns to your head (tau fp_body_head_follow_s) until within 2 deg;
+    //            a snap / smooth turn starts that turn at once (0.18.15)
+    //   moving:  Hw follows your head's forward continuously (fp_body_move_follow_s 0.15) - running, strafing, backing up: the body
+    //            faces where you look, the legs run in that frame
+    // The pose is turned by Hw - node yaw (the hip squaring of 0.18.15 keeps the drawn HIPS on Hw while standing).
+    static float Hw = 0.0f; static bool HwOk = false;
+    const float nodeYaw = atan2f(F[1], F[0]);
+    auto wrapPi = [&](float a) { if (!std::isfinite(a)) return 0.0f; if (fabsf(a) > 64.0f) a = fmodf(a, 2 * PI); while (a > PI) a -= 2 * PI; while (a < -PI) a += 2 * PI; return a; };   // 0.18.21: bounded
+    if (!wasActive || !HwOk) { Hw = wrapPi(nodeYaw + bodyYawCur); HwOk = true; headTurning = false; }
+    if (g_fp.bodyFollow && refOk) {
+        const float L[3] = {U[1] * F[2] - U[2] * F[1], U[2] * F[0] - U[0] * F[2], U[0] * F[1] - U[1] * F[0]};   // U x F = left
+        float rv[3] = {refF[0], refF[1], 0}; { const float u = rv[0] * U[0] + rv[1] * U[1]; for (int c = 0; c < 3; c++) rv[c] -= u * U[c]; }
+        const float a = atan2f(rv[0] * L[0] + rv[1] * L[1] + rv[2] * L[2], rv[0] * F[0] + rv[1] * F[1] + rv[2] * F[2]); facingDeg = a * D;
+        const float headYaw = headOk ? atan2f(headF[1], headF[0]) : wrapPi(nodeYaw + a);
+        if (ride) { nBodyRiding++; headTurning = false; Hw = nodeYaw; }
+        else if (sp > g_fp.bodyMaxSpeed) { nBodyFast++; headTurning = false; Hw = nodeYaw; }
+        // 0.18.22 (owner: "Jin always rotates to match the headset after a small threshold (5-10 deg); movement totally headset oriented"):
+        // with move_follows_head the body uses the same head follow standing AND moving (dead zone fp_body_head_deadzone_deg 7.5 around
+        // the drawn body, then it turns to your head until within 2 deg); the captured-forward branch below is for move_follows_head=0
+        else if ((sp < 0.6f || vrin::cfg.moveHead) && g_fp.bodyHead) {
+            const float e = wrapPi(headYaw - Hw);
+            { static u64 seenTurn = 0; const u64 tn = vrin::turnSeq.load(); if (tn != seenTurn) { seenTurn = tn; if (fabsf(e) * D > 2.0f && !headTurning) { headTurning = true; nSnapTurns++; } } }
+            if (!headTurning && fabsf(e) * D > g_fp.headDeadDeg) { headTurning = true; nDeadTurns++; }
+            if (headTurning && fabsf(e) * D < 0.5f) headTurning = false;   // 0.18.22: 2 -> 0.5 deg, the body ends square to the view
+            if (headTurning) Hw = wrapPi(Hw + e * (g_fp.headTau > 0.0f ? 1.0f - expf(-dt / g_fp.headTau) : 1.0f));
+        }
+        else { headTurning = false;   // 0.18.17: moving, the body faces the MOVEMENT forward (your headset's forward at the last snap / start / menu exit)
+            // 0.18.20 (owner: "when moving, Jin's body and sword must still rotate when the player exceeds the look threshold, like standing
+            // still"): beyond fp_body_head_deadzone_deg from the body the body turns to your head - and the movement forward turns with it
+            // 0.18.21: the body faces movement forward + an offset; the offset (not the forward) takes the turn past the threshold and
+            // stays until the forward is taken again (the next start from rest / snap / menu / recenter), which squares the body to it.
+            static bool moveTurning = false, mvSeen = false; static float off = 0.0f, lastMv = 0.0f;
+            const float mv = vrin::moveYawOk.load() ? vrin::moveYaw.load() / D : headYaw;
+            if (!mvSeen || fabsf(wrapPi(mv - lastMv)) > 1e-4f) { mvSeen = true; lastMv = mv; off = 0.0f; moveTurning = false; }   // a new forward
+            const float eh = wrapPi(headYaw - Hw);
+            if (!moveTurning && fabsf(eh) * D > g_fp.headDeadDeg) { moveTurning = true; nDeadTurns++; }
+            if (moveTurning) { const float eo = wrapPi(headYaw - (mv + off)); off = wrapPi(off + eo * (g_fp.headTau > 0.0f ? 1.0f - expf(-dt / g_fp.headTau) : 1.0f)); if (fabsf(eo) * D < 2.0f) moveTurning = false; }
+            moveOffDeg = off * D;
+            const float e = wrapPi(mv + off - Hw);
+            Hw = wrapPi(Hw + e * (g_fp.moveTau > 0.0f ? 1.0f - expf(-dt / g_fp.moveTau) : 1.0f));
+        }
+        target = wrapPi(Hw - nodeYaw);
+        while (target - bodyYawCur > PI) target -= 2 * PI; while (target - bodyYawCur < -PI) target += 2 * PI;   // the short way
+    } else Hw = wrapPi(nodeYaw + bodyYawCur);
+    const float step = g_fp.bodyTurnSpeed > 0.0f ? g_fp.bodyTurnSpeed / D * dt : 1e9f; float d = target - bodyYawCur;
+    if (expo && g_fp.headTau > 0.0f) d *= 1.0f - expf(-dt / g_fp.headTau);
+    bodyYawCur = fabsf(d) <= step ? bodyYawCur + d : bodyYawCur + (d > 0 ? step : -step);
+    if (bodyYawCur > PI) bodyYawCur -= 2 * PI; else if (bodyYawCur < -PI) bodyYawCur += 2 * PI;
+    if (fabsf(bodyYawCur) > 1e-4f) nBodyFrames++;
+    bodyYaw.store(bodyYawCur, std::memory_order_relaxed); bodyDeg = bodyYawCur * D;
+}
+// 0.18.6 (owner: "the backwards running is good, but we need the sword to also go backwards"): attached items (katana, scabbard,
+// bow...) are not in the skin - RE 0x57E0A0 (render gather of attachments): instance = attachment local x the hero's joint WORLD
+// matrix (node+0x278, entry joint+1). So the world array is turned too, right after the hero's animation job (same angle, about
+// the vertical through the head joint); the next job rewrites the whole array, so nothing accumulates, and the head joint's
+// position (the eye anchor) does not move. Game code that reads Jin's joints this tick sees the turned body (the VR body).
+static std::atomic<u64> nWorldTurned{0};
+static void turnWorld(u8 *nd, float a, int head) {
+    float *W = *(float **)(nd + 0x278); const float *R = (const float *)(nd + 0x150); const int n = *(int *)(nd + 0x280) - 1;
+    if (!W || n < 1 || n > JOINT_CAP || head < 0 || head >= n) return;
+    float U[3] = {R[8], R[9], R[10]}; { const float l = len3(U); if (!(l > 1e-4f)) return; for (auto &x : U) x /= l; }
+    const float c = cosf(a), s = sinf(a), *Hp = W + (size_t)(head + 1) * 16 + 12; const float P[3] = {Hp[0], Hp[1], Hp[2]};
+    auto rot = [&](float *v) { const float d = U[0] * v[0] + U[1] * v[1] + U[2] * v[2]; const float x[3] = {U[1] * v[2] - U[2] * v[1], U[2] * v[0] - U[0] * v[2], U[0] * v[1] - U[1] * v[0]};
+        for (int k = 0; k < 3; k++) v[k] = v[k] * c + x[k] * s + U[k] * d * (1.0f - c); };   // Rodrigues about U (right-handed: fwd -> left)
+    for (int j = 0; j <= n; j++) { float *m = W + (size_t)j * 16;   // entry 0 = the node's own copy (attachments with joint -1)
+        rot(m); rot(m + 4); rot(m + 8); float d[3] = {m[12] - P[0], m[13] - P[1], m[14] - P[2]}; rot(d); m[12] = P[0] + d[0]; m[13] = P[1] + d[1]; m[14] = P[2] + d[2]; }
+    nWorldTurned++;
+}
+static void turnPose(float *pose, int cnt, float a, float px, float py) {   // the whole model-space pose about the vertical through (px, py)
+    const float c = cosf(a), s = sinf(a);
+    for (int j = 0; j < cnt; j++) { float *m = pose + (size_t)j * 16;
+        for (int r = 0; r < 3; r++) { const float x = m[4 * r], y = m[4 * r + 1]; m[4 * r] = c * x - s * y; m[4 * r + 1] = s * x + c * y; }
+        const float x = m[12] - px, y = m[13] - py; m[12] = px + c * x - s * y; m[13] = py + s * x + c * y; }
+}
+static void unpublish() { hpubIdx = -1; }
+static void publish() {   // game thread: hand the head set to the animation-job hook (seqlocked by the slot swap)
+    const int k = hpubIdx.load() == 0 ? 1 : 0; HidePub &p = hpub[k];
+    p.node = node; p.target = neckIdx; p.head = headIdx; p.n = 0;
+    for (int i = 0; i < nHide && p.n < HIDE_CAP; i++) if (!strayed[hideSet[i]]) p.idx[p.n++] = (uint16_t)hideSet[i];
+    hpubIdx = k;
+}
+static bool validate(u8 *h) {   // on hero / joint-array change only (VirtualQuery is not for the hot path)
+    unpublish();
+    nRevalidate++; valid = false; nJ = 0; headIdx = botIdx = neckIdx = -1; calibrated = false; nHide = 0; relInit = false; memset(strayed, 0, sizeof strayed);
+    for (auto &f : strayFlag) f.store(0, std::memory_order_relaxed);
+    hero = h; node = nullptr; joints = nullptr;
+    if (!h || !readable(h, 0x4100)) return false;
+    const int cid = classId(h); if (cid < 10 || cid >= 220) { logf("first person: hero %p class id %d is not a scene node -> third person", (void *)h, cid); return false; }
+    int cnt = 0; u8 *n = findModel(h, nodeOff, nodeOff2, cnt);
+    if (!n) {
+        logf("first person: no skinned model with a skeleton found near the hero %p (best %d joints) -> third person, retrying", (void *)h, cnt);
+        return false;
+    }
+    node = n; nodeClass = classId(n); joints = *(float **)(n + 0x278); nJ = cnt;
+    const float *root = (const float *)(n + 0x150);
+    // the head: the highest joint near the body axis (a raised hand or weapon is off to the side) - the top of the head
+    int hidden = 0; for (int i = 0; i < nJ; i++) { const float *m = J(i); if (!saneLoose(m, root) || !shown(m)) hidden++; }
+    float topUp = -1e9f; int dense = 0; const int top = pickHead(joints, nJ, root, topUp, &dense);   // BUG-75
+    headIdx = top; botIdx = -1;
+    if (top >= 0) { findLone(); char b[160]; int o = 0; for (int k = 0; k < nLone && o < 140; k++) o += snprintf(b + o, sizeof b - o, " %d", lone[k]); b[o] = 0;
+        logf("first person: riding markers (lone gear joints in the skeleton's tail):%s", nLone ? b : " none"); }
+    logf("first person: %d of %d joints are hidden or unused (zero scale) in this pose; joint count from %s", hidden, nJ, countSrc == 1 ? "the node (+0x280)" : "a scan of the joint array");
+    logf("first person: hero %p (class %d) -> skinned model %p at hero+0x%X%s (class %d), %d joints, head = joint %d (%.0f cm above the model root; the highest near the body axis with %d joints within %.0f cm - lone gear is skipped)",
+         (void *)h, cid, (void *)n, nodeOff < 0 ? 0 : nodeOff, nodeOff2 >= 0 ? " (one level down)" : "", nodeClass, nJ, top, topUp, dense, g_fp.hideRadiusCm);
+    if (nodeOff2 >= 0) logf("first person: the model is at *(hero+0x%X)+0x%X", nodeOff, nodeOff2);
+    valid = headIdx >= 0 && topUp > 50.0f; return valid;
+}
+static void dump() {   // Shift+F5: the hero skeleton in the hero's frame (cm), for picking the head set / eye offsets
+    if (!valid) { logf("first person: skeleton dump - no valid hero"); return; }
+    const float *root = (const float *)(node + 0x150), *H = J(headIdx);
+    float ax[3][3]; for (int r = 0; r < 3; r++) { const float l = len3(root + 4 * r); for (int c = 0; c < 3; c++) ax[r][c] = l > 1e-4f ? root[4 * r + c] / l : 0; }
+    logf("first person: skeleton of the hero's model %p - root (%.1f %.1f %.1f) rows fwd(%.3f %.3f %.3f) left(%.3f %.3f %.3f) up(%.3f %.3f %.3f); joint: fwd/left/up cm from the root, distance to the head joint %d, row lengths; neck (collapse target) %d",
+         (void *)node, root[12], root[13], root[14], ax[0][0], ax[0][1], ax[0][2], ax[1][0], ax[1][1], ax[1][2], ax[2][0], ax[2][1], ax[2][2], headIdx, neckIdx);
+    static u8 inSet[JOINT_CAP]; memset(inSet, 0, sizeof inSet); for (int k = 0; k < nHide; k++) inSet[hideSet[k]] = 1;
+    for (int i = 0; i < nJ; i++) {
+        const float *m = J(i); const float d[3] = {m[12] - root[12], m[13] - root[13], m[14] - root[14]}, dh[3] = {m[12] - H[12], m[13] - H[13], m[14] - H[14]};
+        logf("   joint %3d: %7.1f %7.1f %7.1f | head %6.1f | rows %.3f %.3f %.3f%s%s%s%s", i, d[0] * ax[0][0] + d[1] * ax[0][1] + d[2] * ax[0][2], d[0] * ax[1][0] + d[1] * ax[1][1] + d[2] * ax[1][2],
+             d[0] * ax[2][0] + d[1] * ax[2][1] + d[2] * ax[2][2], len3(dh), len3(m), len3(m + 4), len3(m + 8), i == headIdx ? " <- head" : "", i == neckIdx ? " <- neck (collapse target)" : "", inSet[i] ? " [hidden]" : "", strayed[i] ? " [strayed]" : "");
+    }
+}
+// Animation-job hook (job threads, every character): the hero's head set collapsed in the render-pose buffer it just wrote.
+typedef void (*FnAnimJob)(u8 *); static FnAnimJob oAnimJob;
+// ---------------- 0.18.7 full-body IK stage 1: VR arms (fbik.h; playbook ch12, bldbrne-vr + its credits FRIK / BetterVR) ----------------
+// The skeleton's parent table is found at run time (never hard-coded): the hero's animation job hands Anim_Eval its anim object
+// (job+0x48) whose rig (+0x18) holds the bone count (+0x18) and the rest pose (+0x10, 48 bytes per bone, re/decomp_anim). The table
+// is the int16 array, reachable from the rig / anim object / node, in which every joint's parent comes before it (one root) and
+// whose parent-child distances in the live pose are bone-sized. Then the arm chains are found by shape (fbik::findArms: a hand =
+// a joint with a finger subtree, two long bones above it ending at a shoulder high and off the body axis). Fail closed: no table,
+// no chains -> the arms stay animated, the log says why.
+static int16_t parents[JOINT_CAP]; static std::atomic<int> parState{0}; static u64 parTryMs = 0; static int parTries = 0;
+static fbik::Arm armsD[2]; static std::atomic<int> armsReady{0}, armsFiltered{0}, armsWant{1};
+static fbik::Leg legsD[2]; static std::atomic<int> legsReady{0};
+// 0.18.9 arm ownership (owner: "the flute, climbing and takedowns driven by the game's animation"; bldbrne-vr gates arms by animation
+// class with eased hand-over): the game owns the arms while (a) an input said so - the flute (until you move or dodge), a takedown /
+// quick attack (2.5 s) - or (b) the animation itself raises a hand to head height (climbing, ledges, grappling, the flute at the mouth).
+static std::atomic<int> idleMoved{0};   // 0.18.13: the idle hold changed this pose
+static std::atomic<float> hipYawDeg{0};   // 0.18.15: the drawn hips' yaw relative to the node (before the hip squaring)
+// 0.18.16 (owner: "could the body always follow directly below the HMD - I move to the right in reality, Jin's body follows"): the
+// camera already goes where your head goes (eye anchor + the headset's offset since the last recentre); the DRAWN body now goes with it.
+// The headset's horizontal offset (world, game thread) is turned into Jin's model space and added to every joint of the render pose and
+// to the world matrices of everything but the head set (the eye anchor reads those - no feedback), so carried items move along.
+// Clamped to fp_body_under_max_cm (60): beyond that you are leaving Jin's body; the game still decides where Jin actually is.
+static std::atomic<float> underW[2]; static std::atomic<float> underCm{0}; static bool underMoved = false;
+static std::atomic<u64> animUntil{0}, raisedUntil{0}; static std::atomic<int> animMove{0}; static std::atomic<u64> nAnimHolds{0}, nRaised{0};
+static std::atomic<float> gateW{0}, standDz{0}, standApplied{0}; static std::atomic<u64> nStand{0};
+struct ArmPub { float pos[2][3], fing[2][3], thumb[2][3]; float w[2]; int ok[2]; float palm[2][3], grip[2], trig[2], thumbC[2]; };
+// 0.18.18 VR fingers (fingers.h): the hands' finger chains with their bind pose, found with the arms
+static fing::Hand fingD[2]; static std::atomic<int> fingState{0}; static std::atomic<u64> nFingPosed{0}; static std::atomic<float> fingCurlOut[2], thumbOut[2];
+static ArmPub apub[2]; static std::atomic<int> apubIdx{-1};
+static std::atomic<u64> nArmSolves{0}, nArmSkipped{0}; static std::atomic<float> armW[2];
+static bool tryParentTable(u8 *obj, int n, const float *pose, int depth, char *where, int whereN) {
+    if (!obj || ((u64)obj & 7) || (u64)obj < 0x10000 || (u64)obj > 0x7FFFFFFFFFFFull || !readable(obj, 0x200)) return false;
+    for (int off = 0; off < 0x200; off += 8) {
+        u8 *p = *(u8 **)(obj + off);
+        if (!p || ((u64)p & 1) || (u64)p < 0x10000 || (u64)p > 0x7FFFFFFFFFFFull) continue;
+        if (readable(p, (size_t)n * 2) && fbik::parentsOk((const int16_t *)p, n)) {
+            const int16_t *pa = (const int16_t *)p; int good = 0, tot = 0;
+            for (int i = 0; i < n; i++) { const int q = pa[i]; if (q < 0) continue; const float *a = pose + (size_t)i * 16, *b = pose + (size_t)q * 16;
+                if (!fbik::shownJ(pose, i) || !fbik::shownJ(pose, q)) continue; tot++; const float d[3] = {a[12] - b[12], a[13] - b[13], a[14] - b[14]}; if (fbik::len3f(d) < 80.0f) good++; }
+            if (tot > n / 3 && good * 10 >= tot * 9) { memcpy(parents, pa, (size_t)n * 2); snprintf(where, (size_t)whereN, "%p+0x%X -> %p (%d of %d bone lengths under 80 cm)", (void *)obj, off, (void *)p, good, tot); return true; }
+        }
+        if (depth > 0 && readable(p, 0x200) && tryParentTable(p, n, pose, depth - 1, where, whereN)) return true;
+    }
+    return false;
+}
+static void analyseArms(u8 *job, u8 *nd, const float *pose, int cnt) {   // job thread, the hero's fresh render pose (before the head is hidden)
+    const u64 now = GetTickCount64(); if (now < parTryMs) return; parTryMs = now + 3000;
+    if (parState.load() == 0) {
+        char where[160] = ""; u8 *anim = *(u8 **)(job + 0x48); u8 *rig = anim && readable(anim + 0x18, 8) ? *(u8 **)(anim + 0x18) : nullptr;
+        const int rc = rig && readable(rig + 0x18, 4) ? *(int *)(rig + 0x18) : -1;
+        const bool ok = cnt >= 8 && cnt <= JOINT_CAP && (tryParentTable(rig, cnt, pose, 1, where, sizeof where) || tryParentTable(anim, cnt, pose, 1, where, sizeof where) || tryParentTable(nd, cnt, pose, 0, where, sizeof where));
+        if (ok) { parState = 1; logf("arms: the skeleton's parent table found at %s (rig %p, rig bone count %d, pose joints %d)", where, (void *)rig, rc, cnt); }
+        else if (++parTries >= 5) { parState = -1; logf("arms: no parent table found near the rig %p (rig bone count %d, pose joints %d) -> the arms stay animated (please send this log)", (void *)rig, rc, cnt); return; }
+        else return;
+    }
+    if (parState.load() != 1 || armsReady.load()) return;
+    static uint8_t skip[JOINT_CAP]; memset(skip, 0, sizeof skip);
+    const int k = hpubIdx.load(std::memory_order_acquire); float headZ = 160.0f;
+    if (k >= 0) { const HidePub &hp = hpub[k]; for (int i = 0; i < hp.n; i++) if (hp.idx[i] < JOINT_CAP && hp.idx[i] != hp.target) skip[hp.idx[i]] = 1; if (hp.head >= 0 && hp.head < cnt) headZ = pose[(size_t)hp.head * 16 + 14]; }
+    char why[400]; const int f = fbik::findArms(parents, cnt, pose, headZ, skip, armsD, why, sizeof why);
+    logf("arms: %s", why);
+    { char lw[300]; const int nl = fbik::findLegs(parents, cnt, pose, headZ, skip, legsD, lw, sizeof lw); logf("legs: %s -> %s", lw, nl == 2 ? "stand tall available" : "stand tall off (legs not found)"); if (nl == 2) legsReady = 1; }
+    if (f == 2) { armsReady = 1; logf("arms: both arm chains found -> Jin's arms follow your controllers (fp_arms = 1, Shift+F10 toggles)");
+        {   // 0.18.18 fingers: the bind pose from the skinning palette's inverse-bind matrices (node+0x2F8 -> +0x660 -> +0xA8, 3x4 each)
+            u8 *p1 = readable(nd + 0x2F8, 8) ? *(u8 **)(nd + 0x2F8) : nullptr; u8 *p2 = p1 && readable(p1 + 0x660, 8) ? *(u8 **)(p1 + 0x660) : nullptr;
+            const float *IB = p2 && readable(p2 + 0xA8, 8) ? *(const float **)(p2 + 0xA8) : nullptr; const int ibN = readable(nd + 0x280, 4) ? *(int *)(nd + 0x280) - 1 : 0;
+            int mode = 0; auto bindOf = [&](int j, fing::Aff &o) -> bool { if (!IB || j < 0 || j >= ibN || !readable(IB + (size_t)j * 12, 48)) return false; const fing::Aff a = fing::fromRows34(IB + (size_t)j * 12);
+                for (int k = 0; k < 12; k++) if (!std::isfinite(IB[(size_t)j * 12 + k])) return false; if (mode == 0) return fing::inv(a, o); o = a; return true; };
+            // 0.18.19: both readings of the palette matrices are analysed; the one whose finger lengths match the animation wins
+            char fw[2][2][260]; int okm[2] = {0, 0}, badm[2] = {0, 0}, linkm[2] = {0, 0};
+            for (mode = 0; mode < 2; mode++) for (int sd = 0; sd < 2; sd++) { if (fing::analyse(fingD[sd], parents, cnt, pose, armsD[sd], bindOf, fw[mode][sd], sizeof fw[mode][sd])) okm[mode]++; badm[mode] += fingD[sd].bad; linkm[mode] += fingD[sd].links; }
+            int pick = -1; for (int m = 0; m < 2; m++) if (okm[m] == 2 && (pick < 0 || badm[m] * linkm[pick] < badm[pick] * linkm[m])) pick = m;
+            if (pick >= 0) { mode = pick; for (int sd = 0; sd < 2; sd++) fing::analyse(fingD[sd], parents, cnt, pose, armsD[sd], bindOf, fw[pick][sd], sizeof fw[pick][sd]); }
+            fingState = pick >= 0 ? 1 : -1;
+            logf("fingers: inverse-bind array %p (%d joints) -> %s", (void *)IB, ibN, pick == 0 ? "bind = the inverse of the palette matrices -> VR fingers ON (grip = fist)" : pick == 1 ? "bind = the palette matrices themselves -> VR fingers ON (grip = fist)" : "not usable -> the fingers stay animated (please send this log)");
+            for (int m = 0; m < 2; m++) logf("   fingers, %s: left: %s | right: %s", m == 0 ? "inverse" : "direct", fw[m][0], fw[m][1]);
+            {   // the hands' joint structure, once (parent, children, hand-local position animated / bind, link lengths)
+                mode = pick >= 0 ? pick : 0;
+                for (int sd = 0; sd < 2; sd++) { const fbik::Arm &A = armsD[sd]; if (A.hand < 0) continue; const float *Hm = pose + (size_t)A.hand * 16; fing::Aff Bh, BhI; const bool hb = bindOf(A.hand, Bh) && fing::inv(Bh, BhI);
+                    logf("   %s hand %d structure (joint parent kids | animated hand-local x y z | bind hand-local x y z | link animated / bind cm):", sd ? "right" : "left", A.hand);
+                    for (int i = 1; i < A.nSub[3]; i++) { const int j = A.sub[3][i], pj = parents[j]; int kids = 0; for (int k = 0; k < A.nSub[3]; k++) if (parents[A.sub[3][k]] == j) kids++;
+                        const float *M = pose + (size_t)j * 16, *PM = pose + (size_t)pj * 16; float d[3] = {M[12] - Hm[12], M[13] - Hm[13], M[14] - Hm[14]}, al[3];
+                        for (int r = 0; r < 3; r++) { float ax[3] = {Hm[4 * r], Hm[4 * r + 1], Hm[4 * r + 2]}; fbik::norm3(ax); al[r] = fbik::dot3(d, ax); }
+                        const float la = sqrtf((M[12] - PM[12]) * (M[12] - PM[12]) + (M[13] - PM[13]) * (M[13] - PM[13]) + (M[14] - PM[14]) * (M[14] - PM[14]));
+                        float bl[3] = {0, 0, 0}, lb = -1; fing::Aff Bj, Bp; if (hb && bindOf(j, Bj)) { const fing::Aff L = fing::mul(BhI, Bj); bl[0] = L.t[0]; bl[1] = L.t[1]; bl[2] = L.t[2]; if (bindOf(pj, Bp)) lb = fing::dist(Bj.t, Bp.t); }
+                        logf("      %4d %4d %d | %6.1f %6.1f %6.1f | %6.1f %6.1f %6.1f | %5.1f / %5.1f", j, pj, kids, al[0], al[1], al[2], bl[0], bl[1], bl[2], la, lb); }
+                }
+            }
+        }
+    }
+    else {
+        parState = -2; logf("arms: only %d arm chain(s) found -> the arms stay animated (please send this log); the skeleton follows (joint parent fwd left up cm, model space, * = hidden)", f);
+        for (int j = 0; j < cnt; j++) { const float *m = pose + (size_t)j * 16; logf("   arms joint %3d parent %3d %7.1f %7.1f %7.1f%s%s", j, (int)parents[j], m[12], m[13], m[14], fbik::shownJ(pose, j) ? "" : " *", skip[j] ? " [head]" : ""); }
+    }
+}
+static bool solveArms(u8 *nd, float *pose, int cnt, float bodyA) {   // job thread, after the head is hidden and the body turned
+    if (!armsReady.load() || !armsWant.load() || !g_fp.arms || ridingNow.load()) { nArmSkipped++; return false; }
+    const int k = apubIdx.load(std::memory_order_acquire); if (k < 0) return false; const ArmPub ap = apub[k];
+    const float *N = (const float *)(nd + 0x150); float n0[3] = {N[0], N[1], N[2]}, n1[3] = {N[4], N[5], N[6]}, n2[3] = {N[8], N[9], N[10]};
+    if (!fbik::norm3(n0) || !fbik::norm3(n1) || !fbik::norm3(n2)) return false;
+    auto toModelP = [&](const float *w, float *o) { const float d[3] = {w[0] - N[12], w[1] - N[13], w[2] - N[14]}; o[0] = fbik::dot3(d, n0); o[1] = fbik::dot3(d, n1); o[2] = fbik::dot3(d, n2); };
+    auto toModelD = [&](const float *w, float *o) { o[0] = fbik::dot3(w, n0); o[1] = fbik::dot3(w, n1); o[2] = fbik::dot3(w, n2); };
+    fbik::Params prm; prm.bodyYaw = bodyA; bool any = false;
+    for (int side = 0; side < 2; side++) {
+        const fbik::Arm &A = armsD[side]; if (!ap.ok[side] || ap.w[side] <= 0.0f || A.hand < 0 || A.hand >= cnt || A.clav < 0) continue;
+        fbik::Target T; toModelP(ap.pos[side], T.pos); toModelD(ap.fing[side], T.fing); toModelD(ap.thumb[side], T.thumb); T.orient = true;
+        const float w = ap.w[side] * (1.0f - gateW.load()); if (w <= 0.001f) continue;
+        fbik::solveArm(pose, A, side, T, w, prm); any = true;
+        if (fingState.load() == 1 && g_fp.fingers) {   // 0.18.18: the fingers, detached from the animation
+            fing::Curl cu; cu.grip = ap.grip[side]; cu.thumb = ap.thumbC[side]; cu.index = g_fp.indexTrigger ? ap.trig[side] : ap.grip[side];   // 0.18.20: index = the trigger, thumb = the thumb touch
+            float pm[3]; toModelD(ap.palm[side], pm); fing::Tune tn; tn.sign = g_fp.fingerSign; tn.relaxed = g_fp.fingerRelaxed;
+            fing::apply(pose, fingD[side], cu, pm, w, tn); nFingPosed++;
+        }
+    }
+    if (any) nArmSolves++;
+    return any;
+}
+// the joint WORLD matrices of everything the mod moved, from the final render pose (held items follow the hands; world = pose x node)
+// - except the head set, whose world entries keep the animated head (the eye anchor reads them; the stand-tall raise is added there)
+static void worldFromPose(u8 *nd, const float *pose, int cnt, const HidePub &hp) {
+    float *W = *(float **)(nd + 0x278); if (!W) return; const float *N = (const float *)(nd + 0x150);
+    static uint8_t inHead[JOINT_CAP]; memset(inHead, 0, (size_t)(cnt < JOINT_CAP ? cnt : JOINT_CAP)); for (int i = 0; i < hp.n; i++) if (hp.idx[i] < JOINT_CAP && hp.idx[i] != hp.target) inHead[hp.idx[i]] = 1;
+    for (int j = 0; j < cnt && j < JOINT_CAP; j++) { if (inHead[j]) continue; const float *M = pose + (size_t)j * 16; float *o = W + (size_t)(j + 1) * 16;
+        for (int r = 0; r < 4; r++) { const float *v = M + 4 * r; for (int c = 0; c < 3; c++) o[4 * r + c] = v[0] * N[c] + v[1] * N[4 + c] + v[2] * N[8 + c] + (r == 3 ? N[12 + c] : 0.0f); } }
+}
+static void hideInPose(u8 *nd, float *pose) {
+    const int k = hpubIdx.load(std::memory_order_acquire); if (k < 0) return;
+    const HidePub &p = hpub[k]; if (p.node != nd || p.target < 0) return;
+    if ((u32)(frameCtr() - hideFrame.load(std::memory_order_relaxed)) > 2u) return;   // first person not active this frame
+    int cnt = nJ;
+    for (int b = 0; b < 2; b++) if (*(float **)(nd + 0x508 + b * 0x18) == pose) { const int c = *(int *)(nd + 0x510 + b * 0x18); if (c > 0 && c < cnt) cnt = c; }
+    if (p.target >= cnt || p.head >= cnt) { nJobsNoBuf++; return; }
+    float *T = pose + (size_t)p.target * 16, *H = pose + (size_t)p.head * 16;
+    const bool copied = len3(H) < 0.01f; const float H0[3] = {H[12], H[13], H[14]};
+    if (copied) nSeenCollapsed++; else nSeenRestored++;   // already hidden on entry = the job copied the previous pose
+    const float P[3] = {T[12], T[13], T[14]};
+    int done = 0;
+    for (int i = 0; i < p.n; i++) {
+        const int j = p.idx[i]; if (j >= cnt) continue; float *m = pose + (size_t)j * 16;
+        if (len3(m) >= 0.01f) {   // fresh from the animation: a head joint stays within 45 cm of the neck (a hand does not)
+            const float d[3] = {m[12] - P[0], m[13] - P[1], m[14] - P[2]};
+            if (j != p.head && len3(d) > 45.0f) { if (j < JOINT_CAP) strayFlag[j].store(1, std::memory_order_relaxed); continue; }
+        }
+        for (int c = 0; c < 12; c++) m[c] = 0.0f;
+        m[12] = P[0]; m[13] = P[1]; m[14] = P[2]; done++;
+    }
+    nJobsHidden++; nJointsHidden += (u64)done; nCollapse++;
+    {   // 0.18.5 body follow: turn the whole pose about the head's vertical (a copied pose already carries the last turn)
+        // 0.18.15 (owner: "I need to look far left for the body to rotate, but only a little to the right - Jin is turned slightly ajar to
+        // the right, the right shoulder too far back"): the game's standing stance is bladed ~32 deg to the right (IDLE/s), and the body
+        // follow centred its dead zone on the NODE's facing, not on the hips you see. Standing, the hip line's yaw (fresh pose, model
+        // space, after the idle hold - a held pose is already square) is smoothed and turned out with the body, so the hips face where
+        // the body follow says; it fades out above 0.3 m/s (walking hips swing) and is off while riding.
+        static float hipS = 0.0f, hipCorr = 0.0f; static u64 hipMs = 0;
+        if (!copied) {
+            const u64 nowh = GetTickCount64(); const float dth = hipMs ? fminf((float)(nowh - hipMs) * 0.001f, 0.1f) : 0.0f; hipMs = nowh;
+            float raw = 0.0f; bool ok = false;
+            if (g_fp.stanceSquare && legsReady.load() && !ridingNow.load()) { const int a0 = legsD[0].hip, b0 = legsD[1].hip;
+                if (a0 >= 0 && b0 >= 0 && a0 < cnt && b0 < cnt) { const float lx = pose[(size_t)a0 * 16 + 12] - pose[(size_t)b0 * 16 + 12], ly = pose[(size_t)a0 * 16 + 13] - pose[(size_t)b0 * 16 + 13];
+                    if (lx * lx + ly * ly > 1e-4f) { raw = atan2f(ly, lx) - 1.5707963f; while (raw > 3.14159265f) raw -= 6.2831853f; while (raw < -3.14159265f) raw += 6.2831853f; ok = fabsf(raw) < 0.8f; } } }
+            if (!ok) raw = 0.0f;
+            hipS += (raw - hipS) * (1.0f - expf(-dth / 0.15f));
+            const float sp = speedMs.load(); const float ws = sp < 0.3f ? 1.0f : sp > 0.6f ? 0.0f : (0.6f - sp) / 0.3f;
+            hipCorr = -hipS * ws; hipYawDeg = hipS * 57.2957795f;
+        }
+        const float a = bodyYaw.load(std::memory_order_relaxed) + hipCorr; const float s = g_cfg.unitsPerM * 0.01f;
+        static float shApplied[2] = {0, 0}; float sh[2] = {0, 0};
+        if (g_fp.bodyUnder && !ridingNow.load()) {
+            const float *N = (const float *)(nd + 0x150); const float w0 = underW[0].load(), w1 = underW[1].load();
+            const float n00 = N[0] * N[0] + N[1] * N[1] + N[2] * N[2], n11 = N[4] * N[4] + N[5] * N[5] + N[6] * N[6];
+            if (n00 > 1e-6f && n11 > 1e-6f) { sh[0] = (w0 * N[0] + w1 * N[1]) / n00; sh[1] = (w0 * N[4] + w1 * N[5]) / n11;
+                const float l = sqrtf(sh[0] * sh[0] + sh[1] * sh[1]), mx = g_fp.underMaxCm * s; if (l > mx && l > 1e-4f) { sh[0] *= mx / l; sh[1] *= mx / l; } }
+        }
+        {   // 0.18.17 (owner: "Jin's body should smoothly move to follow the headset, rather than immediately centre below it"): low-pass
+            // (fp_body_under_follow_s 0.5); the filter steps on fresh poses only (copied poses reuse the last value)
+            static float shF[2] = {0, 0}; static u64 shMs = 0;
+            if (!copied) { const u64 nw = GetTickCount64(); const float dts = shMs ? fminf((float)(nw - shMs) * 0.001f, 0.1f) : 0.0f; shMs = nw;
+                const float k = g_fp.underTau > 0.0f ? 1.0f - expf(-dts / g_fp.underTau) : 1.0f; shF[0] += (sh[0] - shF[0]) * k; shF[1] += (sh[1] - shF[1]) * k; }
+            sh[0] = shF[0]; sh[1] = shF[1]; underCm = sqrtf(sh[0] * sh[0] + sh[1] * sh[1]) / s;
+        }
+        auto shiftPose = [&](float dx, float dy) { if (dx == 0.0f && dy == 0.0f) return; for (int j = 0; j < cnt; j++) { pose[(size_t)j * 16 + 12] += dx; pose[(size_t)j * 16 + 13] += dy; } };
+        if (!copied) {
+            jobApplied = 0;
+            if (a != 0.0f) {
+                if (!(H0[2] > 60.0f * s) || sqrtf(H0[0] * H0[0] + H0[1] * H0[1]) > 80.0f * s) nBodyRefused++;   // not an upright model space: fail closed
+                else { turnPose(pose, cnt, a, H0[0], H0[1]); jobApplied = a; jobPivot[0] = H0[0]; jobPivot[1] = H0[1]; nBodyJobs++;
+                       if (g_fp.bodyAttach) turnWorld(nd, a, p.head); }
+            }
+        } else if (a != jobApplied && jobApplied != 0.0f) { turnPose(pose, cnt, a - jobApplied, jobPivot[0], jobPivot[1]); jobApplied = a; nBodyJobs++; }
+        if (!copied) { shiftPose(sh[0], sh[1]); shApplied[0] = sh[0]; shApplied[1] = sh[1]; }
+        else { shiftPose(sh[0] - shApplied[0], sh[1] - shApplied[1]); shApplied[0] = sh[0]; shApplied[1] = sh[1]; }
+        underMoved = sh[0] != 0.0f || sh[1] != 0.0f;
+    }
+    if (!copied) {   // 0.18.7 / 0.18.9 FBIK: stand tall (legs), arm ownership gate, VR arms, then the world matrices of what moved
+        const u64 now = GetTickCount64(); static u64 lastG = 0; const float dtg = lastG ? fminf((float)(now - lastG) * 0.001f, 0.1f) : 0.0f; lastG = now;
+        { static float gt = 0; const bool own = now < animUntil.load() || now < raisedUntil.load(); gt = fminf(1.0f, fmaxf(0.0f, gt + (own ? dtg : -dtg) / 0.3f)); gateW = 0.5f - 0.5f * cosf(gt * 3.14159265f); }
+        bool moved = jobApplied != 0.0f;
+        const float dz = standDz.load();
+        if (legsReady.load() && dz > 0.05f && g_fp.standTall) { const float ap = fbik::standTall(pose, cnt, legsD, dz, jobApplied); standApplied = ap; if (ap > 0.0f) { moved = true; nStand++; } } else standApplied = 0.0f;
+        moved |= solveArms(nd, pose, cnt, jobApplied);
+        moved |= idleMoved.load() != 0;   // 0.18.13: the held idle pose (carried items follow it)
+        moved |= underMoved;               // 0.18.16: the body moved under the headset
+        if (moved) worldFromPose(nd, pose, cnt, p);
+    }
+}
+// ---------------- 0.18.13 idle hold (owner: "we need to stop Jin's idle animations during first person") ----------------
+// Standing still, the game plays idle fidgets (weight shifts, looking around, breathing) - in first person they sway the body you look
+// down at and, through the head joint, the view. Playbook ch02: blend weight, playback rate and position are three levers and "freeze
+// at pose X" needs all three - we own none of the game's animation graph, so the hold is done on its OUTPUT instead: once Jin has
+// stood still for fp_idle_settle_s (0.5 s, before the first fidget starts) the fresh render pose is captured, and while he keeps
+// standing still every new pose is replaced by it (model space, so the game can still move / turn the node). Arms are solved on top,
+// the head is hidden on top, the body follow turns on top. It lets go (0.2 s blend) the moment anything is not idle: any pad input
+// (buttons, triggers, sticks - including the snap-turn catch-up), body speed above 0.3 m/s, the game owning the arms (flute,
+// climbing, takedowns), riding, or the animation itself moving the torso / feet faster than 50 cm/s (hit reactions, scripted moves).
+static std::atomic<int> idleOn{1}; static float idlePose[JOINT_CAP * 16]; static int idleCnt = 0; static bool idleCap = false;
+static float idleW = 0.0f, idleStill = 0.0f; static u64 idleLastMs = 0; static float idlePrev[6][3]; static bool idlePrevOk = false;
+static std::atomic<u64> nIdleHeld{0}, nIdleRelease{0}; static std::atomic<int> idleWhy{0};
+static std::atomic<float> idleWOut{0};
+static u64 (*idleNow)() = GetTickCount64;   // self-test clock
+// 0.18.14 (owner: "standing still, Jin is naturally turned maybe 15 degrees to the right (left foot forward) - we want his body to
+// face directly forwards"): the game's standing stance is bladed. When the stand pose is taken, the line through the hips and the line
+// through the shoulders (left minus right, horizontal) give the stance's yaw in model space (x forward, y left: facing forward = the
+// line along +y); the held pose is turned back by it about the head's vertical (so the eyes do not move). fp_stance_square = 0: off.
+static std::atomic<float> idleSquareDeg{0};
+static void idleSquare(float *pose, int cnt) {
+    idleSquareDeg = 0.0f; if (!g_fp.stanceSquare) return;
+    const int k = hpubIdx.load(std::memory_order_acquire); if (k < 0) return; const HidePub &hp = hpub[k]; if (hp.head < 0 || hp.head >= cnt) return;
+    float lx = 0, ly = 0; int n = 0;
+    auto pair = [&](int a, int b) { if (a < 0 || b < 0 || a >= cnt || b >= cnt) return; lx += pose[(size_t)a * 16 + 12] - pose[(size_t)b * 16 + 12]; ly += pose[(size_t)a * 16 + 13] - pose[(size_t)b * 16 + 13]; n++; };
+    if (legsReady.load()) pair(legsD[0].hip, legsD[1].hip);
+    if (armsReady.load()) pair(armsD[0].sh, armsD[1].sh);
+    if (!n || lx * lx + ly * ly < 1e-4f) return;
+    const float yaw = atan2f(ly, lx) - 1.5707963f;   // 0 = square to the node's forward; + = turned left
+    if (fabsf(yaw) > 0.7f) return;                     // > 40 deg: not a stance (fail closed)
+    const float *H = pose + (size_t)hp.head * 16; turnPose(pose, cnt, -yaw, H[12], H[13]); idleSquareDeg = yaw * 57.2957795f;
+}
+static bool idleApply(u8 *nd, float *pose, int cnt, bool inputQuiet) {   // job thread, a FRESH pose (head not yet hidden); true = the pose changed
+    const u64 now = idleNow(); const float dt = idleLastMs ? fminf((float)(now - idleLastMs) * 0.001f, 0.1f) : 0.0f; idleLastMs = now;
+    const int k = hpubIdx.load(std::memory_order_acquire); const HidePub *hp = k >= 0 ? &hpub[k] : nullptr;
+    const float s = g_cfg.unitsPerM * 0.01f;
+    float motion = 0.0f;   // fastest of neck and feet in model space (cm/s): the animation is doing something
+    { int js[6]; int nj = 0; if (hp && hp->target >= 0 && hp->target < cnt) js[nj++] = hp->target;
+      if (legsReady.load()) for (int sd = 0; sd < 2; sd++) { if (legsD[sd].foot >= 0 && legsD[sd].foot < cnt) js[nj++] = legsD[sd].foot; if (legsD[sd].hip >= 0 && legsD[sd].hip < cnt) js[nj++] = legsD[sd].hip; }
+      for (int i = 0; i < nj; i++) { const float *m = pose + (size_t)js[i] * 16;
+          if (idlePrevOk && dt > 0.0f) { const float d[3] = {m[12] - idlePrev[i][0], m[13] - idlePrev[i][1], m[14] - idlePrev[i][2]}; motion = fmaxf(motion, len3(d) / dt / s); }
+          idlePrev[i][0] = m[12]; idlePrev[i][1] = m[13]; idlePrev[i][2] = m[14]; }
+      idlePrevOk = nj > 0; }
+    int why = 0;
+    if (!idleOn.load() || !g_fp.idleHold) why = 1;
+    else if (!inputQuiet) why = 2;
+    else if (speedMs.load() > 0.3f) why = 3;
+    else if (now < animUntil.load() || now < raisedUntil.load()) why = 4;
+    else if (ridingNow.load()) why = 5;
+    else if (motion > 50.0f) why = 6;
+    else if (cnt <= 0 || cnt > JOINT_CAP) why = 7;
+    idleWhy = why;
+    if (why) { idleStill = 0.0f; if (idleW > 0.0f) { idleW = fmaxf(0.0f, idleW - dt / 0.2f); if (idleW <= 0.0f) nIdleRelease++; } }
+    else idleStill += dt;
+    if (!why && !idleCap && idleStill >= g_fp.idleSettle) { memcpy(idlePose, pose, (size_t)cnt * 64); idleCnt = cnt; idleCap = true; idleSquare(idlePose, cnt); }
+    if (idleW <= 0.0f && why) idleCap = false;   // fully let go: the next stand captures a fresh pose
+    if (!why && idleCap) idleW = fminf(1.0f, idleW + dt / 0.2f);
+    idleWOut = idleW;
+    if (!idleCap || idleW <= 0.0f || idleCnt != cnt) return false;
+    const float w = 0.5f - 0.5f * cosf(idleW * 3.14159265f);
+    if (w >= 0.999f) memcpy(pose, idlePose, (size_t)cnt * 64);
+    else for (size_t i = 0; i < (size_t)cnt * 16; i++) pose[i] += (idlePose[i] - pose[i]) * w;
+    nIdleHeld++;
+    {   // the WORLD matrices too (the eye anchor reads the head's): world = pose x node for every joint, head set included
+        float *W = *(float **)(nd + 0x278); const float *N = (const float *)(nd + 0x150);
+        if (W) for (int j = 0; j < cnt; j++) { const float *M = pose + (size_t)j * 16; float *o = W + (size_t)(j + 1) * 16;
+            for (int r = 0; r < 4; r++) { const float *v = M + 4 * r; for (int c = 0; c < 3; c++) o[4 * r + c] = v[0] * N[c] + v[1] * N[4 + c] + v[2] * N[8 + c] + (r == 3 ? N[12 + c] : 0.0f); } }
+    }
+    return true;
+}
+static void hAnimJob(u8 *job) {
+    oAnimJob(job);
+    if (!job) return;
+    u8 *nd = *(u8 **)(job + 0xE8); if (!nd) return;
+    const int k = hpubIdx.load(std::memory_order_acquire); if (k < 0 || hpub[k].node != nd) return;
+    nHeroJobs++;
+    float *pose = *(float **)(job + 0xA8); if (!pose) { nJobsNoBuf++; return; }
+    if (g_fp.arms && !armsReady.load() && parState.load() >= 0) { int cnt = nJ; for (int b = 0; b < 2; b++) if (*(float **)(nd + 0x508 + b * 0x18) == pose) { const int c = *(int *)(nd + 0x510 + b * 0x18); if (c > 0 && c < cnt) cnt = c; } analyseArms(job, nd, pose, cnt); }
+    if (armsReady.load()) {   // 0.18.9: the ANIMATION lifts a hand to head height (climbing, ledges, grappling, the flute) -> the game owns the arms
+        const int k2 = hpubIdx.load(std::memory_order_acquire); if (k2 >= 0 && hpub[k2].head >= 0 && hpub[k2].head < nJ) {
+            const float hz = pose[(size_t)hpub[k2].head * 16 + 14], s = g_cfg.unitsPerM * 0.01f;
+            const bool jumping = GetTickCount64() - vrin::jumpAt.load() < 1200;   // 0.18.19: a jump swings the arms up - not a climb
+            for (int sd = 0; sd < 2 && !jumping; sd++) { const int h = armsD[sd].hand; if (h >= 0 && h < nJ && pose[(size_t)h * 16 + 14] > hz - 15.0f * s) { raisedUntil = GetTickCount64() + 400; nRaised++; break; } } } }
+    {   // 0.18.13 idle hold: only a fresh pose of an active first person (a copied pose already carries it)
+        const int k3 = hpubIdx.load(std::memory_order_acquire);
+        if (k3 >= 0 && hpub[k3].head >= 0 && hpub[k3].head < nJ && (u32)(frameCtr() - hideFrame.load(std::memory_order_relaxed)) <= 2u && len3(pose + (size_t)hpub[k3].head * 16) >= 0.01f) {
+            int cnt = nJ; for (int b = 0; b < 2; b++) if (*(float **)(nd + 0x508 + b * 0x18) == pose) { const int c = *(int *)(nd + 0x510 + b * 0x18); if (c > 0 && c < cnt) cnt = c; }
+            idleMoved = idleApply(nd, pose, cnt, vrin::nowMs() - vrin::lastAct.load() > 300) ? 1 : 0;
+        } else idleMoved = 0;
+    }
+    hideInPose(nd, pose);
+}
+static void collapse() {}   // 0.17.2's world-array collapse is gone (the GPU never sees that array)
+// BUG-70 (0.17.4: "the stutter only happens in the LEFT eye"): the anchor was computed once per tick at its FIRST render-camera
+// update. On the simulated (left) tick that is the game's camera controller (SetLocal -> slot 43), before this tick's animation
+// moved the hero, so the left eye sat on the previous step's body while the frozen (right) tick computed it from the new one:
+// the two eyes of one pair had different eye anchors whenever the body or head animation moved. Now the left tick recomputes the
+// anchor at every render-camera update (the last one before the frame snapshot sees the animated hero; the low-pass filters
+// advance once per tick from the previous tick's state, so repeating is idempotent) and the right tick of the pair REUSES the
+// left tick's final anchor - one body pose per pair, like one head-pose sample per pair (playbook ch10: both eyes from one moment).
+static float relUpC = 0, relHC[3] = {0, 0, 0}, latC = 0, latF = 0, frameAv = 1, frameAh = 1; static bool recompute = false; static u32 pairLeftFrame = 0xFFFFFFF0u;
+static std::atomic<float> lrDiffMax{0}, headLat{0}; static std::atomic<u64> nRecompute{0}, nPairReuse{0};
+static bool anchorFrom(float out[3]) {
+    const float *root = (const float *)(node + 0x150), *H = J(headIdx);
+    float U[3] = {root[8], root[9], root[10]}; { const float l = len3(U); if (!(l > 1e-4f)) return false; for (auto &x : U) x /= l; }
+    float F[3] = {root[0], root[1], root[2]}; { const float d = F[0] * U[0] + F[1] * U[1] + F[2] * U[2]; for (int c = 0; c < 3; c++) F[c] -= d * U[c]; const float l = len3(F); if (l > 1e-4f) for (auto &x : F) x /= l; }
+    if (bodyYawCur != 0.0f) {   // 0.18.5: the eyes sit in front of the face as drawn (turned with the body)
+        const float L[3] = {U[1] * F[2] - U[2] * F[1], U[2] * F[0] - U[0] * F[2], U[0] * F[1] - U[1] * F[0]}, c = cosf(bodyYawCur), sn = sinf(bodyYawCur);
+        for (int k = 0; k < 3; k++) F[k] = F[k] * c + L[k] * sn; }
+    const float hp[3] = {H[12], H[13], H[14]};
+    if (!std::isfinite(hp[0]) || len3(H) < 0.01f) return false;
+    // 0.18.7 (owner: "not perfectly centred at the head, a bit more towards his left shoulder"): the head joint (123, the top of the
+    // head) sits 3.3 cm (standing) / 4.0 cm (riding) to Jin's LEFT of the centre of the 480-joint head cluster (both skeleton dumps).
+    // Sideways, the eyes now sit on that centre (+ fp_eye_left_cm); height and forward offset still come from the head joint.
+    const float s0 = g_cfg.unitsPerM * 0.01f; const float Lw[3] = {U[1] * F[2] - U[2] * F[1], U[2] * F[0] - U[0] * F[2], U[0] * F[1] - U[1] * F[0]};
+    float lat = g_fp.eyeLeftCm * s0;
+    if (calibrated && nHide > 8) {
+        double cs[3] = {0, 0, 0}; int k = 0;
+        for (int i = 0; i < nHide; i++) { if (strayed[hideSet[i]]) continue; const float *m = J(hideSet[i]); if (!std::isfinite(m[12])) continue; cs[0] += m[12]; cs[1] += m[13]; cs[2] += m[14]; k++; }
+        if (k > 8) { const float d[3] = {(float)(cs[0] / k) - hp[0], (float)(cs[1] / k) - hp[1], (float)(cs[2] / k) - hp[2]};
+            float c = d[0] * Lw[0] + d[1] * Lw[1] + d[2] * Lw[2]; const float lim = 8.0f * s0; c = c > lim ? lim : c < -lim ? -lim : c;
+            latF = latC + (c - latC) * frameAh; lat += latF; headLat = latF / s0; }   // 0.18.16: smoothed like the head offset (it followed every head twitch)
+    }
+    const float up = (hp[0] - root[12]) * U[0] + (hp[1] - root[13]) * U[1] + (hp[2] - root[14]) * U[2]; headUp = up;
+    float hz[3]; for (int c = 0; c < 3; c++) hz[c] = (hp[c] - root[12 + c]) - up * U[c];
+    relUpF = relUpC + (up - relUpC) * frameAv; for (int c = 0; c < 3; c++) relHF[c] = relHC[c] + (hz[c] - relHC[c]) * frameAh;
+    const float s = g_cfg.unitsPerM * 0.01f;   // cm -> game units
+    const float rz = standApplied.load();   // 0.18.9: the drawn body raised by stand tall - the eyes go with it
+    for (int c = 0; c < 3; c++) out[c] = root[12 + c] + U[c] * (relUpF + g_fp.eyeUpCm * s + rz) + relHF[c] * g_fp.lean + F[c] * (g_fp.eyeFwdCm * s) + Lw[c] * lat;
+    return true;
+}
+// render-camera update (hSlot43, CAM-A, VR pose present): true = first person; gm translation becomes the eye anchor
+static bool update(float *gm) {
+    const u32 f = frameCtr();
+    if (f == lastFrame) {
+        if (activeNow) { if (recompute) { float a[3]; if (anchorFrom(a)) { memcpy(anchor, a, sizeof a); nRecompute++; } } gm[12] = anchor[0]; gm[13] = anchor[1]; gm[14] = anchor[2]; }
+        return activeNow;
+    }
+    const bool wasActive = activeNow; const u32 prevFrame = lastFrame;
+    lastFrame = f; activeNow = false; recompute = false;
+    if (!on.load() || g_cfg.xr != 4) { nOff++; lastReason = 1; return false; }
+    if (const int r = ui::fpBlockReason()) { nBlockedUi++; lastReason = 10 + r; relInit = false; return false; }
+    u8 *h = heroPtr();
+    if (!h) { nNoHero++; lastReason = 2; valid = false; hero = nullptr; unpublish(); return false; }
+    if (h == hero && valid && (*(float **)(node + 0x278) != joints || (countSrc == 1 && *(int *)(node + 0x280) - 1 != nJ))) {
+        // another joint buffer or count (outfit / gear change): the indices may mean other joints now -> stop hiding, find the head again
+        nJointSwaps++; valid = false; unpublish(); retryAt = 0; logf("first person: the hero's skeleton changed (joint buffer or count) -> head set recalibrated");
+    }
+    if (h != hero || !valid) {
+        const u64 nowR = GetTickCount64(); if (h == hero && !valid && nowR < retryAt) { nNoHero++; lastReason = 3; return false; }
+        retryAt = nowR + 3000; if (!validate(h)) { nNoHero++; lastReason = 3; return false; }
+        armsReady = 0; armsFiltered = 0; if (parState.load() != -1) parState = 0; parTries = 0; parTryMs = 0; }   // 0.18.7: a new skeleton -> find the arms again
+    const float *root = (const float *)(node + 0x150), *H = J(headIdx);
+    float U[3] = {root[8], root[9], root[10]}; { const float l = len3(U); if (!(l > 1e-4f)) { lastReason = 4; return false; } for (auto &x : U) x /= l; }
+    float F[3] = {root[0], root[1], root[2]}; { const float d = F[0] * U[0] + F[1] * U[1] + F[2] * U[2]; for (int c = 0; c < 3; c++) F[c] -= d * U[c]; const float l = len3(F); if (l > 1e-4f) for (auto &x : F) x /= l; }
+    const float hp[3] = {H[12], H[13], H[14]};
+    if (!std::isfinite(hp[0]) || len3(H) < 0.01f) {   // a hidden head joint in the world array (not ours any more): keep the last anchor
+        if (relInit) { activeNow = true; nActive++; hideFrame = f; gm[12] = anchor[0]; gm[13] = anchor[1]; gm[14] = anchor[2]; return true; }
+        lastReason = 5; return false;
+    }
+    const float up = (hp[0] - root[12]) * U[0] + (hp[1] - root[13]) * U[1] + (hp[2] - root[14]) * U[2]; headUp = up;
+    const float cd[3] = {gm[12] - hp[0], gm[13] - hp[1], gm[14] - hp[2]}; camDist = len3(cd) / g_cfg.unitsPerM;
+    if (camDist.load() > g_fp.maxCamDistM) { nFar++; lastReason = 6; relInit = false; return false; }   // a scripted / cinematic camera away from the hero
+    const float s = g_cfg.unitsPerM * 0.01f;   // cm -> game units
+    const bool rightOfPair = g_cfg.xr == 4 && g_pairPhase == 1 && wasActive && relInit && prevFrame == pairLeftFrame && f == pairLeftFrame + 1;
+    if (rightOfPair) {   // the right eye of the pair: the left tick's final anchor (one body pose per pair); how far apart they would be
+        const float sU = relUpF, sH[3] = {relHF[0], relHF[1], relHF[2]}; float a[3];
+        if (anchorFrom(a)) { const float d[3] = {a[0] - anchor[0], a[1] - anchor[1], a[2] - anchor[2]}; const float dl = len3(d) / s; if (dl > lrDiffMax.load()) lrDiffMax = dl; }
+        relUpF = sU; for (int c = 0; c < 3; c++) relHF[c] = sH[c]; nPairReuse++;
+    } else {
+        const u64 now = GetTickCount64(); const float dt = lastT ? (float)(now - lastT) * 0.001f : 0.0f; lastT = now;
+        // the head's sustained lean away from the root (running posture, crouch) is followed slowly; the gait bob (~2 Hz) is not
+        const float dtc = dt > 0.2f ? 0.2f : dt;
+        if (!relInit) { float hz[3]; for (int c = 0; c < 3; c++) hz[c] = (hp[c] - root[12 + c]) - up * U[c]; relUpC = up; for (int c = 0; c < 3; c++) relHC[c] = hz[c]; latC = latF; relInit = true; frameAv = frameAh = 1; }
+        else {
+            relUpC = relUpF; for (int c = 0; c < 3; c++) relHC[c] = relHF[c]; latC = latF;   // the end state of the previous tick
+            frameAv = g_fp.vertTau > 0.0f ? 1.0f - expf(-dtc / g_fp.vertTau) : 1.0f; frameAh = g_fp.horizTau > 0.0f ? 1.0f - expf(-dtc / g_fp.horizTau) : 1.0f;
+        }
+        bodyStep(root, U, F, wasActive);   // 0.18.5
+        {   // 0.18.9 stand tall: the standing head height is tracked (rises at once, sinks over ~20 s); a SHALLOW drop below it while
+            // nearly still (the sword stance: knees bent) is given back by raising the drawn body with the feet planted (legs IK in the job)
+            // and the eyes with it; a deep drop (sneaking crouch), riding, fast motion and the game owning the arms (climbing) are left alone
+            static float standH = -1e9f; static u64 lt = 0; const u64 nw = GetTickCount64(); const float dt2 = lt ? fminf((float)(nw - lt) * 0.001f, 0.1f) : 0.0f; lt = nw;
+            const float s1 = g_cfg.unitsPerM * 0.01f, hNow = relUpC;
+            if (!wasActive || standH < -1e8f) standH = hNow; else if (hNow > standH) standH = hNow; else standH += (hNow - standH) * (1.0f - expf(-dt2 / 20.0f));
+            const float drop = standH - hNow; const bool owned = GetTickCount64() < animUntil.load() || GetTickCount64() < raisedUntil.load();
+            const float want = (g_fp.standTall && legsReady.load() && !ridingNow.load() && !owned && speedMs.load() < 2.5f && drop > 1.0f * s1 && drop < g_fp.stanceMaxCm * s1) ? drop : 0.0f;
+            static float cur = 0; cur += (want - cur) * (dt2 > 0 ? 1.0f - expf(-dt2 / 0.15f) : 1.0f); standDz = cur;
+        }
+        float a[3]; if (anchorFrom(a)) memcpy(anchor, a, sizeof a);
+        recompute = g_cfg.xr == 4 && g_pairPhase == 0; if (recompute) pairLeftFrame = f;
+    }
+    if (!calibrated && g_fp.hide) {   // the head set: joints within the radius of the head joint in this (first) pose
+        nHide = 0; const float r = g_fp.hideRadiusCm * s;
+        for (int i = 0; i < nJ && nHide < HIDE_CAP; i++) { if (strayed[i]) continue; const float *m = J(i); if (!saneLoose(m, root) || !shown(m)) continue; const float d[3] = {m[12] - hp[0], m[13] - hp[1], m[14] - hp[2]}; if (len3(d) <= r) hideSet[nHide++] = i; }
+        // collapse target: the highest shown joint near the body axis that is outside the head set and below the head (the neck)
+        static u8 inSet[JOINT_CAP]; memset(inSet, 0, sizeof inSet); for (int k = 0; k < nHide; k++) inSet[hideSet[k]] = 1;
+        neckIdx = -1; float best = -1e9f;
+        for (int i = 0; i < nJ; i++) { if (inSet[i]) continue; const float *m = J(i); if (!saneLoose(m, root) || !shown(m)) continue;
+            const float d[3] = {m[12] - root[12], m[13] - root[13], m[14] - root[14]}; const float u = d[0] * U[0] + d[1] * U[1] + d[2] * U[2];
+            const float hzz[3] = {d[0] - u * U[0], d[1] - u * U[1], d[2] - u * U[2]}; if (len3(hzz) < 30.0f && u < up && u > best) { best = u; neckIdx = i; } }
+        if (neckIdx < 0) neckIdx = headIdx;
+        calibrated = true; logf("first person: head set = %d joints within %.0f cm of joint %d (head %.0f cm above the root), collapsed onto joint %d (%.0f cm above the root) in the render pose; Shift+F5 logs the skeleton", nHide, g_fp.hideRadiusCm, headIdx, up / s, neckIdx, best / s);
+        { static int once = 0; if (!once++) dump(); }
+        publish();
+    }
+    if (calibrated) {   // joints the animation job saw stray from the neck (a hand by the face in the first pose): out of the set for good
+        int drop = 0;
+        for (int k = 0; k < nHide; k++) { const int j = hideSet[k]; if (j < JOINT_CAP && strayFlag[j].load(std::memory_order_relaxed) && !strayed[j]) { strayed[j] = 1; drop++; nDropped++; logf("first person: joint %d moved more than 45 cm from the neck -> not a head joint, no longer hidden", j); } }
+        if (drop) { int w = 0; for (int k = 0; k < nHide; k++) if (!strayed[hideSet[k]]) hideSet[w++] = hideSet[k]; nHide = w; publish(); }
+    }
+    if (calibrated && armsReady.load() && !armsFiltered.load()) {   // 0.18.7: arm joints are never hidden with the head (a hand by the face)
+        static uint8_t inArm[JOINT_CAP]; memset(inArm, 0, sizeof inArm); for (int sd = 0; sd < 2; sd++) for (int i = 0; i < armsD[sd].nSub[0]; i++) inArm[armsD[sd].sub[0][i]] = 1;
+        int w = 0, dropped = 0; for (int q = 0; q < nHide; q++) { if (hideSet[q] < JOINT_CAP && inArm[hideSet[q]]) { dropped++; continue; } hideSet[w++] = hideSet[q]; } nHide = w;
+        if (inArm[neckIdx < 0 ? 0 : neckIdx]) logf("arms: WARNING the head collapse target %d is an arm joint", neckIdx);
+        armsFiltered = 1; publish(); logf("arms: %d arm joints taken out of the head set (%d left)", dropped, nHide);
+    }
+    if (g_fp.hide && calibrated) hideFrame = f;
+    if (dumpReq.exchange(0)) dump();
+    gm[12] = anchor[0]; gm[13] = anchor[1]; gm[14] = anchor[2];
+    activeNow = true; nActive++; lastReason = 0;
+    return true;
+}
+} // namespace fp
 namespace rsz { static std::atomic<int> applying{0}; }   // 0.16.3: the game is applying a new render size (main thread blocked)
+// 0.18.9 / 0.18.11: the first-person near clip plane (see apply); state shared by both eyes, restored when first person ends
+namespace nearp {
+static float nearOrig = -1.0f; static bool nearSet = false; static int told = 0;
+static void apply(float *g, float sw, u8 *cb, bool active) {
+                    // 0.18.9 (owner: "Jin's arms were see-through when really close to the camera"): the near clip plane in first person.
+                    // Reversed-Z, row vector (CAMERA_FINDINGS): A = g[10] = -s*n/(f-n), B = g[14] = n*f/(f-n); the camera's own near (+0x664)
+                    // is set too, so everything that linearises depth from it agrees; the game's near comes back when first person ends.
+                    float *pn = (float *)(cb + 0x664); const float fz = *(float *)(cb + 0x668);
+                    const float want = g_fp.nearCm * g_cfg.unitsPerM * 0.01f;
+                    if (active && want > 0.0f) {
+                        const float n0 = nearSet ? nearOrig : *pn;
+                        if (std::isfinite(n0) && std::isfinite(fz) && fz > n0 && n0 > want) {
+                            // 0.18.11: the projection is accepted when it was built with the game's near OR already with ours (the game
+                            // rebuilds it from +0x664 on some ticks and resets +0x664 to its own value on others - 0.18.9 then left the
+                            // camera saying 10 cm under a 4 cm projection, so depth was linearised wrongly on those ticks). Either way both
+                            // the projection and +0x664 end up at ours, on every tick of both eyes (NEAR/s counts them per eye).
+                            const float A0 = -sw * n0 / (fz - n0), B0 = n0 * fz / (fz - n0), Aw = -sw * want / (fz - want), Bw = want * fz / (fz - want);
+                            auto near_ = [&](float a, float b) { return fabsf(g[10] - a) <= 1e-3f * fabsf(a) + 1e-6f && fabsf(g[14] - b) <= 1e-3f * fabsf(b) + 1e-4f; };
+                            if (near_(A0, B0) || near_(Aw, Bw)) {
+                                g[10] = Aw; g[14] = Bw;
+                                if (!nearSet) { nearOrig = n0; nearSet = true; } *pn = want;
+                                if (!told++) logf("first person: near clip plane %.1f -> %.1f cm (far %.0f)", n0, want, fz);
+                                fp::nearHits[g_pairPhase & 1]++;
+                            } else { fp::nearMiss++; if (told < 3) { told++; logf("first person: the projection does not match near %.2f or %.2f / far %.0f (A %.6f vs %.6f, B %.3f vs %.3f) -> near plane left alone", n0, want, fz, g[10], A0, g[14], B0); } }
+                        }
+                    } else if (nearSet) { *pn = nearOrig; nearSet = false; }
+}
+} // namespace nearp
+// 0.18.14's culling apex pull-back (planes at +0x4F0 widened in first person) was removed in 0.18.15: no help, black edges (owner).
 static void hSlot43(void *cam) {
     // BUG-64c: during a size change the swapchain thread runs RTPool_OnResize -> Cam_SetAspect -> this slot on CAM-A; no eye
     // pose belongs to that call (the main thread is blocked in the apply) -> the engine's own update only
@@ -1079,6 +2059,14 @@ static void hSlot43(void *cam) {
         bool rfix = false; float posL[3] = {0, 0, 0}, dlt[3] = {0, 0, 0};
         if (poseOn) {
             float gm[16]; memcpy(gm, cacheIn(c_world, (u64)cam, w), 64);
+            { const float fx = gm[0], fy = gm[1]; if (fx * fx + fy * fy > 1e-6f) vrin::gameTick(atan2f(fy, fx) * 57.2957795f); }   // 0.18.0 snap turn closes its loop on this (0.18.12: in the same update)
+            if (vr) fp::update(gm);   // 0.17.0: first person - the eye anchor replaces the game camera's position (yaw stays the game's)
+            stipple::tick(vr && fp::activeNow);   // 0.18.10
+            if (vr) {   // 0.18.5: your forward direction for the body follow (game camera yaw + the VR turn, not the head's yaw)
+                float rf[2] = {gm[0], gm[1]}; const float n = sqrtf(rf[0] * rf[0] + rf[1] * rf[1]);
+                if (n > 1e-4f) { rf[0] /= n; rf[1] /= n; const float hd = vrin::viewHold.load(); if (hd != 0.0f) { const float a = hd / 57.2957795f; rotateZ(rf, cosf(a), sinf(a)); }
+                    fp::refF[0] = rf[0]; fp::refF[1] = rf[1]; fp::refOk = true; }
+            }
             auto compose = [&](const GvPose *pose, float *o) {
                 memcpy(o, gm, 64);
                 if (pose) {
@@ -1086,6 +2074,7 @@ static void hSlot43(void *cam) {
                         float fx = o[0], fy = o[1], n = sqrtf(fx * fx + fy * fy);
                         if (n > 1e-4f) { fx /= n; fy /= n; o[0] = fx; o[1] = fy; o[2] = 0; o[4] = -fy; o[5] = fx; o[6] = 0; o[8] = 0; o[9] = 0; o[10] = 1; }
                     }
+                    { const float hd = vrin::viewHold.load(); if (hd != 0.0f) { const float a = hd / 57.2957795f, c = cosf(a), s = sinf(a); rotateZ(o + 0, c, s); rotateZ(o + 4, c, s); rotateZ(o + 8, c, s); } }   // 0.18.1: VR-owned turn (snap / smooth), before the head so head motion turns with it
                     float Rg[3][3], dg[3]; poseLocal(*pose, Rg, dg);
                     float r[3][4]; memcpy(r, o, 48);
                     for (int i = 0; i < 3; i++) for (int c = 0; c < 3; c++) { float v = 0; for (int k = 0; k < 3; k++) v += Rg[k][i] * r[k][c]; o[i * 4 + c] = v; }
@@ -1094,6 +2083,61 @@ static void hSlot43(void *cam) {
                 if (m_yaw.load()) { const float a = 5.0f * 3.14159265f / 180.0f, c = cosf(a), s = sinf(a); rotateZ(o + 0, c, s); rotateZ(o + 4, c, s); rotateZ(o + 8, c, s); }
             };
             float o[16]; compose(vr ? &epose : nullptr, o);
+            if (vr) {   // 0.18.7 FBIK inputs (game thread)
+                { const float n = sqrtf(o[0] * o[0] + o[1] * o[1]); if (n > 1e-4f) { fp::headF[0] = o[0] / n; fp::headF[1] = o[1] / n; fp::headOk = true;
+                    vrin::headYawNow = atan2f(fp::headF[1], fp::headF[0]) * 57.2957795f; vrin::headYawOk = 1; const u64 mc = vrin::moveCapAt.load(); if (mc && GetTickCount64() >= mc) { vrin::moveCapAt = 0; vrin::moveYaw = atan2f(fp::headF[1], fp::headF[0]) * 57.2957795f; vrin::moveYawOk = 1; vrin::nMoveCaps++; } } }   // 0.18.7: where your head looks (0.18.17: + the movement forward)
+                if (S && fp::activeNow && g_pairPhase == 0) {   // 0.18.16 body under the headset: your head's horizontal offset from the eye anchor (world)
+                    GvPose hc{}; u32 hv = 0; gvRead(&S->poseSeq, [&] { hc = S->head; hv = S->poseValid; });
+                    if (hv && g_fp.bodyUnder && g_cfg.headPos) { float oc[16]; compose(&hc, oc); fp::underW[0] = oc[12] - gm[12]; fp::underW[1] = oc[13] - gm[13]; }
+                    else { fp::underW[0] = 0.0f; fp::underW[1] = 0.0f; }
+                }
+                if (S && fp::activeNow && g_pairPhase == 0) {   // 0.18.7 FBIK: the controllers' grip poses -> world wrist targets (the same composition as the eyes)
+                    GvHand hd[2]; u32 act = 0; const bool got = gvRead(&S->inSeq, [&] { hd[0] = S->hand[0]; hd[1] = S->hand[1]; act = S->inActive; });
+                    static u64 lastMs = 0; static float tw[2] = {0, 0}; const u64 nowMs = GetTickCount64(); const float dt = lastMs ? fminf((float)(nowMs - lastMs) * 0.001f, 0.1f) : 0.0f; lastMs = nowMs;
+                    const int k = fp::apubIdx.load() == 0 ? 1 : 0; fp::ArmPub &ap = fp::apub[k]; const float sc = g_cfg.unitsPerM * 0.01f;
+                    for (int h = 0; h < 2; h++) {
+                        const bool ok = got && act && (hd[h].poseValid & 1);
+                        tw[h] = fminf(1.0f, fmaxf(0.0f, tw[h] + (ok ? dt : -dt) / 0.25f)); ap.w[h] = 0.5f - 0.5f * cosf(tw[h] * 3.14159265f); fp::armW[h] = ap.w[h];   // 1 - cos blend in / out
+                        ap.ok[h] = ok || ap.w[h] > 0.0f; if (!ok) continue;
+                        float oh[16]; compose(&hd[h].grip, oh);   // rows: fwd = grip -Z, left = grip -X, up = grip +Y (world)
+                        // hand frame from the grip (rows: fwd = -Z, left = -X, up = +Y). [HEADSET] 0.18.7 (-Y fingers, -Z thumb): upside down; 0.18.9 (+Y, -Z):
+                        // "only right when the controller points straight down" -> 0.18.10 = 0.18.9 pitched up 90 deg: fingers along -Z, thumb along -Y
+                        // 0.18.12 (owner: "the hands rotate around a point near the wrist, not the wrist itself; palms down the controllers are a
+                        // few cm higher than the hands"): the grip pose's origin is the centre of the fist around the handle, which sits on the PALM
+                        // side of the forearm's axis. The wrist was put only 7 cm back along the hand from it, so the hand hung low and turned about a
+                        // point below the real wrist. Now the wrist = grip - fingers * back + backOfHand * up + thumb * side (OpenXR grip +X is the palm
+                        // normal pointing to the user's right for both hands, so the back of the hand is -X on the left, +X on the right; rows: row 1 =
+                        // grip -X). All three turn with the hand trims, so the pivot stays the wrist whatever the trims are.
+                        float fing[3] = {oh[0], oh[1], oh[2]}, th[3] = {-oh[8], -oh[9], -oh[10]}, bk[3];
+                        for (int c = 0; c < 3; c++) bk[c] = oh[4 + c] * (h ? -1.0f : 1.0f);
+                        auto spin = [&](const float *ax, float deg) { if (deg == 0.0f) return; float k3[3] = {ax[0], ax[1], ax[2]}; if (!fbik::norm3(k3)) return; const fbik::Rot R = fbik::axisAngle(k3, deg / 57.2957795f); float t[3]; fbik::rotv(R, fing, t); memcpy(fing, t, 12); fbik::rotv(R, th, t); memcpy(th, t, 12); fbik::rotv(R, bk, t); memcpy(bk, t, 12); };
+                        spin(oh + 4, g_fp.handPitch); spin(oh + 8, g_fp.handYaw * (h ? -1.0f : 1.0f)); spin(oh + 0, g_fp.handRoll * (h ? -1.0f : 1.0f));
+                        for (int c = 0; c < 3; c++) { ap.pos[h][c] = oh[12 + c] + (-fing[c] * g_fp.handBackCm + bk[c] * g_fp.handUpCm + th[c] * g_fp.handSideCm) * sc; ap.fing[h][c] = fing[c]; ap.thumb[h][c] = th[c]; ap.palm[h][c] = -bk[c]; }
+                        {   // 0.18.18 finger curl (God of War VR: a light squeeze is already a fist on Quest; grip_fist_full 0.35), smoothed 60 ms
+                            static float gS[2] = {0, 0}, tS[2] = {0, 0}; const float full = fmaxf(0.1f, g_fp.gripFull);
+                            const float gt = fminf(1.0f, fmaxf(0.0f, (hd[h].squeeze - 0.05f) / (full - 0.05f))), tt = fminf(1.0f, fmaxf(0.0f, (hd[h].trigger - 0.05f) / 0.9f));
+                            // 0.18.20 (owner: "detect when thumbs are on the sticks and the in-game thumbs also go down"): the thumb follows the thumb
+                            // touch (stick, face buttons, thumb rest); the index rests a third closed with a finger on the trigger
+                            static float thS[2] = {0, 0}; const float tht = (hd[h].buttons & (GV_BTN_THUMBTOUCH | GV_BTN_THUMBREST)) ? 1.0f : 0.0f;
+                            const float ttc = fmaxf(tt, (hd[h].buttons & GV_BTN_TRIGTOUCH) ? 0.35f : 0.0f);
+                            // 0.18.21 (owner: "I want the fingers to animate / tween to their poses, not just unnaturally snap to them"): 0.18.20
+                            // followed the inputs with a 60 ms lag - the thumb / trigger TOUCHES are on / off and a light squeeze is already a
+                            // full fist, so the fingers jumped. Now each curl is a critically damped spring (eases out AND in, no overshoot),
+                            // ~90 % there after fp_finger_tween_s (0.15 s), on its own high-resolution clock (one step per hand per frame).
+                            static float gV[2] = {0, 0}, tV[2] = {0, 0}, thV[2] = {0, 0}; static LARGE_INTEGER fq0{}, lastQ[2]{};
+                            if (!fq0.QuadPart) QueryPerformanceFrequency(&fq0);
+                            LARGE_INTEGER qn; QueryPerformanceCounter(&qn);
+                            const float dq = lastQ[h].QuadPart ? fminf((float)(qn.QuadPart - lastQ[h].QuadPart) / (float)fq0.QuadPart, 0.1f) : 0.0f; lastQ[h] = qn;
+                            const float om = 3.9f / fmaxf(0.02f, g_fp.fingerTween);
+                            fing::spring(gS[h], gV[h], gt, om, dq); fing::spring(tS[h], tV[h], ttc, om, dq); fing::spring(thS[h], thV[h], tht, om, dq);
+                            (void)dt;
+                            ap.grip[h] = gS[h]; ap.trig[h] = tS[h]; ap.thumbC[h] = thS[h]; fp::fingCurlOut[h] = gS[h]; fp::thumbOut[h] = thS[h];
+                        }
+                    }
+                    // the controller hand order is left = 0, right = 1, the same as fbik's sides (Jin's left arm = +y)
+                    fp::apubIdx.store(k, std::memory_order_release);
+                }
+            }
             if (right && ((vr && pk.stereo) || offT)) {
                 float oL[16]; compose(vr ? &pk.pose : nullptr, oL);
                 if (offT) for (int c = 0; c < 3; c++) o[12 + c] = oL[12 + c] - oL[4 + c] * 0.5f * g_cfg.unitsPerM;   // row 1 = left -> 0.5 m to the right
@@ -1130,6 +2174,7 @@ static void hSlot43(void *cam) {
                 const float jx = g[8], jy = g[9];
                 g[0] = 2 / (r - l); g[8] = -sw * (r + l) / (r - l) + jx;
                 g[5] = 2 / (u - d); g[9] = -sw * (u + d) / (u - d) + jy;
+                nearp::apply(g, sw, cb, vr && fp::activeNow);
                 cacheOut(c_proj, g);
                 // half-tangents (+0x680/+0x684) widened to cover the eye frustum, for any consumer that culls or
                 // sizes effects from them (review #10); restored with the projection
@@ -1590,6 +2635,7 @@ static char hPump(u8 *w, float dt) {
     const char r = oPump(w, dt);
     if (!pumpTid.load()) pumpTid = GetCurrentThreadId();
     if (pending.exchange(0)) applyNow();
+    mblur::tick(); shade::tick();
     return r;
 }
 static void request() {   // hotkey thread: never blocks; the main thread applies it at its next message pump
@@ -1597,6 +2643,103 @@ static void request() {   // hotkey thread: never blocks; the main thread applie
     if (!oPump) { logf("render size: the game's message pump is not hooked -> F2 unavailable"); return; }
     if (pending.exchange(1)) { logf("render size: a change is still waiting to be applied"); return; }
 }
+}
+// ---------------- 0.18.6 motion blur off in VR (BUG-74, playbook ch14 #velocity-not-temporal) ----------------
+// 0.18.5's Shift+F9 test: the artifact ("terrain and trees streak across the screen, extremely distorted, only on very fast head
+// turns") follows the eye that is drawn right after the simulation step. That eye's PREVIOUS frame is the other eye of the
+// previous pair, so the engine's velocity buffer holds a whole pair of head motion (+ the eye separation) and motion blur smears
+// it; the other eye's previous frame is the same pose sample (velocity = eye separation only). The playbook: under alternate-eye
+// rendering "disabling motion blur is a requirement". The game's PC settings block (vt+0x118 of the app, the one F2 uses;
+// reflection table 0x1404600F0) holds MotionBlurScale as a float at +0x64 (FilmGrainStrength +0x68, DOFQuality +0x5C, Vignette
+// +0x71). While xr=4 runs it is held at 0 on the main thread (message pump); the user's value is put back at exit.
+// ---------------- 0.18.10 near stipple fade off in first person (owner: "Jin is still see-through") ----------------
+// Not the near clip plane (0.18.9 set it to 4 cm, the projection confirmed it, still see-through). The game's ENVIRONMENT parameters
+// (353 per set, 32-byte entries: value, +0x10 index, +0x14 type, +0x1C set flag; ctor 0x619E10, entry init 0xAFF100, defaults table
+// 0x14180A980 + i*0x18) include NearStippleDist 200 cm / NearStippleDistClose 100 cm / DisableNearStippleFade (index 106, bool):
+// the third-person dither that fades Jin out when the camera comes within 1-2 m. While first person is on, every ACTIVE set (the
+// blend list 0x1433938A8, count 0x1433939A8, Env_SetA 0x61A9C0) and the two global sets get DisableNearStippleFade = 1 (each entry is
+// checked: index 106, type 3); first person off -> the game's values come back.
+// 0.18.12 (owner: "the arms are still transparent-ish close to the camera, like whatever is behind gets written on top of them"): the
+// same environment sets carry NEAR_CLIP (index 5, 10 cm; the name table 0x141809260 + i*8): the camera takes its near plane from it
+// every tick. 0.18.11 overrode only the projection and +0x664 in the render-camera update, so whatever the engine builds from the
+// environment's near before that update (the reprojection that TAA uses to fetch last frame's colour, depth linearisation) still used
+// 10 cm while the depth buffer was drawn with 2 cm: a pixel 20 cm away was reprojected as if it were 1 m away, so between the eyes
+// (6.4 cm apart) TAA fetched history from the wrong place - the background behind the arm, blended on top of it. Now the environment
+// itself says fp_near_cm while first person is on, so every consumer agrees; the projection override stays as the backstop.
+namespace stipple {
+static const u32 RVA_LIST = 0x33938A8, RVA_COUNT = 0x33939A8, RVA_G1 = 0x347E4D0, RVA_G2 = 0x347B870; enum { IDX = 106, IDX_NEAR = 5, IDX_FLOATREF = 104, IDX_RADH = 312, IDX_RADV = 313 };
+struct Mod { u8 *set; int idx; u32 orig, origFlag; }; static Mod mods[128]; static int nMods = 0; static std::atomic<u64> nSets{0}, nBad{0}, nNear{0};
+static bool entryOk(u8 *set, int idx) {
+    u8 *e = set + idx * 0x20; if (!readable(e, 0x20) || *(int *)(e + 0x10) != idx) return false;
+    if (idx == IDX) return *(int *)(e + 0x14) == 3;   // bool
+    u8 *r = set + IDX_FLOATREF * 0x20;   // a float entry: the same type as NEAR_STIPPLE_DIST (a known float) in this set
+    return readable(r, 0x20) && *(int *)(r + 0x10) == IDX_FLOATREF && *(int *)(r + 0x14) == *(int *)(e + 0x14) && *(int *)(e + 0x14) != 3;
+}
+static void put(u8 *set, int idx, u32 v) {
+    if (!set || !entryOk(set, idx)) { if (set) nBad++; return; }
+    u8 *e = set + idx * 0x20; int k = 0; for (; k < nMods; k++) if (mods[k].set == set && mods[k].idx == idx) break;
+    if (k == nMods) { if (nMods >= 128) return; mods[nMods++] = {set, idx, *(u32 *)e, e[0x1C]}; }
+    *(u32 *)e = v; e[0x1C] = 1; nSets++; if (idx == IDX_NEAR) nNear++;
+}
+static void on(u8 *set) {
+    put(set, IDX, 1u);
+    // 0.18.12 (NEAR_CLIP index 5 = fp_near_cm) and 0.18.13 (STIPPLE_NEAR_RADIUS 312/313 = 0) were removed in 0.18.15: no effect on the
+    // arms (owner) - the environment keeps the game's values; the projection's 2 cm near (0.18.11) stays.
+}
+static void tick(bool fpOn) {   // game thread, once per frame
+    static u32 last = 0xFFFFFFFFu; const u32 f = frameCtr(); if (f == last) return; last = f;
+    if (g_cfg.xr != 4) return;
+    u8 **list = (u8 **)(g_base + RVA_LIST); const int n = *(int *)(g_base + RVA_COUNT);
+    if (fpOn) {
+        on(g_base + RVA_G1); on(g_base + RVA_G2);
+        if (n > 0 && n <= 32) for (int i = 0; i < n; i++) on(list[i]);
+        { static int told = 0; if (!told++) logf("first person: environment sets changed: the game's near stipple fade (Jin dithered away within 1-2 m of the camera) off (%d entries, %llu rejected)", nMods, (unsigned long long)nBad.load()); }
+    } else if (nMods) {   // back to the game's values - only in sets that still exist (globals or still in the blend list)
+        for (int k = 0; k < nMods; k++) { bool live = mods[k].set == g_base + RVA_G1 || mods[k].set == g_base + RVA_G2;
+            if (!live && n > 0 && n <= 32) for (int i = 0; i < n; i++) if (list[i] == mods[k].set) live = true;
+            if (live && entryOk(mods[k].set, mods[k].idx)) { u8 *e = mods[k].set + mods[k].idx * 0x20; *(u32 *)e = mods[k].orig; e[0x1C] = (u8)mods[k].origFlag; } }
+        nMods = 0;
+    }
+}
+}
+namespace mblur {
+static float orig = -1.0f; static u8 *st0 = nullptr; static std::atomic<float> seen{-1.0f}; static std::atomic<u64> forced{0};
+static void tick(bool force) {   // main thread (message pump)
+    static u64 next = 0; const u64 now = GetTickCount64(); if (now < next && !force) return; next = now + 500;
+    if (g_cfg.xr != 4) return;
+    u8 *st = rsz::settingsOf(rsz::getApp()); if (!st || !readable(st + 0x64, 4)) return;
+    const float v = *(float *)(st + 0x64); seen = v;
+    { static int told = 0; if (!told++) logf("motion blur: the game's setting (MotionBlurScale) is %.2f%s", v, g_mblurOff.load() ? (v > 0 ? " -> held at 0 while in VR (motion_blur_off = 1)" : " (already off)") : " (motion_blur_off = 0: left alone)"); }
+    if (!g_mblurOff.load() || !(v > 0.0f && v <= 100.0f)) return;
+    if (st != st0 || orig < 0) { orig = v; st0 = st; }
+    *(float *)(st + 0x64) = 0.0f; forced++;
+}
+static void restore() { if (st0 && orig > 0 && readable(st0 + 0x64, 4) && *(float *)(st0 + 0x64) == 0.0f) *(float *)(st0 + 0x64) = orig; }
+}
+// 0.18.21 arm see-through test (owner: "the grass, in black and white, can be seen through the arm - the arm is still there, just a
+// little see-through"; both eyes; depends on where the headset looks; photo crop: grass-shaped dark streaks ON the forearm skin). That
+// is the signature of a SCREEN-SPACE shadow / occlusion pass: it marches the depth buffer from each pixel toward the sun (or around it)
+// and, for a surface a few cm from the eye, the march leaves the arm at once and lands on the grass behind it -> the grass's shape is
+// printed onto the arm as shade, and how much depends on the sun's direction on screen = where you look. The same settings block as
+// motion blur (reflection table 0x1404600F0): AmbientOcclusionQuality +0x60 (int), ScreenSpaceShadows +0x98 (int).
+// Shift+F6 cycles: the game's own -> screen-space shadows off -> + ambient occlusion off -> the game's own. Main thread (message pump),
+// written every 0.5 s while on, the player's values back on the way out / at exit. If the game only reads them when its menu applies
+// them, nothing changes - then the in-game menu toggle is the test (the log says what the game holds).
+namespace shade {
+static int oS = -1, oA = -1; static u8 *st0 = nullptr; static std::atomic<int> seenS{-1}, seenA{-1}; static std::atomic<u64> writes{0};
+static bool sane(int v) { return v >= 0 && v <= 8; }
+static void tick(bool force) {   // main thread (message pump)
+    static u64 next = 0; const u64 now = GetTickCount64(); if (now < next && !force) return; next = now + 500;
+    u8 *st = rsz::settingsOf(rsz::getApp()); if (!st || !readable(st + 0x60, 4) || !readable(st + 0x98, 4)) return;
+    int *pS = (int *)(st + 0x98), *pA = (int *)(st + 0x60); seenS = *pS; seenA = *pA;
+    const int m = g_cfg.xr == 4 ? mode.load() : 0;
+    if (m == 0) { if (st0 == st) { if (oS >= 0 && *pS == 0) *pS = oS; if (oA >= 0 && *pA == 0) *pA = oA; } oS = oA = -1; st0 = nullptr; return; }
+    if (st0 != st) { st0 = st; oS = *pS; oA = *pA; if (!sane(oS) || !sane(oA)) { logf("arm shading test: the settings block holds screen-space shadows %d / ambient occlusion %d - not a setting we know -> left alone", oS, oA); mode = 0; st0 = nullptr; oS = oA = -1; return; }
+        logf("arm shading test: the game's own values: screen-space shadows %d, ambient occlusion %d", oS, oA); }
+    if (*pS != 0) { *pS = 0; writes++; }
+    if (m >= 2) { if (*pA != 0) { *pA = 0; writes++; } } else if (oA >= 0 && *pA == 0 && oA != 0) *pA = oA;
+}
+static void restore() { if (st0 && readable(st0 + 0x98, 4)) { if (oS > 0 && *(int *)(st0 + 0x98) == 0) *(int *)(st0 + 0x98) = oS; if (oA > 0 && *(int *)(st0 + 0x60) == 0) *(int *)(st0 + 0x60) = oA; } }
 }
 
 // ---------------- UI, HUD and videos (0.12.0, playbook ch04 HUD-002/003/004) ----------------
@@ -1620,6 +2763,9 @@ typedef void (*FnSC)(u8 *, u32, u32, u32, u32); static FnSC oSC;
 typedef void (*FnVP)(u8 *, u32, u32, u32, u32);
 typedef void (*FnMovie)(void *, void *, void *, void *); static FnMovie oMovie;
 static std::atomic<int> hud{1}; static std::atomic<float> hudDeg{55.0f};   // F9 cycles the size / off
+static std::atomic<int> hudHidden{0};   // 0.18.0: the left-hand-at-head gesture shows / hides the gameplay HUD
+static std::atomic<u64> hudBoostUntil{0};   // 0.18.2: time of the last HUD gesture (+6 s; log / self-test)
+static std::atomic<int> placeReq{0};          // 0.18.5: the HUD gesture re-places the room-fixed panel in front of you
 static std::atomic<int> theaterMode{0};                                      // F10: 0 auto, 1 always, 2 never
 static int crop = 0;                                                         // theater_crop: show only the 16:9 band of a video
 struct View { bool ok; int eye; float tl, tr, tu, td, ex; bool wl; float wx0, wx1, wyT, wyB; };   // wl: world-locked panel tangents for this eye
@@ -1708,6 +2854,13 @@ typedef ID3D12GraphicsCommandList GL;
 static GL *fastList(u8 *ctx) { u8 *w = ctx ? *(u8 **)ctx : nullptr; return w ? *(GL **)w : nullptr; }   // what Ctx_SetViewport derefs
 static std::atomic<int> f1Off{0};   // F1: layer off (A/B)
 static bool layerReady() { return layerWant.load() && !f1Off.load() && !rdRefused.load() && hostUiOk.load() && shReady.load() && shRtv[0].load() && probeRec.load() && probeNat.load(); }
+// BUG-72 (0.18.1: "after the map / pause menu I was in third person, then it went back to first"): the game fades the HUD after a
+// pausing menu closes; that fade (veil, no bars) started the cutscene latch, which only ends when the camera's fov changes or after
+// 15 s - and the 1 s "HUD large" window after a menu also counted as cinematic. The UI may still go over the whole view then, but
+// first person is only given up for a CAMERA cutscene (bars in the 3D picture, the engine's letterbox rect, or bars on the HUD
+// image); a fade-only start ends 0.5 s after the fade.
+static std::atomic<int> camCut{0};
+static int fpBlockReason() { if (flat()) return 1; const int m = mode.load(); return m == M_HUD ? 0 : m == M_CINEMA ? (camCut.load() ? 2 : 0) : m == M_TITLE ? 3 : 4; }
 static bool layerOn() { const int m = mode.load(); return g_cfg.xr == 4 && hud.load() && (m == M_HUD || m == M_TITLE || m == M_CINEMA) && layerReady(); }
 static int kNow() { const u32 f = frameCtr(); const KOf &x = kOf[f & 31]; return x.frame == f ? x.k : -1; }
 // contexts of UI passes with the UI target bound while the layer is on
@@ -1746,7 +2899,7 @@ static u64 hUI60(u8 *ctx) {
 // Three rows (3 %, 50 %, 97 % of the height) are copied at pass 65 into a readback ring and read 4 frames later. While it
 // holds the UI layer covers each eye's whole view (GV_UI_FULL) - bars at the top/bottom of the view, fades over everything.
 static ID3D12Resource *rbUi[8]; static u8 *rbMap[8]; static u32 rbFrame[8], rbPitch = 0, rbW = 0, rbH = 0; static DXGI_FORMAT rbFmt = DXGI_FORMAT_R8G8B8A8_UNORM;
-static std::atomic<int> cine{0}; static int cinePos = 0, cineNeg = 0; static std::atomic<u64> cineReads{0}, cineHits{0};
+static std::atomic<int> cine{0}, cineFade{0}; static int cinePos = 0, cineNeg = 0; static std::atomic<u64> cineReads{0}, cineHits{0};
 static std::atomic<u32> histZero{0}, histPart{0}, histFull{0}, lastTop{0}, lastBot{0}, lastMid{0};
 // 0.15.2 (BUG-57b): 0.15.1 never fired - one row at 3 %/97 % with "opaque (a >= 230) and pure black" missed the thick UI bars
 // (squared alpha, HUD-004) and the UI fades (a translucent dark veil), and the THIN bars are not UI at all: they are in the 3D
@@ -1790,7 +2943,7 @@ static void cineRead(u32 f) {   // pass 65 of frame f: the readback of frame f-4
     const Bands b = bandsOf(rbMap[s], rbPitch, rbW, true, false); cineReads++;
     { const u8 *q = rbMap[s] + 6 * (u64)rbPitch; for (int i = 0; i < NS; i++) { const u8 *p = q + (u64)((0.03f + 0.94f * (float)i / (NS - 1)) * (float)(rbW - 1)) * 4; if (p[3] == 0) histZero++; else if (p[3] == 255) histFull++; else histPart++; } }
     lastTop = (u32)b.top; lastBot = (u32)b.bot; lastMid = (u32)b.veil; amax(maxTop, b.top); amax(maxBot, b.bot); amax(maxVeil, b.veil);
-    if (uiHit(b)) { cineHits++; cineNeg = 0; if (++cinePos >= 2 && !cine.load()) { cine = 1; logf("UI: cinematic %s on the HUD image (bar rows top %d / bottom %d, veil rows %d of %d) -> HUD over the whole view", b.veil == NROW ? "fade" : "letterbox", b.top, b.bot, b.veil, NROW); } }
+    if (uiHit(b)) { cineHits++; cineNeg = 0; if (b.veil != NROW) cineFade = 0; if (++cinePos >= 2 && !cine.load()) { cine = 1; cineFade = b.veil == NROW; logf("UI: cinematic %s on the HUD image (bar rows top %d / bottom %d, veil rows %d of %d) -> HUD over the whole view", b.veil == NROW ? "fade" : "letterbox", b.top, b.bot, b.veil, NROW); } }
     else { cinePos = 0; if (++cineNeg >= 24 && cine.load()) { cine = 0; logf("UI: cinematic bars/fade gone from the HUD image -> HUD panel"); } }
 }
 static void rowsCopy(GL *gl, ID3D12Resource *src, ID3D12Resource *dst, DXGI_FORMAT fmt, u32 w, u32 h, u32 pitch) {
@@ -1942,7 +3095,8 @@ static void follow(bool entered) {
     if (!S || !gvRead(&S->poseSeq, [&] { h = S->head; ok = S->poseValid; }) || !ok) return;
     static LONG rc = 0; const LONG nrc = S->theaterRecenter;
     const float yh = yawOf(h.q); const u64 now = GetTickCount64(); const float dt = wLastMs ? fminf((float)(now - wLastMs) * 0.001f, 0.1f) : 0.0f; wLastMs = now;
-    if (!wp.on || entered || nrc != rc) { rc = nrc; wYaw = yh; wEasing = false; wAwaySince = 0; if (!wp.on || entered) logf("UI: panel placed in the room in front of you (yaw %.1f deg)", yh * 57.29578f); }
+    const bool pr = placeReq.exchange(0) != 0;
+    if (!wp.on || entered || nrc != rc || pr) { rc = nrc; wYaw = yh; wEasing = false; wAwaySince = 0; if (!wp.on || entered || pr) logf("UI: panel placed in the room in front of you (yaw %.1f deg)%s", yh * 57.29578f, pr ? " - HUD gesture" : ""); }
     else {
         float dy = yh - wYaw; while (dy > 3.14159265f) dy -= 6.2831853f; while (dy < -3.14159265f) dy += 6.2831853f;
         const float lim = g_ui.followDeg / 57.29578f;
@@ -1993,6 +3147,11 @@ static void endPost() {   // game thread: the flat-context decision for this fra
         const float fa = *(volatile float *)(g_base + RVA_FADE + 0xC);   // the game's own fade (pass 65) covers the UI on the monitor
         if (fa > 0.3f) rdHidden++;
         else uf = mode.load() == M_CINEMA ? GV_UI_FULL : (mode.load() == M_TITLE || g_ui.follow) ? GV_UI_WORLD : GV_UI_HEAD;
+        if (hudHidden.load() && mode.load() == M_HUD) uf = 0;
+        // 0.18.5 (owner: "it is too big for me to see ... the hud should be in the smaller, world locked mode"): the gesture no longer
+        // enlarges the HUD or locks it to the head. It places the normal room-fixed panel straight in front of you (ui::placeReq,
+        // taken by follow()) and the default gesture's touchpad swipe-up makes the game show the objective on it.
+        if (S) S->hudDeg = hudDeg.load();
     }
     uiRing[f & 31] = {f, uf};
     static int was = -1; const int st = (fl ? 1 : 0) | (mv ? 2 : 0) | (worldMode.load() << 2) | (pausedTick.load() ? 64 : 0);
@@ -2002,6 +3161,45 @@ static void endPost() {   // game thread: the flat-context decision for this fra
 static u32 flagsOf(u32 frame) { const Flag &x = ring[frame & 31]; return x.frame == frame ? x.flags : 0u; }
 static u32 uiFlagsOf(u32 frame) { const Flag &x = uiRing[frame & 31]; return x.frame == frame ? x.flags : 0u; }
 } // namespace ui
+// ---------------- 0.18.0 VR controllers: the virtual pad (vrinput.h) wired into the XInput exports ----------------
+void vrin::animHold(int sh) {
+    const u64 now = GetTickCount64(); fp::nAnimHolds++;
+    if (sh) { const u64 u = now + 2500; if (u > fp::animUntil.load()) fp::animUntil = u; }
+    else { fp::animUntil = now + 60000; fp::animMove = 1; logf("controls: the game's animation owns Jin's arms (flute) until you move or dodge"); }
+}
+void vrin::animMoved() { if (fp::animMove.exchange(0)) fp::animUntil = GetTickCount64() + 300; }
+void vrin::recenterView() { vrin::moveCapture(150); m_recenter = 1; if (S) InterlockedIncrement(&S->theaterRecenter); g_flatCut = 2; occ::reseed(); logf("controls: wheel -> recenter view (F11)"); }
+void vrin::hudToggle() { ui::hudBoostUntil = GetTickCount64() + 6000; ui::hudHidden = 0; ui::placeReq = 1; logf("controls: HUD panel placed in front of you (left hand at the head + trigger)"); }
+namespace vrin {
+struct XS { DWORD packet; XINPUT_GAMEPAD g; };
+static bool padImpl(DWORD, u8 *st, bool realOk) {
+    XINPUT_GAMEPAD v; const bool flat = g_flatRender.load() || ui::fpBlockReason() != 0;
+    if (!build(v, flat)) return false;   // no VR input ever: the real pad alone
+    XS *x = (XS *)st; XINPUT_GAMEPAD g = realOk ? x->g : XINPUT_GAMEPAD{};
+    // merge (playbook ch03: one lane per control by saturation): buttons OR, triggers max, each stick from the larger deflection
+    g.wButtons |= v.wButtons; if (v.bLeftTrigger > g.bLeftTrigger) g.bLeftTrigger = v.bLeftTrigger; if (v.bRightTrigger > g.bRightTrigger) g.bRightTrigger = v.bRightTrigger;
+    auto mag = [](SHORT a, SHORT b) { return (int)a * a + (int)b * b; };
+    if (mag(v.sThumbLX, v.sThumbLY) > mag(g.sThumbLX, g.sThumbLY)) { g.sThumbLX = v.sThumbLX; g.sThumbLY = v.sThumbLY; }
+    if (mag(v.sThumbRX, v.sThumbRY) > mag(g.sThumbRX, g.sThumbRY)) { g.sThumbRX = v.sThumbRX; g.sThumbRY = v.sThumbRY; }
+    if (memcmp(&g, &last, sizeof g)) { last = g; packet++; }
+    x->packet = (realOk ? x->packet : 0) + (packet << 16); x->g = g;   // a new packet number whenever either source changes
+    return true;
+}
+static void rumbleImpl(DWORD, const void *v) { rumble((const XINPUT_VIBRATION *)v); }
+static bool capsImpl(DWORD, u8 *c) {   // after the first VR activation the virtual pad stays connected for the process lifetime
+    if (!everActive) return false;
+    if (c) { memset(c, 0, 20); c[0] = 1; c[1] = 1; *(WORD *)(c + 4) = 0xF3FF; c[6] = c[7] = 255; for (int k = 0; k < 4; k++) *(SHORT *)(c + 8 + 2 * k) = (SHORT)0xFFC0; *(WORD *)(c + 16) = 0xFFFF; *(WORD *)(c + 18) = 0xFFFF; }
+    return true;
+}
+static void install(const wchar_t *ini) {
+    loadCfg(ini);
+    if (!cfg.enabled) { logf("controls: VR controllers off ([controls] enabled=0)"); return; }
+    g_padHook = padImpl; g_rumbleHook = rumbleImpl; g_capsHook = capsImpl;
+    logf("controls: VR controllers -> virtual Xbox pad (user 0), merged with a real pad; turn = %s %.0f deg; wheel: 1 %s, 2 %s, 3 %s",
+         cfg.turnSmooth ? "smooth (speed" : "snap", cfg.turnSmooth ? cfg.smoothGain * 100.0f : cfg.snapDeg, cfg.wheelName[0], cfg.wheelName[1], cfg.wheelName[2]);
+    for (int c = 0; c < C_N; c++) logf("controls:   %-28s -> mask 0x%08X (%s)", kCtl[c].key, cfg.out[c].m, kCtl[c].what);
+}
+} // namespace vrin
 
 // game thread, start of every xr=4 tick: one flat-context decision per tick (render path, UI mapping and flags agree)
 static void uiDecide() {
@@ -2045,16 +3243,19 @@ static void uiDecide() {
         const bool rectLb = ui::worldMode.load() == 2 && rectT > 0.3f && rectT < 0.99f;
         const bool ev = ui::sceneBars.load() || ui::cine.load() || rectLb;
         if (ev) lastEv = nowMs;
-        if (!cutHold && ev && !fl) { cutHold = true; entryFov = cfov; logf("UI: cutscene START (%s; camera fov %.3f) -> HUD over the whole view", rectLb ? "camera letterbox rect" : ui::sceneBars.load() ? "bars in the 3D picture" : "bars/fade on the HUD image", cfov); }
+        static bool fadeOnly = false;
+        if (cutHold && ev && (rectLb || ui::sceneBars.load() || (ui::cine.load() && !ui::cineFade.load()))) fadeOnly = false;   // real bars upgrade a fade start
+        if (!cutHold && ev && !fl) { cutHold = true; fadeOnly = !rectLb && !ui::sceneBars.load() && ui::cineFade.load(); entryFov = cfov; logf("UI: cutscene START (%s; camera fov %.3f) -> HUD over the whole view", rectLb ? "camera letterbox rect" : ui::sceneBars.load() ? "bars in the 3D picture" : "bars/fade on the HUD image", cfov); }
         else if (cutHold && !ev) {
             const u64 quiet = nowMs - lastEv; const bool moved = fabsf(cfov - entryFov) > 0.004f;
-            if ((moved && quiet > 500) || quiet > 15000 || fl) { cutHold = false; logf("UI: cutscene END (%s; camera fov %.3f, was %.3f) -> HUD panel", fl ? "flat context" : moved ? "the camera's field of view changed" : "15 s without bars", cfov, entryFov); }
+            if ((moved && quiet > 500) || quiet > 15000 || fl || (fadeOnly && quiet > 500)) { cutHold = false; logf("UI: cutscene END (%s; camera fov %.3f, was %.3f) -> HUD panel", fl ? "flat context" : fadeOnly ? "a fade only, gone" : moved ? "the camera's field of view changed" : "15 s without bars", cfov, entryFov); }
         }
         else if (cutHold && ev && fabsf(cfov - entryFov) > 0.004f) entryFov = cfov;   // a new shot with its own fov while bars are visible
         const bool pz = ui::pausedTick.load();
         if (wasPaused && !pz) { pauseUntil = nowMs + 1000; logf("UI: pause menu closed -> HUD large for 1 s"); }
         wasPaused = pz;
         const bool cine = (cutHold || nowMs < pauseUntil) && ui::layerReady();
+        ui::camCut = cutHold && !fadeOnly;   // first person yields only to a camera cutscene
         const bool title = ui::titleReason >= 0 && ui::titleReason < 28 && ui::scaleOf(ui::titleReason) == 0.0f && ui::worldMode.load() == 2 && !ui::pausedTick.load();
         const int m = fl ? ui::M_FLAT : cine ? ui::M_CINEMA : title ? ui::M_TITLE : ui::M_HUD;
         if (m != ui::mode.load()) { static const char *nm[4] = {"HUD (gameplay)", "START SCREEN (world-locked)", "CINEMATIC (UI over the whole view: letterbox bars, fades, subtitles)", "FLAT (theatre screen)"};
@@ -2547,7 +3748,7 @@ static void record(ID3D12GraphicsCommandList *c, ID3D12Resource *bb, int k, u32 
 }
 static void copyFrame(u32 frame) {
     FramePkt pk{}; FramePkt &rr = g_ring[frame & 31];
-    bool got = gvRead(&rr.seq, [&] { pk.frame = rr.frame; pk.eye = rr.eye; pk.valid = rr.valid; pk.flat = rr.flat; pk.pose = rr.pose; memcpy(pk.fov, rr.fov, 16); pk.stereo = rr.stereo; pk.pose2 = rr.pose2; memcpy(pk.fov2, rr.fov2, 16); });
+    bool got = gvRead(&rr.seq, [&] { pk.frame = rr.frame; pk.eye = rr.eye; pk.phase = rr.phase; pk.valid = rr.valid; pk.flat = rr.flat; pk.pose = rr.pose; memcpy(pk.fov, rr.fov, 16); pk.stereo = rr.stereo; pk.pose2 = rr.pose2; memcpy(pk.fov2, rr.fov2, 16); });
     if (!got || pk.frame != frame) { mismatch++; S->gameMismatch++; return; }
     if (!pk.valid && !pk.flat) { noPkt++; return; }
     int k = (ai + 1) % 3;
@@ -2588,14 +3789,14 @@ static void copyFrame(u32 frame) {
     // monitor = left eye only (0.9.5): under xr=4 consecutive presents alternate eyes, so the window showed both
     // views flickering at the refresh rate ("two frames overlapped"). On a right-eye present the back buffer is
     // overwritten with this pair's left image after it has been captured for the headset.
-    if (g_cfg.xr == 4 && g_cfg.mirrorLeft && !st && pk.eye == 1 && lastLeftTi < GV_TEXCOUNT && tex[lastLeftTi] && lastLeftFrame == frame - 1) {
+    if (g_cfg.xr == 4 && g_cfg.mirrorLeft && !st && pk.phase == 1 && lastLeftTi < GV_TEXCOUNT && tex[lastLeftTi] && lastLeftFrame == frame - 1) {
         D3D12_RESOURCE_BARRIER br{}; br.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION; br.Transition.pResource = bb; br.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
         br.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_SOURCE; br.Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_DEST; cl->ResourceBarrier(1, &br);
         cl->CopyResource(bb, tex[lastLeftTi]);
         br.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST; br.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT; cl->ResourceBarrier(1, &br);
         mirrored++;
     }
-    if (g_cfg.xr == 4 && !st && pk.eye == 0 && pk.valid) { lastLeftTi = ti; lastLeftFrame = frame; }
+    if (g_cfg.xr == 4 && !st && pk.phase == 0 && pk.valid) { lastLeftTi = ti; lastLeftFrame = frame; }
     if (ui::probeNat.load() && !ui::probeLogged.exchange(1)) {   // UI target probe (0.13.0): separate texture, or the back buffer itself?
         ID3D12Resource *un = ui::probeNat.load(); D3D12_RESOURCE_DESC ud = un->GetDesc(); bool isBB = un == bb;
         for (u32 i = 0; i < bbmap::count && i < 8; i++) isBB |= bbmap::nat[i] == un;
@@ -2628,12 +3829,12 @@ static void copyFrame(u32 frame) {
         GvSlot &sl = S->slot[s2][b];
         // xr=4: both eyes of a pair carry the LEFT eye's frame id (right = left + 1, same simulation tick), so the host
         // presents only complete pairs (BUG-25: per-eye newest mixed pair k+1's left with pair k's right = AFR-like)
-        const u32 tag = (g_cfg.xr == 4 && pk.valid && pk.eye == 1) ? frame - 1 : frame;
+        const u32 tag = (g_cfg.xr == 4 && pk.valid && pk.phase == 1) ? frame - 1 : frame;   // 0.18.5: by pair phase (eye order can be swapped)
         // flat frame (0.13.0): one image for both slots, tagged the same frame, always on the theatre screen
         const u32 fl = pk.valid ? ui::flagsOf(frame) : (ui::flagsOf(frame) | GV_SLOT_THEATER | GV_SLOT_FLAT);
         gvWriteBegin(&sl.seq); sl.tex = ti; sl.gen = (u32)S->texGen; sl.fence = v; sl.frame = tag; sl.pose = pk.pose; memcpy(sl.fov, pk.fov, 16); sl.flags = fl; gvWriteEnd(&sl.seq);
         if (!pk.valid) flatPub++;
-        if (g_cfg.xr == 4 && pk.eye == 1) pairsPub++;
+        if (g_cfg.xr == 4 && pk.phase == 1) pairsPub++;
         if (st && s2 == 0) monoFallback++;
     }
     S->gameBeat = (LONG64)GetTickCount64(); S->gamePublished++; published++;
@@ -3140,6 +4341,7 @@ static std::atomic<u64> g_presents{0};
 static u64 hPresent(void *self, void *desc) {
     g_presents++; c_present++;
     if (desc && readable(desc, 4)) g_wrapFrame = *(u32 *)desc; t_present = GetCurrentThreadId();
+    if (desc && readable(desc, 4)) { g_presFrame = *(u32 *)desc; if (g_presEv) SetEvent(g_presEv); }
     static u64 lastRes = 0; u64 now = GetTickCount64();
     if (now - lastRes > 1000 && desc && readable(desc, 0x48)) { // EXP-06: sample the four tagged resources once per second
         lastRes = now; ResSample s{}; u8 *d = (u8 *)desc;
@@ -3161,6 +4363,13 @@ static bool startHost() {
     memset(S, 0, sizeof *S); S->magic = GV_MAGIC; S->version = GV_VERSION; S->gamePid = GetCurrentProcessId(); S->mode = (u32)g_cfg.xr;
     S->theaterDist = g_ui.thDist; S->theaterWidth = g_ui.thWidth; S->theaterHeight = g_ui.thHeight; S->theaterBackdrop = (u32)g_ui.thBackdrop;
     S->hudDist = g_ui.hudDist; S->hudDeg = g_ui.hudDeg; S->hudDown = g_ui.hudDown; S->uiPremul = (u32)g_ui.premul;
+    S->poseLeadCfgMs = g_poseLeadMs; S->hostGpuPrio = -1;
+    if (g_cfg.xr == 4 && g_gameGpuPrio) {   // BUG-69 (0.17.3): a GPU-bound game starved the streamer's encoder and the host (headset frames 44-60/s while
+        // the game kept its rate; black edges on fast turns). WDDM scheduling class BELOW_NORMAL (1) for the game process only.
+        typedef LONG(APIENTRY * FnPrio)(HANDLE, int); HMODULE gd = GetModuleHandleW(L"gdi32.dll"); if (!gd) gd = LoadLibraryW(L"gdi32.dll");
+        FnPrio f = gd ? (FnPrio)GetProcAddress(gd, "D3DKMTSetProcessSchedulingPriorityClass") : nullptr; const LONG st = f ? f(GetCurrentProcess(), 1) : -1;
+        logf("game GPU scheduling priority: %s", st == 0 ? "BELOW NORMAL (the headset streamer and GoTVRHost go first)" : "unchanged (not available)");
+    }
     wchar_t exe[MAX_PATH], cmd[MAX_PATH + 32]; swprintf(exe, MAX_PATH, L"%ls\\GoTVRHost.exe", g_dir);
     if (GetFileAttributesW(exe) == INVALID_FILE_ATTRIBUTES) {   // also accept it next to the game exe
         wchar_t alt[MAX_PATH]; wcscpy(alt, g_dir); if (wchar_t *sl = wcsrchr(alt, L'\\')) wcscpy(sl, L"\\GoTVRHost.exe");
@@ -3217,6 +4426,24 @@ static void reportCallers() {
     logf("setlocal callers (retRVA:total/camA):%s", n ? b : " (none)");
 }
 
+// 0.18.11 (owner: "an option to change the rotation of the hands manually using F1, 2 and 3, and then you save it as default"):
+// F1 / F2 / F3 turn both hands about pitch / yaw / roll by 5 degrees (Shift = the other way); every press is written to gotvr.ini
+// (fp_hand_pitch_deg / _yaw_deg / _roll_deg), which is read at start, so the last setting is the default from then on.
+// The old F1 / F2 / F3 functions (HUD layer A/B, render size, letterbox crop) moved to Ctrl+F1 / Ctrl+F2 / Ctrl+F3 (0.18.12: Ctrl+Alt+F1 / F2 / F3; Ctrl+F1..F3 now move the wrist point).
+// 0.18.15's Shift+F7 TAA A/B (preset TAA / per-eye TAA / no history) made no difference to the arm overlay (owner) - removed in 0.18.16.
+static void handTrim(int ax, float d) {   // ax 0..2 = pitch / yaw / roll (deg, F1..F3); 3..5 = wrist back / up / toward the thumb (cm, Ctrl+F1..F3; 0.18.12)
+    float *const vs[6] = {&g_fp.handPitch, &g_fp.handYaw, &g_fp.handRoll, &g_fp.handBackCm, &g_fp.handUpCm, &g_fp.handSideCm};
+    float &v = *vs[ax]; float nv = v + d;
+    if (ax < 3) { while (nv > 180.0f) nv -= 360.0f; while (nv <= -180.0f) nv += 360.0f; } else nv = fminf(ax == 3 ? 20.0f : 10.0f, fmaxf(-10.0f, nv));
+    if (fabsf(nv) < 1e-3f) nv = 0.0f;
+    v = nv;
+    static const wchar_t *key[6] = {L"fp_hand_pitch_deg", L"fp_hand_yaw_deg", L"fp_hand_roll_deg", L"fp_hand_back_cm", L"fp_hand_up_cm", L"fp_hand_side_cm"};
+    static const char *nm[6] = {"pitch", "yaw", "roll", "wrist back", "wrist up (toward the back of the hand)", "wrist toward the thumb"};
+    wchar_t ini[MAX_PATH]; swprintf(ini, MAX_PATH, L"%ls\\gotvr.ini", g_dir); wchar_t b[32]; swprintf(b, 32, L"%.1f", nv);
+    const BOOL ok = WritePrivateProfileStringW(L"gotvr", key[ax], b, ini);
+    logf("HOTKEY %sF%d hand %s %+.0f -> %.1f %s (angles %.1f / %.1f / %.1f deg, wrist %.1f / %.1f / %.1f cm) %s", ax < 3 ? "" : "Ctrl+", ax % 3 + 1, nm[ax], d, nv, ax < 3 ? "deg" : "cm",
+         g_fp.handPitch, g_fp.handYaw, g_fp.handRoll, g_fp.handBackCm, g_fp.handUpCm, g_fp.handSideCm, ok ? "saved to gotvr.ini as the default" : "NOT saved (gotvr.ini not writable)");
+}
 static DWORD WINAPI worker(void *) {
     wchar_t exe[MAX_PATH]; DWORD n = GetModuleFileNameW(nullptr, exe, MAX_PATH);
     wcscpy(g_dir, exe); wchar_t *sl = wcsrchr(g_dir, L'\\'); if (sl) wcscpy(sl, L"\\GoTVR"); CreateDirectoryW(g_dir, nullptr);
@@ -3238,6 +4465,8 @@ static DWORD WINAPI worker(void *) {
         logf("frame counter: GameTick increments rva 0x%x (expected 0x%x) %s", tgt, (u32)RVA_FRAMECTR, tgt == RVA_FRAMECTR ? "PASS" : "FAIL");
         if (tgt != RVA_FRAMECTR && g_cfg.xr) { logf("frame counter guard failed -> xr disabled"); g_cfg.xr = 0; }
     }
+    g_presEv = CreateEventW(nullptr, FALSE, FALSE, nullptr);
+    logf("render sync (xr=4): %s", g_renderSync == 1 ? "the right-eye tick waits for the left-eye frame to be presented" : g_renderSync == 2 ? "every stereo tick waits for the previous frame to be presented" : "off");
     if (MH_Initialize() != MH_OK) { logf("MinHook init failed"); return 0; }
     struct H { u32 rva; void *det; void **orig; const char *name; } hooks[] = {
         {RVA_GAMETICK, (void *)hGameTick, (void **)&oGameTick, "GameTick"}, {RVA_PRESENT, (void *)hPresent, (void **)&oPresent, "Present"},
@@ -3252,10 +4481,13 @@ static DWORD WINAPI worker(void *) {
         {RVA_SC_COMPUTESIZES, (void *)rsz::hCS, (void **)&rsz::oCS, "SC_ComputeSizes (headset render size)"},
         {RVA_WND_PUMP, (void *)rsz::hPump, (void **)&rsz::oPump, "GameWindow_Pump (F2 size change on the main thread)"},
         {RVA_SC_RECREATE, (void *)pub::hRecreate, (void **)&pub::oRecreate, "SC_Recreate (swapchain re-creation)"},
+        {RVA_ANIM_JOB, (void *)fp::hAnimJob, (void **)&fp::oAnimJob, "Anim_Job (first-person head hiding in the render pose)"},
+        {RVA_OCC_VIEWFN, (void *)occ::hOccView, (void **)&occ::oOccView, "Occ_View (foliage culling gets the engine view)"},
     };
     for (auto &h : hooks) { MH_STATUS st = MH_CreateHook(g_base + h.rva, h.det, h.orig); logf("hook %s -> %s", h.name, MH_StatusToString(st)); if (st != MH_OK) { logf("hook failed -> aborting all hooks"); MH_Uninitialize(); return 0; } }
     // the shared block must exist before any hook can read it
     if (g_cfg.xr && !startHost()) { logf("xr disabled for this run"); if (!S) g_cfg.xr = 0; }
+    if (g_cfg.xr == 4 && S) { wchar_t ini[MAX_PATH]; swprintf(ini, MAX_PATH, L"%ls\\gotvr.ini", g_dir); vrin::install(ini); }
     r1::capturePassTable();
     {   // F2 result from an earlier session: the second render takes this pass from the first render
         wchar_t ini[MAX_PATH]; swprintf(ini, MAX_PATH, L"%ls\\gotvr.ini", g_dir);
@@ -3267,6 +4499,7 @@ static DWORD WINAPI worker(void *) {
         else { g_cfg.xr = 2; logf("xr=3 needs the verified pass table -> falling back to xr=2 (alternate-eye)"); if (S) S->mode = 2; }
     }
     rsz::apply = (rsz::FnApply)(g_base + RVA_APPLY_DISPLAY);
+    fp::on = g_fp.on; if (g_cfg.xr == 4) logf("first person: %s (F5 toggles; eye %.0f cm up / %.0f cm forward of the head joint, head hiding %s)", g_fp.on ? "ON" : "off", g_fp.eyeUpCm, g_fp.eyeFwdCm, g_fp.hide ? "on" : "off");
     if (g_cfg.xr == 4) { rsz::want = g_renderSize; logf("render size: %s", g_renderSize ? "square headset render size set before the swapchain exists (render_size in gotvr.ini, F2 cycles)" : "the game's own size (render_size=0)"); if (g_renderSize) logf("render size: %d x %d per eye", g_renderSize, g_renderSize); }
     MH_STATUS st = MH_EnableHook(MH_ALL_HOOKS); logf("hooks enabled: %s", MH_StatusToString(st));
     if (g_cfg.xr == 4) {
@@ -3277,7 +4510,7 @@ static DWORD WINAPI worker(void *) {
         logf("UI: HUD panel %s (%.0f deg wide, converges at %.2f m, %.1f deg below eye level); theatre screen %s (%.1f m away, %.1f m wide, backdrop %d, crop %d, flat render %d, pause reasons 0x%x)",
              g_ui.hud ? "on" : "off", g_ui.hudDeg, g_ui.hudDist, g_ui.hudDown, g_ui.theater ? "auto" : "never (F10 forces it)", g_ui.thDist, g_ui.thWidth, g_ui.thBackdrop, ui::crop, g_ui.flatRender, g_ui.pauseMask);
         if (!g_ui.theater) ui::theaterMode = 2;
-        occ::fastDeg = g_fastTurnDeg; occ::fastMode = g_fastTurnMode; logf("fast head-turn limit for occlusion history: %.1f deg per eye frame pair", occ::fastDeg);
+        occ::fastDeg = g_fastTurnDeg; occ::fastDegLeft = g_fastTurnDegLeft; occ::viewMode = g_foliageOcc; occ::fastMode = g_fastTurnMode; logf("fast head-turn limit for occlusion history: left eye %.2f deg, right eye %.1f deg per eye frame pair", occ::fastDegLeft, occ::fastDeg);
         bool ok = cutp::apply(); applyPreset(ok ? g_cfg.histMode : 4);
         if (!ok) logf("cut overrides unavailable -> history preset 5 RESET (0.9.0 behaviour)");
         logf("history preset %s", kPresets[g_preset.load()].name);
@@ -3293,40 +4526,69 @@ static DWORD WINAPI worker(void *) {
             for (int i = 0; i < 11; i++) {
                 bool down = (GetAsyncKeyState(keys[i]) & 0x8000) != 0;
                 if (down && !prev[i]) {
-                    if (i == 0) {
+                    if (i == 0 && g_cfg.xr == 4 && (GetAsyncKeyState(VK_SHIFT) & 0x8000)) {   // 0.18.16: the TAA A/B made no difference (owner) -> near-plane A/B
+                        static float saved = 2.0f; if (g_fp.nearCm > 0.0f) { saved = g_fp.nearCm; g_fp.nearCm = 0.0f; } else g_fp.nearCm = saved > 0.0f ? saved : 2.0f;
+                        logf("HOTKEY Shift+F7 first-person near clip -> %s %.1f cm", g_fp.nearCm > 0.0f ? "ours" : "the game's own (10 cm), was", g_fp.nearCm > 0.0f ? g_fp.nearCm : saved); }
+                    else if (i == 0) {
                         if (g_cfg.xr == 4) { m_cullHead ^= 1; logf("HOTKEY F7 culling/shadow camera follows your head -> %d", m_cullHead.load()); }
                         else { m_armed ^= 1; logf("HOTKEY F7 armed zero-delta -> %d", m_armed.load()); }
                     }
-                    if (i == 1) {
+                    if (i == 1 && g_cfg.xr == 4 && (GetAsyncKeyState(VK_SHIFT) & 0x8000)) {
+                        const int m = (occ::viewMode.load() + 1) % 3; occ::viewMode = m;
+                        logf("HOTKEY Shift+F8 foliage/grass culling view -> %s", m == 1 ? "1 the engine's own view" : m == 2 ? "2 no occlusion view (default)" : "0 the per-eye-rewritten view (0.17.4)");
+                    } else if (i == 1) {
                         if (g_cfg.xr == 4) { int m = occ::fastMode.load() % 3 + 1; if (m == 3) m = 0; occ::fastMode = m; occ::setVoFast(occ::fast.load());
                                              logf("HOTKEY F8 fast head turns -> %s", m == 1 ? "1 culling memory off during the turn" : m == 2 ? "2 game's own culling memory during the turn" : "0 no special handling"); }
                         else { m_leftHalf ^= 1; logf("HOTKEY F8 projection left-half (EXP-03b) -> %d", m_leftHalf.load()); }
                     }
-                    if (i == 2) {
+                    if (i == 2 && g_cfg.xr == 4 && (GetAsyncKeyState(VK_SHIFT) & 0x8000)) {
+                        g_eyeSwap = !g_eyeSwap.load(); logf("HOTKEY Shift+F9 the simulated tick renders the %s eye (pop-in diagnostic: does it follow?)", g_eyeSwap.load() ? "RIGHT" : "LEFT (default)");
+                    } else if (i == 2) {
                         if (g_cfg.xr == 4) {   // HUD panel size: 40 -> 55 -> 70 -> 85 -> off -> 40
                             static const float sz[4] = {40, 55, 70, 85}; float nx = 0;
                             if (!ui::hud.load()) nx = sz[0]; else for (int j = 0; j < 4; j++) if (sz[j] > ui::hudDeg.load() + 0.5f) { nx = sz[j]; break; }
                             if (nx > 0) { ui::hud = 1; ui::hudDeg = nx; if (S) S->hudDeg = nx; logf("HOTKEY F9 HUD panel %.0f deg wide", nx); } else { ui::hud = 0; logf("HOTKEY F9 HUD panel OFF (UI stretched over the lens)"); } }
                         else { m_yaw ^= 1; logf("HOTKEY F9 camera yaw +5 deg, idempotent (EXP-02) -> %d", m_yaw.load()); }
                     }
-                    if (i == 10 && g_cfg.xr == 4) { if (ui::rdRefused.exchange(0)) { ui::rdFailRun = 0; ui::f1Off = 1; } ui::f1Off = !ui::f1Off.load(); logf("HOTKEY F1 HUD -> %s", ui::f1Off.load() ? "drawn into the 3D image (0.14 panel, A/B)" : "its own sharp layer"); }
+                    const bool ctrl = (GetAsyncKeyState(VK_CONTROL) & 0x8000) != 0, shf = (GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0;
+                    const bool alt = (GetAsyncKeyState(VK_MENU) & 0x8000) != 0;
+                    if (g_cfg.xr == 4 && !ctrl && !alt && (i == 10 || i == 9 || i == 8)) handTrim(10 - i, shf ? -5.0f : 5.0f);
+                    else if (g_cfg.xr == 4 && ctrl && !alt && (i == 10 || i == 9 || i == 8)) handTrim(13 - i, shf ? -1.0f : 1.0f);   // 0.18.12: wrist position
+                    else if (i == 10 && g_cfg.xr == 4) { if (ui::rdRefused.exchange(0)) { ui::rdFailRun = 0; ui::f1Off = 1; } ui::f1Off = !ui::f1Off.load(); logf("HOTKEY F1 HUD -> %s", ui::f1Off.load() ? "drawn into the 3D image (0.14 panel, A/B)" : "its own sharp layer"); }
                     else if (i == 10) { m_offTest ^= 1; logf("HOTKEY F1 second render's camera 0.5 m to the right (flat stereo proof; needs F5 on) -> %d", m_offTest.load()); }
-                    if (i == 9 && g_cfg.xr == 4) {   // F2: headset render size 1536 -> 1792 -> 2048 -> 2304 -> 2560 -> game's own -> 1536
+                    else if (i == 9 && g_cfg.xr == 4) {   // Ctrl+Alt+F2: headset render size 1536 -> 1792 -> 2048 -> 2304 -> 2560 -> game's own -> 1536
                         static const int sz[6] = {1536, 1792, 2048, 2304, 2560, 0}; int cur = rsz::want.load(), nx = sz[0];
                         for (int j = 0; j < 6; j++) if (sz[j] == cur) { nx = sz[(j + 1) % 6]; break; }
                         rsz::want = nx; logf("HOTKEY F2 headset render size -> %s %d", nx ? "square" : "the game's own (0)", nx); rsz::request(); }
                     else if (i == 9) { if (sweep::running.load()) sweep::end("cancelled with F2"); else sweep::begin(GetTickCount64()); }
-                    if (i == 8 && g_cfg.xr == 4) { ui::cropOn = !ui::cropOn.load(); logf("HOTKEY F3 letterbox crop -> %s", ui::cropOn.load() ? "ON (only the 16:9 picture goes to the headset)" : "OFF (the whole window image)"); }
+                    else if (i == 8 && g_cfg.xr == 4) { ui::cropOn = !ui::cropOn.load(); logf("HOTKEY F3 letterbox crop -> %s", ui::cropOn.load() ? "ON (only the 16:9 picture goes to the headset)" : "OFF (the whole window image)"); }
                     else if (i == 8) { static int k = 0; k = (k + 1) % 6; r1::skipFrom = r1::skipSteps[k]; r1::pjDump = 1;
                                   if (r1::skipFrom.load()) logf("HOTKEY F3 second run skips passes %d..68 (bisection; image should come from run 1)", r1::skipFrom.load()); else logf("HOTKEY F3 second run complete again (no skipped passes)"); }
-                    if (i == 3) {
-                        if (g_cfg.xr == 4) { int m = (ui::theaterMode.load() + 1) % 3; ui::theaterMode = m; logf("HOTKEY F10 theatre screen -> %s", m == 1 ? "ALWAYS (everything on the flat screen)" : m == 2 ? "never" : "auto (videos and menus without a 3D world)"); }
+                    if (i == 3 && g_cfg.xr == 4 && (GetAsyncKeyState(VK_SHIFT) & 0x8000)) { fp::armsWant = !fp::armsWant.load(); logf("HOTKEY Shift+F10 VR arms (full-body IK) -> %s", fp::armsWant.load() ? "ON" : "off (animated arms)"); }
+                    else if (i == 3) {
+                        if (g_cfg.xr == 4) { int m = ui::theaterMode.load() == 1 ? 0 : 1; ui::theaterMode = m; logf("HOTKEY F10 theatre screen -> %s", m == 1 ? "ALWAYS (everything on the flat screen)" : "auto (videos and menus without a 3D world)"); }   // 0.18.2: "never" only from the ini (it left pause menus in 3D)
                         else { m_burst = 1; m_census = 1; slDump = 2; r1::pjDump = 1; logf("HOTKEY F10 snapshot + R1 view census"); } }
-                    if (i == 7 && g_cfg.xr == 4) { g_ui.follow = !g_ui.follow; logf("HOTKEY F4 HUD panel -> %s", g_ui.follow ? "stays put in the room" : "fixed to your view"); }
+                    if (i == 7 && g_cfg.xr == 4 && (GetAsyncKeyState(VK_SHIFT) & 0x8000)) {
+                        // 0.18.19 arm overlay test (owner: "the grass in black and white can be seen through the arm" - headset only, the monitor
+                        // never shows it, solid when looking down-left): the HUD panel is a separate layer the headset draws OVER the game image,
+                        // room-fixed in front of you. Anything in the UI image where nothing is drawn (colour with alpha 0) is ADDED by a
+                        // premultiplied layer. Shift+F4: HUD premultiplied (as before) -> straight alpha (stray colour hidden) -> HUD hidden.
+                        static int st = 0; st = (st + 1) % 3;
+                        g_ui.premul = st == 1 ? 0 : 1; if (S) S->uiPremul = (u32)g_ui.premul; ui::hudHidden = st == 2 ? 1 : 0;
+                        logf("HOTKEY Shift+F4 HUD layer -> %s", st == 0 ? "shown, premultiplied alpha (as before)" : st == 1 ? "shown, straight alpha (colour where the UI is transparent is not added)" : "hidden (the arm overlay test)");
+                    }
+                    else if (i == 7 && g_cfg.xr == 4) { g_ui.follow = !g_ui.follow; logf("HOTKEY F4 HUD panel -> %s", g_ui.follow ? "stays put in the room" : "fixed to your view"); }
                     else if (i == 7) { r1::dupOn ^= 1; r1::pjDump = 1; logf("HOTKEY F4 R1 main-only renderables duplicated into the second view (BUG-17 fix, A/B) -> %d", r1::dupOn.load()); }
-                    if (i == 4) { m_recenter = 1; if (S) InterlockedIncrement(&S->theaterRecenter); logf("HOTKEY F11 recentre head tracking (and the theatre screen)"); }
-                    if (i == 6) { r1::on ^= 1; slDump = 2; logf("HOTKEY F5 R1-A second render-graph run (same camera) -> %d", r1::on.load()); }
-                    if (i == 5) {
+                    if (i == 4) { vrin::moveCapture(150); m_recenter = 1; if (S) InterlockedIncrement(&S->theaterRecenter); g_flatCut = 2; occ::reseed(); logf("HOTKEY F11 recentre head tracking (and the theatre screen) + all per-eye histories reset (like the pause menu)"); }
+                    if (i == 6 && g_cfg.xr == 4) {   // 0.17.0: F5 first person on/off, Shift+F5 hero skeleton into the log
+                        if (GetAsyncKeyState(VK_SHIFT) & 0x8000) { fp::dumpReq = 1; logf("HOTKEY Shift+F5 hero skeleton dump requested (logged at the next first-person frame)"); }
+                        else { fp::on = !fp::on.load(); logf("HOTKEY F5 first person -> %s", fp::on.load() ? "ON" : "OFF (the game's third-person camera)"); } }
+                    else if (i == 6) { r1::on ^= 1; slDump = 2; logf("HOTKEY F5 R1-A second render-graph run (same camera) -> %d", r1::on.load()); }
+                    if (i == 5 && g_cfg.xr == 4 && (GetAsyncKeyState(VK_SHIFT) & 0x8000)) {   // 0.18.21 arm shading test (see namespace shade)
+                        const int m = (shade::mode.load() + 1) % 3; shade::mode = m;
+                        logf("HOTKEY Shift+F6 arm shading test -> %s (the game holds: screen-space shadows %d, ambient occlusion %d)", m == 0 ? "the game's own settings" : m == 1 ? "screen-space shadows OFF" : "screen-space shadows + ambient occlusion OFF", shade::seenS.load(), shade::seenA.load());
+                    }
+                    else if (i == 5) {
                         if (g_cfg.xr == 4 && cutp::applied) { applyPreset(g_preset.load() + 1); logf("HOTKEY F6 history preset %s", kPresets[g_preset.load()].name); }
                         else { int cur = m_histReset.load(); if (cur < 0) cur = g_cfg.histReset; m_histReset = !cur; logf("HOTKEY F6 temporal history reset every VR frame -> %d", !cur); }
                     }
@@ -3378,7 +4640,11 @@ static DWORD WINAPI worker(void *) {
             static u64 ppr = 0; u64 pr = pub::pairsPub;
             { static u64 pc = 0, pf = 0, pb = 0, pd = 0, pk = 0; u64 c = occ::calls, f = occ::fixed, b = occ::skipBranch, d = occ::skipDims, k = occ::skipBank;
               static u64 pft = 0; u64 ft = occ::fastTicks;
-              logf("   OCC/s: setup calls=%llu per-eye fixed=%llu | not steady-state=%llu dims differ=%llu no bank=%llu | eye=%d | fast-turn frames=%llu (last %.2f deg, limit %.1f)", (unsigned long long)(c - pc), (unsigned long long)(f - pf), (unsigned long long)(b - pb), (unsigned long long)(d - pd), (unsigned long long)(k - pk), g_camEye.load(), (unsigned long long)(ft - pft), occ::lastAngle, occ::fastDeg); pft = ft;
+              { static u64 a0, a1, q00, q01, q10, q11; const u64 b0 = occ::trkOwn, b1 = occ::trkEngine, r00 = occ::parEye[0][0], r01 = occ::parEye[0][1], r10 = occ::parEye[1][0], r11 = occ::parEye[1][1];
+                logf("   OCCTRK/s: own-slot tests=%llu engine pairing=%llu | parity seen by the left eye p0=%llu p1=%llu, right eye p0=%llu p1=%llu", (unsigned long long)(b0 - a0), (unsigned long long)(b1 - a1),
+                     (unsigned long long)(r00 - q00), (unsigned long long)(r01 - q01), (unsigned long long)(r10 - q10), (unsigned long long)(r11 - q11)); a0 = b0; a1 = b1; q00 = r00; q01 = r01; q10 = r10; q11 = r11; }
+              logf("   OCC/s: setup calls=%llu per-eye fixed=%llu | not steady-state=%llu dims differ=%llu no bank=%llu | eye=%d | fast-turn frames=%llu (left %llu, right %llu; last %.2f deg, head %.2f deg, limit left %.2f / right %.1f)", (unsigned long long)(c - pc), (unsigned long long)(f - pf), (unsigned long long)(b - pb), (unsigned long long)(d - pd), (unsigned long long)(k - pk), g_camEye.load(), (unsigned long long)(ft - pft), (unsigned long long)occ::fastL.exchange(0), (unsigned long long)occ::fastR.exchange(0), occ::lastAngle, occ::lastHeadAngle.load(), occ::fastDegLeft, occ::fastDeg); pft = ft;
+              logf("   OCCVIEW/s: foliage culling view mode %d | calls %llu, engine view %llu, none %llu", occ::viewMode.load(), (unsigned long long)occ::viewCalls.exchange(0), (unsigned long long)occ::viewEngine.exchange(0), (unsigned long long)occ::viewNull.exchange(0));
               pc = c; pf = f; pb = b; pd = d; pk = k; }
             { static u64 a0, a1, a2, a3, a4, a5, a6, a7, vs0, vw0; u64 b0 = taa::runs, b1 = taa::drawFix, b2 = taa::velFix, b3 = taa::restores, b4 = taa::saves, b5 = taa::resets, b6 = taa::stale, b7 = taa::texFail;
               { static u64 q0, q1, q2, q3, q4, q5, q6; u64 w0 = ui::binds, w1 = ui::mapped, w2 = ui::scissors, w3 = ui::movieDraws, w4 = ui::flatPosts, w5 = ui::skipNoView, w6 = ui::posts;
@@ -3395,6 +4661,27 @@ static DWORD WINAPI worker(void *) {
                      (unsigned long long)(x6 - r6), (unsigned long long)(x7 - r7), (unsigned long long)(x2 - r2), (unsigned long long)(x3 - r3), pn ? pb : " none", S ? (long long)S->hostUi : -1LL);
                 { u64 a = camA(); float cf[6] = {0, 0, 0, 0, 0, 0}; if (isCam(a)) { cf[0] = *(const float *)(a + 0x670); for (int j = 0; j < 4; j++) cf[1 + j] = *(const float *)(a + 0x6A4 + 4 * j); cf[5] = (float)*(const u8 *)(a + 0x7D8); }
                   logf("   CAMCENSUS/s: fov %.3f rect +0x6A4 %.3f %.3f %.3f %.3f cut %.0f | cutscene(bars)=%d | outermost 3D rows brightness avg %d max %d (of 255) | HUD images skipped (right eye)=%llu | size recomputes=%llu (output %dx%d, UI/flat aspect %.3f) swapchain resizes=%llu UI row copies skipped while resizing=%llu", cf[0], cf[1], cf[2], cf[3], cf[4], cf[5], ui::sceneBars.load(), ui::rowEdgeAvg.load(), ui::rowEdgeMax.load(), (unsigned long long)ui::rightSkip.exchange(0), (unsigned long long)rsz::calls.exchange(0), rsz::lastW.load(), rsz::lastH.load(), rsz::ana.load(), (unsigned long long)pub::resizes.load(), (unsigned long long)ui::cineSizeSkip.exchange(0)); }
+                  { static const char *rn[] = {"active", "F5 off", "no hero", "hero not usable", "no up axis", "head not animated yet", "camera far from the hero (scripted)"};
+                    const int r = fp::lastReason.load(); const char *rs = r >= 10 ? (r == 11 ? "flat/theatre frame" : r == 12 ? "cutscene" : r == 13 ? "start screen" : "UI mode") : (r >= 0 && r <= 6 ? rn[r] : "-");
+                    static u64 f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10; const u64 g0 = fp::nActive, g1 = fp::nBlockedUi, g2 = fp::nNoHero, g3 = fp::nFar, g4 = fp::nCollapse, g5 = fp::nSeenCollapsed, g6 = fp::nSeenRestored, g7 = fp::nHeroJobs, g8 = fp::nJobsHidden, g9 = fp::nJobsNoBuf, g10 = fp::nJointsHidden;
+                    logf("   FP/s: first person %s (frames %llu, game camera kept: UI %llu, no hero %llu, far camera %llu) | hero %p joints %d head %d neck %d | head set %d (dropped %llu) | hero animation jobs %llu, head hidden in %llu (%.0f joints each; no pose buffer %llu; pose already hidden on entry %llu / fresh %llu) | head %.0f cm above the root, game camera %.1f m from the head | eyes on the head centre: %.1f cm sideways from the head joint",
+                         rs, (unsigned long long)(g0 - f0), (unsigned long long)(g1 - f1), (unsigned long long)(g2 - f2), (unsigned long long)(g3 - f3), (void *)fp::hero, fp::nJ, fp::headIdx, fp::neckIdx, fp::nHide, (unsigned long long)fp::nDropped.load(),
+                         (unsigned long long)(g7 - f7), (unsigned long long)(g8 - f8), g8 > f8 ? (double)(g10 - f10) / (double)(g8 - f8) : 0.0, (unsigned long long)(g9 - f9), (unsigned long long)(g5 - f5), (unsigned long long)(g6 - f6), fp::headUp.load() / (g_cfg.unitsPerM * 0.01f), fp::camDist.load(), fp::headLat.load());
+                    (void)g4; (void)f4;
+                    { const u64 ca = camA(); const float cn = isCam(ca) ? *(const float *)(ca + 0x664) : -1.0f;
+                    logf("   NEAR/s: first-person near plane %.1f cm (0 = game's own; camera now %.1f, environment entries set %llu) applied left %llu right %llu, projection not recognised %llu | hand trims pitch %.1f yaw %.1f roll %.1f deg (F1/F2/F3, Shift = back), wrist back %.1f up %.1f thumb %.1f cm (Ctrl+F1/F2/F3) | arm shading test (Shift+F6) %d: the game holds screen-space shadows %d, ambient occlusion %d (writes %llu)", g_fp.nearCm, cn, (unsigned long long)stipple::nNear.exchange(0),
+                         (unsigned long long)fp::nearHits[0].exchange(0), (unsigned long long)fp::nearHits[1].exchange(0), (unsigned long long)fp::nearMiss.exchange(0), g_fp.handPitch, g_fp.handYaw, g_fp.handRoll, g_fp.handBackCm, g_fp.handUpCm, g_fp.handSideCm, shade::mode.load(), shade::seenS.load(), shade::seenA.load(), (unsigned long long)shade::writes.exchange(0)); }
+                    { static const char *iw[] = {"holding", "off", "pad input", "moving", "game owns the arms", "riding", "animation moving", "pose size"}; const int w = fp::idleWhy.load();
+                      logf("   UNDER/s: body under the headset %s, offset %.1f cm (max %.0f)", g_fp.bodyUnder ? "on" : "off (fp_body_under_hmd)", fp::underCm.load(), g_fp.underMaxCm);
+                      logf("   IDLE/s: idle hold %s | weight %.2f | stance turned %.1f deg to face forward | held poses %llu, let go %llu", w >= 0 && w <= 7 ? iw[w] : "-", fp::idleWOut.load(), -fp::idleSquareDeg.load(), (unsigned long long)fp::nIdleHeld.exchange(0), (unsigned long long)fp::nIdleRelease.exchange(0)); }
+                    logf("   FINGERS/s: %s | posed %llu | grip curl left %.2f right %.2f | thumb down left %.2f right %.2f", fp::fingState.load() == 1 ? (g_fp.fingers ? "VR fingers on" : "off (fp_fingers)") : fp::fingState.load() < 0 ? "not usable (animated)" : "not analysed yet", (unsigned long long)fp::nFingPosed.exchange(0), fp::fingCurlOut[0].load(), fp::fingCurlOut[1].load(), fp::thumbOut[0].load(), fp::thumbOut[1].load());
+                    logf("   ARMS/s: %s | solves %llu, held off %llu | hand blend left %.2f right %.2f | parent table %d | game owns the arms %.2f (input holds %llu, animation raised a hand %llu) | stand tall %.1f cm applied %.1f (%llu poses)", fp::armsReady.load() ? (fp::armsWant.load() && g_fp.arms ? "VR arms ON" : "VR arms off (Shift+F10 / fp_arms)") : "arm chains not found yet",
+                         (unsigned long long)fp::nArmSolves.exchange(0), (unsigned long long)fp::nArmSkipped.exchange(0), fp::armW[0].load(), fp::armW[1].load(), fp::parState.load(),
+                         fp::gateW.load(), (unsigned long long)fp::nAnimHolds.exchange(0), (unsigned long long)fp::nRaised.exchange(0), fp::standDz.load() / (g_cfg.unitsPerM * 0.01f), fp::standApplied.load() / (g_cfg.unitsPerM * 0.01f), (unsigned long long)fp::nStand.exchange(0));
+                    logf("   BODY/s: body drawn facing your forward: frames %llu, render poses turned %llu (items %llu), now %.0f deg | Jin faces %.0f deg from your forward, speed %.1f m/s | stance hips %.0f deg (squared while standing) | turns: dead zone %llu, snap %llu; body turned past the forward while moving %.0f deg, forward taken at move starts %llu (all %llu) | held off: riding %llu, fast %llu, refused %llu (fp_body_follow %d)",
+                         (unsigned long long)fp::nBodyFrames.exchange(0), (unsigned long long)fp::nBodyJobs.exchange(0), (unsigned long long)fp::nWorldTurned.exchange(0), fp::bodyDeg.load(), fp::facingDeg.load(), fp::speedMs.load(), fp::hipYawDeg.load(), (unsigned long long)fp::nDeadTurns.exchange(0), (unsigned long long)fp::nSnapTurns.exchange(0), fp::moveOffDeg.load(), (unsigned long long)vrin::nMoveStarts.load(), (unsigned long long)vrin::nMoveCaps.load(),
+                         (unsigned long long)fp::nBodyRiding.exchange(0), (unsigned long long)fp::nBodyFast.exchange(0), (unsigned long long)fp::nBodyRefused.exchange(0), g_fp.bodyFollow);
+                    f0 = g0; f1 = g1; f2 = g2; f3 = g3; f4 = g4; f5 = g5; f6 = g6; f7 = g7; f8 = g8; f9 = g9; f10 = g10; }
                 { static u64 s0, s1; u64 y0 = ui::sReads, y1 = ui::sHits;
                 logf("   UICINE/s: HUD image reads=%llu hits=%llu cinematic=%d (max bar rows top/bottom %d/%d of 6, max veil rows %d of %d) | 3D picture reads=%llu hits=%llu bars=%d (max bar rows top/bottom %d/%d) | HUD alpha at mid-row samples: zero %u, partial %u, full %u (HUD-004: squared alpha shows as few full)",
                      (unsigned long long)(x9 - r9), (unsigned long long)(x10 - r10), ui::cine.load(), ui::maxTop.exchange(0), ui::maxBot.exchange(0), ui::maxVeil.exchange(0), ui::NROW,
@@ -3405,6 +4692,17 @@ static DWORD WINAPI worker(void *) {
                 logf("   UIDRAW/s: world-anchored UI batches drawn full-frame=%llu | renderer draw functions seen on the panel (rva:batches):%s", (unsigned long long)(wu - wu0), cn ? cb : " none"); wu0 = wu; }
               logf("   TAA/s: same-eye matrices=%llu draw=%llu velocity=%llu (private %llu, swapped %llu) | history restored=%llu saved=%llu | resets=%llu stale=%llu bank failures=%llu source switches=%llu recreations=%llu",
                    (unsigned long long)(b0 - a0), (unsigned long long)(b1 - a1), (unsigned long long)(b2 - a2), (unsigned long long)(taa::velSplit - vs0), (unsigned long long)(taa::velSwaps - vw0), (unsigned long long)(b3 - a3), (unsigned long long)(b4 - a4), (unsigned long long)(b5 - a5), (unsigned long long)(b6 - a6), (unsigned long long)(b7 - a7), (unsigned long long)taa::srcChanges.load(), (unsigned long long)taa::recreations.load());
+              {   // 0.18.7 (BUG-74, owner: "that anti-aliasing change might have been when we tried DLSS"): which anti-aliasing the game runs.
+                  // Since 0.11.0 every session shows TAA reset on every frame (restored=0): the game's own TAA is not in use, an upscaler
+                  // (DLSS / DLAA / FSR / XeSS, the game's Upscaling setting) does the anti-aliasing with ONE history for both eyes - the
+                  // eye drawn first in each pair inherits the other eye's view from a moment earlier (streaks on fast head turns).
+                  static u64 r0 = 0, c0 = 0; const u64 r1n = taa::resets.load(), c1n = slCalls[0].load(); u8 *st = rsz::settingsOf(rsz::getApp());
+                  const int um = st && readable(st + 0xB0, 8) ? *(int *)(st + 0xB0) : -1, uq = st && readable(st + 0xB0, 8) ? *(int *)(st + 0xB4) : -1;
+                  const u64 dr = r1n - r0, dc = c1n - c0; r0 = r1n; c0 = c1n;
+                  logf("   AA/s: game TAA resets=%llu | upscaler pass runs=%llu | the game's Upscaling setting: method %d quality %d", (unsigned long long)dr, (unsigned long long)dc, um, uq);
+                  static int warned = 0; if (g_cfg.xr == 4 && dr > 40 && !warned) { warned = 1;
+                      logf("AA WARNING: the game's TAA is reset every frame -> an upscaler (DLSS / DLAA / FSR / XeSS) is doing the anti-aliasing with one history for both eyes: streaks in one eye on fast head turns. Set the game's Upscaling method to Off / TAA (BUG-74)."); }
+              }
               if (taa::dN) { logf("   TAA camera: |current - previous| same-eye %.2f cm, cross-eye %.2f cm; max |same-eye reprojection - engine| %.4f (n=%llu)",
                    taa::dSameSum / taa::dN, taa::dCrossSum / taa::dN, taa::dRepN ? taa::dRepSum / taa::dRepN : -1.0, (unsigned long long)taa::dN);
                    taa::dSameSum = taa::dCrossSum = taa::dRepSum = 0; taa::dN = taa::dRepN = 0; }
@@ -3419,6 +4717,13 @@ static DWORD WINAPI worker(void *) {
               if (pub::dev) { HRESULT rr = pub::dev->GetDeviceRemovedReason(); static bool told = false; if (rr != S_OK && !told) { told = true; logf("D3D12 DEVICE REMOVED: reason 0x%08lx", (unsigned long)rr); } }
               a0 = b0; a1 = b1; a2 = b2; a3 = b3; a4 = b4; a5 = b5; a6 = b6; a7 = b7; vs0 = taa::velSplit; vw0 = taa::velSwaps; }
             static u64 pmir = 0, pch = 0; u64 mir = pub::mirrored, ch = c_cullHead; logf("   MONITOR/s: left-eye mirror copies=%llu | cull camera follows head=%d (%llu/s)", (unsigned long long)(mir - pmir), m_cullHead.load(), (unsigned long long)(ch - pch)); pmir = mir; pch = ch;
+            if (S) { char p0[96], p1[96]; gvRead(&S->inSeq, [&] { memcpy(p0, S->inProfile[0], 96); memcpy(p1, S->inProfile[1], 96); }); p0[95] = p1[95] = 0;
+                logf("   INPUT/s: polls %llu, live %llu, stale %llu | snap turns %llu, wheel opened %llu / used %llu, head gestures %llu (HUD %llu) | rumble max %d%% | left %s, right %s",
+                     (unsigned long long)vrin::nPolls.exchange(0), (unsigned long long)vrin::nActive.exchange(0), (unsigned long long)vrin::nStale.exchange(0), (unsigned long long)vrin::nSnaps.exchange(0),
+                     (unsigned long long)vrin::nWheelOpen.exchange(0), (unsigned long long)vrin::nWheelPick.exchange(0), (unsigned long long)vrin::nGest.exchange(0), (unsigned long long)vrin::nHud.exchange(0), vrin::rumbleMax.exchange(0), p0[0] ? p0 : "-", p1[0] ? p1 : "-"); }
+            if (S) logf("   POSE/s: simulated eye %s (Shift+F9) | prediction lead %.1f ms (new pairs reach the display %.1f ms after their prediction) | host GPU priority %ld | render sync %d: waited %llu (%.1f ms total, timeouts %llu), already presented %llu | first person: left/right eye anchor apart by up to %.2f cm before the pair reuse, reused %llu, recomputed %llu",
+                        g_eyeSwapLatched ? "RIGHT (swapped)" : "left", S->poseLeadUs / 1000.0, S->poseLagUs / 1000.0, (long)S->hostGpuPrio, g_renderSync, (unsigned long long)g_syncNeeded.exchange(0), g_syncWaitUs.exchange(0) / 1000.0, (unsigned long long)g_syncTimeouts.exchange(0), (unsigned long long)g_syncAlready.exchange(0),
+                        (double)fp::lrDiffMax.exchange(0), (unsigned long long)fp::nPairReuse.exchange(0), (unsigned long long)fp::nRecompute.exchange(0));
             logf("   SYNC/s: simulated (left-eye) ticks=%llu frozen (right-eye) ticks=%llu | stereo pairs published=%llu | history preset %s | camera cuts=%llu | cut readers/s VV=%llu VO=%llu L=%llu T1=%llu T2=%llu",
                  (unsigned long long)(sm - psm), (unsigned long long)(fz - pfz), (unsigned long long)(pr - ppr), kPresets[g_preset.load()].name, (unsigned long long)(cu - pcut),
                  (unsigned long long)(u32)(h[0] - ph[0]), (unsigned long long)(u32)(h[1] - ph[1]), (unsigned long long)(u32)(h[2] - ph[2]), (unsigned long long)(u32)(h[3] - ph[3]), (unsigned long long)(u32)(h[4] - ph[4]));
@@ -3483,6 +4788,8 @@ extern "C" __declspec(dllexport) int GoTVR_SelfTest(const wchar_t *exePath) {
         {RVA_SC_COMPUTESIZES, (void *)rsz::hCS, (void **)&rsz::oCS, "SC_ComputeSizes (headset render size)"},
         {RVA_WND_PUMP, (void *)rsz::hPump, (void **)&rsz::oPump, "GameWindow_Pump (F2 size change on the main thread)"},
         {RVA_SC_RECREATE, (void *)pub::hRecreate, (void **)&pub::oRecreate, "SC_Recreate (swapchain re-creation)"},
+        {RVA_ANIM_JOB, (void *)fp::hAnimJob, (void **)&fp::oAnimJob, "Anim_Job (first-person head hiding in the render pose)"},
+        {RVA_OCC_VIEWFN, (void *)occ::hOccView, (void **)&occ::oOccView, "Occ_View (foliage culling gets the engine view)"},
     };
     int bad = 0;
     for (auto &h : hooks) {
@@ -3529,21 +4836,46 @@ extern "C" __declspec(dllexport) int GoTVR_SelfTest(const wchar_t *exePath) {
                 ((float *)(view + 0xA0))[0] == 100.0f && ((float *)(view + 0xE0))[3] == 16.0f && ((float *)(view + 0xB0))[0] == 1.0f;
         view[0x120] = 1; *(u8 **)(view + 0x110) = g_base + RVA_OCC_SLOTS + 0x20; occ::hOcc(view);   // first frame after a cut: untouched
         occOk &= *(u8 **)(view + 0x110) == g_base + RVA_OCC_SLOTS + 0x20 && occ::fixed.load() == 1;
+        {   // 0.18.9 tracked slot ownership: an eye tests only against a slot its own last frame drew, with that frame's camera
+            static u8 fcam[0x700]; u8 **pc = (u8 **)(g_base + RVA_CAMA); DWORD op2; VirtualProtect(pc, 8, PAGE_READWRITE, &op2); u8 *const scam = *pc; *pc = fcam;
+            const bool sfo = g_stFrameOn; const u32 sfr = g_stFrame; g_stFrameOn = true; occ::on = 2; occ::owner[0].ok = occ::owner[1].ok = false; occ::fixed = 0; occ::trkOwn = 0; occ::trkEngine = 0;
+            auto frame = [&](u32 f, int eye, int par2, float tag) { g_stFrame = f; g_camEye = eye; *par = par2; for (int i = 0; i < 16; i++) ((float *)(fcam + 0x430))[i] = tag + i; ((float *)(fcam + 0x550))[0] = tag;
+                view[0x120] = 0; *(u8 **)(view + 0x110) = g_base + RVA_OCC_SLOTS + par2 * 0x20; memset(view + 0xA0, 0, 16); occ::hOcc(view); };
+            bool tk = true;
+            frame(10, 0, 0, 100.0f); tk &= occ::trkEngine.load() == 1 && *(u8 **)(view + 0x110) == g_base + RVA_OCC_SLOTS;                 // nothing of its own yet: engine
+            frame(11, 1, 1, 200.0f); tk &= occ::trkEngine.load() == 2;                                                                    // the left eye's slot is not the right's
+            frame(12, 0, 0, 300.0f); tk &= *(u8 **)(view + 0x110) == g_base + RVA_OCC_SLOTS + 0x20 && ((float *)(view + 0xA0))[0] == 100.0f && occ::trkOwn.load() == 1;   // its own (frame 10, slot 1) with frame 10's camera
+            frame(13, 1, 0, 400.0f); tk &= *(u8 **)(view + 0x110) == g_base + RVA_OCC_SLOTS && ((float *)(view + 0xA0))[0] == 200.0f && occ::trkOwn.load() == 2;            // parity did not toggle: still its own slot 0 (frame 11)
+            frame(14, 0, 1, 500.0f); tk &= occ::trkEngine.load() == 3 && *(u8 **)(view + 0x110) == g_base + RVA_OCC_SLOTS + 0x20;          // its slot was overwritten by the other eye: engine pairing
+            occOk &= tk; if (!tk) logf("   tracked occlusion: FAIL (own %llu engine %llu)", (unsigned long long)occ::trkOwn.load(), (unsigned long long)occ::trkEngine.load());
+            *pc = scam; g_stFrameOn = sfo; g_stFrame = sfr; g_camEye = -1; occ::owner[0].ok = occ::owner[1].ok = false; occ::trkOwn = 0; occ::trkEngine = 0;
+        }
+        {   // 0.18.11 preset 7: per-eye frustum culling - the setup is not touched and every Occ_View caller gets no occlusion view
+            occ::on = 3; g_camEye = 1; *par = 1; occ::fixed = 0; view[0x120] = 0; *(u8 **)(view + 0x110) = g_base + RVA_OCC_SLOTS + 0x20; memset(view + 0xA0, 0x5A, 16);
+            occ::hOcc(view); bool m3 = occ::fixed.load() == 0 && *(u8 **)(view + 0x110) == g_base + RVA_OCC_SLOTS + 0x20 && view[0xA0] == 0x5A && view[0xAF] == 0x5A;
+            const int svm = occ::viewMode.load(); occ::viewMode = 1; const u64 vn = occ::viewNull.load();
+            m3 &= occ::hOccView(g_base + RVA_OCC_VIEW) == nullptr && occ::viewNull.load() == vn + 1;   // even with the engine-view setting
+            occ::viewMode = svm; g_camEye = -1; occOk &= m3; if (!m3) logf("   per-eye frustum culling (mode 3): FAIL");
+        }
         *par = sp; *en = se; dims[0] = sd0; *(u32 *)((u8 *)dims + 0x34) = sd1; g_cfg.xr = sx; occ::on = 0; occ::bank[1].ok = false; occ::fixed = 0;
-        logf("per-eye occlusion test: %s", occOk ? "PASS" : "FAIL");
+        logf("per-eye occlusion test (0.9.4 bank, tracked slots, preset 7 per-eye frustum culling): %s", occOk ? "PASS" : "FAIL");
     }
     bool fastOk = false;
     {   // BUG-36: fast-turn detection between this eye's previous world and the current one
         static u8 cam[0x900]; memset(cam, 0, sizeof cam); occ::Bank &bk = occ::bank[0]; memset(&bk, 0, sizeof bk); bk.ok = true;
         float *pw = (float *)(bk.w180 + 0x40); pw[0] = 1; pw[5] = 1; pw[10] = 1;
         auto setYaw = [&](float deg) { float a = deg / 57.2957795f, c = cosf(a), sn = sinf(a); float *w = (float *)(cam + 0x140); memset(w, 0, 64); w[0] = c; w[1] = sn; w[4] = -sn; w[5] = c; w[10] = 1; };
-        const int sx = g_cfg.xr; g_cfg.xr = 4; occ::on = 1; g_pairPhase = 0; occ::fastDeg = 2.0f;
+        const int sx = g_cfg.xr; g_cfg.xr = 4; occ::on = 1; g_pairPhase = 1; occ::fastDeg = 2.0f; occ::fastDegLeft = 0.6f; occ::bank[1] = bk;
         setYaw(1.0f); occ::fastCheck(cam); bool slow = !occ::fast.load() && fabsf(occ::lastAngle - 1.0f) < 0.05f;
         setYaw(5.0f); occ::fastCheck(cam); bool quick = occ::fast.load() && fabsf(occ::lastAngle - 5.0f) < 0.05f;
         setYaw(0.5f); occ::fastCheck(cam); bool back = !occ::fast.load();
-        fastOk = slow && quick && back;
+        g_pairPhase = 0; setYaw(1.0f); occ::fastCheck(cam); const bool leftLow = occ::fast.load();   // the left eye: 1 deg is already a gap
+        setYaw(0.3f); occ::fastCheck(cam); const bool leftBack = !occ::fast.load();
+        occ::on = 3; g_pairPhase = 1; setYaw(5.0f); occ::fastCheck(cam); const bool noCut3 = !occ::fast.load();   // preset 7: never a fast-turn cut
+        occ::bank[1].ok = false; g_pairPhase = 0;
+        fastOk = slow && quick && back && leftLow && leftBack && noCut3;
         g_cfg.xr = sx; occ::on = 0; bk.ok = false; occ::fastTicks = 0;
-        logf("fast-turn detection test: 1 deg slow=%d, 5 deg fast=%d, back=%d -> %s", slow, quick, back, fastOk ? "PASS" : "FAIL");
+        logf("fast-turn detection test: right eye 1 deg slow=%d, 5 deg fast=%d, back=%d; left eye 1 deg fast=%d, 0.3 deg back=%d; preset 7 never cuts=%d -> %s", slow, quick, back, leftLow, leftBack, noCut3, fastOk ? "PASS" : "FAIL");
     }
     bool dlssOk = false;
     {   // BUG-37: right-eye frames go to viewport value+OFF in slEvaluateFeature / slSetTag / slSetConstants; left untouched
@@ -3705,8 +5037,424 @@ extern "C" __declspec(dllexport) int GoTVR_SelfTest(const wchar_t *exePath) {
         rsz::hPump(nullptr, 0.016f); ok &= nApply == 1;                                // once per request
         st[0] = 1; rsz::request(); ok &= rsz::pending.load() == 0;                     // fullscreen: refused at the key
         rsz::pending = 1; rsz::hPump(nullptr, 0.016f); ok &= nApply == 1; st[0] = 0;   // ...and at the pump
+        {   // 0.18.6 motion blur held at 0 in VR (the same settings block, +0x64), the user's value back at exit
+            const int sx = g_cfg.xr; g_cfg.xr = 4; *(float *)(st + 0x64) = 0.75f; mblur::tick(true); bool mb = *(float *)(st + 0x64) == 0.0f && mblur::forced.load() == 1;
+            mblur::restore(); mb &= *(float *)(st + 0x64) == 0.75f;
+            g_mblurOff = 0; mblur::tick(true); mb &= *(float *)(st + 0x64) == 0.75f; g_mblurOff = 1;   // motion_blur_off = 0: untouched
+            g_cfg.xr = 0; mblur::tick(true); mb &= *(float *)(st + 0x64) == 0.75f;                        // not in VR: untouched
+            g_cfg.xr = sx; mblur::orig = -1.0f; mblur::st0 = nullptr; mblur::forced = 0; *(float *)(st + 0x64) = 0;
+            ok &= mb; logf("motion blur test (held at 0 in VR, restored at exit, untouched when off / not in VR): %s", mb ? "PASS" : "FAIL");
+            {   // 0.18.21 arm shading test: Shift+F6 modes write 0 to +0x98 (and +0x60), the game's values come back, odd values are left alone
+                const int sx2 = g_cfg.xr; g_cfg.xr = 4; *(int *)(st + 0x98) = 2; *(int *)(st + 0x60) = 3;
+                shade::mode = 1; shade::tick(true); bool sh = *(int *)(st + 0x98) == 0 && *(int *)(st + 0x60) == 3;
+                shade::mode = 2; shade::tick(true); sh &= *(int *)(st + 0x98) == 0 && *(int *)(st + 0x60) == 0;
+                shade::mode = 0; shade::tick(true); sh &= *(int *)(st + 0x98) == 2 && *(int *)(st + 0x60) == 3;
+                *(int *)(st + 0x98) = 77; shade::mode = 1; shade::tick(true); sh &= *(int *)(st + 0x98) == 77 && shade::mode.load() == 0;   // not a setting we know
+                *(int *)(st + 0x98) = 1; shade::mode = 2; shade::tick(true); shade::restore(); sh &= *(int *)(st + 0x98) == 1 && *(int *)(st + 0x60) == 3;   // exit
+                shade::mode = 0; shade::tick(true); g_cfg.xr = sx2; *(int *)(st + 0x98) = 0; *(int *)(st + 0x60) = 0; shade::writes = 0;
+                ok &= sh; logf("arm shading test (Shift+F6: screen-space shadows, then + ambient occlusion off; the game's values back; unknown values untouched): %s", sh ? "PASS" : "FAIL");
+            }
+            {   // 0.18.10 near stipple fade: switched off in the active environment sets while first person is on, the game's value back after
+                static u8 fset[0x2C58]; memset(fset, 0, sizeof fset); u8 *e = fset + 106 * 0x20; *(int *)(e + 0x10) = 106; *(int *)(e + 0x14) = 3; e[0] = 0; e[0x1C] = 0;
+                u8 *eh = fset + 312 * 0x20; *(int *)(eh + 0x10) = 312; *(int *)(eh + 0x14) = 1; *(float *)eh = 1.0f;
+                u8 *en = fset + 5 * 0x20, *er = fset + 104 * 0x20; *(int *)(en + 0x10) = 5; *(int *)(en + 0x14) = 1; *(float *)en = 10.0f; *(int *)(er + 0x10) = 104; *(int *)(er + 0x14) = 1; *(float *)er = 200.0f;
+                static u8 bad[0x2C58]; memset(bad, 0, sizeof bad);   // not an environment set (index / type do not match): untouched
+                u8 **lst = (u8 **)(g_base + stipple::RVA_LIST); int *cnt = (int *)(g_base + stipple::RVA_COUNT); DWORD o1, o2; VirtualProtect(lst, 16, PAGE_READWRITE, &o1); VirtualProtect(cnt, 4, PAGE_READWRITE, &o2);
+                u8 *s0 = lst[0], *s1 = lst[1]; const int c0 = *cnt; lst[0] = fset; lst[1] = bad; *cnt = 2;
+                const int sx2 = g_cfg.xr; g_cfg.xr = 4; const bool sfo = g_stFrameOn; const u32 sfr = g_stFrame; g_stFrameOn = true;
+                const float snc = g_fp.nearCm; g_fp.nearCm = 2.0f;
+                g_stFrame = 500; stipple::tick(true); bool st = e[0] == 1 && e[0x1C] == 1 && bad[106 * 0x20] == 0 && *(float *)en == 10.0f && en[0x1C] == 0 && *(float *)er == 200.0f && bad[5 * 0x20] == 0 && *(float *)eh == 1.0f;   // 0.18.15: near clip / focus radius left to the game
+                g_stFrame = 501; stipple::tick(false); st &= e[0] == 0 && e[0x1C] == 0 && stipple::nMods == 0 && *(float *)eh == 1.0f;
+                *(int *)(en + 0x14) = 3; g_stFrame = 502; stipple::tick(true); st &= *(float *)en == 10.0f; g_stFrame = 503; stipple::tick(false);   // NEAR_CLIP not typed like a float: untouched
+                g_fp.nearCm = snc;
+                lst[0] = s0; lst[1] = s1; *cnt = c0; g_cfg.xr = sx2; g_stFrameOn = sfo; g_stFrame = sfr;
+                ok &= st; logf("environment test (near stipple fade off in first person, near clip / focus radius untouched, checked entries only, game values back after): %s", st ? "PASS" : "FAIL");
+            }
+        }
         rsz::getApp = sg; rsz::apply = sa; rsz::oPump = sp; rsz::pending = 0; rsz::applies = 0; rsz::pumpTid = 0;
         logf("main-thread size change test (after the message pump, ApplyDisplay with the current settings, once, never in fullscreen): %s", ok ? "PASS" : "FAIL");
+        rsOk &= ok;
+    }
+    {   // 0.17.0/0.17.3 first person: eye anchor on the root + head height; head set hidden in the RENDER POSE right after the
+        // hero's animation job (rows zero, onto the neck), world array untouched, stray hand dropped, nothing hidden once FP stops
+        static u8 code[8] = {0xB8, 0x2A, 0, 0, 0, 0xC3}; static void *vt[8]; vt[4] = code;
+        static u8 hero[0x4200]; static float jt[32 * 16], pose[2][32 * 16]; static u8 job[0x100]; memset(hero, 0, sizeof hero); memset(jt, 0, sizeof jt); memset(pose, 0, sizeof pose); memset(job, 0, sizeof job);
+        *(void ***)hero = vt; float *root = (float *)(hero + 0x150);
+        auto ident = [](float *m, float x, float y, float z) { memset(m, 0, 64); m[0] = 1; m[5] = 1; m[10] = 1; m[15] = 1; m[12] = x; m[13] = y; m[14] = z; };
+        ident(root, 1000, 2000, 300); *(float **)(hero + 0x278) = jt; *(int *)(hero + 0x280) = 31;   // node count = 30 joints + the node
+        *(char *)(hero + 0x2DA) = 0; *(float **)(hero + 0x508) = pose[0]; *(int *)(hero + 0x510) = 30; *(float **)(hero + 0x520) = pose[1]; *(int *)(hero + 0x528) = 30;
+        static float hand; hand = 160;
+        auto anim = [&](float handUp) { ident(jt, 1000, 2000, 300); for (int i = 0; i < 30; i++) ident(jt + (i + 1) * 16, 1000, 2000, 300 + i * 6.0f); ident(jt + 30 * 16, 1000, 2000, 300 + handUp); ident(jt + 31 * 16, 1e9f, 0, 0); ident(jt + 2 * 16, 1003, 2000, 300 + 205.0f);   /* BUG-75: joint 1 = lone gear above the head (horse) */
+            for (int k = 0; k < 12; k++) jt[9 * 16 + k] = 0.0f; };   // joint 8: a hidden gear slot (zero scale) inside the skeleton
+        anim(hand);   // joint 29 = a hand next to the face in the first pose
+        const auto shp = fp::heroPtr; static u8 *hp; hp = hero; fp::heroPtr = []() -> u8 * { return hp; };
+        const auto soj = fp::oAnimJob;   // the "animation job": model-space render pose of this tick (joint i at i * 6 cm, the hand at `hand`)
+        fp::oAnimJob = [](u8 *j) { float *P = *(float **)(j + 0xA8); for (int i = 0; i < 30; i++) { float *m = P + i * 16; memset(m, 0, 64); m[0] = m[5] = m[10] = m[15] = 1; m[14] = i * 6.0f; } P[29 * 16 + 14] = hand; P[1 * 16 + 12] = 3; P[1 * 16 + 14] = 205; };   // joint 1 = the lone gear (as in the world array)
+        *(u8 **)(job + 0xE8) = hero; *(float **)(job + 0xA8) = pose[0];
+        const int sxr = g_cfg.xr; g_cfg.xr = 4; ui::mode = ui::M_HUD; ui::flatNow = false; const FpCfg sfp = g_fp; g_fp = FpCfg{}; g_fp.vertTau = 0; fp::on = 1; g_stFrameOn = true; g_stFrame = 100;
+        float gm[16]; ident(gm, 1000, 1700, 450);   // game camera 3 m behind
+        bool ok = fp::update(gm) && fp::nJ == 30 && fp::headIdx == 28 && fp::countSrc == 1;
+        ok &= fabsf(gm[12] - (1000 + g_fp.eyeFwdCm)) < 0.01f && fabsf(gm[13] - 2000) < 0.01f && fabsf(gm[14] - (300 + 168 + g_fp.eyeUpCm)) < 0.01f;   // eyes relative to the top of the head
+        ok &= fp::nHide == 5 && fp::neckIdx == 24;   // joints 25..28 (150..168 cm) + the hand at 160 (within 22 cm); the neck = joint 24 (144 cm)
+        ok &= len3_st(jt + 29 * 16) > 0.9f;          // the world array is not touched any more
+        fp::hAnimJob(job);
+        const float *P = pose[0];
+        ok &= len3_st(P + 28 * 16) == 0.0f && len3_st(P + 28 * 16 + 4) == 0.0f && fabsf(P[28 * 16 + 14] - 144) < 0.01f;   // the head: hidden on the neck
+        ok &= len3_st(P + 25 * 16) == 0.0f && len3_st(P + 29 * 16) == 0.0f && len3_st(P + 24 * 16) > 0.9f && len3_st(P + 20 * 16) > 0.9f;   // + the hand by the face; neck and chest drawn
+        *(u8 **)(job + 0xE8) = hero + 8; fp::hAnimJob(job); ok &= len3_st(pose[0] + 25 * 16) > 0.9f; *(u8 **)(job + 0xE8) = hero;   // another character: untouched
+        {   // BUG-70: the left tick recomputes at every camera update (the hero moved after the first one); the right tick reuses it
+            auto shift = [&](float dx) { root[12] += dx; for (int i = 0; i < 31; i++) jt[i * 16 + 12] += dx; };
+            float g3[16]; shift(10); ident(g3, 1000, 1700, 450); bool r1 = fp::update(g3) && fabsf(g3[12] - (1010 + g_fp.eyeFwdCm)) < 0.01f;   // same left tick, later update
+            shift(40); g_pairPhase = 1; g_stFrame = 101; ident(g3, 1000, 1700, 450); r1 &= fp::update(g3) && fabsf(g3[12] - (1010 + g_fp.eyeFwdCm)) < 0.01f;   // right tick: the left's final anchor
+            r1 &= fp::lrDiffMax.load() > 39.0f && fp::nPairReuse.load() == 1; shift(-50); g_pairPhase = 0; fp::lrDiffMax = 0; fp::nPairReuse = 0; fp::nRecompute = 0;
+            ok &= r1; if (!r1) logf("   first-person pair-anchor reuse: FAIL");
+        }
+        g_stFrame = 102; hand = 60; anim(hand);   // the hand drops to 60 cm (84 cm from the neck)
+        fp::hAnimJob(job); ok &= len3_st(pose[0] + 29 * 16) > 0.9f && len3_st(pose[0] + 27 * 16) == 0.0f;   // the stray hand is drawn, the head is not
+        ok &= fp::update(gm) && fp::nHide == 4 && fp::nDropped.load() == 1;   // ...and it leaves the set for good
+        g_stFrame = 103; ui::mode = ui::M_CINEMA; ui::camCut = 1; float gm2[16]; ident(gm2, 1000, 1700, 450); ok &= !fp::update(gm2) && gm2[13] == 1700;   // cutscene: the game's camera
+        g_stFrame = 107; fp::hAnimJob(job); ok &= len3_st(pose[0] + 27 * 16) > 0.9f;   // ...and the head is drawn again
+        ui::mode = ui::M_HUD; ui::camCut = 0; g_stFrame = 108; anim(100); ident(gm2, 1000, 1700 - 2000, 450); ok &= !fp::update(gm2) && fp::lastReason.load() == 6;   // camera 20 m away: scripted
+        {   // 0.18.5 body follow: Jin runs back towards you (faces +x, your forward is -x) -> his pose is drawn turned round
+            // 0.18.16: moving, the body faces your HEAD's forward (world heading); here you look back (-x) while Jin runs at 2 m/s
+            float g4[16]; g_fp.bodyTurnSpeed = 0; const float smt = g_fp.moveTau, sht = g_fp.headTau; g_fp.moveTau = 0; g_fp.headTau = 0; const float sdd = g_fp.headDeadDeg; g_fp.headDeadDeg = 45.0f; const int smh = vrin::cfg.moveHead; vrin::cfg.moveHead = 1; fp::refF[0] = -1; fp::refF[1] = 0; fp::refOk = true; fp::nLone = 0;
+            const bool sho = fp::headOk; fp::headOk = true; fp::headF[0] = -1; fp::headF[1] = 0; const int sbu = g_fp.bodyUnder; g_fp.bodyUnder = 0;
+            const float *rt = (const float *)(fp::node + 0x150); fp::lastRoot[0] = rt[12] - 20.0f; fp::lastRoot[1] = rt[13]; fp::lastRoot[2] = rt[14]; fp::lastRootOk = true; fp::bodyLastMs = GetTickCount64() - 100;
+            g_stFrame = 109; ident(g4, 1000, 1700, 450); bool b = fp::update(g4) && fabsf(fabsf(fp::bodyDeg.load()) - 180.0f) < 0.5f;
+            b &= fabsf(g4[12] - (1000 - g_fp.eyeFwdCm)) < 0.05f;   // the eyes in front of the turned face
+            fp::hAnimJob(job); const float *Q = pose[0];
+            b &= fabsf(Q[20 * 16 + 0] + 1.0f) < 1e-3f && fabsf(Q[20 * 16 + 5] + 1.0f) < 1e-3f && fabsf(Q[20 * 16 + 14] - 120.0f) < 0.01f && fabsf(Q[20 * 16 + 12]) < 0.01f;   // chest turned round, on the head's axis
+            b &= len3_st(Q + 28 * 16) == 0.0f;   // the head stays hidden
+            b &= fabsf(jt[21 * 16 + 0] + 1.0f) < 1e-3f && fabsf(jt[21 * 16 + 12] - 1000.0f) < 0.01f && fabsf(jt[21 * 16 + 14] - 420.0f) < 0.01f;   // 0.18.6: joint 20's WORLD matrix turned on the head axis (items follow)
+            b &= fabsf(jt[2 * 16 + 12] - 997.0f) < 0.01f && fabsf(jt[2 * 16 + 14] - 505.0f) < 0.01f && fp::nWorldTurned.load() == 1;   // joint 1 (3 cm in front) is now 3 cm behind
+            fp::lone[0] = 1; fp::nLone = 1; g_stFrame = 110; ident(g4, 1000, 1700, 450);   // riding: joint 1 (lone gear) is 205 cm up
+            b &= fp::update(g4) && fabsf(fp::bodyDeg.load()) < 0.01f && fp::nBodyRiding.load() > 0;
+            fp::hAnimJob(job); b &= fabsf(pose[0][20 * 16 + 0] - 1.0f) < 1e-3f;   // ...drawn as animated
+            fp::nLone = 0; fp::refF[0] = cosf(0.5f); fp::refF[1] = sinf(0.5f); fp::headF[0] = cosf(0.5f); fp::headF[1] = sinf(0.5f); fp::lastRootOk = false; fp::bodyLastMs = GetTickCount64() - 100;
+            g_stFrame = 111; ident(g4, 1000, 1700, 450);   // standing, looking 29 deg aside: inside the dead zone, no turn
+            b &= fp::update(g4) && fabsf(fp::bodyDeg.load()) < 0.01f;
+            fp::headF[0] = cosf(-0.5f); fp::headF[1] = sinf(-0.5f); fp::bodyLastMs = GetTickCount64() - 100; g_stFrame = 112; ident(g4, 1000, 1700, 450);   // 29 deg the other way: no turn either
+            b &= fp::update(g4) && fabsf(fp::bodyDeg.load()) < 0.01f;
+            {   // 0.18.16 body under the headset: the head 15 cm to the left in the world -> the drawn body and its world matrices move with it
+                g_fp.bodyUnder = 1; const float sut = g_fp.underTau; g_fp.underTau = 0.0f; fp::underW[0] = 0.0f; fp::underW[1] = 15.0f; fp::bodyLastMs = GetTickCount64() - 100; g_stFrame = 113; ident(g4, 1000, 1700, 450); b &= fp::update(g4);
+                fp::underW[0] = 0.0f; fp::underW[1] = 15.0f; fp::hAnimJob(job);
+                const bool bu = fabsf(pose[0][20 * 16 + 13] - 15.0f) < 0.01f && fabsf(jt[21 * 16 + 13] - 2015.0f) < 0.01f && fabsf(fp::underCm.load() - 15.0f) < 0.01f;
+                fp::underW[1] = 500.0f; fp::hAnimJob(job); const bool bm = fabsf(pose[0][20 * 16 + 13] - g_fp.underMaxCm) < 0.01f;   // clamped
+                b &= bu && bm; if (!(bu && bm)) logf("   body under the headset: FAIL (pose y %.2f, world y %.2f)", pose[0][20 * 16 + 13], jt[21 * 16 + 13]);
+                fp::underW[1] = 0.0f; fp::underCm = 0; g_fp.underTau = sut;
+            }
+            g_fp.moveTau = smt; g_fp.headTau = sht; g_fp.headDeadDeg = sdd; vrin::cfg.moveHead = smh; fp::headOk = sho; g_fp.bodyUnder = sbu; fp::lastRootOk = false; fp::bodyLastMs = 0; vrin::moveYawOk = 0; vrin::moveCapAt = 0;
+            fp::refOk = false; fp::bodyYawCur = 0; fp::bodyYaw = 0; fp::jobApplied = 0; fp::nBodyRiding = 0; fp::nBodyFrames = 0; fp::nBodyJobs = 0; fp::nWorldTurned = 0;
+            ok &= b; if (!b) logf("   first-person body follow: FAIL (body %.1f deg, eye x %.2f)", fp::bodyDeg.load(), g4[12]);
+        }
+        fp::heroPtr = shp; fp::oAnimJob = soj; fp::unpublish(); g_fp = sfp; g_cfg.xr = sxr; g_stFrameOn = false; fp::valid = false; fp::hero = nullptr; fp::node = nullptr; fp::joints = nullptr; fp::lastFrame = 0xFFFFFFFFu; fp::on = 1;
+        fp::nActive = 0; fp::nBlockedUi = 0; fp::nNoHero = 0; fp::nFar = 0; fp::nCollapse = 0; fp::nSeenCollapsed = 0; fp::nSeenRestored = 0; fp::nDropped = 0; fp::nRevalidate = 0; fp::nHeroJobs = 0; fp::nJobsHidden = 0; fp::nJointsHidden = 0; fp::nJobsNoBuf = 0;
+        logf("first-person test (anchor on root + head height + forward; body drawn facing your forward when Jin runs back, not while riding; head set hidden in the render pose after the hero's animation job, onto the neck; world array untouched; other characters untouched; stray hand dropped; cutscene / far camera keep the game camera and show the head): %s", ok ? "PASS" : "FAIL");
+        rsOk &= ok;
+    }
+    {   // 0.18.7 FBIK stage 1 (fbik.h): arm chains found by shape on a synthetic skeleton; two-bone IK reaches the wrist target with the
+        // bone lengths kept, the elbow bends down/out, fingers stay rigid on the hand, the hand takes the grip frame; far targets stop short
+        static int16_t par[64]; static float pz[64 * 16]; int n = 0;
+        auto add = [&](int p, float x, float y, float z) { float *m = pz + n * 16; memset(m, 0, 64); m[0] = m[5] = m[10] = m[15] = 1; m[12] = x; m[13] = y; m[14] = z; par[n] = (int16_t)p; return n++; };
+        const int root = add(-1, 0, 0, 100), spine = add(root, 0, 0, 130), neck = add(spine, 0, 0, 150); add(neck, 0, 0, 165);
+        int hands[2], shs[2];
+        for (int sd = 0; sd < 2; sd++) { const float y = sd == 0 ? 1.0f : -1.0f;
+            const int cl = add(neck, 0, 5 * y, 145), sh = add(cl, 0, 18 * y, 145), el = add(sh, 0, 18 * y, 115), hd = add(el, 0, 18 * y, 88);
+            hands[sd] = hd; shs[sd] = sh;
+            const float fy[4] = {16.5f, 18.0f, 19.5f, 21.0f};
+            for (int f = 0; f < 4; f++) { const int r = add(hd, 1, fy[f] * y, 80); add(r, 1, fy[f] * y, 77); }
+            const int tb = add(hd, 4, 15.5f * y, 84); add(tb, 6, 15.5f * y, 82);
+            add(hd, 60, 18 * y, 88); add(el, 0, 18 * y, 101); }   // 0.18.8: a held item 60 cm out under the hand + a forearm twist joint (0.18.7 found no chains on Jin)
+        int feetJ[2], kneeJ[2], hipJ[2];
+        for (int sd = 0; sd < 2; sd++) { const float y = sd == 0 ? 1.0f : -1.0f; const int hip = add(root, 0, 10 * y, 85), kn = add(hip, 20, 10 * y, 45), ft = add(kn, 0, 10 * y, 5); add(ft, 12, 10 * y, 2); feetJ[sd] = ft; kneeJ[sd] = kn; hipJ[sd] = hip; }   // knees bent (sword stance)
+        static fbik::Arm A[2]; char why[400]; bool ok = fbik::parentsOk(par, n) && fbik::findArms(par, n, pz, 165.0f, nullptr, A, why, sizeof why) == 2;
+        ok &= A[0].hand == hands[0] && A[1].hand == hands[1] && A[0].sh == shs[0] && A[1].sh == shs[1] && A[0].frame && A[1].frame && A[0].nSub[3] == 12;
+        if (!ok) logf("   fbik chains: %s", why);
+        fbik::Target T; T.pos[0] = 40; T.pos[1] = 25; T.pos[2] = 130; T.fing[0] = 1; T.fing[1] = 0; T.fing[2] = 0; T.thumb[0] = 0; T.thumb[1] = 0; T.thumb[2] = 1; T.orient = true;
+        const float fr0[3] = {pz[(hands[0] + 1) * 16 + 12] - pz[hands[0] * 16 + 12], pz[(hands[0] + 1) * 16 + 13] - pz[hands[0] * 16 + 13], pz[(hands[0] + 1) * 16 + 14] - pz[hands[0] * 16 + 14]};
+        fbik::Params prm; fbik::solveArm(pz, A[0], 0, T, 1.0f, prm);
+        auto dist = [&](int a, const float *b) { const float d[3] = {pz[a * 16 + 12] - b[0], pz[a * 16 + 13] - b[1], pz[a * 16 + 14] - b[2]}; return fbik::len3f(d); };
+        auto djj = [&](int a, int b) { return dist(a, pz + b * 16 + 12); };
+        ok &= dist(A[0].hand, T.pos) < 0.5f && fabsf(djj(A[0].sh, A[0].el) - 30.0f) < 0.1f && fabsf(djj(A[0].el, A[0].hand) - 27.0f) < 0.1f;   // reached, lengths kept
+        ok &= pz[A[0].el * 16 + 14] < 0.5f * (pz[A[0].sh * 16 + 14] + T.pos[2]) && pz[A[0].el * 16 + 13] > 18.0f;   // elbow down and out (Jin's left = +y)
+        ok &= fabsf(fbik::len3f(fr0) - djj(hands[0], hands[0] + 1)) < 0.05f;   // the finger root rides rigidly with the hand
+        { float f[3] = {0, 0, 0}; int c = 0; for (int q = hands[0] + 1; q < hands[0] + 11; q++) if (par[q] == hands[0] && q != hands[0] + 9) { for (int k = 0; k < 3; k++) f[k] += pz[q * 16 + 12 + k] - pz[hands[0] * 16 + 12 + k]; c++; }
+          fbik::norm3(f); ok &= f[0] > 0.95f; }   // the fingers point along the grip's finger direction (+x)
+        float far2[3] = {80, 20, 145}; T.pos[0] = far2[0]; T.pos[1] = far2[1]; T.pos[2] = far2[2]; const float c0[3] = {pz[A[0].clav * 16 + 12], pz[A[0].clav * 16 + 13], pz[A[0].clav * 16 + 14]};
+        const float s0[3] = {pz[A[0].sh * 16 + 12], pz[A[0].sh * 16 + 13], pz[A[0].sh * 16 + 14]};
+        fbik::solveArm(pz, A[0], 0, T, 1.0f, prm);
+        ok &= dist(A[0].hand, far2) > 1.0f && fabsf(djj(A[0].sh, A[0].el) - 30.0f) < 0.1f && fabsf(djj(A[0].el, A[0].hand) - 27.0f) < 0.1f;   // out of reach: stops short, no stretch
+        ok &= dist(A[0].clav, c0) < 0.01f && dist(A[0].sh, s0) > 0.5f;   // the clavicle shrugged toward it (the shoulder moved, the clavicle root did not)
+        {   // 0.18.9 stand tall: legs found, the body raised 5 cm, the feet stay where they were planted, knees straighter, lengths kept
+            static fbik::Leg L[2]; char lw[300]; bool lg = fbik::findLegs(par, n, pz, 165.0f, nullptr, L, lw, sizeof lw) == 2 && L[0].foot == feetJ[0] && L[1].knee == kneeJ[1] && L[0].hip == hipJ[0];
+            float f0[3] = {pz[feetJ[0] * 16 + 12], pz[feetJ[0] * 16 + 13], pz[feetJ[0] * 16 + 14]}; const float h0 = pz[hipJ[0] * 16 + 14], kx0 = pz[kneeJ[0] * 16 + 12];
+            const float got = fbik::standTall(pz, n, L, 5.0f, 0.0f);
+            lg &= fabsf(got - 5.0f) < 1e-3f && dist(feetJ[0], f0) < 0.1f && fabsf(pz[hipJ[0] * 16 + 14] - (h0 + 5.0f)) < 1e-3f && pz[kneeJ[0] * 16 + 12] < kx0 - 1.0f && pz[kneeJ[0] * 16 + 12] > 0.0f;
+            lg &= fabsf(djj(hipJ[0], kneeJ[0]) - L[0].thigh) < 0.05f && fabsf(djj(kneeJ[0], feetJ[0]) - L[0].shin) < 0.05f && fabsf(pz[feetJ[0] * 16 + 0] - 1.0f) < 1e-3f;   // foot flat as animated
+            lg &= fbik::standTall(pz, n, L, 50.0f, 0.0f) < 5.0f;   // never past a straight leg
+            ok &= lg; if (!lg) logf("   fbik legs: %s (raise %.2f)", lw, got);
+        }
+        {   // 0.18.13 idle hold: captured after standing still, held while quiet, let go on input; world matrices follow
+            static float W[(8 + 1) * 16]; static u8 nd[0x300]; memset(nd, 0, sizeof nd); memset(W, 0, sizeof W); *(float **)(nd + 0x278) = W;
+            float *N = (float *)(nd + 0x150); N[0] = N[5] = N[10] = N[15] = 1.0f; N[12] = 1000.0f;
+            static float A[8 * 16], B[8 * 16], P[8 * 16]; for (int j = 0; j < 8; j++) for (int c = 0; c < 16; c++) { A[j * 16 + c] = (c % 5 == 0) ? 1.0f : 0.0f; B[j * 16 + c] = A[j * 16 + c]; } for (int j = 0; j < 8; j++) { A[j * 16 + 14] = 10.0f * j; B[j * 16 + 14] = 10.0f * j + 3.0f; }
+            static u64 t = 1000; fp::idleNow = [] { return t; }; const int sLeg = fp::legsReady.load(), sk = fp::hpubIdx.load(); fp::legsReady = 0; fp::hpubIdx = -1; fp::idleLastMs = 0; fp::idleW = 0; fp::idleCap = false; fp::idleStill = 0; fp::idlePrevOk = false;
+            fp::speedMs = 0; fp::animUntil = 0; fp::raisedUntil = 0; fp::ridingNow = 0; const int sih = g_fp.idleHold; g_fp.idleHold = 1;
+            bool it = true; for (int i = 0; i < 7; i++) { t += 100; memcpy(P, A, sizeof P); fp::idleApply(nd, P, 8, true); }   // stands 0.6 s: captured, blending in
+            for (int i = 0; i < 3; i++) { t += 100; memcpy(P, B, sizeof P); it &= fp::idleApply(nd, P, 8, true); }               // a slow fidget: the stand pose is held
+            it &= fabsf(P[3 * 16 + 14] - 30.0f) < 1e-3f && fabsf(W[4 * 16 + 14] - 30.0f) < 1e-3f && fabsf(W[4 * 16 + 12] - 1000.0f) < 1e-3f;
+            for (int i = 0; i < 3; i++) { t += 100; memcpy(P, B, sizeof P); fp::idleApply(nd, P, 8, false); }                    // pad input: let go
+            it &= fabsf(P[3 * 16 + 14] - 33.0f) < 1e-3f && !fp::idleCap && fp::idleWhy.load() == 2;
+            for (int i = 0; i < 3; i++) { t += 100; memcpy(P, B, sizeof P); fp::idleApply(nd, P, 8, true); }
+            fp::speedMs = 1.0f; t += 100; memcpy(P, B, sizeof P); fp::idleApply(nd, P, 8, true); it &= fp::idleWhy.load() == 3 && fp::idleStill == 0.0f;   // walking: not idle
+            fp::speedMs = 0; fp::legsReady = sLeg; fp::hpubIdx = sk; fp::idleNow = GetTickCount64; fp::idleLastMs = 0; fp::idleW = 0; fp::idleCap = false; g_fp.idleHold = sih;
+            ok &= it; logf("idle hold test (stand pose taken after standing still, held through a slow fidget, world matrices follow, let go on pad input / walking): %s", it ? "PASS" : "FAIL");
+        }
+        {   // 0.18.15 a snap turn brings the body round even inside the 35 deg dead zone (standing, head follow)
+            float root[16] = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1}; const float U[3] = {0, 0, 1}, F[3] = {1, 0, 0};
+            const bool sro = fp::refOk, sho = fp::headOk; const int sbf = g_fp.bodyFollow, sbh = g_fp.bodyHead; const float sby = fp::bodyYawCur; const int sln = fp::nLone;
+            g_fp.bodyFollow = 1; g_fp.bodyHead = 1; fp::refOk = true; fp::headOk = true; fp::refF[0] = 1; fp::refF[1] = 0; fp::nLone = 0; fp::bodyYawCur = 0; fp::headTurning = false; fp::lastRootOk = false;
+            const float sdd = g_fp.headDeadDeg; g_fp.headDeadDeg = 45.0f;
+            const float a = 20.0f / 57.2957795f; fp::headF[0] = cosf(a); fp::headF[1] = sinf(a);   // looking 20 deg left: inside the dead zone
+            for (int i = 0; i < 5; i++) { fp::bodyLastMs = GetTickCount64() - 50; fp::bodyStep(root, U, F, true); }
+            bool tb = fabsf(fp::bodyYawCur) < 1e-4f;   // no turn yet
+            vrin::turnSeq++; for (int i = 0; i < 60; i++) { fp::bodyLastMs = GetTickCount64() - 50; fp::bodyStep(root, U, F, true); }
+            tb &= fabsf(fp::bodyYawCur - a) < 2.5f / 57.2957795f;   // after the snap: the body faces the view
+            fp::refOk = sro; fp::headOk = sho; g_fp.bodyFollow = sbf; g_fp.bodyHead = sbh; fp::bodyYawCur = sby; fp::nLone = sln; fp::headTurning = false; fp::bodyLastMs = 0; fp::lastRootOk = false; fp::bodyYaw = 0; g_fp.headDeadDeg = sdd;
+            ok &= tb; logf("snap-turn body test (inside the dead zone nothing turns; after a snap the hips come round to the view): %s", tb ? "PASS" : "FAIL");
+        }
+        {   // 0.18.21 moving: the forward is NOT rewritten when the body turns past the threshold; a new forward squares the body to it
+            float root[16] = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1}; const float U[3] = {0, 0, 1}, F[3] = {1, 0, 0};
+            const bool sro = fp::refOk, sho = fp::headOk; const int sbf = g_fp.bodyFollow, sbh = g_fp.bodyHead; const float sby = fp::bodyYawCur, sup = g_cfg.unitsPerM; const int sln = fp::nLone;
+            const float smy = vrin::moveYaw.load(); const int smo = vrin::moveYawOk.load();
+            g_fp.bodyFollow = 1; g_fp.bodyHead = 1; g_cfg.unitsPerM = 100.0f; fp::refOk = true; fp::headOk = true; fp::refF[0] = 1; fp::refF[1] = 0; fp::nLone = 0; fp::bodyYawCur = 0; fp::headTurning = false; fp::lastRootOk = false;
+            vrin::moveYaw = 0.0f; vrin::moveYawOk = 1; const float sdd = g_fp.headDeadDeg; g_fp.headDeadDeg = 45.0f; const int smh = vrin::cfg.moveHead; vrin::cfg.moveHead = 0;
+            auto run = [&](int n) { for (int i = 0; i < n; i++) { root[12] += 5.0f; fp::bodyLastMs = GetTickCount64() - 50; fp::bodyStep(root, U, F, true); } };   // 1 m/s
+            const float a = 60.0f / 57.2957795f; fp::headF[0] = 1; fp::headF[1] = 0; run(60);
+            const float b0 = fp::bodyYawCur; bool mt = fabsf(b0) < 0.5f / 57.2957795f;
+            fp::headF[0] = cosf(a); fp::headF[1] = sinf(a); run(80);   // looking 60 deg left while running: past the 45 deg threshold
+            const float b1 = fp::bodyYawCur, m1 = vrin::moveYaw.load();
+            mt &= fabsf(b1 - a) < 2.5f / 57.2957795f && m1 == 0.0f;   // the body turned, the forward did not
+            if (!mt) logf("   moving body: FAIL (straight %.2f deg, looking 60 deg left: body %.2f deg, forward %.2f deg)", b0 * 57.2957795f, b1 * 57.2957795f, m1);
+            vrin::moveYaw = 60.0f; run(80); mt &= fabsf(fp::bodyYawCur - a) < 1.0f / 57.2957795f && fabsf(fp::moveOffDeg.load()) < 1e-3f;   // a new forward (start from rest): offset cleared, body on it
+            const float mb = fp::bodyYawCur;
+            {   // 0.18.22 move_follows_head (default): running, a look 5 deg aside does nothing, 12 deg turns the body to the view
+                vrin::cfg.moveHead = 1; g_fp.headDeadDeg = 7.5f; fp::bodyYawCur = 0; fp::headTurning = false; fp::headF[0] = 1; fp::headF[1] = 0; run(60);
+                const float a5 = 5.0f / 57.2957795f, a12 = 12.0f / 57.2957795f; const float b00 = fp::bodyYawCur;
+                fp::headF[0] = cosf(a5); fp::headF[1] = sinf(a5); run(40); const float b5 = fp::bodyYawCur;
+                fp::headF[0] = cosf(a12); fp::headF[1] = sinf(a12); run(60); const float b12 = fp::bodyYawCur;
+                const bool hm = fabsf(b00) < 0.6f / 57.2957795f && fabsf(b5 - b00) < 0.2f / 57.2957795f && fabsf(b12 - a12) < 0.6f / 57.2957795f; mt &= hm;
+                if (!hm) logf("   moving body, head mode: FAIL (straight %.2f, 5 deg look %.2f, 12 deg look %.2f deg)", b00 * 57.2957795f, b5 * 57.2957795f, b12 * 57.2957795f);
+            }
+            g_fp.headDeadDeg = sdd; vrin::cfg.moveHead = smh;
+            fp::refOk = sro; fp::headOk = sho; g_fp.bodyFollow = sbf; g_fp.bodyHead = sbh; fp::bodyYawCur = sby; fp::nLone = sln; fp::headTurning = false; fp::bodyLastMs = 0; fp::lastRootOk = false; fp::bodyYaw = 0; g_cfg.unitsPerM = sup;
+            vrin::moveYaw = smy; vrin::moveYawOk = smo; fp::speedMs = 0; fp::moveOffDeg = 0;
+            ok &= mt; logf("moving body test (past the threshold while running the body turns to the view and the movement forward stays; a new forward clears the turn): %s (body %.1f deg)", mt ? "PASS" : "FAIL", mb * 57.2957795f);
+        }
+        {   // 0.18.14 stance squared: hips / shoulders 15 deg to the right -> turned back about the head
+            static float Q[8 * 16]; memset(Q, 0, sizeof Q); for (int j = 0; j < 8; j++) { Q[j * 16] = Q[j * 16 + 5] = Q[j * 16 + 10] = Q[j * 16 + 15] = 1.0f; }
+            const float a = -15.0f / 57.2957795f, lx = -sinf(a) * 10.0f, ly = cosf(a) * 10.0f;   // the left direction turned by -15 deg
+            Q[0 * 16 + 12] = 5.0f; Q[0 * 16 + 14] = 170.0f; Q[1 * 16 + 12] = lx; Q[1 * 16 + 13] = ly; Q[1 * 16 + 14] = 90.0f; Q[2 * 16 + 12] = -lx; Q[2 * 16 + 13] = -ly; Q[2 * 16 + 14] = 90.0f;
+            const int sk = fp::hpubIdx.load(); const fp::HidePub sh0 = fp::hpub[0]; fp::hpub[0].head = 0; fp::hpubIdx = 0;
+            const int sl = fp::legsReady.load(), sa2 = fp::armsReady.load(); const int h0 = fp::legsD[0].hip, h1 = fp::legsD[1].hip; fp::legsReady = 1; fp::armsReady = 0; fp::legsD[0].hip = 1; fp::legsD[1].hip = 2;
+            const int ssq = g_fp.stanceSquare; g_fp.stanceSquare = 1; fp::idleSquare(Q, 8);
+            bool sq = fabsf(Q[1 * 16 + 12] - Q[2 * 16 + 12]) < 1e-3f && Q[1 * 16 + 13] > Q[2 * 16 + 13] && fabsf(fp::idleSquareDeg.load() + 15.0f) < 0.01f && Q[0 * 16 + 12] == 5.0f;
+            fp::hpub[0] = sh0; fp::hpubIdx = sk; fp::legsReady = sl; fp::armsReady = sa2; fp::legsD[0].hip = h0; fp::legsD[1].hip = h1; g_fp.stanceSquare = ssq;
+            ok &= sq; logf("stance squared test (a stance turned 15 deg to the right is turned back to face forward about the head): %s", sq ? "PASS" : "FAIL");
+        }
+        {   // 0.18.11 near plane: a projection built with the game's near or already with ours both end at ours, +0x664 follows, garbage is left alone, the game's near returns after
+            static u8 cb[0x700]; memset(cb, 0, sizeof cb); float *pn = (float *)(cb + 0x664); *pn = 10.0f; *(float *)(cb + 0x668) = 1e7f;
+            const float snc = g_fp.nearCm, sup = g_cfg.unitsPerM; g_fp.nearCm = 2.0f; g_cfg.unitsPerM = 100.0f; const float f = 1e7f, sw = -1.0f;
+            auto mk = [&](float *g, float n) { memset(g, 0, 64); g[10] = -sw * n / (f - n); g[14] = n * f / (f - n); g[11] = sw; };
+            float g[16]; const u64 h0 = fp::nearHits[0].load(), m0 = fp::nearMiss.load(); g_pairPhase = 0;
+            mk(g, 10.0f); nearp::apply(g, sw, cb, true); bool nt = fabsf(g[14] - 2.0f) < 1e-3f && *pn == 2.0f;
+            *pn = 10.0f; mk(g, 2.0f); nearp::apply(g, sw, cb, true); nt &= fabsf(g[14] - 2.0f) < 1e-3f && *pn == 2.0f;       // the game reset its near after rebuilding with ours
+            mk(g, 37.0f); nearp::apply(g, sw, cb, true); nt &= fabsf(g[14] - 37.0f) < 1e-2f && fp::nearMiss.load() == m0 + 1;   // not a projection we know: untouched
+            nt &= fp::nearHits[0].load() == h0 + 2;
+            mk(g, 10.0f); nearp::apply(g, sw, cb, false); nt &= *pn == 10.0f && fabsf(g[14] - 10.0f) < 1e-3f && !nearp::nearSet;   // first person ended: the game's own near
+            g_fp.nearCm = snc; g_cfg.unitsPerM = sup; ok &= nt;
+            logf("near plane test (game-built or ours accepted on every tick, camera near follows, unknown projection untouched, restored after first person): %s", nt ? "PASS" : "FAIL");
+        }
+        {   // 0.18.18 VR fingers: chains + thumb + index found, bind fingers placed on a turned hand (animation ignored), grip curls toward the palm
+            static int16_t par[40]; static float Q[40 * 16], Bp[40 * 16]; int nj = 0;
+            auto put = [&](int parent, float x, float y, float z) { float *m = Q + (size_t)nj * 16; memset(m, 0, 64); m[0] = m[5] = m[10] = m[15] = 1; m[12] = x; m[13] = y; m[14] = z; par[nj] = (int16_t)parent; return nj++; };
+            put(-1, 0, 0, 0);   // 0 the hand
+            int th0 = put(0, 3, 4, -1), th1 = put(th0, 5, 5, -1); put(th1, 7, 6, -1);   // the thumb (toward +y)
+            const int palmJ = put(0, 4, 0, 0);   // 0.18.19: a palm joint the four long fingers share, and helper leaves on the fingers
+            int tips[4]; for (int f = 0; f < 4; f++) { const float y = 3.0f - 2.0f * f; int b0 = put(palmJ, 8, y, 0); put(b0, 8.5f, y, 0.6f); int b1 = put(b0, 11, y, 0); tips[f] = put(b1, 13, y, 0); put(b1, 11.3f, y, 0.4f); }
+            const int sock = put(0, 4, 0, -3);   // a weapon socket under the hand (not a finger)
+            memcpy(Bp, Q, sizeof Q);   // the bind: straight fingers
+            for (int j = 1; j < nj; j++) if (par[j] > 0) { Q[(size_t)j * 16 + 14] -= 2.0f * (j % 3); Q[(size_t)j * 16 + 12] -= 0.5f; }   // the animation: bent fingers (lengths roughly kept)
+            fbik::Arm A; A.hand = 0; A.frame = true; A.fl[0] = 1; A.tl[1] = 1; A.nSub[3] = nj; for (int j = 0; j < nj; j++) A.sub[3][j] = (uint16_t)j;
+            for (int j = 1; j < nj; j++) if (par[j] > 0) { float *m = Q + (size_t)j * 16; const float *pp = Q + (size_t)par[j] * 16, *bm = Bp + (size_t)j * 16, *bp = Bp + (size_t)par[j] * 16;   // keep the animated lengths = the bind lengths
+                const float bl = sqrtf((bm[12] - bp[12]) * (bm[12] - bp[12]) + (bm[13] - bp[13]) * (bm[13] - bp[13]) + (bm[14] - bp[14]) * (bm[14] - bp[14]));
+                float d[3] = {m[12] - pp[12], m[13] - pp[13], m[14] - pp[14]}; fbik::norm3(d); m[12] = pp[12] + d[0] * bl; m[13] = pp[13] + d[1] * bl; m[14] = pp[14] + d[2] * bl; }
+            auto bindOf = [&](int j, fing::Aff &o) -> bool { if (j < 0 || j >= nj) return false; o = fing::fromPose(Bp + (size_t)j * 16); return true; };
+            static fing::Hand H; char fw[200]; bool fg = fing::analyse(H, par, nj, Q, A, bindOf, fw, sizeof fw) && H.nf == 5;
+            int nth = 0, nix = 0; for (int c = 0; c < H.nf; c++) { nth += H.f[c].thumb; nix += H.f[c].index; if (H.f[c].thumb) fg &= H.f[c].j[0] == th0; if (H.f[c].index) fg &= H.f[c].j[0] == tips[0] - 3 && H.f[c].n == 3; }
+            fg &= nth == 1 && nix == 1;
+            // turn the hand 90 deg (yaw) and move it; the animated fingers stay as they were relative to it
+            const float sockOld[3] = {Q[sock * 16 + 12], Q[sock * 16 + 13], Q[sock * 16 + 14]};
+            { const fbik::Rot R = fbik::axisAngle((const float[3]){0, 0, 1}, 1.5707963f); const float pv[3] = {0, 0, 0}; fbik::moveSet(Q, A.sub[3], nj, R, pv); for (int j = 0; j < nj; j++) Q[(size_t)j * 16 + 13] += 100.0f; }
+            fing::Tune tn; tn.relaxed = 0.0f; fing::Curl open; const float palm[3] = {0, 0, -1};
+            fing::apply(Q, H, open, palm, 1.0f, tn);
+            // straight bind fingers on the turned hand: the index tip at hand + R (13, 3, 0) = (-3, 113, 0)
+            fg &= fabsf(Q[tips[0] * 16 + 12] + 3.0f) < 1e-3f && fabsf(Q[tips[0] * 16 + 13] - 113.0f) < 1e-3f && fabsf(Q[tips[0] * 16 + 14]) < 1e-3f;
+            fg &= fabsf(Q[sock * 16 + 12] - (-sockOld[1])) < 1e-3f && fabsf(Q[sock * 16 + 13] - (100.0f + sockOld[0])) < 1e-3f && fabsf(Q[sock * 16 + 14] - sockOld[2]) < 1e-3f;   // the socket kept its animated offset
+            fing::Curl fist; fist.grip = fist.index = fist.thumb = 1.0f; const float baseZ = Q[(tips[1] - 3) * 16 + 14];
+            fing::apply(Q, H, fist, palm, 1.0f, tn);
+            const float *tp = Q + (size_t)tips[1] * 16 + 12, *mp = Q + (size_t)(tips[1] - 1) * 16 + 12, *bp = Q + (size_t)(tips[1] - 3) * 16 + 12;
+            const float l1 = sqrtf((mp[0] - bp[0]) * (mp[0] - bp[0]) + (mp[1] - bp[1]) * (mp[1] - bp[1]) + (mp[2] - bp[2]) * (mp[2] - bp[2]));
+            fg &= tp[2] < baseZ - 2.0f && fabsf(l1 - 3.0f) < 1e-3f;   // curled toward the palm (down), lengths kept
+            ok &= fg; logf("VR fingers test (finger chains, thumb + index, bind fingers on the IK hand regardless of the animation, sockets keep their offset, a fist curls toward the palm): %s (%s)", fg ? "PASS" : "FAIL", fw);
+        }
+        {   // 0.18.21 Jin's own hands (bind + animated joints from the 0.18.20 live log, hand-local cm): grip = a fist with every finger in its
+            // own plane (0.18.20 bent the middle joints sideways), tips on the palm; thumb touch = the thumb across the curled index / middle
+            struct J { int p; float a[3], b[3]; };
+            static const J L[] = {   // index 0 = the hand (513); parents are indices into this table
+                {-1, {0, 0, 0}, {0, 0, 0}},
+                {0, {0, 0, 0}, {0, 0, 0}}, {1, {0, 50, 0}, {0, 50, 0}},                                                 // 514, 515 helper
+                {0, {3.0f, -0.1f, -1.7f}, {3.0f, -0.1f, -1.8f}}, {3, {10.0f, 0.4f, 0.2f}, {9.9f, 0.3f, 0.1f}}, {4, {10.9f, 3.6f, 1.3f}, {13.3f, 0.6f, 0.8f}}, {5, {8.9f, 3.2f, 0.9f}, {15.3f, 0.7f, 1.2f}}, {3, {10.1f, -1.0f, 0.8f}, {10.0f, -1.3f, 0.5f}},   // index 516-520
+                {0, {3.3f, -0.8f, -0.3f}, {3.3f, -0.8f, -0.3f}}, {8, {9.5f, -0.1f, 2.3f}, {9.4f, -0.2f, 2.2f}}, {9, {10.5f, 3.9f, 3.1f}, {13.3f, 0.2f, 3.6f}}, {10, {8.3f, 3.4f, 2.4f}, {15.6f, 0.5f, 4.4f}},   // middle 521-524
+                {0, {1.6f, -0.5f, 2.0f}, {1.7f, -0.5f, 2.0f}}, {12, {6.9f, 0.4f, 5.7f}, {6.8f, 0.3f, 5.6f}}, {13, {7.8f, 3.3f, 5.8f}, {9.4f, 0.7f, 7.3f}}, {14, {6.4f, 2.8f, 4.7f}, {10.9f, 0.9f, 8.3f}}, {12, {7.5f, -0.9f, 5.8f}, {7.3f, -1.2f, 5.6f}},   // little 525-529
+                {0, {2.3f, -0.8f, 1.4f}, {2.3f, -0.8f, 1.3f}}, {17, {8.4f, 0.0f, 4.2f}, {8.4f, 0.0f, 4.1f}}, {18, {9.3f, 3.5f, 4.7f}, {11.6f, 0.4f, 5.8f}}, {19, {7.0f, 2.9f, 3.5f}, {14.0f, 0.7f, 7.0f}},   // ring 530-533
+                {0, {3.3f, 1.2f, -1.6f}, {3.3f, 1.2f, -1.6f}}, {21, {7.1f, 2.8f, -2.3f}, {6.9f, 2.9f, -2.6f}}, {22, {9.6f, 3.9f, -1.5f}, {9.5f, 4.2f, -3.2f}},   // thumb 534-536
+                {0, {7.2f, 0.1f, 2.2f}, {7.2f, 0.0f, 2.2f}} };   // socket 537
+            const int nj = (int)(sizeof L / sizeof L[0]); bool jf = true; char fw2[2][200] = {{0}, {0}}; float rep[4] = {0, 0, 0, 0};
+            for (int side = 0; side < 2; side++) {   // the right hand is the left mirrored through the hand (x, y and z negated, as in the log)
+                const float sx = side ? -1.0f : 1.0f; static int16_t par[32]; static float Q[32 * 16], Bp[32 * 16];
+                for (int j = 0; j < nj; j++) { float *m = Q + (size_t)j * 16, *b = Bp + (size_t)j * 16; memset(m, 0, 64); memset(b, 0, 64); m[0] = m[5] = m[10] = m[15] = b[0] = b[5] = b[10] = b[15] = 1;
+                    m[12] = L[j].a[0] * sx; m[13] = L[j].a[1] * sx; m[14] = L[j].a[2] * sx; b[12] = L[j].b[0] * sx; b[13] = L[j].b[1] * sx; b[14] = L[j].b[2] * sx; par[j] = (int16_t)L[j].p; }
+                fbik::Arm A; A.hand = 0; A.frame = true; A.fl[0] = sx; A.tl[1] = sx; A.nSub[3] = nj; for (int j = 0; j < nj; j++) A.sub[3][j] = (uint16_t)j;
+                auto bindOf = [&](int j, fing::Aff &o) -> bool { if (j < 0 || j >= nj) return false; o = fing::fromPose(Bp + (size_t)j * 16); return true; };
+                static fing::Hand H; jf &= fing::analyse(H, par, nj, Q, A, bindOf, fw2[side], sizeof fw2[side]) && H.nf == 5;
+                if (!H.ok) continue;
+                int thC = -1, ixC = -1; for (int c = 0; c < H.nf; c++) { if (H.f[c].thumb) thC = c; if (H.f[c].index) ixC = c; }
+                jf &= thC >= 0 && H.f[thC].j[0] == 21 && ixC >= 0 && H.f[ixC].j[0] == 3;
+                fing::Tune tn; fing::Curl fist; fist.grip = fist.index = fist.thumb = 1.0f; const float palm[3] = {0, 0, 1};
+                fing::apply(Q, H, fist, palm, 1.0f, tn);
+                const int knuck[4] = {4, 9, 13, 18}, endJ[4] = {6, 11, 15, 20};
+                for (int f = 0; f < 4; f++) {   // each long finger: its end joint in front of the palm (+y left / -y right), not off to the side
+                    const float *e = Q + (size_t)endJ[f] * 16 + 12; const float y = e[1] * sx, x = e[0] * sx, z = e[2] * sx, dz = fabsf(z - L[knuck[f]].b[2]);
+                    const bool okf = y > 2.0f && y < 5.0f && x > 4.0f && x < 11.0f && dz < 1.5f; jf &= okf;
+                    if (!okf) logf("   Jin fingers: %s finger %d end joint at (%.1f %.1f %.1f) - not a fist", side ? "right" : "left", f, x, y, z);
+                }
+                const float *ip = Q + 23 * 16 + 12; const float ipx = ip[0] * sx, ipy = ip[1] * sx, ipz = ip[2] * sx;   // the thumb's end joint over the curled index / middle
+                const bool okt = ipy > 3.8f && ipz > -1.0f && ipz < 2.5f && ipx > 6.5f && ipx < 10.5f; jf &= okt;
+                if (!side) { rep[0] = ipx; rep[1] = ipy; rep[2] = ipz; rep[3] = Q[6 * 16 + 13]; }
+                if (!okt) logf("   Jin fingers: %s thumb end joint at (%.1f %.1f %.1f) - not across the fist", side ? "right" : "left", ipx, ipy, ipz);
+            }
+            {   // the tween: a critically damped spring reaches ~90 %% in fp_finger_tween_s, never overshoots, is still on the way after a frame
+                float x = 0, v = 0; const float om = 3.9f / 0.15f; bool sp = true; float mx = 0; int n = 0;
+                for (float t = 0; t < 0.6f; t += 0.011f, n++) { fing::spring(x, v, 1.0f, om, 0.011f); mx = fmaxf(mx, x); if (n == 0) sp &= x < 0.1f; if (n == 13) sp &= x > 0.85f && x < 0.97f; }
+                sp &= mx <= 1.0f + 1e-5f && x > 0.999f; jf &= sp; if (!sp) logf("   finger tween spring: FAIL (max %.4f end %.4f)", mx, x);
+            }
+            ok &= jf; logf("Jin's hands test (grip = a fist on his own bind fingers, each finger bending in its own plane, the thumb across the fist, both hands; the tween eases in and settles): %s (left thumb end %.1f %.1f %.1f, index end height %.1f; %s)", jf ? "PASS" : "FAIL", rep[0], rep[1], rep[2], rep[3], fw2[0]);
+        }
+        {   // 0.18.11 F1/F2/F3 hand trims: 5-degree steps, wrap at +-180, saved to gotvr.ini and read back as the default
+            const float sp0 = g_fp.handPitch, sy0 = g_fp.handYaw, sr0 = g_fp.handRoll; g_fp.handPitch = 0; g_fp.handYaw = 175.0f; g_fp.handRoll = 0;
+            handTrim(0, 5.0f); handTrim(0, 5.0f); handTrim(1, 5.0f); handTrim(2, -5.0f);
+            wchar_t ini[MAX_PATH]; swprintf(ini, MAX_PATH, L"%ls\\gotvr.ini", g_dir); wchar_t b[32];
+            GetPrivateProfileStringW(L"gotvr", L"fp_hand_pitch_deg", L"x", b, 32, ini); const float rp = (float)_wtof(b);
+            GetPrivateProfileStringW(L"gotvr", L"fp_hand_yaw_deg", L"x", b, 32, ini); const float ry = (float)_wtof(b);
+            GetPrivateProfileStringW(L"gotvr", L"fp_hand_roll_deg", L"x", b, 32, ini); const float rr = (float)_wtof(b);
+            const bool ht2 = g_fp.handPitch == 10.0f && fabsf(g_fp.handYaw - 180.0f) < 1e-3f && g_fp.handRoll == -5.0f && rp == 10.0f && fabsf(ry - 180.0f) < 1e-3f && rr == -5.0f;
+            ok &= ht2; logf("hand trim hotkey test (F1/F2/F3 steps, wrap, saved to and read back from gotvr.ini): %s (pitch %.1f yaw %.1f roll %.1f; ini %.1f %.1f %.1f)", ht2 ? "PASS" : "FAIL", g_fp.handPitch, g_fp.handYaw, g_fp.handRoll, rp, ry, rr);
+            g_fp.handPitch = sp0; g_fp.handYaw = sy0; g_fp.handRoll = sr0;
+            WritePrivateProfileStringW(L"gotvr", L"fp_hand_pitch_deg", nullptr, ini); WritePrivateProfileStringW(L"gotvr", L"fp_hand_yaw_deg", nullptr, ini); WritePrivateProfileStringW(L"gotvr", L"fp_hand_roll_deg", nullptr, ini);
+        }
+        logf("full-body IK arm test (chains found by shape, two-bone reach, lengths kept, elbow down/out, rigid fingers, grip frame, clavicle reach for far targets; legs: stand tall with feet planted): %s", ok ? "PASS" : "FAIL");
+        rsOk &= ok;
+    }
+    {   // 0.18.0 VR controllers: canonical controls -> virtual pad (deadzone, mapping, snap turn closed loop, wheel, head gesture,
+        // staleness -> neutral but connected, flat context, rumble)
+        static GvShared fake; GvShared *const sS = S; S = &fake; memset(&fake, 0, sizeof fake);
+        static u64 tNow; tNow = 100000; const auto sNow = vrin::nowMs; vrin::nowMs = []() -> u64 { return tNow; };
+        static int hudCalls = 0; vrin::cfg = vrin::Cfg{};
+        { const char *def[vrin::C_N]; for (int c = 0; c < vrin::C_N; c++) def[c] = vrin::kCtl[c].def; for (int c = 0; c < vrin::C_N; c++) vrin::cfg.out[c] = vrin::parseOut(def[c]); }
+        vrin::cfg.wheel[0] = vrin::parseOut("down"); vrin::cfg.wheel[1] = vrin::parseOut("right"); vrin::cfg.wheel[2] = vrin::parseOut("left"); strcpy(vrin::cfg.wheelName[0], "Heal"); vrin::cfg.nWheel = 3;
+        const bool shh = ui::hudHidden.load();
+        auto push = [&](auto f) { gvWriteBegin(&fake.inSeq); f(); fake.inActive = 1; fake.inSamples++; gvWriteEnd(&fake.inSeq); };
+        fake.poseValid = 1; fake.head.q[3] = 1; fake.head.p[1] = 1.6f;
+        XINPUT_GAMEPAD g; bool ok = !vrin::build(g, false);   // nothing from the host yet: no pad
+        push([&] { fake.hand[0].stick[0] = 0.1f; fake.hand[0].stick[1] = 1.0f; fake.hand[1].buttons = GV_BTN_PRIMARY; for (auto &h : fake.hand) { h.poseValid = 1; h.grip.q[3] = 1; h.grip.p[1] = 1.0f; } });
+        ok &= vrin::build(g, false) && (g.wButtons & vrin::XB_A) && g.sThumbLY > 32000 && abs(g.sThumbLX) < 3500;   // jump, move (radial deadzone keeps the angle)
+        vrin::lastYawOk = false; vrin::gameTick(0.0f); tNow += 10;
+        push([&] { fake.hand[1].buttons = 0; fake.hand[1].stick[0] = 1.0f; });
+        ok &= vrin::build(g, false) && fabsf(vrin::viewHold.load() + 30.0f) < 0.01f && g.sThumbRX > 20000;   // snap: the view turns 30 deg at once, the game camera is sent after it
+        push([&] { fake.hand[0].stick[0] = 0; fake.hand[0].stick[1] = 1.0f; });
+        vrin::gameTick(-12.0f); tNow += 10; vrin::build(g, false); ok &= fabsf(vrin::viewHold.load() + 18.0f) < 0.01f && g.sThumbRX > 0 && g.sThumbLX > 9000;   // view stays put; forward = where you look
+        vrin::gameTick(-29.8f); tNow += 10; vrin::build(g, false); ok &= fabsf(vrin::viewHold.load() + 0.2f) < 0.01f && g.sThumbRX == 0;   // caught up
+        tNow += 10; vrin::build(g, false); ok &= g.sThumbRX == 0 && fabsf(vrin::viewHold.load() + 0.2f) < 0.01f;   // holding the stick does not repeat
+        push([&] { fake.hand[0].stick[1] = 0; fake.hand[1].stick[0] = 0; }); tNow += 300; vrin::gameTick(-40.0f); vrin::build(g, false); ok &= fabsf(vrin::viewHold.load() + 0.2f) < 0.01f;   // the game's own turns pass through
+        push([&] { fake.hand[1].stick[0] = 0; fake.hand[0].trigger = 1.0f; });   // wheel opens; right stick up = option 1
+        tNow += 10; vrin::build(g, false); ok &= vrin::wheel.open && g.bLeftTrigger == 0;
+        push([&] { fake.hand[1].stick[1] = 1.0f; }); tNow += 10; vrin::build(g, false); ok &= vrin::wheel.sel == 0 && g.sThumbRY == 0 && g.sThumbRX == 0;
+        push([&] { fake.hand[1].stick[1] = 0.0f; }); tNow += 10; vrin::build(g, false); ok &= (g.wButtons & vrin::XB_DOWN) && !vrin::wheel.open;   // released onto Heal
+        tNow += 200; vrin::build(g, false); ok &= !(g.wButtons & vrin::XB_DOWN) && !vrin::wheel.open;   // one tap; closed until the trigger is let go
+        {   // 0.18.7: five options (90 - i*72 deg); Play flute = D-pad right, then the right stick flicked left; Recenter view = F11
+            vrin::cfg.nWheel = 5; vrin::cfg.wheel[3] = vrin::parseOut("dpad_right+rs_left"); vrin::cfg.wheel[4] = vrin::parseOut("recenter"); m_recenter = 0;
+            bool w5 = true;
+            push([&] { fake.hand[0].trigger = 0; }); tNow += 10; vrin::build(g, false);
+            push([&] { fake.hand[0].trigger = 1.0f; }); tNow += 10; vrin::build(g, false); w5 &= vrin::wheel.open;
+            push([&] { fake.hand[1].stick[0] = -0.588f; fake.hand[1].stick[1] = -0.809f; }); tNow += 10; vrin::build(g, false); w5 &= vrin::wheel.sel == 3;
+            push([&] { fake.hand[1].stick[0] = 0; fake.hand[1].stick[1] = 0; }); tNow += 10; vrin::build(g, false); w5 &= (g.wButtons & vrin::XB_RIGHT) && g.sThumbRX == 0;   // flute: D-pad first
+            push([&] {}); tNow += 150; vrin::build(g, false); w5 &= (g.wButtons & vrin::XB_RIGHT) && g.sThumbRX < -30000;   // ...then the flick left
+            push([&] {}); tNow += 320; vrin::build(g, false); w5 &= !(g.wButtons & vrin::XB_RIGHT) && g.sThumbRX == 0;
+            push([&] { fake.hand[0].trigger = 0; }); tNow += 10; vrin::build(g, false);
+            push([&] { fake.hand[0].trigger = 1.0f; }); tNow += 10; vrin::build(g, false);
+            push([&] { fake.hand[1].stick[0] = -0.951f; fake.hand[1].stick[1] = 0.309f; }); tNow += 10; vrin::build(g, false); w5 &= vrin::wheel.sel == 4;
+            push([&] { fake.hand[1].stick[0] = 0; fake.hand[1].stick[1] = 0; }); tNow += 10; vrin::build(g, false); w5 &= m_recenter.load() == 1 && g.wButtons == 0;   // recenter, no pad output
+            m_recenter = 0; vrin::cfg.nWheel = 3; ok &= w5; if (!w5) logf("   five-option wheel (flute, recenter): FAIL");
+        }
+        push([&] { fake.hand[0].trigger = 0; fake.hand[1].grip.p[1] = 1.6f; fake.hand[1].grip.p[0] = 0.1f; fake.hand[1].trigger = 1.0f; });   // right hand at the head + trigger
+        tNow += 10; vrin::build(g, false); ok &= (g.wButtons & vrin::XB_RIGHT) && g.sThumbRY == 0 && g.bRightTrigger == 0;   // guiding wind: D-pad right first, no shot
+        push([&] {}); tNow += 150; vrin::build(g, false); ok &= (g.wButtons & vrin::XB_RIGHT) && g.sThumbRY > 30000 && g.bRightTrigger == 0;   // ...then the flick up while it is held
+        push([&] {}); tNow += 140; vrin::build(g, false); push([&] {}); tNow += 140; vrin::build(g, false); ok &= (g.wButtons & vrin::XB_RIGHT) && g.sThumbRY == 0;   // the flick ends before the D-pad
+        tNow += 500; vrin::build(g, false); ok &= !(g.wButtons & vrin::XB_RIGHT) && g.bRightTrigger == 0;   // one gesture only
+        push([&] { fake.hand[1].trigger = 0; fake.hand[1].grip.p[1] = 1.0f; fake.hand[0].grip.p[1] = 1.6f; fake.hand[0].trigger = 1.0f; });
+        ui::hudBoostUntil = 0; tNow += 10; vrin::build(g, false); ok &= ui::hudBoostUntil.load() > GetTickCount64() && ui::placeReq.exchange(0) == 1;   // left hand at the head: the room-fixed HUD panel placed in front
+        push([&] { fake.hand[0].trigger = 0; fake.hand[0].grip.p[1] = 1.0f; fake.hand[1].trigger = 0.5f; fake.hand[1].stick[0] = 0.8f; });
+        tNow += 10; vrin::build(g, true); ok &= g.bRightTrigger > 120 && g.sThumbRX > 20000;   // menus: plain pad (stick raw, trigger analog)
+        tNow += 400; ok &= vrin::build(g, false) && g.wButtons == 0 && g.sThumbRX == 0 && g.bRightTrigger == 0;   // no new sample for 400 ms: neutral, still connected
+        XINPUT_VIBRATION vb{65535, 0}; vrin::rumble(&vb); ok &= fake.hapLevel[0] > 0.99f && fake.hapLevel[1] == 0.0f;
+        {   // 0.18.17: the view's world yaw survives a menu; the left stick's forward is the captured movement yaw
+            push([&] { for (auto &h : fake.hand) { h.stick[0] = 0; h.stick[1] = 0; h.trigger = 0; h.squeeze = 0; h.buttons = 0; } });
+            vrin::lastYawOk = false; vrin::gameTick(10.0f); vrin::viewHold = 5.0f; vrin::wasFlat = false; tNow += 10; vrin::build(g, true);   // into a menu: view at 15 deg
+            vrin::gameTick(40.0f); tNow += 10; vrin::build(g, true); tNow += 10; vrin::build(g, false);                                          // the game camera turned to 40 in the menu
+            bool mf = fabsf(vrin::viewHold.load() + 25.0f) < 0.01f;                                                                           // out: the view faces 15 again
+            vrin::moveYaw = 90.0f; vrin::moveYawOk = 1; vrin::headYawOk = 0; vrin::gameTick(0.0f); vrin::viewHold = 0.0f;
+            push([&] { fake.hand[0].stick[1] = 1.0f; }); tNow += 10; vrin::build(g, false); mf &= g.sThumbLX < -30000 && abs(g.sThumbLY) < 2000;   // forward = 90 deg left of the game camera
+            vrin::moveYawOk = 0; push([&] { fake.hand[0].stick[1] = 0.0f; }); vrin::build(g, false);
+            // 0.18.20: a move from rest takes the headset's forward as the movement forward
+            vrin::headYawNow = 60.0f; vrin::headYawOk = 1; tNow += 400; push([&] { fake.hand[0].stick[1] = 0.0f; }); vrin::build(g, false);
+            push([&] { fake.hand[0].stick[1] = 1.0f; }); tNow += 10; vrin::build(g, false); mf &= vrin::moveYawOk.load() && fabsf(vrin::moveYaw.load() - 60.0f) < 0.01f;
+            push([&] { fake.hand[0].stick[1] = 0.0f; }); tNow += 10; vrin::build(g, false); vrin::moveYawOk = 0; vrin::headYawOk = 0;
+            {   // 0.18.22 move_follows_head: the stick's forward follows the headset WHILE moving (no capture needed)
+                const int smh = vrin::cfg.moveHead; vrin::cfg.moveHead = 1; vrin::gameTick(0.0f); vrin::headYawNow = 90.0f; vrin::headYawOk = 1; vrin::moveYaw = 0.0f; vrin::moveYawOk = 1;
+                push([&] { fake.hand[0].stick[1] = 1.0f; }); tNow += 10; vrin::build(g, false); const bool h1 = g.sThumbLX < -30000 && abs(g.sThumbLY) < 2000;   // 90 deg left
+                vrin::headYawNow = -90.0f; tNow += 10; vrin::build(g, false); const bool h2 = g.sThumbLX > 30000 && abs(g.sThumbLY) < 2000;   // you look right, still moving: right
+                vrin::cfg.moveHead = 0; tNow += 10; vrin::build(g, false); const bool h3 = abs(g.sThumbLX) < 2000 && g.sThumbLY > 30000;   // captured mode: the old forward (0)
+                push([&] { fake.hand[0].stick[1] = 0.0f; }); tNow += 10; vrin::build(g, false); vrin::moveYawOk = 0; vrin::headYawOk = 0; vrin::cfg.moveHead = smh;
+                mf &= h1 && h2 && h3; if (!(h1 && h2 && h3)) logf("   movement follows the headset: FAIL (%d %d %d)", h1, h2, h3);
+            }
+            ok &= mf; if (!mf) logf("   menu direction / movement forward: FAIL (hold %.2f, LX %d LY %d)", vrin::viewHold.load(), g.sThumbLX, g.sThumbLY);
+        }
+        ui::hudHidden = shh; ui::hudBoostUntil = 0; (void)hudCalls; vrin::nowMs = sNow; S = sS; vrin::everActive = false; vrin::snap = vrin::Snap{}; vrin::wheel = vrin::Wheel{}; vrin::viewHold = 0; vrin::gameYawOk = 0; vrin::catching = false; vrin::bleedUntil = 0; vrin::lastYawOk = false; vrin::lastPoll = 0;
+        logf("VR controller test (deadzone, mapping, snap turn at once with the game camera catching up behind it, stick follows the view, item wheel pick/tap/close, guiding-wind and HUD head gestures, menus, staleness, rumble): %s", ok ? "PASS" : "FAIL");
+        rsOk &= ok;
+    }
+    {   // BUG-70: render sync - the right tick waits for the left frame's Present (event from the render thread), with a timeout
+        if (!g_presEv) g_presEv = CreateEventW(nullptr, FALSE, FALSE, nullptr);
+        g_presFrame = 41; g_syncNeeded = 0; g_syncAlready = 0; g_syncTimeouts = 0;
+        HANDLE th = CreateThread(nullptr, 0, [](void *) -> DWORD { Sleep(8); g_presFrame = 42; SetEvent(g_presEv); return 0; }, nullptr, 0, nullptr);
+        waitPresented(42); WaitForSingleObject(th, 1000); CloseHandle(th);
+        bool ok = g_syncNeeded.load() == 1 && g_syncTimeouts.load() == 0 && g_presFrame.load() == 42;
+        waitPresented(42); ok &= g_syncAlready.load() == 1;                      // already presented: no wait
+        waitPresented(50); ok &= g_syncTimeouts.load() == 1;                    // never presented: gives up after 40 ms
+        waitPresented(50); waitPresented(50); ok &= g_syncTimeouts.load() == 3 && g_syncPause == 300;   // 3 in a row: paused
+        g_syncPause = 0; g_syncMiss = 0; g_presFrame = 0; g_syncNeeded = 0; g_syncAlready = 0; g_syncTimeouts = 0; g_syncWaitUs = 0;
+        logf("render sync test (waits for the previous frame's Present, no wait when presented, 40 ms timeout, pauses after 3 timeouts): %s", ok ? "PASS" : "FAIL");
         rsOk &= ok;
     }
     {   // 0.16.4 (BUG-64e): the game re-creating its swapchain -> the publisher lets go of it BEFORE the old one is destroyed
@@ -3900,6 +5648,9 @@ extern "C" BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, void *) {
         HANDLE t = CreateThread(nullptr, 0, worker, nullptr, 0, nullptr); if (t) CloseHandle(t);
 #endif
     } else if (reason == DLL_PROCESS_DETACH) {
+#ifndef GOTVR_SELFTEST
+        mblur::restore(); shade::restore();
+#endif
         logflush();
     }
     return TRUE;

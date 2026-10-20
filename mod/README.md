@@ -1,4 +1,4 @@
-# GoTVR 0.16.5 — SYNCHRONIZED STEREO 6DoF (xr=4): both eyes from the same moment of the game
+# GoTVR 0.18.22 — SYNCHRONIZED STEREO 6DoF (xr=4): both eyes from the same moment of the game
 
 Single-player only. Never enter Legends (online) with any GoTVR file installed.
 What changed and why: `docs/BUGLOG.md` (BUG-5, BUG-6).
@@ -21,6 +21,460 @@ refused to send images ("FRAME GENERATION is on" in the log, although it was off
 "R1 census" every 5 s (or on F10): the list of views the engine renders each frame. That decides how true
 same-frame stereo (both eyes every frame) gets built. Please press **F10** once in each of: main menu, standing
 outdoors, riding, a cutscene, photo mode.
+
+## 0.18.22: movement always follows the headset, body turns to the headset past a small threshold
+
+**Install:** `xinput1_4.dll`. This changes the 0.18.21 movement and body behaviour; the 0.18.21 fingers and the Shift+F6 test stay.
+
+- **Movement:** the left stick's forward is now **always where the headset looks**, every frame, also while you are already moving.
+  Look right while running and you run right. `[controls] move_follows_head=0` brings back the 0.18.21 behaviour (forward taken
+  when you start moving, snap turn or leave a menu).
+- **Body:** Jin's body and sword turn to match the headset once you look more than **7.5 deg** away, standing **and** moving. The turn
+  is smooth (0.25 s) and now ends square to your view (within 0.5 deg instead of 2). `fp_body_head_deadzone_deg` sets the threshold
+  (5 to 10 is the range you asked for); `fp_body_head_follow_s` sets the turn speed (this ini key was being ignored before; fixed).
+
+## 0.18.21: forward only when you start moving, fingers fixed (fist and thumb), fingers ease into place, arm shading test
+
+**Install:** `xinput1_4.dll` (the host is unchanged since 0.18.20).
+
+- **Movement forward:** it is now set **only** when you start moving from rest (and still at snap / smooth turns, the start, menus
+  and Recenter). The stop capture from 0.18.19 is gone. 0.18.20 also re-set forward on every frame of a turn past the threshold while
+  moving; that is gone too. While moving, looking more than 45 deg away still turns Jin's body and sword to your view, but the
+  direction you walk stays where it was until you next start from rest or snap turn.
+- **Grip pose:** each finger joint used to take its bend axis from the bone **after** the joints before it had bent. Once the knuckle
+  had turned ~80 deg, that bone pointed straight into the palm and the axis became noise, so the middle joints bent sideways (your
+  photo). Each finger now bends on **one hinge**, worked out once from Jin's straight reference finger, for all three joints
+  including the fingertip joint, which never bent before. Fist angles are 80 / 100 / 60 deg (knuckle / middle / tip). Checked on
+  Jin's own hand data, both hands: all four fingertips land on the palm, each finger in its own plane.
+- **Thumb on the stick:** the thumb now curls the way it does in a fist: it swings across the palm and bends at all three joints
+  (15 / 40 / 60 deg), so its tip lies over the curled index and middle fingers instead of just dipping down.
+- **Fingers ease into place:** every finger moves on a smooth spring, about 0.15 s from open to closed. It eases in and out with no
+  overshoot, so pressing grip, touching the stick or the trigger no longer snaps the pose. `fp_finger_tween_s` (0.15) sets the speed.
+- **Index:** it still follows the trigger (rests a third closed when your finger is on it, closes fully when pulled). Grip alone closes
+  middle, ring and little finger.
+- **See-through arms, a new test (Shift+F6):** your crop shows dark, grass-shaped streaks **on** the forearm skin, and it changes with
+  where you look. Those are the signs of a screen-space shadow or occlusion effect: it works from the depth image, and for an arm a
+  few cm from your eyes it samples the grass behind it and darkens the arm in the grass's shape. **Shift+F6** cycles:
+  1. Screen-space shadows OFF.
+  2. Plus ambient occlusion OFF.
+  3. Back to your own settings.
+
+  The log line `NEAR/s` shows what the game holds. If Shift+F6 changes nothing, the game may only read these settings when its menu
+  applies them. Then please switch **Screen Space Shadows** (and Ambient Occlusion) off in the game's graphics menu while in VR and
+  tell me if the grass goes. Either way, the answer pins it down.
+
+## 0.18.20: grass over the arms, fingers fixed, thumb and index touch, forward when you start walking, body turns while moving
+
+**Install both files:** `xinput1_4.dll` and `GoTVR\GoTVRHost.exe` (the host now reads thumb and trigger touch).
+
+- **Grass over the arms:** your photo shows it in the game's own image, so it's in the game's rendering, not the headset. It
+  started with 0.18.11, when the mod moved the near clip from the game's 10 cm to 2 cm. Grass appears to be drawn with the game's own
+  10 cm, so grass up to about five times farther away than your hand counts as nearer than the arm and is drawn on top. The near
+  clip is back to the game's 10 cm (`fp_near_cm=0`). The cost: an arm closer than 10 cm to your eyes gets cut open again.
+  **Shift+F7** still switches to 2 cm so you can compare.
+- **Fingers:** the thumb was mistaken for the ring finger and the bend direction came from the controller rather than Jin's hand, which
+  caused the odd pose. Now:
+  - the thumb is the shortest finger chain;
+  - the fingers curl toward Jin's own palm;
+  - **grip** curls middle, ring and little finger;
+  - **trigger** curls the index (touching the trigger closes it a third);
+  - **thumb on the stick, a face button or the thumb rest** puts the thumb down; lift it and the thumb comes up.
+- **Movement forward:** set the moment you **start** moving from rest, to where the headset looks then, so you can look around while
+  standing and walk off where you look. Snap turns, the game start, menus and Recenter still set it too.
+- **Body while moving:** looking more than the threshold (45 deg) away from the body while moving turns the body and the sword with
+  your head, as when standing, and the direction you walk turns with it.
+- **Gesture text removed:** the little "HUD" / "GUIDING WIND" text that appeared when you raise a hand is off by default
+  (`gesture_indicator=1` brings it back).
+
+## 0.18.19: arms keep working through jumps, body turn threshold respected, forward reset when you stop, fingers (second try), HUD test key
+
+**Install:** `xinput1_4.dll`.
+
+- **Arms stop at the start of a jump / body turning before 45 deg:** the mod's "is Jin on the horse?" check was fooled by jumps. A jump
+  lifts gear he carries on his back above the height the check used, and for that moment the mod thought you were riding. It
+  switched the VR arms off and snapped the body to the game's facing, which is the turn before 45 deg you saw. Now two
+  horse markers must be up (on the horse both are), for a quarter of a second. Also, a jump press no longer hands the arms to the
+  game.
+- **Forward when you stop:** when you stop moving, forward is set again to where your headset looks.
+- **Fingers:** 0.18.18 found only 3 fingers per hand (Jin's hand has extra helper joints the finder didn't expect). The finder now
+  works from each fingertip back to the hand, ignoring helper joints. The log also writes out the full joint layout of both hands
+  once (lines under `fingers:`), so if it still fails I can fix it exactly. Please send `gotvr.log`.
+- **Arm see-through, next test:** the HUD is drawn by the headset as a separate panel **on top of** the game image, fixed in the room in
+  front of you. That fits everything you've seen: only in the headset, never in the monitor window, solid when you look down and to
+  the left (the panel is out of the way there), and "like an added texture". **Shift+F4** cycles:
+  - HUD as before;
+  - HUD with straight alpha (colour where the HUD is empty can't be added);
+  - HUD hidden.
+
+  If the arms are solid with it hidden, the HUD panel is the cause. Also tell me whether it happens in **both eyes** or one: close
+  each eye in turn.
+
+## 0.18.18: VR fingers, walking forward = where you looked at the last snap, menus keep your direction
+
+**Install:** `xinput1_4.dll`.
+
+- **Fingers:** Jin's fingers no longer come from the game's animation. Each finger is set from the character model's own neutral
+  hand pose on your VR hand. **Grip closes a fist** (a light squeeze is already a full fist, as in the God of War VR mod;
+  `fp_grip_fist_full`). The **trigger also curls the index finger**. Every finger bend is a per-finger, per-joint angle, so grips
+  that wrap a sword hilt or other handles can be added later. If the fingers ever bend backwards, set `fp_finger_bend_sign=-1`.
+  The log's `fingers:` line says whether it worked (please send the log either way).
+- **Walking forward:** forward on the left stick is now where your **headset** pointed at the moment of your last snap turn
+  (also set once when the game starts, after menus and after Recenter). Looking around while walking no longer changes it. While
+  walking, the body faces that same direction.
+- **Menus:** you come out of a menu facing the same way you went in. The game camera quietly catches up behind you.
+- **Body:** the turn threshold is now **45 deg** (`fp_body_head_deadzone_deg`). Following your headset sideways is smoothed over half a
+  second (`fp_body_under_follow_s`).
+- **Grass seen through the arms (headset only):** the monitor never shows it, so it's added after the game renders, in the
+  headset's own processing. That points to **Virtual Desktop's Synchronous Spacewarp (SSW)**. The game runs at ~58 frames per second
+  per eye, so SSW makes up the in-between frames. Without depth information it guesses motion from colour, and close objects
+  (your arms, your body when you look down) then show the background through them in grey ghost shapes and wobble. Please try
+  **SSW = Disabled** in Virtual Desktop's settings (Streaming tab). If the arms are solid then, that's the cause. The proper
+  fix is sending the game's depth to the headset, so Spacewarp knows what's near.
+
+## 0.18.16: even 35 deg threshold, body faces where you look when moving, body under your headset, steadier view
+
+**Install:** `xinput1_4.dll`.
+
+- **Body turning too easily:** the body's facing is now kept as a direction in the world. Before, it was kept relative to Jin's
+  game character, which the game turns on its own (toward the camera after a snap, toward where he runs), and those turns dragged
+  the drawn body along. Standing, it now stays put until you look more than **35 deg** away from where his hips face, the
+  same both ways. It then turns to your view and stops. Change the angle with `fp_body_head_deadzone_deg` in `gotvr.ini`. A snap
+  turn still brings him round.
+- **Moving in any direction:** while walking or running, the body always faces where your headset looks, including strafing
+  and backing up. The legs run in that direction too, so no more looking into his shoulder. `fp_body_move_follow_s` (0.15)
+  sets how quickly it follows.
+- **Body under your headset:** step or lean sideways in your room and Jin's drawn body (and his sword) moves with you, up to 60 cm
+  (`fp_body_under_max_cm`; `fp_body_under_hmd=0` turns it off). The game still decides where Jin really is; beyond that you're
+  leaving his body.
+- **Jitter when looking down:** the view's sideways position followed every small twitch of Jin's animated head. It's now smoothed
+  over 1 s (`fp_lean_smoothing_s`). If near objects still wobble, check Virtual Desktop's Synchronous Spacewarp: at this mod's
+  ~58 fps per eye it can make close objects (your own body) wobble.
+- **Arm overlay:** the TAA test made no difference, so it's removed. **Shift+F7** now switches the near clip between 2 cm and the
+  game's own 10 cm. If the overlay disappears at 10 cm (the arms get cut off very close instead), the near clip is involved. A
+  screenshot of the monitor window while it happens would help a lot.
+
+## 0.18.15: hips square to your view, the last three transparency attempts removed, a TAA test key
+
+**Install:** `xinput1_4.dll`.
+
+- **Removed:** 0.18.14's culling change (the black screen edges), 0.18.13's dither-circle change and 0.18.12's environment
+  near-clip change. The 2 cm near clip from 0.18.11 and the near fade switched off in 0.18.10 stay.
+- **Lopsided body follow:** Jin's standing stance has his hips turned about 32 deg to the right (the log shows it). The body follow was
+  centred on the direction his whole model faced, not on his hips, so it turned the body with only a little look to the right
+  but needed a big look to the left. Standing, the hips are now turned to face exactly where the body follow points. The turn
+  is symmetric, and the right shoulder is no longer pulled back. It fades out when you walk, so his gait is left alone.
+- **After a snap (or smooth) turn** the body always comes round so the hips face where you look, even within the dead zone.
+- **"Background drawn on top of the arm":** that looks like the game's anti-aliasing (TAA) blending in the wrong part of the previous
+  frame. **Shift+F7** now cycles the anti-aliasing on its own, leaving culling and everything else as they are:
+  0 = as now, 1 = each eye uses its own previous frame, 2 = no history (jagged edges, a test only).
+  Please tell me which of the three makes the overlay go away. Also try **Shift+F10** (VR arms off) to see whether it only happens
+  with the IK arms.
+
+## 0.18.14: arms no longer culled, Jin stands square
+
+**Install:** `xinput1_4.dll`.
+
+- **Transparent arms (new diagnosis):** what you noticed points to the game deciding not to draw Jin's arm and hand
+  meshes. Those meshes vanish whenever you look straight ahead, but are solid whenever you look down-left, wherever your hands are.
+  - The game decides from where its *animation* puts the arms. In the standing stance his left hand rests on the katana at the
+    left hip, down-left of your eyes, and those meshes are only drawn while that spot is in view.
+  - Where they're in view for one eye only, the arms look half see-through.
+  - In first person, the area the game checks before drawing now starts 1 m behind your eyes, so nothing of Jin gets dropped.
+    Far away it is barely wider, so the cost should be negligible.
+  - (Removed in 0.18.15.) Shift+F7 switched this off and on. Please try it once: if the arms go transparent again with it
+    off, that confirms the cause.
+- **Standing stance:** when the idle pose is taken, the angle of his hips and shoulders is measured and the pose is turned to
+  face straight forward (the log's `IDLE/s` line shows how much). `fp_stance_square=0` turns this off.
+
+## 0.18.13: arms solid wherever you look, Jin's idle animations held still
+
+**Install:** `xinput1_4.dll`.
+
+- **Arms transparent depending on where you look:** this was the game's third-person "see the hero through whatever is between
+  him and the camera" effect, which cuts a dithered circle around where Jin is on screen. In first person Jin is at the camera,
+  so the circle moved with your head, not your hands. That circle is now switched off in first person (`fp_focus_stipple_off=1`).
+- **Idle animations:** once Jin has stood still for half a second, his pose is kept as it is and the idle fidgets (weight
+  shifts, looking around) no longer move the body or the view. Your arms still follow the controllers on top of it.
+  - It lets go smoothly the moment you press anything, move a stick, walk, get hit, or the game takes the arms (flute,
+    climbing, takedowns).
+  - `fp_idle_hold=0` turns it off; `fp_idle_settle_s` sets how long he stands before the pose is taken.
+  - The log line `IDLE/s` says whether it is holding and, if not, why.
+
+## 0.18.12: smooth snap turn, hands pivot on the wrist, arms solid up close, view 3 cm back
+
+**Install:** `xinput1_4.dll`. Culling, pop-in and shadows are untouched.
+
+- **Snap turn wobble:** after a snap the mod turns the game's own camera after your view in the background. Each degree it
+  turned was subtracted from the view one controller poll late, so the view overshot a little and came back. It's now subtracted
+  in the same frame the camera turns, so the view stays perfectly still while the game camera catches up.
+- **Hands:** the controller's grip point is the centre of your fist, which sits on the palm side of your wrist. The wrist was
+  placed only 7 cm back from it, so the hand hung a few cm low and turned around a point below your real wrist. It now also
+  goes **3 cm toward the back of the hand**. If it still isn't on your wrist, **Ctrl+F1 / Ctrl+F2 / Ctrl+F3** move the wrist
+  point 1 cm back / up (toward the back of the hand) / toward the thumb; **Ctrl+Shift** moves it the other way. Every change is
+  saved like the F1-F3 angles. The old Ctrl+F1/F2/F3 functions are now **Ctrl+Alt+F1/F2/F3**.
+- **Arms transparent-ish close up:** the game takes its near clip distance from its environment settings (10 cm). 0.18.11
+  changed only the camera, so the anti-aliasing still worked out depth as if the near clip were 10 cm. An arm 20 cm away was
+  treated as if it were 1 m away, and the anti-aliasing pulled in the background from behind it. The environment now says 2 cm
+  too, so everything agrees.
+- **View:** 3 cm further back (`fp_eye_forward_cm` 4 -> 1).
+
+## 0.18.11: each eye culls for itself, view 5 cm back, hand angle keys, arms no longer cut open up close
+
+**Install:** `xinput1_4.dll`.
+
+- **Objects missing in one eye:** each eye now decides what to draw from its own view (new F6 setting **7**, the default).
+  Setting 4 checked every object against what the *other* eye saw on its last frame, so anything that eye couldn't see (behind
+  Jin's arm, behind a nearby grass clump or post) was dropped from this eye too. Setting 7 drops that check. Nothing is culled
+  in one eye only, at some GPU cost. If the left-eye streaks/pop-in come back, press F6 four times (7 -> 1 -> 2 -> 3 -> **4**)
+  and tell me. 7 is setting 4 without the cross-eye check, so a return of the pop-in would point at that check itself.
+- **View position:** 5 cm further back (`fp_eye_forward_cm` 9 -> 4).
+- **Hand angles:** **F1** pitch, **F2** yaw, **F3** roll, 5° per press for both hands (Shift+F1/F2/F3 = the other way). Every
+  press is saved to `gotvr.ini` (`fp_hand_pitch_deg` / `_yaw_deg` / `_roll_deg`), so whatever you settle on is the default next
+  time. The log line `NEAR/s` shows the current values. The old F1 / F2 / F3 (HUD layer A/B, render size, letterbox crop) are
+  now **Ctrl+F1 / Ctrl+F2 / Ctrl+F3** (0.18.12: Ctrl+Alt+F1 / F2 / F3).
+- **Arms see-through very close up:** the game clips everything closer than 10 cm to the camera. The near-plane change from
+  0.18.9 is back at 2 cm, made consistent this time: some ticks used to keep the camera saying 10 cm while the projection said
+  4 cm, which is the likely source of 0.18.9's one-eye shadows. If shadows show in one eye again, set `fp_near_cm=0` and tell me.
+
+## 0.18.10: setting 4 by default, Jin no longer see-through, hands, grip free for the sword
+
+**Install:** `xinput1_4.dll`.
+
+- **Pop-in:** F6 setting 4 (the game's own cross-eye culling) is now the default, as you asked. If you had `history_mode` in
+  your `gotvr.ini`, remove it. Shadows in one eye were probably 0.18.9's near-plane change, which is reverted.
+- **See-through Jin:** the game fades its hero out when the camera comes within 1-2 m (a third-person feature). That fade is now
+  switched off while you are in first person.
+- **Hands:** what looked right with the controller pointing down is now what you get holding it forward.
+- **Stand tall** is off by default; **right grip** is unbound - it will drive the physical sword.
+
+## 0.18.9: left-eye pop-in (new fix), hands the right way up, arms not see-through, standing tall, game-animated flute / climbing
+
+**Install:** `xinput1_4.dll` (host unchanged: 0.14.2).
+
+- **Left-eye pop-in:** your F6 test pointed at the per-eye occlusion (hidden-object culling). It assumed which of the game's two
+  depth buffers belonged to which eye; now the mod records it every frame, so each eye only tests against its own last frame
+  with the camera that drew it. This is the new default (F6 setting 1). Please check pop-in and the "missing in one eye" objects
+  again. F6 setting 6 is the old method, for comparison.
+- **Hands:** turned the right way up.
+- **See-through arms:** the near clip plane is now 4 cm in first person (`fp_near_cm`).
+- **View height:** 5 cm higher (`fp_eye_up_cm` = -3).
+- **Sword stance:** when the game crouches Jin a little, he is drawn standing tall with his feet planted (`fp_stand_tall`). A
+  deep sneaking crouch is left as the game plays it.
+- **Game animation owns the arms** (smooth hand-over) during: the flute (from the wheel, until you move or dodge), takedowns /
+  quick attack (Y, 2.5 s), and whenever the animation raises a hand to head height (climbing, ledges, grappling).
+
+## 0.18.8: VR arms found, history reset on F11
+
+**Install:** `xinput1_4.dll` (host unchanged: 0.14.2).
+
+- **VR arms:** 0.18.7 found Jin's skeleton but not his arms (the items he holds hang far below his hands and confused the
+  search). The search now follows the bone chain itself. The log lines starting `arms:` say what it found; if it fails it
+  writes the whole skeleton into the log so I can fix it from there.
+- **Left eye:** your TAA switch worked (the per-eye TAA is running for the first time since 0.10). To find what still differs
+  in the left eye, please try this in one session and tell me what changes:
+  1. **F6** cycles five "history" settings (the number shows as white squares): 1 = default, 2 = the game's own TAA, 3 = TAA
+     off, 4 = everything shared between eyes, 5 = everything reset every frame.
+  2. **F11** (or the wheel's Recenter view) now resets everything like the pause menu does - press it when the far objects
+     look wrong in the left eye.
+
+## 0.18.7: VR arms and body (full-body IK, stage 1), five-option wheel, view centred
+
+**Install both files:** `xinput1_4.dll` and `GoTVR\GoTVRHost.exe` (host 0.14.2; they must be the same build).
+
+- **The streaks in one eye:** not motion blur (your setting was already 0). Since we tried DLSS (0.11), the game's own TAA has
+  been switched off in every session - the game's **Upscaling** setting is still doing the anti-aliasing, and an upscaler
+  keeps one history for both eyes. Please set the game's Upscaling method back to **Off / TAA** (Settings > Display/Graphics).
+  The log then shows the per-eye TAA working again ("TAA/s ... restored" above 0) and no "AA WARNING".
+- **Wheel:** Heal, Photo mode, Call horse, Play flute, Recenter view (five sectors, clockwise from the top).
+- **View:** 3 cm higher and centred on Jin's head (it was 3-4 cm toward his left shoulder). Fine tuning: `fp_eye_up_cm`,
+  `fp_eye_left_cm` (positive = toward his left) under `[gotvr]`.
+- **Full-body IK, stage 1:** standing still, Jin's body turns to where you look once you look more than 35 degrees away; his
+  arms follow your controllers (shoulders shrug for far reaches, elbows bend down and out, hands take the controllers' angle,
+  the sword in his hand follows). **Shift+F10** turns the VR arms on/off. If a hand angle is off, tell me which way - trims:
+  `fp_hand_pitch_deg`, `fp_hand_yaw_deg`, `fp_hand_roll_deg`, `fp_hand_back_cm`. Not yet: attacks / climbing still let your
+  controllers own the arms.
+
+## 0.18.6: the left-eye streaks are motion blur, sword turns with the body, HUD gesture
+
+**Install:** `xinput1_4.dll`.
+
+- **Streaks on fast head turns (the old "left-eye pop-in"):** your Shift+F9 test proved it belongs to the eye the game draws
+  first in each pair. That eye's "previous frame" is the other eye from a moment earlier, so the game thinks the whole view
+  moved a lot and its motion blur smears terrain and trees across the screen. The mod now holds the game's motion blur at 0
+  while in VR (your setting comes back when you quit). If you still see streaks, set Motion Blur to 0 / Off in the game's
+  graphics settings - the log line starting "motion blur:" tells me which case it is. Shift+F9 is still there; leave it off.
+- **Sword when running backwards:** carried items (sword, scabbard, bow...) now turn with the body.
+- **HUD gesture:** the game only shows the objective when it sees "hold D-pad right, then flick the right stick up"; the mod
+  sent both at the same instant. It now does them in order, like a player. Note the game itself hides most of its HUD out of
+  combat - the gesture brings up what the game shows for the objective.
+
+## 0.18.5: running backwards, HUD gesture, left-eye pop-in test
+
+**Install:** `xinput1_4.dll`.
+
+- **Running backwards:** the game has no backpedal - Jin turns round and runs at the camera. Now, when he faces away from your
+  forward direction, his body is drawn turned round to face forward, so his run plays forwards while you move back. Looking
+  around with your head doesn't turn him; it's off on the horse. `fp_body_follow=0` under `[gotvr]` turns it off.
+- **HUD gesture:** left hand at the head + trigger now puts the normal-size HUD panel (room-locked) straight in front of you,
+  and the game shows your objective on it.
+- **Left-eye pop-in:** Shift+F7 is gone. New test: **Shift+F9** swaps which eye the game renders first. Please tell me whether
+  the pop-in moves to the RIGHT eye after Shift+F9, or stays in the LEFT eye. Press Shift+F9 again to go back.
+
+## 0.18.4: starting on the horse no longer breaks first person
+
+**Install:** `xinput1_4.dll`.
+
+- When the game loaded with Jin on the horse, the mod took a piece of riding gear 40 cm above his head for the head. That put
+  you above his head, left his real head visible, and dropped you to the floor once you got off (that gear sits on the ground
+  then). The head is now found by its shape (the dense cluster of face joints), so lone gear can't win.
+- Your 0.18.2 eye test also started on the horse, so the eye position was never really tested - the eyes stay at 0.18.1's
+  place (9 cm forward). The log line "first person: hero ... head = joint ..." should now say joint 22 or 123.
+
+## 0.18.3: eye position put back
+
+**Install:** `xinput1_4.dll`. The eyes are back where 0.18.1 had them (`fp_eye_forward_cm` 9); the 0.18.2 move made it worse.
+Everything else from 0.18.2 below is still in.
+
+## 0.18.2: left-eye pop-in (new fix), pause menu back on the screen, HUD gesture you can see, eyes moved back (xr=4)
+
+**Install:** `xinput1_4.dll` (host unchanged: 0.14.1, but copying both is fine).
+
+- **Left-eye pop-in:** yes, the occlusion change covered the terrain too: every pass that asks for that occlusion data
+  (grass, terrain tiles and six others) had it switched off, and you cycled all three Shift+F8 modes. So you were right, the
+  pop-in is not that occlusion. The new suspect: the left eye's camera was set *during* the game's update, after the systems
+  that decide what to draw (culling, detail levels, streaming) had already run with the previous right-eye camera. 0.18.2 sets
+  the left-eye camera *before* the update. **Shift+F7** turns this on/off so you can compare (log: "pre-compose ON/OFF").
+- **Pause menu not on the screen:** your log shows F10 was pressed twice (always -> never); "never" turns the screen off for
+  every menu. F10 now only switches between auto and always.
+- **Left hand at head + trigger:** the HUD now appears straight in front of you for 6 seconds, and the game's swipe-up is
+  pressed (it shows your current objective). Right hand at head + trigger is still the guiding wind; please tell me whether it
+  blows.
+- **Too far in front of Jin:** the eyes moved back 7 cm (`fp_eye_forward_cm` 9 -> 2) - reverted in 0.18.3 (worse).
+
+## 0.18.1: no left-eye pop-in, one-step snap turn, item wheel you can see (xr=4)
+
+**Install both files:** `xinput1_4.dll` and `GoTVR\GoTVRHost.exe` (host 0.14.1; they must be the same build).
+
+- **Left-eye pop-in:** the setting you found with Shift+F8 is now the default (`foliage_occlusion = 2`).
+- **Snap turn:** one instant 30° step. The view turns immediately; the game's own camera catches up behind it without you seeing
+  it, and the left stick always moves you where you are looking. `turn = smooth` in `[controls]` is now smooth too.
+- **Item wheel:** holding the left trigger now shows the wheel above your left hand; the right stick highlights an option, letting
+  the stick go uses it.
+- **Head gesture test indicator:** when a hand is at your head, a small panel low in your view shows which hand (green), and the
+  gesture's name flashes when it fires ("GUIDING WIND", "HUD"). `gesture_indicator = 0` in `[controls]` turns it off.
+- **Third person after the map / pause menu:** fixed - the game's fade after a menu no longer counts as a cutscene for the camera.
+
+## 0.18.0: VR controllers, left-eye pop-in attempt 3 (xr=4)
+
+**Install both files:** `xinput1_4.dll` and `GoTVR\GoTVRHost.exe` (the host changed: 0.14.0; they must be the same build).
+
+**Controllers.** Works with any OpenXR controller: Quest Touch / Touch Plus / Touch Pro, Index, Vive wands, Windows Mixed Reality,
+HP Reverb G2, Pico 4. The game sees an Xbox controller, so its own button prompts and control settings apply. A real gamepad
+still works alongside. Default layout (your CONTROL_SCHEME.txt; Quest names, other controllers use the same positions):
+
+| Control | Does |
+|---|---|
+| Left stick / click | move / run |
+| Right stick / click | snap turn 30° (or smooth) / crouch |
+| A (right lower) | jump |
+| B (right upper) | dodge |
+| Y (left upper) | quick attack / assassinate |
+| X (left lower), left menu | game menu |
+| Right trigger | fire / blowgun |
+| Left trigger (hold) | item wheel: right stick picks Heal (up) / Photo mode (lower right) / Call horse (lower left), let the stick go to use it; let the trigger go to cancel. You feel a tick on each option. No picture yet. |
+| Right hand at your head + right trigger | guiding wind |
+| Left hand at your head + left trigger | show / hide the HUD |
+| Right grip | block / parry (temporary, until the physical sword exists) |
+| Left grip | nothing yet (grab, later) |
+
+The game's rumble plays on the controllers. Every binding can be changed in `gotvr.ini` under a `[controls]` section, e.g.
+`right_secondary = b`, `turn = smooth`, `snap_turn_deg = 45`, `wheel_1 = down`, `right_hand_at_head_trigger = dpad_right+rs_up`
+(outputs: `a b x y lb rb l3 r3 start back up down left right lt rt rs_up rs_down rs_left rs_right ls_up ... wheel hud none`,
+several joined with `+`).
+
+**Left-eye pop-in, attempt 3.** The two earlier attempts are switched off again (they cost a little and did not help). The grass and
+foliage culling read data the mod had rewritten for a different purpose; it now gets the game's own data again, at no cost.
+If the left eye still pops, press **Shift+F8** twice (mode 2): if that makes it go away we know exactly where it is, otherwise it
+is not culling at all. Either way please send the log.
+
+## 0.17.4: left-eye pop-in and left-eye stutter (xr=4)
+
+**Install:** `xinput1_4.dll` (the host is unchanged since 0.17.3).
+
+- **Why only the left eye:** the game builds each frame's GPU work on a separate thread while the next tick already runs. After a
+  left-eye frame comes the short right-eye tick, which re-aims the camera and rewrites the culling data for the right eye while
+  the left frame is still being built, so grass and objects in the left eye were culled with right-eye data. The right-eye tick
+  now waits until the left frame is finished (`render_sync`, 1). This can cost a few frames per second; the `POSE/s` log line
+  shows how long it waits.
+- **Left-eye stutter:** your eye position was taken from Jin's body before his animation for that tick ran, while the right eye
+  used the animated body. Both eyes now use the same body pose.
+
+## 0.17.3: the head is hidden, left-eye foliage pop-in, black edges on fast head movement (xr=4)
+
+**Install both files:** `xinput1_4.dll` and `GoTVR\GoTVRHost.exe` (the host changed: 0.13.2; they must be the same build).
+
+- **The head is gone in first person:** 0.17.2 hid joints in the skeleton copy that the game uses for gameplay, but the graphics card
+  draws Jin from a second copy (the "render pose") that the game writes right after animating him. The mod now hides the head in that
+  copy, right after Jin's animation and before the game sends it to the GPU, the same way the game hides armor pieces you don't wear.
+  The whole head (face, hair, headgear on the head) collapses onto the neck. Your hands, the body and the gameplay skeleton are not
+  touched. The head comes back in cutscenes, menus and when you press F5 for third person. It also has no shadow now.
+- **Left eye pops grass/flowers/objects in and out when looking side to side:** the game's grass and foliage culling uses the previous
+  frame. For the right eye that is the left eye of the same moment; for the left eye it is the right eye of the previous moment, so
+  only the left eye's culling data is out of date when your head turns. The left eye now discards that data at much slower head turns
+  (`fast_turn_deg_left`, 0.6; the right eye keeps 2.0).
+- **Stutter and black edges when looking down and then up fast:** the headset program now predicts your head pose for the moment the
+  picture really reaches the display (it measures that delay), instead of the moment it was asked for, so the picture needs much less
+  warping. Windows also lets the headset streamer and GoTVRHost use the GPU before the game (`game_gpu_priority_below_normal`, 1).
+  New log lines: `POSE/s` in gotvr.log and "pose lead" in host.log.
+
+Please send `gotvr.log` and `host.log` again; the `FP/s` line should show "head hidden in" about as many jobs as "hero animation jobs".
+
+## 0.17.2: first person engages again, left-eye pop-in fixed (xr=4)
+
+**Install:** `xinput1_4.dll` (host unchanged since 0.17.1).
+
+- **First person never turned on in 0.17.1:** the mod counted only the first 8 of Jin's joints, because the game keeps gear it
+  doesn't show (hats, masks, unused weapons) as invisible joints in the middle of the skeleton, and the count stopped at the
+  first one. They are now counted, so the whole skeleton is found; the head and the hidden-head set use only visible joints.
+- **Objects popping in and out in the left eye when you turn your head fast:** the mod's fast-turn check (which stops the game
+  from using stale culling data during fast turns) couldn't see head turns on left-eye frames. It now also measures the
+  headset's own rotation.
+
+Please send `gotvr.log` again; the lines starting with "first person:" show what it found.
+
+## 0.17.1: first person at eye height, smoother head turns (xr=4)
+
+**Install both files:** `xinput1_4.dll` and `GoTVR\GoTVRHost.exe` (the host changed: 0.13.1).
+
+- **View at hip/chest height fixed:** the object the mod used for Jin was his "game logic" object, which only has a few attachment
+  points (the highest at chest height), not his skeleton. The mod now finds Jin's actual body model and puts your eyes just below
+  the top of his head. The log says which model it found ("skinned model ... joints").
+- **Judder and black edges when turning your head:** the headset program was being starved of GPU time at 2560 x 2560, so
+  Virtual Desktop dropped to half rate and showed old frames shifted (the black edges). Its copies now run at high GPU priority,
+  and the default size is one step lower, **2304 x 2304** (F2 still cycles; `render_size` overrides).
+- Tuning in `gotvr.ini` if the height is still off: `fp_eye_up_cm` (default -11 = 11 cm below the top of the head) and
+  `fp_eye_forward_cm` (default 9).
+
+Please send `gotvr.log` and `GoTVR\host.log` again (Shift+F5 once while standing still helps).
+
+## 0.17.0: first person (first try) (xr=4)
+
+**Install:** `xinput1_4.dll` (host unchanged since 0.16.2). The game must be in Windowed mode.
+
+- **First person is on by default.** Your eyes sit where Jin's eyes are; the game's camera still turns you (right stick /
+  mouse) and moves you, and your headset adds looking around and leaning on top.
+- **No head bob:** the view follows Jin's body, not his animated head, so running and attacking don't shake the view. Climbing
+  stairs, jumping and crouching follow smoothly.
+- **Jin's head is hidden** in first person (his shadow has no head for now).
+- **Third person comes back automatically** for cutscenes, the start screen, menus and videos, and whenever the game moves its
+  camera far away from Jin (scripted shots).
+- **F5** switches first person on/off. **Shift+F5** writes Jin's skeleton into the log (please press it once while standing still).
+- Settings in `gotvr.ini` (all optional): `first_person`, `fp_eye_up_cm` / `fp_eye_forward_cm` (where your eyes sit relative to
+  Jin's head), `fp_hide_head`, `fp_hide_radius_cm`, `fp_vertical_smoothing_s`, `fp_follow_lean`, `fp_max_camera_distance_m`.
+
+Please tell me: is the view at the right height and position (not inside the chest, not floating in front)? Can you see
+any part of the head, hair or hat? Does anything stretch or fly around when you raise your hands to your face (drinking,
+wiping the sword)? Then send `gotvr.log`.
 
 ## 0.16.5: 2560 x 2560 is the default headset size (xr=4)
 
