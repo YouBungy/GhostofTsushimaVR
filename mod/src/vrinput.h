@@ -101,6 +101,12 @@ static std::atomic<float> viewHold{0};                                       // 
 static float lastGameYaw = 0; static bool lastYawOk = false; static u64 lastPoll = 0; static std::atomic<u64> bleedUntil{0}; static bool catching = false;
 static Snap snap; static bool everActive = false; static u32 packet = 1; static XINPUT_GAMEPAD last{}; static bool turnArmed = true;
 struct Wheel { bool open = false, used = false; int sel = -1; u64 tapUntil = 0, tapStart = 0; u32 tapMask = 0; };
+// 0.18.28 a chord requested by the game DLL (the katana draw asks the game to draw / sheathe: touchpad swipe right = hold D-pad right +
+// flick the right stick right on PC), played by build() in order like a wheel option
+static u64 kickAt = 0, flatFrom = 0; static bool kickFirst = true; static std::atomic<u64> nKicks{0};   // 0.18.30 the start-up turn kick
+static std::atomic<u32> blockMask{0}; static std::atomic<u64> nBlocked{0};   // 0.18.29: pad buttons held off (the game's sword attacks while the physical katana is in hand)
+static std::atomic<u32> extReqMask{0}; static std::atomic<u64> extReqSeq{0}, nExt{0}; static u64 extSeen = 0, extStart = 0, extUntil = 0; static u32 extMask = 0;
+static void requestChord(u32 m) { extReqMask = m; extReqSeq++; }
 static Wheel wheel; static u64 gestUntil[2] = {0, 0}, gestStart[2] = {0, 0}; static u32 gestMask[2] = {0, 0}; static bool trigWas[2] = {false, false}, atHeadWas[2] = {false, false};
 static u32 prevBtn[2] = {0, 0};
 // 0.18.7: buttons + a stick flick are played the way a player does it - buttons first (D-pad right = the PC port's touchpad
@@ -169,6 +175,8 @@ static bool build(XINPUT_GAMEPAD &g, bool ctxFlat) {
     const float dt = lastPoll && now > lastPoll ? fminf(0.1f, (now - lastPoll) * 0.001f) : 0.0f; lastPoll = now;
     float ls[2], rs[2]; radial(hd[0].stick, cfg.dead, ls); radial(hd[1].stick, cfg.dead, rs);
     { static bool firstCap = false; if (!firstCap) { firstCap = true; moveCapture(0); } }   // the first live poll: forward = where you look
+    if (ctxFlat && !wasFlat) flatFrom = now;
+    if (!ctxFlat && (kickFirst || (wasFlat && now - flatFrom >= 8000))) { kickFirst = false; kickAt = now + 1200; }   // 0.18.30: after start / a load
     if (ctxFlat && !wasFlat) { if (gameYawOk.load()) { flatViewYaw = wrap180(gameYaw.load() + viewHold.load()); flatSaved = true; } }
     if (!ctxFlat && wasFlat) {
         if (flatSaved && gameYawOk.load()) { viewHold = wrap180(flatViewYaw - gameYaw.load()); catching = fabsf(viewHold.load()) > 0.5f; turnSeq++; }
@@ -272,6 +280,8 @@ static bool build(XINPUT_GAMEPAD &g, bool ctxFlat) {
         }
     }
     if (now < wheel.tapUntil) applyStaged(wheel.tapMask, wheel.tapStart, wheel.tapUntil, now, g);
+    { const u64 sq = extReqSeq.load(); if (sq != extSeen) { extSeen = sq; extMask = extReqMask.load(); extStart = now; extUntil = now + 450; nExt++; } }
+    if (now < extUntil) applyStaged(extMask, extStart, extUntil, now, g);
     // ---- turning: the view turns at once (snap or smooth); the game camera follows in the background ----
     if (!stickBusy) {
         if (cfg.turnSmooth) { if (rs[0] != 0.0f) { holdAdd(-rs[0] * cfg.smoothGain * 150.0f * dt); turnSeq++; moveCapture(30); } }   // stick right = turn right = yaw down (Z up)
@@ -280,13 +290,28 @@ static bool build(XINPUT_GAMEPAD &g, bool ctxFlat) {
             if (turnArmed && fabsf(rs[0]) > 0.7f) { holdAdd(rs[0] > 0 ? -cfg.snapDeg : cfg.snapDeg); turnArmed = false; nSnaps++; turnSeq++; moveCapture(30); }
         }
     }
-    const bool chordBusy = now < wheel.tapUntil || now < gestUntil[0] || now < gestUntil[1];   // 0.18.7: a played stick flick owns the stick
+    // 0.18.30 (owner: "the headset forward isn't set properly / keeps moving until I do a snap turn; at the start of the game do two very
+    // quick, unnoticeable snap turns, one left and one right"): 1.2 s into gameplay (game start, and after any menu / load of 8 s or
+    // more) the right stick is pushed left for 0.2 s and right for 0.2 s - what a snap turn's catch-up does to the game camera - while
+    // every degree the game camera turns is taken off the view offset (as in a snap's catch-up), so the view itself does not move;
+    // the turn counters / forward capture of a snap run too. Not while you are using the right stick.
+    bool kicking = false;
+    if (kickAt && now >= kickAt && gameYawOk.load()) {
+        const u64 t = now - kickAt;
+        if (t == 0 || (t < 400 && fabsf(rs[0]) < 0.2f)) { kicking = true; g.sThumbRX = axis(t < 200 ? -0.6f : 0.6f); bleedUntil = now + 250;
+            static u64 lastKick = 0; if (lastKick != kickAt) { lastKick = kickAt; turnSeq++; moveCapture(30); nKicks++; logf("controls: start-up turn kick (right stick left then right under a still view)"); } }
+        else if (t >= 400) { kickAt = 0; turnSeq++; moveCapture(30); }
+        else kickAt = 0;   // you took the right stick: no kick
+    }
+    const bool chordBusy = kicking || now < wheel.tapUntil || now < gestUntil[0] || now < gestUntil[1] || now < extUntil;   // 0.18.7: a played stick flick owns the stick
     const float yawOff = viewHold.load();
     // catch-up with hysteresis (0.18.12): starts above 2 deg, stops below 0.5 deg - the game camera's own inertia after the stick is
     // released only moves the offset (invisible), it no longer re-triggers small back-and-forth stick corrections
     if (fabsf(yawOff) > 2.0f) catching = true; else if (fabsf(yawOff) < 0.5f) catching = false;
     if (catching && gameYawOk.load() && !chordBusy) {   // catch-up: the stick turns the game camera toward the view (right stick + = right)
         const float k = fminf(0.8f, fmaxf(0.25f, fabsf(yawOff) / 25.0f)); g.sThumbRX = axis(yawOff < 0 ? k : -k); bleedUntil = now + 250; }
+    { const u32 bm = blockMask.load(); if (bm && (g.wButtons & (WORD)(bm & 0xFFFF))) { g.wButtons &= (WORD)~(bm & 0xFFFF); nBlocked++; }
+      if ((bm & OX_RT) && g.bRightTrigger) { g.bRightTrigger = 0; nBlocked++; } if ((bm & OX_LT) && g.bLeftTrigger) { g.bLeftTrigger = 0; nBlocked++; } }
     for (int h = 0; h < 2; h++) { trigWas[h] = hd[h].trigger > 0.6f; prevBtn[h] = hd[h].buttons; }
     { static bool aWas = false; const bool a = (g.wButtons & XB_A) != 0; if (a && !aWas) jumpAt = now; aWas = a; }
     if (g.wButtons || g.bLeftTrigger > 30 || g.bRightTrigger > 30 || abs(g.sThumbLX) > 3000 || abs(g.sThumbLY) > 3000 || abs(g.sThumbRX) > 3000 || abs(g.sThumbRY) > 3000) lastAct = now;   // 0.18.13: idle hold lets go

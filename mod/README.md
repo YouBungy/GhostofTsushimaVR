@@ -1,4 +1,4 @@
-# GoTVR 0.18.26 — SYNCHRONIZED STEREO 6DoF (xr=4): both eyes from the same moment of the game
+# GoTVR 0.18.38 — SYNCHRONIZED STEREO 6DoF (xr=4): both eyes from the same moment of the game
 
 Single-player only. Never enter Legends (online) with any GoTVR file installed.
 What changed and why: `docs/BUGLOG.md` (BUG-5, BUG-6).
@@ -22,6 +22,331 @@ refused to send images ("FRAME GENERATION is on" in the log, although it was off
 same-frame stereo (both eyes every frame) gets built. Please press **F10** once in each of: main menu, standing
 outdoors, riding, a cutscene, photo mode.
 
+## 0.18.38: no game draw / sheathe animations, the 0.18.37 TAA change removed, the katana fixed in the fist while you move, hand placement that works
+
+**Install:** `xinput1_4.dll` (the host is unchanged).
+
+- **The game is never asked to draw or sheathe its sword any more.** Drawing and sheathing are yours alone, so Jin does not animate
+  either. The 0.18.37 game-sword path (its separate sword in your hand, the sheath going empty, its grip) is gone. The katana is the
+  sheath model's own sword again, held in your hand. The leftover settings (`sword_use_game_blade`, `sword_game_grip_*`) are removed
+  from gotvr.ini automatically. Ctrl+F9 no longer asks the game to draw.
+- **The 0.18.37 per-eye TAA is removed** (`taa_per_eye` is deleted from gotvr.ini). Your culling preset 7 was never touched. Ctrl+F11
+  is plain recentre again. The see-through copy of the arm and katana is still open.
+- **The katana and the hands on it no longer trail the body while you move.** The sheath's position the game thread used was the one
+  from the previous animation frame. Walking or running, the body had moved on by then (about 9 cm at a run), so the sheath rail, the
+  hands locked to it and the drawn katana all sat that far behind, on the side you came from. Now the sheath is placed with the body's
+  current position, and the drawn katana's sheath frame comes from the same frame as Jin's hand.
+- **Placing the hands on the katana works now.** The rail's origin (the katana joint) is about 16 cm below the guard, not at it. The
+  old settings were measured from that joint and clamped to the wrong part of the sword, so the right fist could never go further
+  down than just under the guard. Now:
+  - `sword_guard_cm` = auto: where the guard is, worked out from your captured left grip (Ctrl+F6, thumb on the guard).
+  - `sword_right_hand_cm` (9) = how far below the guard the right fist sits.
+  - `sword_left_hand_cm` (4.5) = how far below the guard the left fist sits on the sheath.
+  - **Live, while you play:** Ctrl+PageDown / Ctrl+PageUp move the right hand 1 cm down / up the hilt. Ctrl+End / Ctrl+Home move the
+    left hand 1 cm down / up the sheath. Each change is saved to gotvr.ini right away, and a capture (Ctrl+F5 / Ctrl+F6) sets them too.
+  - The grab areas follow: the hilt can be taken anywhere between the guard and the pommel, and the sheath grab is centred where your
+    left hand goes.
+  - `sword_grip_lower_cm` and `sword_sheath_hand_cm` are removed.
+- **The body follows the headset again.** Since 0.18.31 it held still whenever a hand was within 25 cm of the sword, which with your
+  hands at your sides was most of the time. Now it only holds while a hand actually grips the sheathed katana, or the tip is at the
+  sheath mouth.
+
+## 0.18.37: the game's own sword in your hand, no ghost, no body teleport, faster stand-up, firmer two hands
+
+**Install:** `xinput1_4.dll` (the host is unchanged).
+
+- **Your sword bone (joint 637) is used:**
+  - The game's drawn sword is its own model on 637, and it only exists while the game has drawn its sword. The sheathed sword is part
+    of the sheath's model.
+  - When the blade starts coming out, the mod asks the game to draw (in the background; the attack buttons stay off). Once the game
+    has drawn, its sword is shown in Jin's VR fist, held exactly the way the game's own hand holds it.
+  - The sheath stays on the hip, empty.
+  - When you put the blade home, the mod asks the game to sheathe. If the game does not follow within 2.5 s, it asks once more.
+  - **Learning the grip:** the first time, it learns the game's grip from the game's own animation while the game's sword is drawn.
+    That takes about half a second of the game standing still with it, and is saved in gotvr.ini (`sword_game_grip_*`). The quickest
+    way: draw once with an attack, stand still a moment, then try your own draw.
+  - Until the grip is learned it works as before: sword and sheath as one piece.
+  - `sword_use_game_blade=0` switches all of this off.
+  - Your VR arms are no longer handed to the game while the game's draw or sheathe animation raises its hands.
+  - **Expect for now:** the game's draw / sheathe animation still plays on Jin's body, its sheathe includes the blood flick, and the
+    model swap takes a moment. Next: timing it (Ctrl+F9) and possibly speeding it up.
+- **See-through copy of the arm and katana:** this is the playbook's "temporal trap". With the game's TAA in sequential stereo the
+  history is the other eye's image, so near objects (arms, sword) leave a ghost offset differently in each eye. The mod's per-eye TAA
+  history (the TAA half of preset 6, which removed ghosting in 0.10) is now on top of your culling preset, which is unchanged.
+  - `taa_per_eye` (1). **Ctrl+F11** toggles it live, so you can compare.
+- **Body teleporting when you move back, right or left:**
+  - Moving backward, Jin's body is drawn turned 180°, which puts the run's forward lean on the other side. The correction needed was
+    about 40 cm, right at an old safety cut-off.
+  - So it flipped on and off every frame. It is now limited smoothly at 70 cm instead.
+- **Getting up from a crouch:** the camera height smoothing only calms small bobbing now. A real height change (crouch / stand, more
+  than 4 cm) follows in about 0.06 s, so the headset no longer lags the body.
+- **Two hands:** once the left hand has the hilt, only letting go of it (or your controllers more than 90 cm apart) ends the hold.
+
+## 0.18.36: katana held by the fist, left thumb up the sheath, steadier two hands, no idle while holding, blade probe with the game's sword drawn
+
+**Install:** `xinput1_4.dll` (the host is unchanged).
+
+- **The katana stays in Jin's fist:**
+  - It used to sit where your controller is, so with your arm out further than Jin's can reach, or with his hand turned less than
+    yours, it floated past his hand or wandered around it.
+  - Now the katana is carried by his fist as it actually ends up: same place, same line. It cannot leave the hand.
+  - SWORD/s shows how far his fist is from where your controller wanted it.
+- **Left hand on the sheath:** kept exactly where you captured it, but now turned so the index is toward the hilt and the thumb runs
+  straight up the sheath toward the hilt.
+- **Two hands:** once the left hand holds the hilt, only letting go of its grip (or pulling the hand far away) ends the hold. Your log
+  showed it dropping with the grip still fully pressed.
+- **No idle animations while you hold the katana:**
+  - Your index finger resting on the trigger sent the game R2 / L2 and counted as "pad input". That made the idle hold let go, so
+    Jin's idle animations played.
+  - While your hand is on the hilt or the blade is out, the triggers are held off like the attack buttons.
+- **The blade probe with the game's sword drawn (your finding):**
+  - Your log matches what you saw: the game had its sword drawn (from the attack) from about +0 to +18 s of your third probe run, and
+    the joint that lifted the sword alone was during that window.
+  - Every Ctrl+F7 line now says whether the game has the sword drawn.
+  - **Please repeat it:** draw with an attack, then Ctrl+F7 until only the sword lifts, and press **Ctrl+F8** while it is lifted.
+  - With the game's sword drawn, Ctrl+F8 saves that joint as `sword_drawn_blade_joint` (your sheath setup is left alone). The next
+    build will hold that sword in your hand.
+
+## 0.18.35: capture the drawn grip, captured hands shown as captured, no katana lag, the original sword probe
+
+**Install:** `xinput1_4.dll` (the host is unchanged).
+
+- **Fix the drawn katana's angle with a capture:**
+  1. Draw the katana.
+  2. Press **Ctrl+F5**.
+  3. Within 3 seconds, point your right controller straight ahead the way you would hold the sword, and look straight ahead.
+  4. At 3 s (strong pulse) the mod sets the blade along your view, edge down, and keeps that angle relative to your controller from
+     then on (saved in gotvr.ini).
+  - With the katana sheathed, Ctrl+F5 still captures the hand on the hilt.
+  - Ctrl+Shift+F5 clears both right-hand captures. If the blade's curve bends the wrong way, set `sword_edge_flip=1` and capture
+    again.
+- **Left hand from your capture:** your Ctrl+F6 capture (saved: 13 cm from the mouth, 4 cm off the sheath's line) is now used
+  exactly as you placed it. Jin's hand is no longer re-snapped elsewhere, and the grab radius widens so you can take the sheath at that
+  spot.
+- **Katana lag in swings:**
+  - The hand-tremor filter smoothed the rotation, and a 72 cm blade multiplies any rotation lag at its tip.
+  - While the katana is drawn, or held with two hands, that hand's filter reacts almost instantly to fast movement (it still calms
+    tremor when you hold still).
+- **The original sword-bone test:** Ctrl+F7 now also lifts the joints from your first test (645, 646, 647, 652-654, 593, 594,
+  586-590), right after 637 / 644 / 651.
+  - **645** is the one to watch: it is the parent of 646 / 647 and was not in the last lists.
+  - If only the sword lifts on one of them, press **Ctrl+F8**.
+
+## 0.18.34: does the sword have its own bone? (probe + timing test)
+
+**Install:** `xinput1_4.dll` (the host is unchanged).
+
+1. **With the sword sheathed, Ctrl+F7.** The first press lifts the katana with 592 held still (as before). The next presses lift
+   **592, then 637, 644 and 651** - the joints the game's own draw moved - then the old candidates. Watch your hip: if only the sword
+   lifts (the sheath stays) on one of them, press **Ctrl+F8** to keep it.
+2. **Ctrl+F9 twice** (draw, wait about 3 s, sheathe). The log samples the katana joints, 637 / 644 / 651 and the right hand every
+   50 ms for 2.5 s, using the game's OWN animation, not the VR arms. It records:
+   - how long the draw and the sheathe take
+   - when 637 starts moving and where it settles
+   - how the game's own hand holds it
+   It also logs where 637 sits relative to the sheathed katana before the draw.
+
+## 0.18.33: capture your own grips, the drawn katana follows your controller, steadier two hands, settings in gotvr.ini
+
+**Install:** `xinput1_4.dll` (the host is unchanged).
+
+- **Capture your grips:**
+  - **Right hand on the hilt:** press **Ctrl+F5**, then within 3 seconds hold your right controller exactly where and how Jin's hand
+    should hold the hilt. You get a tick each second; at 3 s a strong pulse means it is saved.
+  - **Left hand on the sheath:** the same with **Ctrl+F6** and your left controller.
+  - From then on every grab uses your capture: where along the hilt or sheath the hand sits, and how it is turned. The captures are
+    saved in gotvr.ini.
+  - **Ctrl+Shift+F5 / Ctrl+Shift+F6** clears a capture. The katana must be in its sheath while you capture.
+- **Drawn katana:**
+  - The katana is now steered from your right controller and Jin's fist is drawn on it, rather than the katana hanging off the fist.
+  - In the sheath, the hand holds the hilt the way you took it (the grip you said looked right in 0.18.30).
+  - When the blade comes free, it turns over a quarter second to run along your controller's forward, like the wrist turning the
+    blade forward after a draw. Holding the controller forward holds the katana forward, with the knuckles to the side.
+  - Settings: `sword_blade_pitch_deg` tilts it, and `sword_blade_sign=-1` flips it if it ever points backward.
+- **Two hands, no more jitter:**
+  - The hold kept taking and dropping because it checked against the katana as drawn, which the left hand itself was steering. It
+    now checks against the right controller alone.
+  - Take the hilt 4-30 cm behind your right hand, toward the pommel. You can let go and grab again.
+- **Settings now in gotvr.ini:** the katana settings are written in with their defaults the next time the game starts:
+  - `sword_grip_lower_cm` (now 10): how much lower on the hilt the right fist sits than your controller, when no capture is saved
+  - `sword_sheath_hand_cm` (now -3): how far below the sheath mouth the left fist sits
+  - `sword_blade_pitch_deg`, `sword_draw_pull_cm`, `sword_free_min_frac`, `sword_free_arm_reach`, `fp_index_tween_s` and the others
+- **Game-draw census:** the Ctrl+F9 test from 0.18.32 is still to do. It finds the game's own separate blade.
+
+## 0.18.32: blade along your controller, lower right grip, left hand up the sheath, two-handed grip, game-draw census
+
+**Install:** `xinput1_4.dll` (the host is unchanged).
+
+- **Blade along your controller:**
+  - The blade's direction in your hand is now out of the front of your fist (where the controller points), not along the handle.
+  - Jin's wrist turns his fist to match, knuckles to the side, so holding the controller forward holds the katana forward.
+  - The same direction is used when you take the hilt in the sheath.
+  - If the blade should point a little higher or lower, use `sword_blade_pitch_deg` (+ = up).
+- **Right hand lower on the hilt:** the fist now sits 6 cm further toward the pommel than your controller (`sword_grip_lower_cm`). The
+  rail from the two katana joints moved the mouth about 8 cm up, which pushed your grip toward the guard.
+- **Left hand up the sheath:** the fist sits 6 cm below the mouth (`sword_sheath_hand_cm`, closer to 0 = higher). Its thumb is still
+  laid along the sheath to the guard. 0.18.30's "as far as the whole thumb reaches" put it too far down.
+- **Two-handed grip:** with the katana drawn in your right hand, bring your left hand to the hilt behind the right fist and squeeze.
+  - You feel a tick when you are close and a pulse when it takes hold.
+  - Jin's left hand then holds the hilt behind his right one.
+  - The katana's line becomes the line between your two controllers, so the left hand steers. It follows 1:1 up to 55° and gently
+    less beyond, never blocking.
+  - The right hand still owns the katana: letting go of the left returns to one hand, and letting go of the right still puts it away.
+  - This follows the playbook's two-handed hold, taken from FEAR VR.
+- **Sheathing uses the katana as you see it:** the mod now publishes where the drawn katana really is, and sheathing and the
+  two-handed grip check against that.
+- **The separate blade (Ctrl+F9):**
+  - Your probes show the sheathed katana is one piece of the model with its sheath. A separate blade only exists when the GAME draws
+    it.
+  - To find where the game keeps that blade, press **Ctrl+F9** once with the sword sheathed (the game draws), wait 2 seconds, then
+    press Ctrl+F9 again (the game sheathes).
+  - Each press logs the joints of Jin's right hand and which joints appeared, disappeared or moved.
+  - Expect the game's own draw and sheathe animation to play during this test; it is the only way to see where the game puts the
+    blade. Then send me the log.
+
+## 0.18.31: hands on the real hilt, blade along your controller, sheath probe, body still while reaching
+
+**Install:** `xinput1_4.dll` (the host is unchanged).
+
+- **The hands on the drawn hilt and sheath:**
+  - The rail line came from where your controllers were at calibration, which was a few cm beside the drawn hilt. That is why the
+    right fist sat to the side of the hilt and the left hand under the armour.
+  - The katana joint (591) has one child joint (592), about 25 cm away. If 592 lies along your calibrated line, which the log
+    reports, the rail now runs through those two joints, the drawn hilt itself. The end nearer your calibrated mouth is the mouth.
+  - Look for `katana: joint 591's child 592 is ... -> rail FROM THE TWO JOINTS` in the log. `sword_rail_from_joints=0` goes back to the
+    calibration.
+- **Blade along your controller:**
+  - Jin's fist used to be about 90° off from your real fist: his hand is mapped with the fingers along the controller, so a sword
+    through his fist pointed up.
+  - While you hold the hilt, Jin's wrist now bends so the hilt runs along your controller the way a real handle would. The knuckles
+    are on top, and the drawn blade points where your controller points. `sword_blade_forward=0` turns this off.
+- **Only the sword moving:**
+  - None of the 16 joints you tried lifted the sword alone. The katana joint has just one joint under it (592).
+  - The blade probe (Ctrl+F7) now first lifts the whole katana while holding 592 still. If the sheath stays and only the sword lifts,
+    press **Ctrl+F8**. That saves the katana as the blade and 592 as the sheath, held still during the draw.
+  - If that also moves both, the sword and sheath are one piece of the model. The separate drawn katana would then have to come from
+    the game itself; see the ROADMAP.
+- **Body no longer slides while you reach for the sword:**
+  - Your log shows your head 57 cm from Jin's while reaching for the katana, standing still. Jin's body followed your head (the "body
+    under the headset" feature) and took the sheath with it.
+  - Now, while a hand is near or on the katana (and while the tip is at the sheath mouth), the body stays where it is. It follows
+    again afterwards. It still follows while you fight with the blade drawn. `sword_hold_body_still=0` turns this off.
+  - `UNDER/s` now logs where the offset points (forward / left of Jin) and the biggest move in a second, in case it happens elsewhere.
+- **Slightly longer draw:** the blade now comes free at 60 % out (was 50 %) with the arm at 93 % of its reach (was 90 %). Settings:
+  `sword_free_min_frac`, `sword_free_arm_reach`.
+- **Faster index finger:** the index finger has its own, faster ease between up, resting on the trigger and pressed: about 0.07 s
+  instead of 0.15 s (`fp_index_tween_s`).
+- **Fewer false draw starts:** the "the blade is coming out / back in" events now need 1.5 cm out and 0.5 cm back in, so they no
+  longer flicker at 1 cm.
+
+## 0.18.30: Jin's own fist on the sword, the thumb on the guard, one-handed draw, start-up turn kick
+
+**Install:** `xinput1_4.dll` (the host is unchanged).
+
+- **The hands sit where Jin's fist really is.**
+  - Your photos show the hands placed by the controller's grip point. Where Jin's fist ends up relative to that point depends on your
+    hand trims, so it missed the hilt and the sheath.
+  - Now the mod measures Jin's own closed fist every frame: the channel his curled fingers wrap around. It then moves and turns the
+    hand so that channel lies exactly on the hilt (right hand, where you took it, kept clear of the guard) or on the sheath (left hand).
+- **Left hand at the mouth, thumb on the guard:** the left hand goes as far up the sheath as its thumb allows. The thumb is laid
+  straight along the sheath's surface with its tip touching the guard. Settings: `sword_thumb_gap_cm` (0.3) and
+  `sword_sheath_radius_cm` (1.6).
+- **Katana in the fist:** once drawn, the katana is placed so its hilt runs through Jin's fist, at the spot where you gripped it. Your
+  third photo showed it about 25 cm off the hand.
+- **One-handed draw:** you can now draw with just your right hand on the hilt (`sword_need_sheath_hand=0` is the default). The blade
+  comes free once it is at least half out and your arm is at 90 % of its reach (`sword_free_arm_reach`), or at 66 cm as before.
+- **Movement forward at start:**
+  - About 1.2 s after you get into gameplay (at game start, and after any menu or load of 8 s or more), the mod gives the game camera
+    a short left-then-right turn, the same way a snap turn does in the background. Your view does not move.
+  - It runs the same forward reset as a snap turn, so walking should face your headset right away.
+  - It is skipped if you are using the right stick at that moment. The log line is `controls: start-up turn kick`.
+- **Still to do:** the drawn katana in your photo is the whole katana with its sheath. Next time, please pick the blade joint
+  (Ctrl+F7 / Ctrl+F8, see 0.18.29) so only the sword comes out.
+- **Logs (`SWORD/s`):** how often each fist was snapped, the finger circle's radius, the thumb placed on the guard, the katana held
+  through the fist, the right arm's reach, and the start-up turn kicks.
+
+## 0.18.29: the physical katana - hands locked on, only the blade moves, shorter draw, sheathing, no game attacks
+
+**Install:** `xinput1_4.dll` (the host is unchanged).
+
+- **Hands locked on the sword:**
+  - When you grab the hilt or the sheath, Jin's hand is fixed to it, both in position and rotation. The line through your fist is
+    turned onto the sword's line, and the centre of the fist sits on it. The hand stays like that until you let go, so it can no
+    longer turn freely on the hilt.
+  - It is also pushed 2 cm toward the palm, so the handle sits inside the fist instead of just above it. Adjust with
+    `sword_hand_into_grip_cm`; a negative value moves it the other way.
+- **Left hand at the sheath mouth:** the left hand now always sits right at the mouth, 3 cm below it, wherever on the sheath you take
+  it. If it still looks low, raise `sword_sheath_hand_cm` (for example to 0 or +2). Positive values are toward the hilt.
+- **Only the sword moves (one-time pick, please):**
+  1. The katana joint (591) carries the sheath as well. The log now lists every joint that could hold only the blade.
+  2. **Ctrl+F7** lifts the next one 15 cm; look at Jin's hip.
+  3. When only the sword lifts and the sheath stays, press **Ctrl+F8** to keep it (saved as `sword_blade_joint`).
+  - **Ctrl+Shift+F7 / Ctrl+Shift+F8** still pick the katana joint itself.
+  - Until a blade joint is picked, it works as before: sword and sheath move together.
+- **Shorter draw:**
+  - The blade is free after **40 cm** of pull (`sword_draw_pull_cm`), about an arm's extension, instead of the whole blade length.
+  - The blade slides out faster than your hand moves, like the real draw where the left hand pulls the sheath back while the right
+    pulls the sword out. Jin's hand rides with the hilt.
+  - Once the blade is free, his hand settles back onto your controller over a quarter second.
+  - Letting go mid-draw now slides the blade home instead of snapping it back.
+- **Sheathing:**
+  - Bring the **tip to the sheath mouth**, lined up with the sheath (within 30°). You get a light tick when it is close and a click
+    when it catches.
+  - Then push it home along the rail, with the same rumble as the draw. The hand locks to the hilt again.
+  - Pull back out and it is free again. Let go part-way and it slides home.
+  - Letting go of the drawn katana anywhere else still puts it back in the sheath, for now.
+  - Settings: `sword_sheathe_tip_cm` (7), `sword_sheathe_deg` (30).
+- **No game attacks:**
+  - The game's draw from 0.18.28 is off (`sword_game_draw=0`).
+  - While your hand is on the hilt or the blade is out, the game's light and heavy attack buttons (pad X / Y) are held off, so no
+    attack animation can start. Set `sword_block_game_attacks=0` to turn this off.
+  - The physical combat itself (your swings doing damage) is the next big step. See the ROADMAP.
+- **Logs (`SWORD/s`):** blade joint, the tip's top speed each second, how far the tip is from the sheath mouth (along, off-line and
+  angle), and how many attack presses were held off.
+
+## 0.18.28: holding the katana, drawing it with the game, body squares up when you stop
+
+**Install:** `xinput1_4.dll` (the host is unchanged).
+
+- **Left trigger is free again.** The temporary left-trigger calibration is gone. Ctrl+F10 still calibrates, and your saved calibration
+  is kept.
+- **Hands on the sword:**
+  - **Right hand on the hilt:** all four fingers wrap the handle, the index too (a katana has no trigger finger), and the thumb closes
+    over them like a fist.
+  - **Left hand on the sheath:** the fingers wrap the scabbard at the mouth and the thumb stays almost straight along it, toward the
+    guard. That's the thumb Jin uses to push the guard and free the blade.
+  - Both ease in over about 0.1 s when you grab and ease out when you let go.
+  - You can now grab the hilt anywhere along it: near the guard, in the middle or at the pommel, within 10 cm.
+- **Drawing the sword:**
+  - While you hold the sword, Jin's hands are drawn **on** it. The right hand slides along the hilt's line and the left stays on the
+    sheath by the mouth. Your controllers no longer have to sit exactly on the handle for it to look right.
+  - When the blade comes free, the mod sends the game's own draw: the touchpad swipe right, which is key 5 on PC. Jin is then really in
+    his sword stance for combat.
+  - When the katana goes back in the sheath (for now, by letting go of it), the same swipe sheathes it in the game.
+  - To have only the visual draw, without the game's, set `sword_game_draw=0`. Please tell me if you ever see two katanas after the
+    game draws.
+- **Body squares to the headset when you stop:** after moving, as soon as you stand still (0.2 s under walking speed), Jin turns to face
+  your headset, using the same eased turn. This works even when you were looking less than 20° to the side. Set
+  `fp_body_square_on_stop=0` to turn it off.
+- **Logs:**
+  - `SWORD/s` now counts the frames your hands were held on the sword and the frames with the hold finger poses, and shows whether the
+    game has the sword drawn.
+  - `katana: asked the game to DRAW / SHEATHE` marks each toggle.
+  - `BODY/s` counts the turns that happened because you stopped.
+
+## 0.18.27: performance back, katana calibration on the left trigger
+
+**Install:** `xinput1_4.dll`.
+
+- **Performance:** yes, 0.18.26 did it. Your log shows about 27 stereo frames a second against about 60 in 0.18.25. The new "Jin's
+  own sounds" check looked at all ~2100 sound sources a second and asked Windows about their memory five times each, which is a
+  slow system call, on the game's audio update. It now only compares one pointer ("is this Jin's?") and does nothing more for
+  anyone else's sounds.
+- **Calibrating the katana rail:** hold the **sheath mouth with your left hand** and the **end of the hilt with your right**, both grips
+  held, and pull the **left trigger**. You get a pulse in both hands when it is saved. It only works with both hands within 60 cm of
+  the katana and the blade in the sheath, so the trigger does nothing anywhere else. Ctrl+F10 still works too.
+- Your Ctrl+F7 / Ctrl+F8 choice is saved: the katana is joint **591**.
+
 ## 0.18.26: katana draw (stage 1), Jin's own sounds centred, dodging off, smoother hands, arm stretch
 
 **Install:** `xinput1_4.dll` (the host is unchanged).
@@ -35,8 +360,8 @@ outdoors, riding, a cutscene, photo mode.
   - **Finding the katana (please do this once):** I know the katana is one of a few gear joints at Jin's hip, but not which.
     1. **Ctrl+F7** lifts one candidate 15 cm. Look down at Jin's hips and see what jumps; press Ctrl+F7 again for the next one.
     2. When the **katana** jumps, press **Ctrl+F8** to keep it (saved to gotvr.ini).
-    3. Then hold your left hand at the sheath mouth and your right hand at the end of the hilt and press **Ctrl+F10** to calibrate the
-       rail (saved too).
+    3. Then hold your left hand at the sheath mouth and your right hand at the end of the hilt, both grips held, and pull the **left
+       trigger** to calibrate the rail (0.18.27; Ctrl+F10 also works; saved too).
   - Until then it uses joint 646 and a guessed direction.
   - The log records everything while you hold the sheath or the hilt: grabs and releases, how far the blade is out, and all buttons,
     triggers, grips and sticks of both hands (`katana:` and `SWORD/s` lines).

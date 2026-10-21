@@ -4,17 +4,33 @@ Done: synchronized native stereo 6DoF (xr=4), per-eye occlusion/TAA history, squ
 HUD layer, first person anchored on the body with the head hidden in the render pose, pose-lead prediction, VR
 controllers for any OpenXR controller (0.18.0: virtual pad, snap turn, item wheel logic, head gestures, rumble).
 
-## CURRENT TASK LIST (reset at 0.18.26 - VR IK + 3D audio done, combat begins)
+## CURRENT TASK LIST (reset at 0.18.26 - VR IK + 3D audio done, combat begins; updated 0.18.38)
 
-1. Katana draw stage 1 in the headset: identify the katana joint (Ctrl+F7 / Ctrl+F8), calibrate the rail (Ctrl+F10), check feel
-   (grab radius, rumble, free point). Logs: SWORD/s, katana:.
-2. Katana draw stage 2: the game's own "sword out" state when the blade comes free (RE: what the game's draw sets - flat-play
-   observer logs of a game draw / sheathe, input-owner stack), a real sheathe (blade tip to the mouth, slide home), the held katana
-   for both hands (two-handed grip, HAND-017), grip-adjust trim.
-3. Physical swings: swing detector (blade tip speed, travel, cooldown, re-arm) emitting the game's light / heavy attacks; gate all
-   synthetic input on the drawn sword. Then blocking / parry from blade contact, stances.
+1. Katana (0.18.38): player-driven only - the game is NEVER asked to draw / sheathe (owner, firm). Check: the katana stays in the fist
+   while moving, the hands' places (Ctrl+PageUp / PageDown / Home / End), the body under the headset. Open: the see-through copy of the
+   arm / katana per eye (the 0.18.37 per-eye TAA did not help - look for the cause elsewhere: velocity / previous-bone matrices of the
+   edited pose, not a costly TAA change). Earlier (0.18.33):
+   Katana in the headset: capture both grips (Ctrl+F5 / Ctrl+F6), check the drawn katana along the controller, two
+   hands. Then (0.18.32): blade along the controller, lower grip, left hand up the sheath, two hands; Ctrl+F9 census of
+   the game's draw (where its separate drawn blade lives). Earlier list (0.18.31):
+   - check the rail from the two joints (hands on the drawn hilt / sheath), the blade-forward wrist, and the body held while reaching
+   - blade probe with 592 held still (Ctrl+F7 / Ctrl+F8)
+   - if the sword and sheath are ONE mesh: the separate drawn blade must come from the game's own in-hand katana. Find the hand-socket
+     joint and the model swap the game's draw makes (flat-play observer + a game draw), then show that model with our physics
+     instead of the game's draw animation.
+   Logs: SWORD/s, katana:, UNDER/s.
+2. Katana stage 2: two-handed grip (left hand on the tsuka behind the right, HAND-017), a grip-adjust trim, dropping / throwing
+   instead of auto-return, the blade following the saya's curve (sori), blood flick (chiburi) gesture.
+3. PHYSICAL combat (owner, 0.18.29: "free flowing combat, a new physical base system, all the game's attack animations disabled"):
+   a. Blade segment every frame (guard -> tip, done in 0.18.29 for sheathing) swept against enemy bodies: needs the enemies' joint
+      positions (the same skeleton / pose path as Jin's: the render pose per character) -> capsules per bone.
+   b. Damage without the game's attack animations: RE the game's hit path (what a sword attack's hit window calls: hit / damage /
+      stagger / dismember events) and call it with our hit (attacker Jin, victim, bone, impulse, our tip speed as strength).
+      Fail closed until found; flat-play observer logs of a normal hit help find it.
+   c. Blocking / parry from blade contact with the enemy's weapon joint; stagger windows; enemy attacks still the game's.
+   d. Stance / Ghost tools stay the game's (bow, kunai) behind their own bindings.
 4. Hit reactions in first person: keep the body / eye anchor steady, damage as haptics (owner TODO 0.18.14).
-5. Shadows / ghosting around the hands (owner 0.18.25, needs a photo): right-eye object motion vectors vs per-eye history, or
+5. Shadows / ghosting around the hands (owner 0.18.25 / 0.18.37 photo: a copy of the arm and katana offset differently per eye; per-eye TAA did NOT fix it, removed in 0.18.38): right-eye object motion vectors vs per-eye history, or
    screen-space shadows on near geometry.
 6. Camera policy for takedowns / photo mode (input-owner stack, below) - the flat-play observer (play_mode=flat) logs help.
 7. Audio stage 3: HRTF (Wwise binaural / Steam Audio plug-in if shipped), positional UI sounds.

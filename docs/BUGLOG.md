@@ -1596,6 +1596,351 @@ spaces, session, instance → TerminateProcess.
   report one eye or both.
 - Self-test PASS (selftest=0, 111): fingers with a shared palm joint and helper leaves (5 chains, index 3 joints), all earlier tests.
 
+## GoTVR 0.18.37 → 0.18.38 — no game draw / sheathe, TAA change reverted, katana frame lag while moving, guard-based hand placement, body under the headset
+- `[HEADSET]` owner, photo plus notes: "STOP MAKING JIN'S SHEATHING ANIMATIONS PLAY ... IT IS PLAYER DRIVEN".
+  - Jin no longer under the headset; not facing the headset direction while moving.
+  - The TAA fix did not fix the ghost and looked worse.
+  - The sheath vanished on the draw, and the grip was wrong (photo: the game's grip).
+  - The blade was not angled with the sheath while drawing.
+  - The grip placement ini settings did nothing (the right hand stays too far up the hilt).
+- Log 0.18.37:
+  - Draw / sheathe requested 3 / 4 times ("the game did not sheathe - asked again" repeatedly).
+  - BODY/s while walking at 0.7 m/s: "Jin faces -5 deg" fixed (the game's drawn-sword strafe stance).
+  - TAA/s: history restored 0 / saved 0 (the per-eye bank never ran on top of preset 7).
+  - UNDER/s: held 55 frames/s with the hands near the hip.
+- Removed: the 0.18.37 chords (draw / sheathe / resend / re-draw), the Ctrl+F9 chord, sword_game_draw (forced 0), sword_use_game_blade
+  (forced 0) and the relHand load (ini keys deleted), taa_per_eye and Ctrl+F11's toggle (F11 recentres again).
+- Frame lag: swd::frame read kGameW, the katana joint's WORLD matrix written by the previous animation job. Now the job also publishes
+  the joint's MODEL matrix (kGameM) and kGameRead() rebuilds W with the game thread's current node. The DRAWN blade's Sfw.t (the
+  mouth) comes from this job's W o mouthL (published as SwordPub.mouthL).
+  - Moving, the 0.18.36 fist carry kept the lag: it preserved Mt.t - P0.
+- Hand placement:
+  - Evidence that the guard is not the rail origin (joint 591): the captured left (thumb on the guard) sits about 12 cm out along the
+    rail. The right fist clamp max was hiltCm - 4.5 = 20.4 cm from 591, about 4 cm under the guard, whatever sword_grip_lower_cm said
+    (200).
+  - Now: guard = sword_guard_cm or auto (capAxial(left) + 4.5, else 16.5). hiltT = rightT() = guard + sword_right_hand_cm, clamped to
+    guard + 4.5 .. guard + hiltCm - 4.5, applied every held frame. sheathG = guard - sword_left_hand_cm.
+  - Captured grips are slid along the rail to those places (capShifted). Capturing writes the settings.
+  - sword.h: Cfg.guardCm / rightCm / leftAx. dHilt over guard .. guard + hiltCm, dSheath from mouth + axis * leftAx.
+  - The 0.18.35 grab radius widening is removed.
+  - Live: Ctrl+PageDown / PageUp / End / Home (adjReq), which shift the active locks and drawLock by the change.
+- underHold: only (not DRAWN and a hand on the hilt / sheath) or (DRAWN and the tip near the mouth). It was also within 25 cm, and the
+  sheath held while drawn.
+- Kept from 0.18.37: the T clamp (70 cm), the crouch / stand height follow, the two-hand release (squeeze < 0.35 or 90 cm), and no arm
+  handover to the game while the katana is held.
+- Self-test PASS (selftest=0, 128). The draw test adds the guard offset (the hilt grab zone, fist clamp, sheath grab centre).
+
+## GoTVR 0.18.36 → 0.18.37 — the game's drawn sword (637) in the VR fist, per-eye TAA on preset 7, T clamp, crouch height, two hands
+- `[HEADSET]` owner, photo plus notes:
+  - Body teleports behind when moving back / right / left (the arms and sword with it).
+  - The katana not anchored in the grip while moving.
+  - Ghost copy of the arm and katana: up-left in the left eye, down-right in the right.
+  - Confirmed the drawn-sword joint.
+  - Stand-up camera too slow.
+  - The two-hand hold breaks in swings.
+- Log 0.18.36: Ctrl+F8 with the game's sword drawn -> 637 (sword_drawn_blade_joint). sword_grip_lower_cm = 200 (the owner's).
+  UNDER/s small (< 9 cm). BODY/s while running backward: the drawn body 148..-163 deg from the node.
+- Teleport: hideInPose's rigid-view term T = R(b) hzS - H0 failed closed to 0 past 40 cm. Running backward with the drawn body
+  turned about 180 deg and the run lean about 20 cm, |T| is about 40 cm, so it flipped every frame. Now a continuous clamp at 70 cm
+  (nTClamped).
+- Ghost: the playbook ch14 temporal trap (alternate-eye TAA blends the other eye). taa_per_eye (default 1) sets taa::on = 3 after the
+  preset is applied (the bank is filled by hStorePrev regardless of occ::on). Ctrl+F11 toggles it. F6 presets still set their own.
+- Stand-up: the vertical anchor smoothing (0.35 s) blends toward a 0.06 s follow for height errors of 4..10 cm.
+- Two hands: release only at squeeze < 0.35 or controllers > 90 cm apart.
+- Game blade, job side:
+  - gameDrawn = the game's own pose (g_animPose) has 637 within 90 cm of 591.
+  - relHand = animHand^-1 * anim637, learned after 30 frames that agree (< 0.02 rotation, < 0.3 cm), saved as sword_game_grip_* by the
+    game thread.
+  - While gameDrawn && relHand: 637 = VR hand * relHand when the katana is out (sheathX = Sm^-1 * 637 recorded each frame), and
+    Sm * sheathX after our sheathe until the game swaps back. 591 is left as the game draws it.
+- Game blade, game thread: the draw chord on SHEATHED -> out, the sheathe chord on out -> SHEATHED (when gameDrawn), one resend after
+  2.5 s, and a re-draw if the game sheathes by itself while DRAWN (4 s cooldown).
+- Arms: the animation-raised-hand handover is skipped while the katana is out or a hand is on the hilt.
+- Self-test PASS (selftest=0, 128).
+
+## GoTVR 0.18.35 → 0.18.36 — katana carried by the solved fist, captured-left turn, two-hand hold, triggers blocked, drawn-state probe
+- `[HEADSET]` owner, photo plus notes:
+  - Left hand in the right place but inverted (the thumb should point up the sheath to the hilt).
+  - The katana goes beyond Jin's hand when the controller is beyond his reach, and strays around the hand.
+  - Two hands fall off too easily.
+  - Probe: "the sword lifted alone on the Ctrl+F7 one AFTER the one that lifted the sheath, only with the sword already drawn by an
+    attack animation".
+  - Idle animations play while holding the sword.
+- Log 0.18.35:
+  - drawn-grip captures repeated (pitch -15..14 deg)
+  - two-hand releases with the grip at 1.00 (geometry)
+  - IDLE/s mostly "pad input" (498 of 559)
+  - d637 went from 107 to 58-61 cm at about 512773 s (the game drew on an attack) and back to 107 at about 512791 s. The probe cycles
+    during that window ran 637, 644, 651, 645 (cycle 2) and 591-with-592-held, 592, 637, 644, 651, 645 (cycle 3).
+  - `[INFERENCE]` 591 carries the sheath (plus the sheathed blade); the game's drawn sword is a separate model on a joint the game
+    animates. 592 (591's child) is the favourite: probe 1 lifted the sheath, "the next" lifted the sword. It is not confirmed yet.
+- Fist-carried katana: solveArms stores the right hand's line target (P0, tD) when it snaps to the drawn katana. swordApply then turns
+  the katana by arc(tD, the measured fist D) about P0 and moves it so P0 -> the measured fist G (nKatFistFix, katFistErrCm).
+- Captured left: no placement snap; a rotation-only snap about G with index -> little = -axis (index toward the hilt); the thumb aimed
+  straight along +axis.
+- Two hands: release only at squeeze < 0.35, perp > 30 cm (beyond 8 cm along), or outside -12..55 cm.
+- blockMask adds OX_RT / OX_LT (vrin zeroes the triggers): no R2 / L2 and no lastAct from the trigger while the katana is held.
+- Probe lines report the game's sword state (d637 < 90 = drawn). Ctrl+F8 while drawn saves sword_drawn_blade_joint (not yet used).
+- Self-test PASS (selftest=0, 128).
+
+## GoTVR 0.18.34 → 0.18.35 — drawn-grip capture, WYSIWYG captures, swing filter, the 0.18.26 candidates in the blade probe
+- `[HEADSET]` owner:
+  - Photo: holding the controller forward, the katana points left. Asks for 90 deg about x / 90 deg about y.
+  - Captured the left grip (Ctrl+F6) and wants it used.
+  - The katana lags the hand in swings.
+  - Ctrl+F7 never lifted the sword alone ("when I first found the sword bone it was raised alone").
+- Log 0.18.34:
+  - forward latched as row 2 x row 0
+  - all 25 blade probes run 3 times, no Ctrl+F8
+  - left capture at 13.0 cm out along the axis, 4.3-4.4 cm off the line
+  - sword_grip_lower_cm set to 20 by the owner
+  - no Ctrl+F9 census this run
+- Axis guessing abandoned: 0.18.31 / 32 / 33 each mapped "forward" to a different row combination and none matched in the headset (the
+  fist-channel sign flips made the photos ambiguous). Instead:
+  - **Drawn capture:** Ctrl+F5 while DRAWN. The target blade frame is pommel = -view forward (headF + pitch) and edge = -view up
+    (with the sheath frame's local world-up as the edge, worn edge-up; sword_edge_flip).
+  - drawRot = C.R^T * frameTo(...) is saved (sword_drawrot_*). With it, K1.R = C.R * drawRot, the hilt goes through the grip point
+    at hiltT, and it blends in with fwdT from the as-taken pose.
+- WYSIWYG captures: a captured hand is not fist-snapped on the rail (sp.capNoSnap). The rigid lock reproduces the hand exactly as it
+  was drawn at the capture. The sheath grab radius is max(12, |capture| + 6) cm.
+- Swing lag: stab.h's derivative low-pass (dHz 1) and rotBeta 3 lag fast rotations, and the blade multiplies them by its length.
+  While DRAWN / SHEATHING (right) or two-handed (left) the filter uses dHz 10, rotBeta 25, beta 30, rotMinHz 2 (nSwingStab).
+- Blade probe: + 645, 646, 647, 653, 654, 652, 593, 594, 586-590 after 637 / 644 / 651. 645 (the parent of 646 / 647) was never in the
+  0.18.29+ lists.
+- Self-test PASS (selftest=0, 128).
+
+## GoTVR 0.18.33 → 0.18.34 — the drawn-sword bone probe and a 50 ms draw census
+- 0.18.32 census, which I first misread: Ctrl+F9 (the game's draw) moved only root children 637 (99 cm), 644 (65), 651 (53), and
+  652-654 (22-27, the right-hip gear). The katana joint 591 did not move. No joint changed scale (a model swap or attachment change, not
+  bone hiding). The right hand's subtree (561) is only the fingers: no weapon socket under the hand.
+- Hypotheses:
+  - (a) the sheathed katana is one model on 591, and the drawn one a second model on 637;
+  - (b) the sword is a separate attachment that sits on 591 when sheathed and is re-attached to 637 on the draw.
+- Probe: the blade candidates now start with 591's children, then 637 / 644 / 651, then the nearest others (up to 24).
+- Census: 2.5 s window, 50 ms samples of 591 / 592 / 637 / 644 / 651 / the right hand from the game's OWN pose (snapTake's copy,
+  g_animPose). Each sample has the position from the root, the movement since the press, 637 in the animated hand's frame and 637 in
+  591's frame. Before the press, 637 / 644 / 651 / 592 are logged in 591's frame; at the end, the full diff. SWORD/s logs 637's distance
+  from the katana joint.
+
+## GoTVR 0.18.32 → 0.18.33 — grip captures, the drawn katana from the controller, two-hand gate without feedback, ini defaults
+- `[HEADSET]` owner, two photos plus notes:
+  - Right hand on the sheathed hilt: knuckles on the wrong side, still too high, "can't find the setting".
+  - Left: the grip is wrong and too low; asks for a hotkey to capture the hand in place.
+  - Two hands: the left kept grabbing above the right and jittered out.
+  - Photo 2: controller held forward, the katana across it to the right.
+- Log 0.18.32: "left hand took the hilt too" / "let go" alternating every 50-150 ms with the grip at 1.0. The gate used the published
+  drawn katana, which the steering itself moves: a closed loop (playbook ch02, "the pose you draw and the pose you steer with are
+  different variables"). No Ctrl+F9 census was run.
+- Axes, from the photos: 0.18.31's blade along row 0 pointed up; 0.18.32's along -row 2 pointed right. So the controller's forward is
+  row 2 x row 0 (left x up), with its sign latched the first time the blade comes free against the head's facing (sword_blade_sign
+  overrides).
+- The drawn katana is now the game thread's:
+  - Kt = grip o drawLock^-1 (the sheathed grab: the fist's tube along the hilt, as in 0.18.30, or the capture).
+  - K1 = Kt turned about the held point (guard + axis * hiltT) so the blade runs along the controller forward, eased in over 0.25 s
+    after DRAWN.
+  - K = K1 turned toward the raw hand line (twoSteer) while two-handed.
+  - K is published (sp.kat*). The job sets the blade joint to N^-1 K Sf^-1 N Pb (the joint as it sits in the sheath, carried by K)
+    and eases from the rail pose over 0.18 s at DRAWN.
+  - The 0.18.30 "katana through the measured fist", the 0.18.31 / 0.18.32 wrist rotation and the job's drawn-pose publish are removed.
+- Fist snapping: one rule per hand. The right hand goes on the drawn hilt at hiltT (sp.dSnapW) when drawn, else on the rail at
+  s + hiltT. The left hand goes on the rail at sp.sheathG (capture or sword_sheath_hand_cm), or on the drawn hilt at hiltT + twoGap.
+- Two-hand gate on K1 (unsteered, the right controller only): the left grip within 12 cm of the line, 4..30 cm behind the held point,
+  squeeze 0.65 / 0.45; leaves at 20 cm off the line or outside -3..40 cm.
+- Captures (Ctrl+F5 right / Ctrl+F6 left, 3 s countdown with ticks, Ctrl+Shift clears): the controller pose relative to the sheath
+  frame (Sf: the katana joint's axes at the mouth), saved as sword_cap_{r,l}_0..11 + _ok.
+  - A grab with a capture locks to it; the right capture also gives hiltT (its axial position) and drawLock.
+  - The left capture's axial position is the left fist's place on the sheath.
+- ini: missing katana keys are written with their defaults at load (sword_grip_lower_cm now 10, sword_sheath_hand_cm now -3).
+- Self-test PASS (selftest=0, 128).
+
+## GoTVR 0.18.31 → 0.18.32 — blade along grip -Y, lower grip, sheath hand fixed, two-handed hold (HAND-017), drawn pose published, draw census
+- `[HEADSET]` owner, two photos plus notes:
+  - Corrects 0.18.31: wants the knuckles on the side, so the katana faces forward when the controller is held forward. Photo 1: the
+    drawn katana points up and the right fist sits right under the guard.
+  - The left hand is too far down the sheath.
+  - Ctrl+F7 with 592 held: the sword never moved without the sheath.
+  - Wants a two-handed grip.
+- Log 0.18.31: rail from the two joints taken (592 at 24.9 cm, 11 deg from the calibrated line; calibrated mouth 8.3 cm from 591).
+  Wrist-forward ran; the fists snapped.
+- Blade direction: the grip pose's -Z is the fist's tube (a rod in a neutral fist points up), so 0.18.31 put the blade up.
+  - Now the blade is grip -Y (out of the front of the fist, OpenXR grip axes), pitched by sword_blade_pitch_deg about grip X. Published
+    as sp.bladeW.
+  - The wrist target puts the fist channel (index -> little = the pommel side) on -bladeW.
+  - The sheathed-grab lock aligns bladeW (not grip -Z) to -+ the rail axis.
+- Grip: hiltT += sword_grip_lower_cm (6) at the grab. The joint rail's mouth is 591's origin, 8.3 cm above the calibrated one.
+- Left on the sheath: G at sword_sheath_hand_cm (-6) below the mouth. The thumb-length placement (CMC to the extrapolated tip, about
+  12 cm) is dropped; the thumb is still aimed at the guard.
+- Two hands (swd::frame):
+  - Gate: DRAWN, the left grip within 10 cm of the drawn hilt at t in (hiltT + 3, hilt + 6) from the guard, squeeze 0.65 / 0.45; leave at
+    17 cm or out of the region. Pulses on hover / take.
+  - sp.twoW (0.15 s ease), twoGap = clamp(t - hiltT, 8, 16), raw grips.
+  - Job: the arms are solved right first. The left target is the snap onto the right fist's channel line at G1 + D1 * gap, with the
+    hilt finger table.
+  - The right wrist target (pommel side) is turned toward the RAW hand line (left - right) by twoSteer: 1:1 to 55 deg, asymptotic to
+    90 deg, faded below 6 cm apart.
+- Drawn pose: swordApply publishes the drawn katana's guard and pommel direction in world (seqlock, 200 ms freshness). Sheathing and
+  the two-hand gate use it; the fallback is grip o drawLock^-1.
+- Census (Ctrl+F9): sends the game's draw toggle and logs the right hand's subtree (joint, parent, scale). 1.5 s later it logs every
+  joint whose scale changed > 0.3 or that moved > 20 cm.
+- Self-test PASS (selftest=0, 128) + twoSteer (30 deg followed, 120 deg compressed below 90, fade 0); grip-lower in the reach test.
+
+## GoTVR 0.18.30 → 0.18.31 — rail from the katana joints, blade-forward wrist, sheath-hold probe, body held near the katana, index tween
+- `[HEADSET]` owner, two photos plus notes:
+  - The right grip angle is right, but the fist is a little to the side of / off the hilt.
+  - Wants the right wrist at 90 deg so the knuckles are on top and the drawn sword points straight forward.
+  - The left grip is right, but the hand is not on the sheath.
+  - Blade probe: nothing lifted the sword alone.
+  - New: "Jin's body sometimes moves behind me to the right".
+  - Draw "a tiny bit longer"; the index tween too slow.
+- Log 0.18.30:
+  - Blade candidates: 591 (parent 5) has one child, 592 (25 cm); then 593 (parent 5, 9 cm), 509-516, 534/535, 541/542, 646/647. The owner
+    cycled all 16.
+  - UNDER/s jumped to 52 cm ("your head 57 cm from Jin's", speed 0) while both hands were 7-20 cm from the katana: the body-under shift
+    followed a lean to the sword.
+  - DRAWN at 36-37 cm out with 0.5 / 0.9. Fists snapped (finger circle radius 2.2-2.4 cm), left thumb aimed, katana through the fist.
+  - The draw state flickered at the 1 cm threshold.
+- Rail from joints `[INFERENCE]`:
+  - The calibrated line (mouth (-3.6, -3.3, -6.7), axis (0.005, 0.188, -0.982), hilt 29 cm, in 591's frame) passes about 5 cm beside
+    591's origin: the controller grips are not the drawn hilt.
+  - The job publishes 591's child (592) in 591's frame (seqlock). railFromJoints uses the 591-592 line when the child is 15-40 cm away
+    and within 35 deg of the calibrated axis: mouth = the end nearer the calibrated mouth, hilt = their distance. Logged once with the
+    verdict; sword_rail_from_joints.
+- Blade forward: solveArms, right side, before the sword snap, weight wristW (0.15 s ease while onHilt / DRAWN / SHEATHING): the
+  predicted fist channel D is turned onto -controller fwd (grip -Z, the real fist's axis) about G.
+  - Jin's hand mapping (0.18.10) has his fingers along grip -Z, so his fist channel was perpendicular to the real fist.
+  - The drawn katana (along D) now points along the controller. sword_blade_forward.
+- Probe: blade mode lists "the katana lifted with descendant X held still" first (probeHold; swordApply saves / restores X's subtree
+  around the lift). Ctrl+F8 there saves sword_blade_joint = the katana joint and sword_keep_joint = X.
+  - The draw restores sword_keep_joint's subtree after moving the blade (generalising the 0.18.29 keep-sheath).
+- Body held: fp::underHold while not DRAWN with a hand on / within 25 cm of the sheath or hilt, or DRAWN with the left hand on the
+  sheath / the tip near the mouth. The body-under target is frozen (sword_hold_body_still).
+  - UNDER/s adds the offset in the drawn body's frame, the largest move in a second, and the held frames.
+- Draw: freeMinFrac 0.6, freeExt 0.93 (sword_free_min_frac / sword_free_arm_reach). Out / in hysteresis 1.5 / 0.5 cm.
+- Fingers: the index curl has its own spring, fp_index_tween_s 0.07 (the others keep fp_finger_tween_s 0.15).
+- Self-test PASS (selftest=0, 128) + rail from joints (along: used, nearer end = mouth; across: refused; too close: refused). Updated
+  the reach test to the 0.6 rule.
+
+## GoTVR 0.18.29 → 0.18.30 — fist-channel snapping, left thumb on the guard, katana through the fist, one-hand draw, start-up turn kick
+- `[HEADSET]` owner, three photos plus notes:
+  1. The right fist sits beside / above the hilt.
+  2. The left hand is hidden under the belt armour, below the mouth. Wanted at the mouth, the thumb outstretched along the sheath's
+     ridge with its nail on the guard.
+  3. The drawn katana (joint 591, with its sheath: the blade joint is not picked yet) floats about 25 cm from the fist.
+  - Also wants a right-hand-only draw.
+  - Movement forward "not set properly / keeps moving until I do a snap turn"; asks for two unnoticeable start-up snap turns.
+- Cause of 1-3 `[INFERENCE]`: the lock placed the controller grip point on the line. Jin's fist centre is offset from it by the hand
+  trims (back 6 / up 5 / side -3 cm, pitch 20 / yaw 10 / roll -10). In 3, Trel was captured while the hand target rode ahead of the
+  real hand by the draw gain and may not have been reached.
+- Fix, fist channel (job thread):
+  - After fing::apply each frame (hold weight > 0.5): the circumcentre of each long finger's three bending joints (a finger wrapped
+    round a cylinder has them on a circle about its axis). Their mean = G; index -> little = D. Kept in the hand joint's frame too.
+  - Before the solve (snap weight from the game thread's lock ease x hold): Rh = frameTo(A.fl, A.tl, T.fing, T.thumb) predicts the
+    hand frame. Rc = arc(D, +-axis) turns the target, and the wrist moves so that G lands on mouth + axis * gAx.
+    - right: gAx = s + hiltT (hiltT clamped 4.5 cm from the guard / pommel)
+    - left: gAx so that the thumb, laid along the surface (radius sword_sheath_radius_cm), reaches the guard
+      (-sword_thumb_gap_cm)
+  - After the fingers, the left thumb chain turns at its first bending joint toward that surface point at the guard.
+- Fix, katana in hand: at the first DRAWN frame the hilt line and the held point (s + hiltT) are stored in the blade's local frame.
+  Each DRAWN frame, the blade (Ph * Trel for the roll) is turned so the hilt lies along D and moved so the held point is at G.
+- One-hand draw: needSheathHand default 0. The blade is freed at s >= 0.5 blade with the right arm's reach >= 0.9 (|target - shoulder|
+  / (upper + lower), published by solveArms), or at s >= 0.92 blade.
+- Start-up kick (vrin): 1.2 s after the first gameplay poll, and after flat periods >= 8 s, the right stick goes -0.6 for 0.2 s and then
+  +0.6 for 0.2 s.
+  - bleedUntil keeps the view still (the game camera's turn comes off viewHold, as in a snap's catch-up).
+  - turnSeq++ and moveCapture(30) at the start and end, as a snap does.
+  - Skipped if the right stick is in use; counted as nKicks.
+  - Root cause still open `[INFERENCE]`: likely the game camera's automatic recentering behind Jin until the right stick is first
+    used.
+- Self-test PASS (selftest=0, 128) + right hand alone draws, freed at 90 % reach past half the blade, hiltT clamp, circumC
+  (points on circles).
+
+## GoTVR 0.18.28 → 0.18.29 — physical katana: hand lock, blade joint, draw gain, sheathing, game attacks held off
+- `[HEADSET]` owner's report:
+  - The left hand is not at the sheath mouth (too low, hard to see).
+  - The right hand sits a little above the hilt and rotates freely ("needs to be locked / gripped onto the hilt").
+  - Drawing moves the sheath and the sword together.
+  - The draw is too long: it should free "until the arm is mostly extended".
+  - The owner wants free-flowing PHYSICAL combat, not the game's: unsheathing must not start any attack animation, and all attack
+    animations are disabled while the katana is physically held.
+  - Wants sheathing: insert the tip into the mouth and guide it home along rails.
+  - Log 0.18.28: the game draw chord fired at DRAWN ("asked the game to DRAW").
+- Hand lock (swd::frame, game thread, before ArmPub is published):
+  - At the grab, the controller's grip frame (rows of oh, now kept as swd::gripM) is turned with fbik::arc so that the grip -Z axis
+    (the line through the fist) lies on +-rail axis. The sign follows the grab: right default toward the guard, left default toward
+    the mouth.
+  - The origin is placed on the line: right at mouth + axis (s + hiltT); left at mouth + axis * sword_sheath_hand_cm (-3).
+  - The result is stored relative to the blade frame (sheath joint axes at the mouth, slid s) or the sheath frame.
+  - Each frame Q = L.R * C.R^T (partial by the ease weight, through a quaternion: rotPart) rotates wrist, fingers, thumb and palm about
+    the grip point; the grip point goes to L.t, and the hand goes + palm * sword_hand_into_grip_cm (2).
+  - Ease in 0.1 s, out 0.25 s.
+- Blade joint:
+  - fp::findBladeCands, once on the job thread: the descendants of the katana joint, then joints within 35 cm that are not ancestors,
+    with no hand / clavicle in their subtree and at most 24 joints, nearest first. Logged with parent, distance and subtree size.
+  - Ctrl+F7 cycles them once calibrated; Ctrl+F8 saves sword_blade_joint. Ctrl+Shift+F7 / F8 pick the katana joint.
+  - swordApply moves the blade joint's subtree. If that subtree holds the katana (sheath) joint, the sheath subtree's matrices are put
+    back. Without a pick it falls back to the katana joint.
+  - The rail frame stays the katana joint (kGameW).
+- Draw gain:
+  - s = s0 + gain * (hand axial - a0), with gain = drawnFrac * blade / sword_draw_pull_cm (66.2 / 40 = 1.66). Real draws pull the
+    sheath back too (saya-biki, Akban wiki "Seitei gata - Mae").
+  - Let go mid-draw: home at 220 cm/s.
+  - The left hand releasing mid-draw keeps s and re-bases the pull.
+- Sheathing (sword.h S_SHEATHING):
+  - In DRAWN the blade frame is grip o drawLock^-1. The tip is the guard - dir * blade. It is taken when the tip is within 7 cm of the
+    rail line, between 6 cm outside and 4 cm inside the mouth, and the blade is within 30 deg of the rail.
+  - s = blade + tip axial; the same gain drives s while pushing. s <= 1 -> SHEATHED with the hand still on the hilt.
+  - Pulling the hand 6 cm back past full length frees the blade (DRAWN). Letting go slides it home.
+  - The job thread eases the blade from its last in-hand pose onto the rail (0.12 s, matrix lerp + Gram-Schmidt).
+  - The right hand re-locks with the draw's lock (the hand where it holds the blade).
+- Game input: vrin::blockMask clears XB_X / XB_Y from the virtual pad while the hand is on the hilt or the blade is out
+  (sword_block_game_attacks 1; counted). sword_game_draw default 0.
+- Self-test PASS (selftest=0, 128). The katana test now also covers:
+  - gain: 20 cm of pull -> 33 cm out; 40.5 cm -> free
+  - sheathing: refused at 45 deg; taken lined up at the mouth; 20 cm push; home with the hand still on the hilt
+  - draw again; let go -> slides home; pulled back out -> DRAWN
+  - rotPart: 0 / 1 / half twice
+  The earlier 1:1 assertions run with drawCm = 66.2 (gain 1).
+
+## GoTVR 0.18.27 → 0.18.28 — katana hold finger poses, hands pinned to the rail, the game's draw / sheathe toggle, square-on-stop
+- `[HEADSET]` owner: performance and the 591 calibration good ("Perfect"). Wants the left trigger unbound from calibration, finger
+  poses for the right hand on the hilt and the left on the sheath, the actual draw "similar to the game's animation", and the body
+  turned to the headset whenever the player stops moving.
+- Left-trigger calibration block removed from swd::frame (Ctrl+F10 kept; saved calibration unchanged).
+- Hilt grab: distance to the hilt SEGMENT (mouth + axis * (s + t), t in [0, hiltCm]) with sword_hilt_grab_cm 10 (was a point at the
+  hilt middle, 12 cm). grab0 is unchanged, so there is no jump at the grab.
+- Hold fingers: SwordPub carries holdW[2] (1 - cos easing over 0.12 s; right = on the hilt or DRAWN, left = on the sheath).
+  solveArms -> holdBlend blends fing::Tune / Curl toward the hold tables:
+  - right: long 65 / 85 / 45, thumb 15 / 40 / 55, all curls 1
+  - left: long 60 / 80 / 45, thumb 5 / 10 / 8 (nearly straight)
+  thumbAcrossDeg is analysis-time only, so it is unchanged.
+- Hands pinned (game thread, before ArmPub is published, so swd::frame(ap) now runs before apubIdx.store): each holding hand's wrist
+  target moves by (pin - grip) * w.
+  - right: the pin is the grip projected onto the rail line, t clamped [s, s + hiltCm]
+  - left: the pin is the projection clamped [-20, +2] cm around the mouth
+  - w: 1 - cos easing over 0.1 s. Not while DRAWN (Trel hand attach).
+- Game draw: on SHEATHED -> DRAWN the mod plays vrin::requestChord(XB_RIGHT | OX_RSR) (touchpad swipe right = draw when sheathed, sheathe
+  when drawn, PC key 5, per Shacknews / GosuNoob), and the same again on DRAWN -> SHEATHED while gameDrawn.
+  - New ext chord slot in vrin: 450 ms, played with applyStaged (D-pad first, the stick after 120 ms), counted in chordBusy.
+  - `sword_game_draw` (1).
+  - Risk `[INFERENCE]`: the game may show its own in-hand katana as well as joint 591; the owner checks.
+- Square-on-stop: bodyStep head branch; stopWasMoving is set at > 0.6 m/s. Below 0.3 m/s for 0.2 s it forces headTurning when
+  |e| > 0.5 deg (the eased spring).
+  - Reset with the root history (lastRootOk false or not active).
+  - `fp_body_square_on_stop` (1); BODY/s "on stopping".
+- Self-test PASS (selftest=0, 128): + hilt segment grab (pommel end, no jump, 12 cm aside refused); hold finger blend (left full,
+  right half, none) + chord queued; stop squares the body (12 deg look inside the 20 deg zone: 0.4 deg moving, 11.5 deg stopped, 0 with
+  the switch off).
+- Test hygiene: the queued chord is marked seen so later controller tests are not disturbed (they failed once without it).
+
+## GoTVR 0.18.26 → 0.18.27 — performance regression (audio emitter hook), calibration on the left trigger
+- `[HEADSET]` owner: "performance much worse"; wants the rail calibration on the left trigger; Ctrl+F7 / Ctrl+F8 chose joint 591.
+- Log 0.18.26: census ticks median 55 / s (0.18.25: 121, 0.18.24: 117) = ~27 stereo pairs / s. AUDIO/s: ~2100 emitter updates / s;
+  0.18.26's hEmitter ran readable() (VirtualQuery) five times per emitter on the audio update before any filter. Fix: owner pointer
+  compare against fp::node first (the game has just used e / source / owner), no VirtualQuery anywhere on that path.
+- Rail calibration: left trigger edge with both grips > 0.5, blade in the sheath, both hands within 60 cm of the katana joint (the
+  left trigger is unbound in gameplay); Ctrl+F10 kept. The draw state resets after a calibration.
+- Lesson (playbook ch07 hot-path rule): no memory-validation system calls in per-object hooks; validate once at discovery.
+
 ## GoTVR 0.18.25 → 0.18.26 — katana draw stage 1, own-sound centring, room-scale off, crouched start, deadband, look-down 30, arm stretch
 - Owner: remove physical dodging (keep code); started in third person; improve hand smoothing; finish audio (gear / voice); push to
   main as VR IK mostly complete + 8D audio; shadows / ghosting around the hands; look-down threshold 30; katana draw with sheath /

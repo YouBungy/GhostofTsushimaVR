@@ -25,7 +25,7 @@
 #include "gotvr_shared.h"
 
 typedef uint64_t u64; typedef uint32_t u32; typedef uint8_t u8;
-#define GOTVR_VERSION "GoTVR 0.18.26 (katana draw stage 1: sheath + hilt grab, rail, rumble, logs, joint probe and calibration; Jin's own sounds centred; physical dodging off; crouched start; hand deadband; look-down threshold 30; arm stretch, 3D audio: the Wwise listener is your head, Jin's own pose back in frozen frames (head shown in pause / cutscene starts), view rigid on the drawn body (no orbit when Jin turns to walk), faster room-scale, body turn eases in, AO fix through the game's own settings apply (AO off + screen-space shadows on), hand stabilisation, body threshold 20 deg, X = item wheel, play_mode=flat with state / flag logging, room-scale: Jin walks under your head, ambient occlusion held off in first person (see-through arms), VR arms kept through the landing, eyes 3 cm right / 2 cm up, body turns faster, headset recenter button recentres the game, forearm twist with the wrist, movement always follows the headset, body turns to the headset past 7.5 deg standing and moving, movement forward only when you start moving, fingers bend on one hinge each (no sideways fingers), thumb curls across like a fist, fingers ease into their poses, Shift+F6 arm shading test (screen-space shadows / AO), near clip back to the game, fingers: thumb by length + the hand's own palm, thumb / trigger touch, forward taken as you start moving, the body turns past the threshold while moving too, gesture indicator off, fingers from leaf paths + structure log, riding needs two markers (jumps keep the VR arms), movement forward taken at stops, Shift+F4 HUD-layer test, VR fingers: bind-pose fingers on the IK hands, grip curls a fist, trigger the index, movement forward = headset forward at snap / start / menu exit, view direction kept across menus, body dead zone 45 deg, body under the headset smoothed, body heading kept in world yaw with an even dead zone, movement faces the headset, body under the headset, smoother eye anchor, Shift+F7 near-plane A/B, standing hips squared to the body follow, hips turned square after a snap turn, Shift+F7 TAA A/B, 0.18.12-14 transparency changes removed, standing stance squared to face forward, idle animations held still in first person, near-focus stipple off in first person, snap turn without the catch-up wobble, wrist point from the grip (back / up / thumb, Ctrl+F1-F3), near clip in the environment too (TAA reprojection agrees), eyes 3 cm further back, each eye culled by its own view - no cross-eye occlusion (preset 7), eyes 5 cm further back, near plane 2 cm in first person, F1/F2/F3 hand trims saved to gotvr.ini, near stipple fade off in first person, hands pitched, grip unbound, per-eye occlusion by tracked slot ownership, hands flipped, near plane 4 cm, stand tall in the sword stance, arms handed to the game for flute / climbing / takedowns, arm chains by bone chain, F11 resets the per-eye histories, five-option wheel with flute and recenter, eyes centred on the head, AA diagnostics, motion blur off in VR, carried items turn with the body, body drawn facing forward when running back, eye-order swap diagnostic, head found by its joint cluster - lone gear above it is skipped, left eye composed before the tick, VR controllers for any OpenXR controller: virtual pad, snap turn, item wheel, head gestures, rumble; first person with the head hidden in the render pose, xr=4 SYNCHRONIZED-SEQUENTIAL stereo: both eyes from one simulation tick, pair-atomic presentation, per-eye occlusion + TAA history, left-eye monitor mirror, HUD on its own sharp layer that stays put in the room (lazy follow), cinematic letterbox bars and fades over the whole view, theatre screen for videos/pause/menus/loading (flat-rendered); xr=3 experimental)"
+#define GOTVR_VERSION "GoTVR 0.18.38 (the game never asked to draw / sheathe (no draw / sheathe animation), the 0.18.37 per-eye TAA removed, the katana and the hands on it no longer a frame behind the body while you move, the guard found from your captured left grip so the right fist goes where sword_right_hand_cm says (Ctrl+PageDown / PageUp, Ctrl+End / Home move the hands live), the body follows the headset unless a hand grips the sheathed katana; 0.18.37: the game's own drawn sword (joint 637) held in Jin's fist with the game's grip, the game drawn / sheathed with your draw, per-eye TAA on top of the culling preset (no arm / katana ghost), no body teleport when running back / sideways, faster stand-up camera, two hands hold until let go; 0.18.36: katana carried by Jin's actual fist (never beyond the hand), captured left grip turned thumb-up the sheath, two hands hold until let go, triggers held off while the katana is held (idle hold), blade probe logs whether the game has its sword drawn; 0.18.35: katana: drawn-grip capture (Ctrl+F5 with the sword out), captured grips shown as captured, swing filter (no katana lag), the original 0.18.26 joints back in the blade probe; 0.18.34: katana probe: the game-draw joints 637 / 644 / 651 in the Ctrl+F7 list, Ctrl+F9 census sampled every 50 ms with the game's own pose and 637 in the hand / katana frames; 0.18.33: katana: grip capture hotkeys (Ctrl+F5 right on the hilt, Ctrl+F6 left on the sheath), the drawn katana steered from the right controller with the blade turned along its forward, fists snapped onto it, two-handed gate on the unsteered katana (no flicker), katana settings written into gotvr.ini; 0.18.32: katana: blade along the controller's forward (knuckles to the side), the right fist lower on the hilt, the left hand up at the sheath mouth, two-handed grip (left hand on the hilt steers), drawn katana published for sheathing, Ctrl+F9 game-draw joint census; 0.18.31: katana rail from the katana joints (the drawn hilt), right wrist bent so the blade points along the controller, blade probe with the sheath joint held still, body held still while you reach for the katana, faster index finger, a slightly longer draw; 0.18.30: Jin's own fist snapped onto the hilt / sheath, left thumb along the sheath to the guard, katana held through the fist, right-hand-only draw freed at arm reach, start-up turn kick for the movement forward; 0.18.29 physical katana: hands locked on the hilt / sheath, only the blade moves (blade joint pick), draw frees at 40 cm of pull, sheathing by the tip along the rail, the game's draw off and its attacks held off while the katana is out; 0.18.28 katana: hold finger poses on the hilt and the sheath, hands pinned to the sword while drawing, the game draws / sheathes with you, the hilt grabbed anywhere along it; body squares to the headset when you stop; left-trigger calibration removed; no memory queries in the audio emitter hook, katana draw stage 1: sheath + hilt grab, rail, rumble, logs, joint probe and calibration; Jin's own sounds centred; physical dodging off; crouched start; hand deadband; look-down threshold 30; arm stretch, 3D audio: the Wwise listener is your head, Jin's own pose back in frozen frames (head shown in pause / cutscene starts), view rigid on the drawn body (no orbit when Jin turns to walk), faster room-scale, body turn eases in, AO fix through the game's own settings apply (AO off + screen-space shadows on), hand stabilisation, body threshold 20 deg, X = item wheel, play_mode=flat with state / flag logging, room-scale: Jin walks under your head, ambient occlusion held off in first person (see-through arms), VR arms kept through the landing, eyes 3 cm right / 2 cm up, body turns faster, headset recenter button recentres the game, forearm twist with the wrist, movement always follows the headset, body turns to the headset past 7.5 deg standing and moving, movement forward only when you start moving, fingers bend on one hinge each (no sideways fingers), thumb curls across like a fist, fingers ease into their poses, Shift+F6 arm shading test (screen-space shadows / AO), near clip back to the game, fingers: thumb by length + the hand's own palm, thumb / trigger touch, forward taken as you start moving, the body turns past the threshold while moving too, gesture indicator off, fingers from leaf paths + structure log, riding needs two markers (jumps keep the VR arms), movement forward taken at stops, Shift+F4 HUD-layer test, VR fingers: bind-pose fingers on the IK hands, grip curls a fist, trigger the index, movement forward = headset forward at snap / start / menu exit, view direction kept across menus, body dead zone 45 deg, body under the headset smoothed, body heading kept in world yaw with an even dead zone, movement faces the headset, body under the headset, smoother eye anchor, Shift+F7 near-plane A/B, standing hips squared to the body follow, hips turned square after a snap turn, Shift+F7 TAA A/B, 0.18.12-14 transparency changes removed, standing stance squared to face forward, idle animations held still in first person, near-focus stipple off in first person, snap turn without the catch-up wobble, wrist point from the grip (back / up / thumb, Ctrl+F1-F3), near clip in the environment too (TAA reprojection agrees), eyes 3 cm further back, each eye culled by its own view - no cross-eye occlusion (preset 7), eyes 5 cm further back, near plane 2 cm in first person, F1/F2/F3 hand trims saved to gotvr.ini, near stipple fade off in first person, hands pitched, grip unbound, per-eye occlusion by tracked slot ownership, hands flipped, near plane 4 cm, stand tall in the sword stance, arms handed to the game for flute / climbing / takedowns, arm chains by bone chain, F11 resets the per-eye histories, five-option wheel with flute and recenter, eyes centred on the head, AA diagnostics, motion blur off in VR, carried items turn with the body, body drawn facing forward when running back, eye-order swap diagnostic, head found by its joint cluster - lone gear above it is skipped, left eye composed before the tick, VR controllers for any OpenXR controller: virtual pad, snap turn, item wheel, head gestures, rumble; first person with the head hidden in the render pose, xr=4 SYNCHRONIZED-SEQUENTIAL stereo: both eyes from one simulation tick, pair-atomic presentation, per-eye occlusion + TAA history, left-eye monitor mirror, HUD on its own sharp layer that stays put in the room (lazy follow), cinematic letterbox bars and fades over the whole view, theatre screen for videos/pause/menus/loading (flat-rendered); xr=3 experimental)"
 static const u32 EXPECTED_TIMESTAMP = 1782230973u;
 static const char EXPECTED_SHA[] = "ed0931b6f6d3ca3874baf39ebc16d95ff0e93296891182f96c3a790da7109f63";
 
@@ -233,7 +233,7 @@ struct UiCfg { int hud = 1; float hudDeg = 55.0f, hudDist = 1.6f, hudDown = 3.0f
 static UiCfg g_ui; static int g_hostStart = 1, g_renderSize = 2304; static float g_uiAspect = 16.0f / 9.0f;
 // 0.17.0 first person (playbook ch01/ch02/ch12; references: bldbrne-vr, BetterVR, FRIK - anchor on the body root, not the head bone)
 struct FpCfg { int on = 1; float nearCm = 0.0f, stanceMaxCm = 25.0f; int standTall = 0; float eyeUpCm = -1.0f, eyeFwdCm = 1.0f, eyeLeftCm = -3.0f, vertTau = 0.35f, horizTau = 1.0f, lean = 1.0f, maxCamDistM = 8.0f, hideRadiusCm = 22.0f; int hide = 1;
-                int idleHold = 1, stanceSquare = 1, fingers = 1, indexTrigger = 1; float gripFull = 0.35f, fingerSign = 1.0f, fingerRelaxed = 5.0f, fingerTween = 0.15f, forearmTwist = 1.0f, armStretch = 0.10f; int stab = 1, roomscale = 0, headRigid = 1; float bodyTurnS = 0.35f; float rsDeadCm = 12.0f, rsStopCm = 5.0f, stabMinHz = 1.2f, stabBeta = 10.0f, stabRotMinHz = 0.9f, stabRotBeta = 3.0f, stabDeadMm = 1.5f, stabDeadDeg = 0.25f; int bodyFollow = 1, bodyAttach = 1, bodyHead = 1, arms = 1; float headDeadDownDeg = 30.0f, headDeadDeg = 20.0f, headTau = 0.08f, moveTau = 0.15f, underMaxCm = 60.0f, underTau = 0.1f; int bodyUnder = 1; float idleSettle = 0.5f, handBackCm = 7.0f, handUpCm = 3.0f, handSideCm = 0.0f, handPitch = 0.0f, handYaw = 0.0f, handRoll = 0.0f; float bodyStartDeg = 80.0f, bodyFullDeg = 130.0f, bodyTurnSpeed = 1440.0f, bodyMaxSpeed = 8.0f; };
+                int idleHold = 1, stanceSquare = 1, fingers = 1, indexTrigger = 1; float gripFull = 0.35f, fingerSign = 1.0f, fingerRelaxed = 5.0f, fingerTween = 0.15f, indexTween = 0.07f, forearmTwist = 1.0f, armStretch = 0.10f; int stab = 1, roomscale = 0, headRigid = 1; float bodyTurnS = 0.35f; int bodySquareOnStop = 1; float rsDeadCm = 12.0f, rsStopCm = 5.0f, stabMinHz = 1.2f, stabBeta = 10.0f, stabRotMinHz = 0.9f, stabRotBeta = 3.0f, stabDeadMm = 1.5f, stabDeadDeg = 0.25f; int bodyFollow = 1, bodyAttach = 1, bodyHead = 1, arms = 1; float headDeadDownDeg = 30.0f, headDeadDeg = 20.0f, headTau = 0.08f, moveTau = 0.15f, underMaxCm = 60.0f, underTau = 0.1f; int bodyUnder = 1; float idleSettle = 0.5f, handBackCm = 7.0f, handUpCm = 3.0f, handSideCm = 0.0f, handPitch = 0.0f, handYaw = 0.0f, handRoll = 0.0f; float bodyStartDeg = 80.0f, bodyFullDeg = 130.0f, bodyTurnSpeed = 1440.0f, bodyMaxSpeed = 8.0f; };
 static FpCfg g_fp;   // 0.12.0 UI/HUD/video settings (playbook ch04)
 static std::atomic<bool> g_flatRender{false};   // 0.13.0 xr=4: this tick is a flat context rendered as a normal flat frame (game thread decides at tick start)
 static std::atomic<int> g_eyeSwap{0}; static int g_eyeSwapLatched = 0;
@@ -370,7 +370,7 @@ static void loadConfig() {
         g_fp.headDeadDeg = fl(L"fp_body_head_deadzone_deg", 20.0f, 1.0f, 120.0f); g_fp.headDeadDownDeg = fl(L"fp_body_head_deadzone_down_deg", 30.0f, 1.0f, 120.0f); /* 0.18.24 owner: 7.5 -> 20 */ /* 0.18.17 owner: 35 -> 45; 0.18.22 owner: "always rotate to match the headset after a small threshold (5-10 deg)" -> 7.5 */ g_fp.headTau = fl(L"fp_body_head_follow_s", 0.08f, 0.0f, 3.0f); /* 0.18.23 owner: "Jin's body must face the headset faster - in large turns I can see his body" (0.25 -> 0.08) */ g_fp.moveTau = fl(L"fp_body_move_follow_s", 0.15f, 0.0f, 3.0f);
         g_fp.bodyUnder = GetPrivateProfileIntW(L"gotvr", L"fp_body_under_hmd", 1, ini) ? 1 : 0; g_fp.underMaxCm = fl(L"fp_body_under_max_cm", 60.0f, 0.0f, 200.0f); g_fp.underTau = fl(L"fp_body_under_follow_s", 0.1f, 0.0f, 5.0f); /* 0.18.25: 0.5 -> 0.1 (owner: "the headset should follow the body's displacement faster") */
         g_fp.fingers = GetPrivateProfileIntW(L"gotvr", L"fp_fingers", 1, ini) ? 1 : 0; g_fp.indexTrigger = GetPrivateProfileIntW(L"gotvr", L"fp_finger_index_trigger", 1, ini) ? 1 : 0;
-        g_fp.gripFull = fl(L"fp_grip_fist_full", 0.35f, 0.1f, 1.0f); g_fp.fingerSign = fl(L"fp_finger_bend_sign", 1.0f, -1.0f, 1.0f) < 0.0f ? -1.0f : 1.0f; g_fp.fingerRelaxed = fl(L"fp_finger_relaxed_deg", 5.0f, -20.0f, 40.0f); g_fp.fingerTween = fl(L"fp_finger_tween_s", 0.15f, 0.02f, 1.0f); g_fp.forearmTwist = fl(L"fp_forearm_twist", 1.0f, 0.0f, 1.5f); g_fp.armStretch = fl(L"fp_arm_stretch", 0.10f, 0.0f, 0.4f); g_fp.roomscale = GetPrivateProfileIntW(L"gotvr", L"fp_roomscale", 0, ini) ? 1 : 0; /* 0.18.26 owner: "remove the physical dodging, it causes too many problems; keep the code" -> off by default */ g_fp.rsDeadCm = fl(L"fp_roomscale_start_cm", 12.0f, 5.0f, 100.0f); g_fp.rsStopCm = fl(L"fp_roomscale_stop_cm", 5.0f, 1.0f, 50.0f); g_fp.headRigid = GetPrivateProfileIntW(L"gotvr", L"fp_view_on_drawn_body", 1, ini) ? 1 : 0; g_fp.bodyTurnS = fl(L"fp_body_turn_s", 0.35f, 0.0f, 3.0f); g_fp.stab = GetPrivateProfileIntW(L"gotvr", L"fp_hand_stab", 1, ini) ? 1 : 0; g_fp.stabMinHz = fl(L"fp_hand_stab_min_hz", 1.2f, 0.1f, 30.0f); g_fp.stabBeta = fl(L"fp_hand_stab_beta", 10.0f, 0.0f, 200.0f); g_fp.stabRotMinHz = fl(L"fp_hand_stab_rot_min_hz", 0.9f, 0.1f, 30.0f); g_fp.stabDeadMm = fl(L"fp_hand_stab_dead_mm", 1.5f, 0.0f, 20.0f); g_fp.stabDeadDeg = fl(L"fp_hand_stab_dead_deg", 0.25f, 0.0f, 5.0f); g_fp.stabRotBeta = fl(L"fp_hand_stab_rot_beta", 3.0f, 0.0f, 100.0f); shade::mode = GetPrivateProfileIntW(L"gotvr", L"fp_ao_off", 1, ini) ? 1 : 0;
+        g_fp.gripFull = fl(L"fp_grip_fist_full", 0.35f, 0.1f, 1.0f); g_fp.fingerSign = fl(L"fp_finger_bend_sign", 1.0f, -1.0f, 1.0f) < 0.0f ? -1.0f : 1.0f; g_fp.fingerRelaxed = fl(L"fp_finger_relaxed_deg", 5.0f, -20.0f, 40.0f); g_fp.fingerTween = fl(L"fp_finger_tween_s", 0.15f, 0.02f, 1.0f); g_fp.indexTween = fl(L"fp_index_tween_s", 0.07f, 0.02f, 1.0f); g_fp.forearmTwist = fl(L"fp_forearm_twist", 1.0f, 0.0f, 1.5f); g_fp.armStretch = fl(L"fp_arm_stretch", 0.10f, 0.0f, 0.4f); g_fp.roomscale = GetPrivateProfileIntW(L"gotvr", L"fp_roomscale", 0, ini) ? 1 : 0; /* 0.18.26 owner: "remove the physical dodging, it causes too many problems; keep the code" -> off by default */ g_fp.rsDeadCm = fl(L"fp_roomscale_start_cm", 12.0f, 5.0f, 100.0f); g_fp.rsStopCm = fl(L"fp_roomscale_stop_cm", 5.0f, 1.0f, 50.0f); g_fp.headRigid = GetPrivateProfileIntW(L"gotvr", L"fp_view_on_drawn_body", 1, ini) ? 1 : 0; g_fp.bodyTurnS = fl(L"fp_body_turn_s", 0.35f, 0.0f, 3.0f); g_fp.bodySquareOnStop = GetPrivateProfileIntW(L"gotvr", L"fp_body_square_on_stop", 1, ini) ? 1 : 0; g_fp.stab = GetPrivateProfileIntW(L"gotvr", L"fp_hand_stab", 1, ini) ? 1 : 0; g_fp.stabMinHz = fl(L"fp_hand_stab_min_hz", 1.2f, 0.1f, 30.0f); g_fp.stabBeta = fl(L"fp_hand_stab_beta", 10.0f, 0.0f, 200.0f); g_fp.stabRotMinHz = fl(L"fp_hand_stab_rot_min_hz", 0.9f, 0.1f, 30.0f); g_fp.stabDeadMm = fl(L"fp_hand_stab_dead_mm", 1.5f, 0.0f, 20.0f); g_fp.stabDeadDeg = fl(L"fp_hand_stab_dead_deg", 0.25f, 0.0f, 5.0f); g_fp.stabRotBeta = fl(L"fp_hand_stab_rot_beta", 3.0f, 0.0f, 100.0f); shade::mode = GetPrivateProfileIntW(L"gotvr", L"fp_ao_off", 1, ini) ? 1 : 0;
         g_fp.idleHold = GetPrivateProfileIntW(L"gotvr", L"fp_idle_hold", 1, ini) ? 1 : 0; g_fp.idleSettle = fl(L"fp_idle_settle_s", 0.5f, 0.1f, 5.0f); g_fp.stanceSquare = GetPrivateProfileIntW(L"gotvr", L"fp_stance_square", 1, ini) ? 1 : 0;
         g_fp.handBackCm = fl(L"fp_hand_back_cm", 7.0f, -10.0f, 20.0f); g_fp.handUpCm = fl(L"fp_hand_up_cm", 3.0f, -10.0f, 10.0f); g_fp.handSideCm = fl(L"fp_hand_side_cm", 0.0f, -10.0f, 10.0f); g_fp.handPitch = fl(L"fp_hand_pitch_deg", 0.0f, -180.0f, 180.0f); g_fp.handYaw = fl(L"fp_hand_yaw_deg", 0.0f, -180.0f, 180.0f); g_fp.handRoll = fl(L"fp_hand_roll_deg", 0.0f, -180.0f, 180.0f);
         g_fp.bodyFollow = GetPrivateProfileIntW(L"gotvr", L"fp_body_follow", 1, ini) ? 1 : 0; g_fp.bodyAttach = GetPrivateProfileIntW(L"gotvr", L"fp_body_follow_items", 1, ini) ? 1 : 0;
@@ -1457,12 +1457,14 @@ static void findLone() {   // validation: tail joints with no other shown joint 
 // tail joint high was enough, and a jump lifts gear carried on the body (joint 600) past 150 cm above the root - the arms were
 // switched off and the body snapped to the node's facing as if mounted. On the horse BOTH reins/saddle markers (644 / 651, ~202 cm)
 // are up. Now at least two markers must be high (or the only one there is), for 0.25 s on and 0.25 s off.
+static std::atomic<u64> nTClamped{0};
 static std::atomic<float> underW[2]; static std::atomic<float> underCm{0}; static bool underMoved = false;
+static std::atomic<int> underHold{0}; static std::atomic<u64> nUnderHeld{0}; static std::atomic<float> underFwdCm{0}, underLeftCm{0}, underJumpCm{0};   // 0.18.31
 static float hzS[2] = {0, 0}; static std::atomic<float> hzOut[2], hzT[2]; static std::atomic<int> hzOk{0};   // 0.18.25 head offset in Jin's own axes (model units), the drawn-body move
 static std::atomic<float> vertMs{0}; static std::atomic<u64> airAt{0}, nJumpHeld{0};   // 0.18.23
 static std::atomic<float> rsCons[2], rsApplied{0}; static std::atomic<u64> nRsBlocked{0};   // 0.18.24 room-scale: distance Jin walked for you (world units, running total)
 static std::atomic<u64> stabResets[8], stabFiltered{0}; static int stabLost[2] = {0, 0}; static std::atomic<float> stabSpeed[2];   // 0.18.24 hand stabilisation
-static std::atomic<int> rideMarkersHigh{0}; static std::atomic<u64> nStopCaps{0}, nDeadTurns{0}, nSnapTurns{0}; static std::atomic<float> moveOffDeg{0}; static std::atomic<float> headPitchDeg{0}; static std::atomic<int> lookDownNow{0};   // 0.18.26
+static std::atomic<int> rideMarkersHigh{0}; static std::atomic<u64> nStopCaps{0}, nDeadTurns{0}, nSnapTurns{0}, nStopTurns{0}; static std::atomic<float> moveOffDeg{0}; static std::atomic<float> headPitchDeg{0}; static std::atomic<int> lookDownNow{0};   // 0.18.26
 static bool ridingRaw(const float *root, const float *U) {
     const float s = g_cfg.unitsPerM * 0.01f; int high = 0;
     for (int k = 0; k < nLone; k++) { const float *m = J(lone[k]); if (!shown(m)) continue; const float d[3] = {m[12] - root[12], m[13] - root[13], m[14] - root[14]};
@@ -1479,8 +1481,10 @@ static bool riding(const float *root, const float *U, float dt) {
     if (raw != rideState) { rideFor += dt; if (rideFor >= 0.25f || dt <= 0.0f) { rideState = raw; rideFor = 0.0f; } } else rideFor = 0.0f;
     return rideState;
 }
+static bool stopWasMoving = false; static float stopStill = 0.0f;   // 0.18.28 the stop detector (reset with the root history)
 static void bodyStep(const float *root, const float *U, const float *F, bool wasActive) {   // game thread, once per simulated tick
     const float PI = 3.14159265f, D = 57.2957795f;
+    if (!lastRootOk || !wasActive) { stopWasMoving = false; stopStill = 0.0f; }
     const u64 now = GetTickCount64(); const float dt = bodyLastMs ? fminf((float)(now - bodyLastMs) * 0.001f, 0.1f) : 0.0f; bodyLastMs = now;
     float sp = 0; if (lastRootOk && dt > 0.0f) { float d[3] = {root[12] - lastRoot[0], root[13] - lastRoot[1], root[14] - lastRoot[2]}; const float u = d[0] * U[0] + d[1] * U[1] + d[2] * U[2]; for (int c = 0; c < 3; c++) d[c] -= u * U[c]; sp = len3(d) / dt / g_cfg.unitsPerM; }
     {   // 0.18.23 (owner: "at the end of a jump, the VR IK arms go back to animation-controlled"): the vertical speed of the root; the
@@ -1541,6 +1545,13 @@ static void bodyStep(const float *root, const float *U, const float *F, bool was
             static bool lookDown = false; { const float pt = headPitchDeg.load(); if (pt < -35.0f) lookDown = true; else if (pt > -25.0f) lookDown = false; }
             const float dead = lookDown ? fmaxf(g_fp.headDeadDeg, g_fp.headDeadDownDeg) : g_fp.headDeadDeg; lookDownNow = lookDown ? 1 : 0;
             if (!headTurning && fabsf(e) * D > dead) { headTurning = true; nDeadTurns++; }
+            {   // 0.18.28 (owner: "set Jin's body rotation to the headset rotation whenever the player stops moving"): after moving (> 0.6 m/s),
+                // once you are below 0.3 m/s for 0.2 s the body turns square to your headset (the same eased turn), whatever the dead zone
+                bool &wasMoving = stopWasMoving; float &stillT = stopStill;
+                if (sp > 0.6f) { wasMoving = true; stillT = 0.0f; }
+                else if (wasMoving && sp < 0.3f) { stillT += dt; if (stillT >= 0.2f) { wasMoving = false; stillT = 0.0f; if (g_fp.bodySquareOnStop && !headTurning && fabsf(e) * D > 0.5f) { headTurning = true; nStopTurns++; } } }
+                else if (wasMoving) stillT = 0.0f;
+            }
             if (headTurning && fabsf(e) * D < 0.5f) headTurning = false;   // 0.18.22: 2 -> 0.5 deg, the body ends square to the view
             // 0.18.25 (owner: "when I first pass the threshold, have Jin's body rotate a bit slower - tween - until it catches up; now it snaps"):
             // the turn is a critically damped spring (eases in and out, no overshoot), ~90 % there after fp_body_turn_s (0.35 s)
@@ -1674,35 +1685,215 @@ struct ArmPub { float pos[2][3], fing[2][3], thumb[2][3]; float w[2]; int ok[2];
 static fing::Hand fingD[2]; static std::atomic<int> fingState{0}; static std::atomic<u64> nFingPosed{0}; static std::atomic<float> fingCurlOut[2], thumbOut[2];
 static ArmPub apub[2]; static std::atomic<int> apubIdx{-1};
 // 0.18.26 the katana draw (sword.h; game-thread logic in namespace swd): the job reads the state and moves the katana joint's subtree
-struct SwordPub { int state = 0; float s = 0; float axisW[3] = {0, 0, 0}; int probe = -1; int joint = -1; };
-static SwordPub spub[2]; static std::atomic<int> spubIdx{-1};
+struct SwordPub { int state = 0; float s = 0; float axisW[3] = {0, 0, 0}; int probe = -1; int joint = -1; int onHilt = 0, onSheath = 0; float holdW[2] = {0, 0}; int blade = -1; float mouthW[3] = {0, 0, 0}, snapW[2] = {0, 0}, hiltAx = 0, hiltT = 0, thumbGap = 0.3f, sheathR = 1.6f; int probeHold = -1, keep = -1; float wristW = 0, ctrlFwd[3] = {0, 0, 0}; float bladeW[3] = {0, 0, 0}, twoW = 0, twoGap = 10.0f, rawG[2][3] = {{0, 0, 0}, {0, 0, 0}}, sheathG = -6.0f; int twoHand = 0; int capNoSnap[2] = {0, 0}; int gameBlade = -1; int katOk = 0; float katR[9] = {1, 0, 0, 0, 1, 0, 0, 0, 1}, katT[3] = {0, 0, 0}, katAx[3] = {0, 0, 1}, dSnapW = 0; float mouthL[3] = {0, 0, 0}; int mouthLok = 0; float leftShift = 0; };
+static SwordPub spub[2]; static std::atomic<int> spubIdx{-1}; static std::atomic<u64> nHoldPosed[2]{};
 static volatile LONG kSeq = 0; static float kGameW[16]; static std::atomic<int> kGameOk{0}; static std::atomic<u64> nSwordMoves{0};
-static bool kGameRead(float *m) { for (int t = 0; t < 4; t++) { const LONG a = kSeq; if (a & 1) continue; MemoryBarrier(); memcpy(m, kGameW, 64); MemoryBarrier(); if (a == kSeq) return kGameOk.load() != 0; } return false; }
+// 0.18.38 (owner: "when I move, the katana is not anchored in Jin's grip and moves around it"): the game thread used the katana joint's
+// WORLD matrix from the last animation job - one frame old. Walking / running, the body has moved on by then (5 m/s at 55 fps = 9 cm),
+// so the sheath rail, the hands locked to it and the drawn katana's sheath frame all lagged the body by that much, in the direction you
+// move. Now the job publishes the joint in Jin's MODEL space too and the game thread puts it into the world with the CURRENT node.
+static float kGameM[16]; static std::atomic<int> kGameMOk{0};
+static bool kGameRead(float *m, const u8 *nodeNow = nullptr) { float M[16]; bool mOk = false;
+    for (int t = 0; t < 4; t++) { const LONG a = kSeq; if (a & 1) continue; MemoryBarrier(); memcpy(m, kGameW, 64); memcpy(M, kGameM, 64); mOk = kGameMOk.load() != 0; MemoryBarrier(); if (a == kSeq) {
+        if (mOk && nodeNow) { const float *N = (const float *)(nodeNow + 0x150); float W[16];
+            for (int r = 0; r < 4; r++) { const float *v = M + 4 * r; for (int c = 0; c < 3; c++) W[4 * r + c] = v[0] * N[c] + v[1] * N[4 + c] + v[2] * N[8 + c] + (r == 3 ? N[12 + c] : 0.0f); W[4 * r + 3] = r == 3 ? 1.0f : 0.0f; }
+            bool fin = true; for (int i = 0; i < 16; i++) fin &= std::isfinite(W[i]) != 0; if (fin) memcpy(m, W, 64); }
+        return kGameOk.load() != 0; } }
+    return false; }
+// 0.18.28 (owner: "the finger poses for grabbing the sword hilt with the right hand, then the sheath with the left"): a hand holding the
+// sword takes a hold pose instead of the controller's curl, blended by the hand's hold weight (SwordPub.holdW, eased 0.12 s):
+//  - right hand on the hilt / the drawn katana: all four fingers wrap the tsuka (a ~3 cm oval - knuckle / middle / end 65 / 85 / 45 deg,
+//    a little less than a fist, which closes the tips on the palm), the index included (no trigger finger on a katana), the thumb wrapped
+//    over the index and middle like a fist (kenjutsu grip: the hand round the hilt, the thumb down, not along it)
+//  - left hand on the sheath at the mouth (the saya is a bit thicker, the koiguchi grip): fingers 60 / 80 / 45; the thumb stays nearly
+//    straight, resting along the sheath toward the tsuba - the thumb that pushes the guard to free the blade in Jin's draw (koiguchi o kiru)
+static const float kHoldLong[2][3] = {{60.0f, 80.0f, 45.0f}, {65.0f, 85.0f, 45.0f}}, kHoldThumb[2][3] = {{5.0f, 10.0f, 8.0f}, {15.0f, 40.0f, 55.0f}}, kHoldThumbCurl[2] = {1.0f, 1.0f};
+static float holdWeight(int side) { const int k = spubIdx.load(std::memory_order_acquire); if (k < 0) return 0.0f; const float w = spub[k].holdW[side]; return std::isfinite(w) ? (w < 0 ? 0 : w > 1 ? 1 : w) : 0.0f; }
+static void holdBlend(int side, fing::Curl &cu, fing::Tune &tn) {
+    const float hw = holdWeight(side); if (hw <= 0.0f) return; std::atomic_fetch_add(&nHoldPosed[side], (u64)1);
+    int tb = side; { const int k = spubIdx.load(std::memory_order_acquire); if (side == 0 && k >= 0 && spub[k].twoHand) tb = 1; }   // 0.18.32 the left hand on the hilt: the hilt grip
+    for (int i = 0; i < 3; i++) { tn.longDeg[i] += (kHoldLong[tb][i] - tn.longDeg[i]) * hw; tn.thumbDeg[i] += (kHoldThumb[tb][i] - tn.thumbDeg[i]) * hw; }
+    cu.grip += (1.0f - cu.grip) * hw; cu.index += (1.0f - cu.index) * hw; cu.thumb += (kHoldThumbCurl[tb] - cu.thumb) * hw;
+}
+// 0.18.29 the blade alone: the joints that could carry only the blade - the katana joint's descendants first, then joints within 35 cm
+// of it that are not its ancestors and carry no hand / arm (small subtrees only) - nearest first; logged once with parent, distance
+// and subtree size, cycled by Ctrl+F7 once the katana is calibrated (Ctrl+F8 keeps one as sword_blade_joint)
+static int bladeCand[24]; static std::atomic<int> bladeCandN{-1}, bladeCandDesc{0}; static const float *g_animPose = nullptr; static int g_animCnt = 0;   // 0.18.34: the game's own pose of this job (snapTake), before the mod
+static volatile LONG kdSeq = 0; static float kDrawnG[3], kDrawnA[3]; static std::atomic<u64> kDrawnMs{0};   // 0.18.32 the drawn katana as drawn (world)
+static bool kDrawnRead(float *g, float *a) { for (int t = 0; t < 4; t++) { const LONG q = kdSeq; if (q & 1) continue; MemoryBarrier(); memcpy(g, kDrawnG, 12); memcpy(a, kDrawnA, 12); MemoryBarrier(); if (q == kdSeq) return GetTickCount64() - kDrawnMs.load() < 200; } return false; }
+static volatile LONG kcSeq = 0; static float kChildL[3]; static std::atomic<int> kChild{-1}; static std::atomic<u64> nKatanaInFist{0};   // 0.18.31 the katana joint's child, in the katana joint's own frame
+// 0.18.30 the fist's channel (measureFist, below solveArms)
+static float fistGl[2][3], fistDl[2][3], thBl[2][3], thLen[2] = {0, 0}; static bool fistLocOk[2] = {false, false};
+static float fistGm[2][3], fistDm[2][3]; static bool fistMOk[2] = {false, false};
+static float drawnTgtP[3], drawnTgtA[3]; static bool drawnTgtOk = false; static std::atomic<u64> nKatFistFix{0}; static std::atomic<float> katFistErrCm{0};   // 0.18.36
+static std::atomic<float> armExt[2]; static std::atomic<u64> nSnapped[2], nThumbAimed{0}, nWristFwd{0}, nTwoSteer{0}, nSwingStab{0}; static std::atomic<float> fistRadCm[2];
+
+static void orthoCols(float *R) {   // Gram-Schmidt on the columns of a row-major rotation (after a blend)
+    float a[3] = {R[0], R[3], R[6]}, b[3] = {R[1], R[4], R[7]}, c[3]; if (!fbik::norm3(a)) return; const float d = fbik::dot3(a, b); for (int k = 0; k < 3; k++) b[k] -= d * a[k]; if (!fbik::norm3(b)) return;
+    fbik::cross3(a, b, c); for (int k = 0; k < 3; k++) { R[k * 3] = a[k]; R[k * 3 + 1] = b[k]; R[k * 3 + 2] = c[k]; } }
+static void findBladeCands(const float *pose, int cnt, int j) {
+    static uint16_t tmp[512]; int n = 0; float dd[24];
+    auto isAnc = [&](int a) { for (int q = parents[j], g = 0; q >= 0 && g < 512; q = parents[q], g++) if (q == a) return true; return false; };
+    auto isDesc = [&](int a) { for (int q = parents[a], g = 0; q >= 0 && g < 512; q = parents[q], g++) if (q == j) return true; return false; };
+    auto hasArm = [&](int a) { const int ns = fbik::subtree(parents, cnt, a, tmp, 512); if (ns > 24) return true; for (int i = 0; i < ns; i++) for (int sd = 0; sd < 2; sd++) if (tmp[i] == armsD[sd].hand || tmp[i] == armsD[sd].clav) return true; return false; };
+    const float *P0 = pose + (size_t)j * 16 + 12;
+    auto add = [&](int a, float d) { if (n < 24) { bladeCand[n] = a; dd[n] = d; n++; } };
+    for (int a = 0; a < cnt; a++) if (a != j && isDesc(a) && !hasArm(a)) { const float *Pa = pose + (size_t)a * 16 + 12; const float d[3] = {Pa[0] - P0[0], Pa[1] - P0[1], Pa[2] - P0[2]}; add(a, fbik::len3f(d)); }
+    const int nDesc = n; bladeCandDesc = nDesc;
+    // 0.18.34 (owner: "are you sure the sword doesn't have its own bone?"): the joints the game's own draw moved (census: 637 99 cm, 644,
+    // 651 - children of the root, far from the sheathed katana) right after the katana's own children: a weapon attached to a bone the
+    // draw moves would lift alone with it
+    static const int kDrawJ[16] = {637, 644, 651, 645, 646, 647, 653, 654, 652, 593, 594, 586, 587, 588, 589, 590};   // 0.18.35 + the original 0.18.26 list (owner: "when I first found the sword bone it was raised alone")
+    for (const int x : kDrawJ) if (x < cnt && x != j) { bool dup = false; for (int q = 0; q < n; q++) if (bladeCand[q] == x) dup = true;
+        if (!dup) { const float *Pa = pose + (size_t)x * 16 + 12; const float d[3] = {Pa[0] - P0[0], Pa[1] - P0[1], Pa[2] - P0[2]}; add(x, fbik::len3f(d)); } }
+    for (int pass = 0; pass < 24 && n < 24; pass++) { int best = -1; float bd = 35.0f * g_cfg.unitsPerM * 0.01f;
+        for (int a = 0; a < cnt; a++) { if (a == j || isAnc(a) || isDesc(a)) continue; bool dup = false; for (int k = 0; k < n; k++) if (bladeCand[k] == a) dup = true; if (dup) continue;
+            const float *Pa = pose + (size_t)a * 16 + 12; const float d[3] = {Pa[0] - P0[0], Pa[1] - P0[1], Pa[2] - P0[2]}; const float l = fbik::len3f(d); if (l < bd && !hasArm(a)) { bd = l; best = a; } }
+        if (best < 0) break; add(best, bd); }
+    char b[900]; int o = 0; b[0] = 0;
+    for (int k = 0; k < n && o < 860; k++) { const int ns = fbik::subtree(parents, cnt, bladeCand[k], tmp, 512); o += snprintf(b + o, sizeof b - (size_t)o, " %d(parent %d, %.0f cm, %d joints%s)", bladeCand[k], parents[bladeCand[k]], dd[k] / (g_cfg.unitsPerM * 0.01f), ns, k < nDesc ? ", under the katana" : ""); }
+    { const int ns = fbik::subtree(parents, cnt, j, tmp, 512); logf("katana: blade candidates for katana joint %d (parent %d, its subtree %d joints):%s - Ctrl+F7 lifts them one by one, Ctrl+F8 keeps the one that lifts ONLY the blade", j, parents[j], ns, n ? b : " none"); }
+    bladeCandN = n;
+}
+// 0.18.32 (owner: "the sword still never left without the sheath with Ctrl+F7"): the sheathed katana is one piece of the model; the
+// separate drawn katana is something the GAME shows when it draws. Ctrl+F9 asks the game to draw / sheathe once (the touchpad swipe) and
+// takes a census of Jin's joints just before and 1.5 s after: which joints appeared / disappeared (scale) or moved, and the right
+// hand's own subtree - the joint that carries the game's drawn katana, to hold with our hands instead of the game's animation.
+static std::atomic<int> censusReq{0}; static std::atomic<u64> nCensus{0}; static std::atomic<float> d637{-1.0f};
+// 0.18.37 the game's own drawn sword (owner: "I confirmed the sword bone": joint 637 carries the drawn sword alone while the GAME has its
+// sword drawn; the sheathed sword is part of the katana joint 591's model, which then shows the empty sheath). gameDrawn: the game's own
+// pose (before the mod) has 637 near the katana. relHand: how the game's own animated right hand holds that sword (637 in the hand's
+// frame), learned while the game's sword is drawn and the relation holds still for 0.5 s, saved to gotvr.ini.
+static std::atomic<int> gameDrawn{0}; static fing::Aff relHand; static std::atomic<int> relHandOk{0}; static std::atomic<int> relHandSave{0}; static std::atomic<u64> nGameBlade{0};
+static fing::Aff sheathX; static bool sheathXok = false;
+static void census(const float *pose, int cnt) {
+    // 0.18.34: 2.5 s after the request, every 50 ms: the watched joints (the katana 591 and its child, the drawn-weapon candidates 637 /
+    // 644 / 651, the right hand 561 - as ANIMATED by the game, before the mod's IK) - position from the root (cm) and how far it moved
+    // since the press; 637 also in the katana joint's frame and in the animated right hand's frame (the game's own grip of the drawn sword).
+    // At the end: every joint that moved > 20 cm or changed scale over the window (as in 0.18.32).
+    static float A[JOINT_CAP][4]; static int phase = 0, n0 = 0; static u64 t0 = 0, lastS = 0; const u64 now = GetTickCount64();
+    const float *ap = (g_animPose && g_animCnt >= cnt) ? g_animPose : pose;   // the game's own pose when there is one
+    const float u = g_cfg.unitsPerM * 0.01f;
+    auto snap = [&](float (*o)[4]) { for (int j = 0; j < cnt && j < JOINT_CAP; j++) { const float *m = ap + (size_t)j * 16; o[j][0] = m[12]; o[j][1] = m[13]; o[j][2] = m[14]; o[j][3] = sqrtf(m[0] * m[0] + m[1] * m[1] + m[2] * m[2]); } };
+    auto relTo = [&](int base, int j, float *o) { if (base < 0 || base >= cnt || j < 0 || j >= cnt) return false; fing::Aff B = fing::fromPose(ap + (size_t)base * 16), Bi; if (!fing::inv(B, Bi)) return false;
+        const fing::Aff J = fing::mul(Bi, fing::fromPose(ap + (size_t)j * 16)); for (int k = 0; k < 3; k++) o[k] = J.t[k] / u;
+        o[3] = atan2f(J.R[3], J.R[0]) * 57.2957795f; o[4] = asinf(fminf(1.0f, fmaxf(-1.0f, -J.R[6]))) * 57.2957795f; o[5] = atan2f(J.R[7], J.R[8]) * 57.2957795f; return true; };
+    const int watch[6] = {591, 592, 637, 644, 651, armsD[1].hand >= 0 ? armsD[1].hand : 561};
+    if (censusReq.exchange(0)) { snap(A); n0 = cnt; t0 = now; lastS = 0; phase = 1;
+        const fbik::Arm &R = armsD[1]; char b[1200]; int o = 0; b[0] = 0;
+        for (int i = 0; i < R.nSub[3] && o < 1150; i++) { const int j = R.sub[3][i]; const float *m = ap + (size_t)j * 16; o += snprintf(b + o, sizeof b - (size_t)o, " %d(p%d s%.2f)", j, parents[j], sqrtf(m[0] * m[0] + m[1] * m[1] + m[2] * m[2])); }
+        logf("katana census: before the game's draw / sheathe (%s pose) - the right hand's subtree (joint, parent, scale):%s", ap == pose ? "the drawn" : "the game's own", b);
+        static const int kRelJ[4] = {637, 644, 651, 592}; for (const int x : kRelJ) { float r[6]; if (relTo(591, x, r)) logf("katana census:    joint %d (parent %d) in the katana joint 591's frame: (%.1f %.1f %.1f) cm, turned %.0f / %.0f / %.0f deg", x, x < cnt ? parents[x] : -1, r[0], r[1], r[2], r[3], r[4], r[5]); }
+        return; }
+    if (phase == 1) {
+        const u64 el = now - t0;
+        if (el - lastS >= 50 && el < 2500) { lastS = el - (el % 50); char b[700]; int o = 0; b[0] = 0;
+            for (const int x : watch) { if (x < 0 || x >= cnt || x >= n0) continue; const float *m = ap + (size_t)x * 16; const float d[3] = {m[12] - A[x][0], m[13] - A[x][1], m[14] - A[x][2]};
+                o += snprintf(b + o, sizeof b - (size_t)o, " %d(%.0f %.0f %.0f, moved %.0f)", x, m[12] / u, m[13] / u, m[14] / u, sqrtf(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]) / u); }
+            float rh[6], rk[6]; const int hj = watch[5]; const bool okH = relTo(hj, 637, rh), okK = relTo(591, 637, rk);
+            if (okH && o < 640) o += snprintf(b + o, sizeof b - (size_t)o, " | 637 in the hand: (%.1f %.1f %.1f) %.0f/%.0f/%.0f", rh[0], rh[1], rh[2], rh[3], rh[4], rh[5]);
+            if (okK && o < 680) snprintf(b + o, sizeof b - (size_t)o, " | in 591: (%.1f %.1f %.1f)", rk[0], rk[1], rk[2]);
+            logf("katana census: +%4llu ms%s", (unsigned long long)el, b); }
+        if (el >= 2500) { phase = 0; static float B[JOINT_CAP][4]; snap(B); char b[1800]; int o = 0, k = 0; b[0] = 0;
+            for (int j = 0; j < cnt && j < n0 && j < JOINT_CAP && o < 1700; j++) { const float d[3] = {B[j][0] - A[j][0], B[j][1] - A[j][1], B[j][2] - A[j][2]}; const float mv = sqrtf(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]) / u;
+                const bool sc = fabsf(B[j][3] - A[j][3]) > 0.3f; if (sc || mv > 20.0f) { k++; o += snprintf(b + o, sizeof b - (size_t)o, " %d(p%d moved %.0f cm, scale %.2f->%.2f)", j, parents[j], mv, A[j][3], B[j][3]); } }
+            logf("katana census: 2.5 s after - %d joints changed:%s", k, k ? b : " none"); nCensus++; }
+    }
+}
 static bool swordApply(u8 *nd, float *pose, int cnt) {   // job thread, after the arms, before the world matrices
+    int sp0j = -1; { const int k0 = spubIdx.load(std::memory_order_acquire); if (k0 >= 0) sp0j = spub[k0].joint; }
+    if (parState.load() > 0) census(pose, cnt);
+    if (sp0j >= 0 && sp0j < cnt && 637 < cnt) { const float *a = pose + (size_t)sp0j * 16 + 12, *b = pose + 637 * 16 + 12; const float d[3] = {a[0] - b[0], a[1] - b[1], a[2] - b[2]}; d637 = fbik::len3f(d) / (g_cfg.unitsPerM * 0.01f); }
     const int k = spubIdx.load(std::memory_order_acquire); if (k < 0) return false; const SwordPub sp = spub[k];
     const float *N = (const float *)(nd + 0x150); const int j = sp.joint;
+    float W[16] = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
     if (j >= 0 && j < cnt) {   // the rail frame: the katana joint as drawn (body turn / shifts included), BEFORE the mod moves it
-        const float *M = pose + (size_t)j * 16; float W[16];
+        const float *M = pose + (size_t)j * 16;
         for (int r = 0; r < 4; r++) { const float *v = M + 4 * r; for (int c = 0; c < 3; c++) W[4 * r + c] = v[0] * N[c] + v[1] * N[4 + c] + v[2] * N[8 + c] + (r == 3 ? N[12 + c] : 0.0f); W[4 * r + 3] = r == 3 ? 1.0f : 0.0f; }
-        InterlockedIncrement(&kSeq); MemoryBarrier(); memcpy(kGameW, W, 64); kGameOk = 1; MemoryBarrier(); InterlockedIncrement(&kSeq);
+        InterlockedIncrement(&kSeq); MemoryBarrier(); memcpy(kGameW, W, 64); memcpy(kGameM, M, 64); kGameOk = 1; kGameMOk = 1; MemoryBarrier(); InterlockedIncrement(&kSeq);
     }
-    static uint16_t sub[512]; static fing::Aff Trel; static bool trelOk = false;
+    static uint16_t sub[512];
     auto moveSub = [&](int root, const fing::Aff &D) { const int n = fbik::subtree(parents, cnt, root, sub, 512); if (n <= 0) return false;
         for (int i = 0; i < n; i++) { float *m = pose + (size_t)sub[i] * 16; const fing::Aff a = fing::fromPose(m); fing::toPose(fing::mul(D, a), m); } return true; };
+    if (j >= 0 && j < cnt && parState.load() > 0 && bladeCandN.load() < 0) findBladeCands(pose, cnt, j);
+    if (j >= 0 && j < cnt && parState.load() > 0) {   // 0.18.31 the katana joint's child (592: the other end of the hilt?) in the katana joint's frame
+        static int ch = -2, chFor = -1; if (chFor != j) { chFor = j; ch = -1; for (int a = 0; a < cnt; a++) if (parents[a] == j) { ch = a; break; } }
+        if (ch >= 0) { fing::Aff Pj = fing::fromPose(pose + (size_t)j * 16), Pi; if (fing::inv(Pj, Pi)) { const float *c = pose + (size_t)ch * 16 + 12; float l[3];
+                for (int k = 0; k < 3; k++) l[k] = Pi.R[k * 3] * c[0] + Pi.R[k * 3 + 1] * c[1] + Pi.R[k * 3 + 2] * c[2] + Pi.t[k];
+                InterlockedIncrement(&kcSeq); MemoryBarrier(); memcpy(kChildL, l, 12); kChild = ch; MemoryBarrier(); InterlockedIncrement(&kcSeq); } }
+    }   // 0.18.29 once: what could be the blade alone
     if (sp.probe >= 0 && sp.probe < cnt && parState.load() > 0) {   // the joint probe: lift the candidate 15 cm so you can see what it carries
-        fing::Aff D; for (int i = 0; i < 9; i++) D.R[i] = (i % 4 == 0) ? 1.0f : 0.0f; D.t[0] = D.t[1] = 0; D.t[2] = 15.0f * g_cfg.unitsPerM * 0.01f; return moveSub(sp.probe, D); }
-    if (sp.state == sword::S_SHEATHED || j < 0 || j >= cnt || parState.load() <= 0) { trelOk = false; return false; }
+        fing::Aff D; for (int i = 0; i < 9; i++) D.R[i] = (i % 4 == 0) ? 1.0f : 0.0f; D.t[0] = D.t[1] = 0; D.t[2] = 15.0f * g_cfg.unitsPerM * 0.01f;
+        if (sp.probeHold >= 0 && sp.probeHold < cnt) {   // 0.18.31: lift the probe but hold this joint's subtree still (is it the sheath?)
+            static uint16_t hs[512]; static float hsave[64][16]; int nh = fbik::subtree(parents, cnt, sp.probeHold, hs, 512); if (nh > 64) nh = 64; for (int i = 0; i < nh; i++) memcpy(hsave[i], pose + (size_t)hs[i] * 16, 64);
+            const bool r = moveSub(sp.probe, D); for (int i = 0; i < nh; i++) memcpy(pose + (size_t)hs[i] * 16, hsave[i], 64); return r; }
+        return moveSub(sp.probe, D); }
+    static int lastState = sword::S_SHEATHED; static fing::Aff lastMt; static bool lastMtOk = false; static float blendT = 1.0f; static LARGE_INTEGER bq{}, bf{};
+    const int gb = sp.gameBlade;
+    if (gb >= 0 && gb < cnt && j >= 0 && j < cnt && g_animPose && g_animCnt >= cnt) {   // 0.18.37 the game's sword state and its own grip
+        const float *a7 = g_animPose + (size_t)gb * 16 + 12, *a1 = g_animPose + (size_t)j * 16 + 12; const float d[3] = {a7[0] - a1[0], a7[1] - a1[1], a7[2] - a1[2]};
+        const bool gd = fbik::len3f(d) / (g_cfg.unitsPerM * 0.01f) < 90.0f; gameDrawn = gd ? 1 : 0;
+        static int stableN = 0; static fing::Aff lastRel; static bool lastRelOk = false; const int hj = armsD[1].hand;
+        if (!gd && sp.state == sword::S_SHEATHED) sheathXok = false;   // the game has put its sword away: the sheathed model shows it again
+        if (gd && hj >= 0 && hj < cnt) { fing::Aff H = fing::fromPose(g_animPose + (size_t)hj * 16), Hi; if (fing::inv(H, Hi)) { const fing::Aff R = fing::mul(Hi, fing::fromPose(g_animPose + (size_t)gb * 16));
+                bool same = lastRelOk; if (same) { float dm = 0; for (int i = 0; i < 9; i++) dm = fmaxf(dm, fabsf(R.R[i] - lastRel.R[i])); const float dt3[3] = {R.t[0] - lastRel.t[0], R.t[1] - lastRel.t[1], R.t[2] - lastRel.t[2]}; same = dm < 0.02f && fbik::len3f(dt3) < 0.3f * g_cfg.unitsPerM * 0.01f; }
+                stableN = same ? stableN + 1 : 0; lastRel = R; lastRelOk = true;
+                if (stableN == 30) { relHand = R; relHandOk = 1; relHandSave = 1; logf("katana: learned how the game's hand holds its drawn sword (joint %d in the hand: %.1f %.1f %.1f cm)", gb, R.t[0] / (g_cfg.unitsPerM * 0.01f), R.t[1] / (g_cfg.unitsPerM * 0.01f), R.t[2] / (g_cfg.unitsPerM * 0.01f)); } } }
+        else { stableN = 0; lastRelOk = false; }
+    }
+    // 0.18.37 the game's sword shown in Jin's fist: while the game has its sword drawn (and we know its grip), joint 637 = Jin's VR hand o the
+    // game's grip; the katana joint (591) is left as the game draws it (the sheath on the hip). Sheathed by us but the game not yet put
+    // its sword away: 637 is kept in the sheath (where the blade went home) until the game swaps back.
+    if (gb >= 0 && gb < cnt && gameDrawn.load() && relHandOk.load() && parState.load() > 0 && armsD[1].hand >= 0 && armsD[1].hand < cnt) {
+        const fing::Aff P7 = fing::fromPose(pose + (size_t)gb * 16); fing::Aff P7i; if (!fing::inv(P7, P7i)) return false;
+        fing::Aff M7; const fing::Aff Sm = fing::fromPose(pose + (size_t)j * 16);   // the sheath frame (the katana joint, as the game draws it now)
+        if (sp.state == sword::S_SHEATHED && sheathXok) M7 = fing::mul(Sm, sheathX);
+        else if (sp.state != sword::S_SHEATHED) { M7 = fing::mul(fing::fromPose(pose + (size_t)armsD[1].hand * 16), relHand); fing::Aff Si; if (fing::inv(Sm, Si)) { sheathX = fing::mul(Si, M7); sheathXok = true; } }
+        else return false;
+        lastState = sp.state; lastMtOk = false; nGameBlade++;
+        return moveSub(gb, fing::mul(M7, P7i));
+    }
+    if (sp.state == sword::S_SHEATHED || j < 0 || j >= cnt || parState.load() <= 0) { lastMtOk = false; lastState = sp.state; return false; }
     const float n00 = N[0] * N[0] + N[1] * N[1] + N[2] * N[2], n11 = N[4] * N[4] + N[5] * N[5] + N[6] * N[6], n22 = N[8] * N[8] + N[9] * N[9] + N[10] * N[10]; if (!(n00 > 1e-6f && n11 > 1e-6f && n22 > 1e-6f)) return false;
     const float u = g_cfg.unitsPerM * 0.01f;
+    // 0.18.29 (owner: "when drawing, the whole sheath and sword move - just the sword should move"): the BLADE joint (sword_blade_joint,
+    // picked with Ctrl+F7 / Ctrl+F8) moves; the sheath (the katana joint, whose frame carries the rail) stays on the hip. If the blade
+    // joint's subtree holds the sheath joint, the sheath's subtree is put back. No blade joint chosen yet: the whole katana moves (as before).
+    const int b = (sp.blade >= 0 && sp.blade < cnt) ? sp.blade : j;
     const float am[3] = {(sp.axisW[0] * N[0] + sp.axisW[1] * N[1] + sp.axisW[2] * N[2]) / n00, (sp.axisW[0] * N[4] + sp.axisW[1] * N[5] + sp.axisW[2] * N[6]) / n11, (sp.axisW[0] * N[8] + sp.axisW[1] * N[9] + sp.axisW[2] * N[10]) / n22};
-    const fing::Aff Pj = fing::fromPose(pose + (size_t)j * 16); fing::Aff Mt = Pj; for (int c = 0; c < 3; c++) Mt.t[c] += am[c] * sp.s * u;
-    if (sp.state == sword::S_DRAWN) {   // free in the right hand: the katana keeps the place in the hand it had when it left the rails
-        const int hj = armsD[1].hand; if (hj < 0 || hj >= cnt) return false; const fing::Aff Ph = fing::fromPose(pose + (size_t)hj * 16);
-        if (!trelOk) { fing::Aff Hi; if (!fing::inv(Ph, Hi)) return false; Trel = fing::mul(Hi, Mt); trelOk = true; }
-        Mt = fing::mul(Ph, Trel);
-    } else trelOk = false;
-    fing::Aff PjI; if (!fing::inv(Pj, PjI)) return false;
-    if (moveSub(j, fing::mul(Mt, PjI))) { nSwordMoves++; return true; }
+    const fing::Aff Pb = fing::fromPose(pose + (size_t)b * 16); fing::Aff Mt = Pb; for (int c = 0; c < 3; c++) Mt.t[c] += am[c] * sp.s * u;
+    if (!bf.QuadPart) QueryPerformanceFrequency(&bf); LARGE_INTEGER qn; QueryPerformanceCounter(&qn); const float bdt = bq.QuadPart ? fminf((float)(qn.QuadPart - bq.QuadPart) / (float)bf.QuadPart, 0.1f) : 0.0f; bq = qn;
+    if (sp.state == sword::S_DRAWN && sp.katOk) {
+        // 0.18.33 (owner photos: the grip on the wrong side, the katana across the controller): the drawn katana is placed by the GAME
+        // THREAD from your right controller (sp.kat*: the blade frame in the world - the hilt through your controller's grip point, the
+        // blade along the controller's forward, the second hand's steering), and Jin's right fist is snapped onto it (solveArms) - the
+        // katana is steered by the raw controller, the hand is drawn on it (playbook: the pose you draw and the pose you steer with are
+        // different variables). Blade joint = K o Sf^-1 o (the blade joint as it sits in the sheath), all in the model's frame.
+        fing::Aff Nf = fing::fromPose(N), Ni, K, Sfw = fing::fromPose(W), Si; memcpy(K.R, sp.katR, 36); memcpy(K.t, sp.katT, 12); memcpy(Sfw.t, sp.mouthW, 12);
+        if (sp.mouthLok) for (int c = 0; c < 3; c++) Sfw.t[c] = sp.mouthL[0] * W[c] + sp.mouthL[1] * W[4 + c] + sp.mouthL[2] * W[8 + c] + W[12 + c];   // 0.18.38 the mouth from THIS frame's katana joint (the game thread's is a frame older)
+        if (fing::inv(Nf, Ni) && fing::inv(Sfw, Si)) { Mt = fing::mul(Ni, fing::mul(K, fing::mul(Si, fing::mul(Nf, Pb)))); nKatanaInFist++;
+            // 0.18.36 (owner: "the katana should never go beyond Jin's hand, even when the controller is stretched beyond it"; "it sometimes
+            // strays around his hand - have it firmly stay in place"): the katana was placed where the CONTROLLER says; when the arm cannot
+            // reach (or the hand turns less than asked) Jin's fist is elsewhere. Now the katana is carried by the fist as solved: turned by the
+            // difference between the line the fist was asked for and the line it has, and moved by the difference between the asked and the
+            // actual fist centre - it can never leave the hand.
+            if (drawnTgtOk && fistMOk[1]) { float Da[3] = {fistDm[1][0], fistDm[1][1], fistDm[1][2]}; if (fbik::dot3(Da, drawnTgtA) < 0) for (auto &x : Da) x = -x;
+                const fbik::Rot Rf = fbik::arc(drawnTgtA, Da); float Rn[9]; for (int r = 0; r < 3; r++) for (int c = 0; c < 3; c++) Rn[r * 3 + c] = Rf.m[r * 3] * Mt.R[c] + Rf.m[r * 3 + 1] * Mt.R[3 + c] + Rf.m[r * 3 + 2] * Mt.R[6 + c];
+                float d[3] = {Mt.t[0] - drawnTgtP[0], Mt.t[1] - drawnTgtP[1], Mt.t[2] - drawnTgtP[2]}, e[3]; fbik::rotv(Rf, d, e); memcpy(Mt.R, Rn, 36); for (int c = 0; c < 3; c++) Mt.t[c] = fistGm[1][c] + e[c];
+                const float er[3] = {fistGm[1][0] - drawnTgtP[0], fistGm[1][1] - drawnTgtP[1], fistGm[1][2] - drawnTgtP[2]}; katFistErrCm = fbik::len3f(er) / u; nKatFistFix++; } }
+        if (lastState == sword::S_DRAWING && lastMtOk) blendT = 0.0f;   // it came free: ease from the rail to the hand (the draw's gain put the rail ahead)
+    } else if (lastState == sword::S_DRAWN && sp.state == sword::S_SHEATHING && lastMtOk) blendT = 0.0f;   // the tip went into the mouth: ease onto the rail
+    if (blendT < 1.0f && lastMtOk) { blendT = fminf(1.0f, blendT + bdt / 0.18f); const float w = 0.5f - 0.5f * cosf(blendT * 3.14159265f);
+        for (int i2 = 0; i2 < 9; i2++) Mt.R[i2] = lastMt.R[i2] + (Mt.R[i2] - lastMt.R[i2]) * w; for (int c = 0; c < 3; c++) Mt.t[c] = lastMt.t[c] + (Mt.t[c] - lastMt.t[c]) * w;
+        orthoCols(Mt.R); }
+    lastState = sp.state; lastMt = Mt; lastMtOk = true;
+    fing::Aff PbI; if (!fing::inv(Pb, PbI)) return false;
+    // the sheath's own subtree, kept when the blade joint carries it
+    static uint16_t ssub[512]; static float ssave[64][16]; int ns = 0; bool keepSheath = false;
+    const int kj = (sp.keep >= 0 && sp.keep < cnt && sp.keep != b) ? sp.keep : (b != j ? j : -1);   // 0.18.31: sword_keep_joint (the sheath under the katana joint)
+    if (kj >= 0) { int nb = fbik::subtree(parents, cnt, b, sub, 512); for (int i = 0; i < nb; i++) if (sub[i] == kj) { keepSheath = true; break; }
+        if (keepSheath) { ns = fbik::subtree(parents, cnt, kj, ssub, 512); if (ns > 64) ns = 64; for (int i = 0; i < ns; i++) memcpy(ssave[i], pose + (size_t)ssub[i] * 16, 64); } }
+    if (moveSub(b, fing::mul(Mt, PbI))) { if (keepSheath) for (int i = 0; i < ns; i++) memcpy(pose + (size_t)ssub[i] * 16, ssave[i], 64); nSwordMoves++; return true; }
     return false;
 }
 static std::atomic<u64> nArmSolves{0}, nArmSkipped{0}; static std::atomic<float> armW[2];
@@ -1773,6 +1964,35 @@ static void analyseArms(u8 *job, u8 *nd, const float *pose, int cnt) {   // job 
         for (int j = 0; j < cnt; j++) { const float *m = pose + (size_t)j * 16; logf("   arms joint %3d parent %3d %7.1f %7.1f %7.1f%s%s", j, (int)parents[j], m[12], m[13], m[14], fbik::shownJ(pose, j) ? "" : " *", skip[j] ? " [head]" : ""); }
     }
 }
+// 0.18.30 (owner, photos: "my right hand is misaligned" on the hilt, "the left hand needs to be at the sheath's mouth where the guard is,
+// the thumb outstretched along the sheath's ridge, its nail touching the guard", "the misalignment when holding the sword"): the hand
+// is no longer placed by the controller's grip point (Jin's fist is somewhere else relative to it, set by the hand trims) but by its OWN
+// fist: the channel the curled fingers wrap. For each long finger the circle through its three bending joints (knuckle, middle, end)
+// has its centre on the handle's axis (a finger wrapped round a cylinder); the centres' mean is the channel point G and index -> little
+// is its direction D. Measured on the posed hand each frame and kept in the hand's own frame, so before the next solve the wrist target
+// can be moved / turned so that G lands on the sword's line and D along it (the right hand: at the hilt where you took it; the left: at
+// the sheath, as far below the mouth as its thumb reaches - the thumb is then aimed along the sheath's surface to the guard). With
+// the katana free in the hand it is the other way round: the katana is placed so its hilt runs through G along D.
+// 0.18.32 the two-handed line: turn the one-handed direction d toward the hand line L (both unit), 1:1 up to 55 deg and compressed
+// asymptotically toward 90 deg past it (FEAR VR's soft steer limit), by fade (0..1)
+static void twoSteer(const float *d, const float *L, float fade, float *out) {
+    const float a = acosf(fminf(1.0f, fmaxf(-1.0f, fbik::dot3(d, L)))); const float soft = 0.96f, mx = 1.57f;
+    const float a2 = a <= soft ? a : soft + (mx - soft) * (1.0f - expf(-(a - soft) / (mx - soft)));
+    const fbik::Rot Rl = fbik::scaled(fbik::arc(d, L), (a > 1e-4f ? a2 / a : 1.0f) * fade); fbik::rotv(Rl, d, out); }
+static bool circumC(const float *a, const float *b, const float *c, float *o) {
+    const float ab[3] = {b[0] - a[0], b[1] - a[1], b[2] - a[2]}, ac[3] = {c[0] - a[0], c[1] - a[1], c[2] - a[2]}; float n[3]; fbik::cross3(ab, ac, n);
+    const float nn = fbik::dot3(n, n); if (!(nn > 1e-6f)) return false; float x1[3], x2[3]; fbik::cross3(n, ab, x1); fbik::cross3(ac, n, x2);
+    const float lab = fbik::dot3(ab, ab), lac = fbik::dot3(ac, ac); for (int k = 0; k < 3; k++) o[k] = a[k] + (lac * x1[k] + lab * x2[k]) / (2.0f * nn); return std::isfinite(o[0]) && std::isfinite(o[1]) && std::isfinite(o[2]); }
+static bool measureFist(const float *pose, int side, float *G, float *D, float *radOut) {
+    const fing::Hand &H = fingD[side]; if (!H.ok) return false; float cc[fing::MAXF][3]; bool isIdx[fing::MAXF]; int n = 0; float rad = 0;
+    for (int c = 0; c < H.nf && n < fing::MAXF; c++) { const fing::Chain &C = H.f[c]; if (C.thumb || C.n - C.first < 3) continue;
+        const float *a = fbik::P(pose, C.j[C.first]), *b = fbik::P(pose, C.j[C.first + 1]), *e = fbik::P(pose, C.j[C.first + 2]);
+        if (!circumC(a, b, e, cc[n])) continue; const float r[3] = {b[0] - cc[n][0], b[1] - cc[n][1], b[2] - cc[n][2]}; rad += fbik::len3f(r); isIdx[n] = C.index; n++; }
+    if (n < 2) return false; for (int k = 0; k < 3; k++) { G[k] = 0; for (int i = 0; i < n; i++) G[k] += cc[i][k] / (float)n; }
+    int ix = 0; for (int i = 0; i < n; i++) if (isIdx[i]) ix = i; int lt = ix; float bd = -1; for (int i = 0; i < n; i++) { const float d[3] = {cc[i][0] - cc[ix][0], cc[i][1] - cc[ix][1], cc[i][2] - cc[ix][2]}; const float l = fbik::len3f(d); if (l > bd) { bd = l; lt = i; } }
+    for (int k = 0; k < 3; k++) D[k] = cc[lt][k] - cc[ix][k]; if (!fbik::norm3(D)) return false; if (radOut) *radOut = rad / (float)n; return true; }
+static int thumbChain(int side) { const fing::Hand &H = fingD[side]; for (int c = 0; c < H.nf; c++) if (H.f[c].thumb && H.f[c].n - H.f[c].first >= 2) return c; return -1; }
+static void thumbTip(const float *pose, const fing::Chain &C, float *tip) { const float *l = fbik::P(pose, C.j[C.n - 1]), *q = fbik::P(pose, C.j[C.n - 2]); for (int k = 0; k < 3; k++) tip[k] = l[k] + (l[k] - q[k]) * 0.75f; }
 static bool solveArms(u8 *nd, float *pose, int cnt, float bodyA) {   // job thread, after the head is hidden and the body turned
     if (!armsReady.load() || !armsWant.load() || !g_fp.arms || ridingNow.load()) { nArmSkipped++; return false; }
     const int k = apubIdx.load(std::memory_order_acquire); if (k < 0) return false; const ArmPub ap = apub[k];
@@ -1780,16 +2000,71 @@ static bool solveArms(u8 *nd, float *pose, int cnt, float bodyA) {   // job thre
     if (!fbik::norm3(n0) || !fbik::norm3(n1) || !fbik::norm3(n2)) return false;
     auto toModelP = [&](const float *w, float *o) { const float d[3] = {w[0] - N[12], w[1] - N[13], w[2] - N[14]}; o[0] = fbik::dot3(d, n0); o[1] = fbik::dot3(d, n1); o[2] = fbik::dot3(d, n2); };
     auto toModelD = [&](const float *w, float *o) { o[0] = fbik::dot3(w, n0); o[1] = fbik::dot3(w, n1); o[2] = fbik::dot3(w, n2); };
-    fbik::Params prm; prm.bodyYaw = bodyA; prm.twist = g_fp.forearmTwist; prm.stretch = g_fp.armStretch; bool any = false;
-    for (int side = 0; side < 2; side++) {
+    fbik::Params prm; prm.bodyYaw = bodyA; prm.twist = g_fp.forearmTwist; prm.stretch = g_fp.armStretch; bool any = false; drawnTgtOk = false;
+    const int spk = spubIdx.load(std::memory_order_acquire); SwordPub sp; if (spk >= 0) sp = spub[spk];   // 0.18.30 the sword the hands hold
+    for (int si = 0; si < 2; si++) {
+        const int side = 1 - si;   // 0.18.32: the right hand first - the left one may take the drawn katana's hilt from it (two hands)
         const fbik::Arm &A = armsD[side]; if (!ap.ok[side] || ap.w[side] <= 0.0f || A.hand < 0 || A.hand >= cnt || A.clav < 0) continue;
         fbik::Target T; toModelP(ap.pos[side], T.pos); toModelD(ap.fing[side], T.fing); toModelD(ap.thumb[side], T.thumb); T.orient = true;
         const float w = ap.w[side] * (1.0f - gateW.load()); if (w <= 0.001f) continue;
+        const float u = g_cfg.unitsPerM * 0.01f;
+        // 0.18.30 / 0.18.33 the fist's channel onto the sword's line (see measureFist). The line and the point on it, per hand:
+        //  - right, katana in the sheath / being drawn / going home: the rail, at s + hiltT out of the mouth (where you hold the hilt)
+        //  - right, katana drawn: the drawn katana's hilt (sp.kat*, steered by your controller), at hiltT from the guard
+        //  - left on the sheath: the rail, sp.sheathG from the mouth (your captured grip, else sword_sheath_hand_cm)
+        //  - left on the drawn hilt (two hands): the drawn katana's hilt, sp.twoGap further toward the pommel than the right hand
+        float Am[3] = {0, 0, 0}, P0[3] = {0, 0, 0}, ww = 0.0f, rotOnlyAx = 0.0f;   // rotOnlyAx: 0 = place on the line; -1 / +1 = only turn, with that sign of index -> little along it
+        if (spk >= 0) {
+            const bool drawnLine = sp.katOk && (side == 1 ? sp.dSnapW > 0.0f : sp.twoW > 0.0f);
+            if (drawnLine) { float kt[3]; toModelD(sp.katAx, Am); toModelP(sp.katT, kt); const float off = (side == 1 ? sp.hiltT : sp.hiltT + sp.twoGap) * u;
+                if (fbik::norm3(Am)) for (int k = 0; k < 3; k++) P0[k] = kt[k] + Am[k] * off; ww = side == 1 ? sp.dSnapW : sp.twoW; }
+            else if (sp.snapW[side] > 0.0f && side == 0 && !sp.twoHand && sp.capNoSnap[0]) {   // 0.18.36 the captured left grip: kept where you put it, only turned
+                // (owner: "the left hand is in the right place but inverted - the thumb should go up, toward the hilt"): the fist's channel is turned
+                // onto the sheath's line with the index on the hilt side (index -> little pointing away from the hilt) about its own centre
+                toModelD(sp.axisW, Am); if (fbik::norm3(Am)) { rotOnlyAx = -1.0f; ww = sp.snapW[0]; } }
+            else if (sp.snapW[side] > 0.0f && !(side == 0 && sp.twoHand) && !sp.capNoSnap[side]) {   /* 0.18.35: a captured grip is shown as captured (no snap) */ float mo[3]; toModelD(sp.axisW, Am); toModelP(sp.mouthW, mo); const float off = (side == 1 ? sp.hiltAx : sp.sheathG) * u;
+                if (fbik::norm3(Am)) for (int k = 0; k < 3; k++) P0[k] = mo[k] + Am[k] * off; ww = sp.snapW[side]; }
+            ww *= sp.holdW[side] > 0.3f ? 1.0f : sp.holdW[side] / 0.3f;
+        }
+        if (ww > 0.0f && fistLocOk[side] && A.frame && fbik::len3f(Am) > 0.5f) {
+            const fbik::Rot Rh = fbik::frameTo(A.fl, A.tl, T.fing, T.thumb); float G[3], D[3]; fbik::rotv(Rh, fistGl[side], G); for (int k = 0; k < 3; k++) G[k] += T.pos[k]; fbik::rotv(Rh, fistDl[side], D);
+            const float sg = rotOnlyAx != 0.0f ? rotOnlyAx : fbik::dot3(D, Am) >= 0.0f ? 1.0f : -1.0f; const float tD[3] = {Am[0] * sg, Am[1] * sg, Am[2] * sg}; const fbik::Rot Rc = fbik::arc(D, tD);
+            const fbik::Rot Rw = fbik::scaled(Rc, ww);
+            if (rotOnlyAx != 0.0f) memcpy(P0, G, 12);   // turn about the fist's centre, keep it where it is
+            if (side == 1 && spk >= 0 && sp.katOk && sp.dSnapW > 0.0f) { memcpy(drawnTgtP, P0, 12); memcpy(drawnTgtA, tD, 12); drawnTgtOk = true; }
+            float rel[3] = {T.pos[0] - G[0], T.pos[1] - G[1], T.pos[2] - G[2]}, rr[3]; fbik::rotv(Rc, rel, rr);
+            for (int k = 0; k < 3; k++) T.pos[k] += (P0[k] + rr[k] - T.pos[k]) * ww;
+            float f2[3], t2[3]; fbik::rotv(Rw, T.fing, f2); fbik::rotv(Rw, T.thumb, t2); memcpy(T.fing, f2, 12); memcpy(T.thumb, t2, 12); nSnapped[side]++;
+        }
+        { const float *Sh = fbik::P(pose, A.sh); const float d[3] = {T.pos[0] - Sh[0], T.pos[1] - Sh[1], T.pos[2] - Sh[2]}; armExt[side] = fbik::len3f(d) / fmaxf(1e-3f, A.upper + A.lower); }
         fbik::solveArm(pose, A, side, T, w, prm); any = true;
         if (fingState.load() == 1 && g_fp.fingers) {   // 0.18.18: the fingers, detached from the animation
             fing::Curl cu; cu.grip = ap.grip[side]; cu.thumb = ap.thumbC[side]; cu.index = g_fp.indexTrigger ? ap.trig[side] : ap.grip[side];   // 0.18.20: index = the trigger, thumb = the thumb touch
             float pm[3]; toModelD(ap.palm[side], pm); fing::Tune tn; tn.sign = g_fp.fingerSign; tn.relaxed = g_fp.fingerRelaxed;
+            holdBlend(side, cu, tn);   // 0.18.28 on the hilt / the sheath
             fing::apply(pose, fingD[side], cu, pm, w, tn); nFingPosed++;
+            {   // 0.18.30 measure the fist (model + hand-local) for the next solve and the katana in the hand
+                float G[3], D[3], rad = 0; fistMOk[side] = sp.holdW[side] > 0.5f && measureFist(pose, side, G, D, &rad);
+                if (fistMOk[side]) { memcpy(fistGm[side], G, 12); memcpy(fistDm[side], D, 12); fistRadCm[side] = rad / (g_cfg.unitsPerM * 0.01f);
+                    fing::Aff Mh = fing::fromPose(pose + (size_t)A.hand * 16), Mi; if (fing::inv(Mh, Mi)) {
+                        for (int k = 0; k < 3; k++) { fistGl[side][k] = Mi.R[k * 3] * G[0] + Mi.R[k * 3 + 1] * G[1] + Mi.R[k * 3 + 2] * G[2] + Mi.t[k]; fistDl[side][k] = Mi.R[k * 3] * D[0] + Mi.R[k * 3 + 1] * D[1] + Mi.R[k * 3 + 2] * D[2]; }
+                        const int tc = thumbChain(side); if (tc >= 0) { const fing::Chain &C = fingD[side].f[tc]; const float *pv = fbik::P(pose, C.j[C.first]); float tp[3]; thumbTip(pose, C, tp);
+                            const float dl[3] = {tp[0] - pv[0], tp[1] - pv[1], tp[2] - pv[2]}; thLen[side] = fbik::len3f(dl);
+                            for (int k = 0; k < 3; k++) thBl[side][k] = Mi.R[k * 3] * pv[0] + Mi.R[k * 3 + 1] * pv[1] + Mi.R[k * 3 + 2] * pv[2] + Mi.t[k]; }
+                        fistLocOk[side] = true; } }
+            }
+            if (side == 0 && spk >= 0 && sp.snapW[0] > 0.0f && sp.holdW[0] > 0.0f && !sp.twoHand) {   // 0.18.30 the left thumb laid along the sheath, its tip at the guard
+                const int tc = thumbChain(0); float Am[3], mouthM[3]; toModelD(sp.axisW, Am); toModelP(sp.mouthW, mouthM);
+                if (tc >= 0 && fbik::norm3(Am)) { const fing::Chain &C = fingD[0].f[tc]; const float *pv0 = fbik::P(pose, C.j[C.first]); const float pv[3] = {pv0[0], pv0[1], pv0[2]};
+                    const float u = g_cfg.unitsPerM * 0.01f; const float dm[3] = {pv[0] - mouthM[0], pv[1] - mouthM[1], pv[2] - mouthM[2]}; const float pa = fbik::dot3(dm, Am);
+                    float rn[3] = {dm[0] - Am[0] * pa, dm[1] - Am[1] * pa, dm[2] - Am[2] * pa};
+                    if (sp.capNoSnap[0]) { float tp[3]; thumbTip(pose, C, tp); const float d0[3] = {tp[0] - pv[0], tp[1] - pv[1], tp[2] - pv[2]};   // 0.18.36 captured: the thumb straight up the sheath, toward the hilt
+                        fbik::moveSet(pose, C.sub[C.first], C.nSub[C.first], fbik::scaled(fbik::arc(d0, Am), sp.snapW[0] * sp.holdW[0]), pv); nThumbAimed++; }
+                    else if (fbik::norm3(rn)) { float tp[3]; thumbTip(pose, C, tp); const float d0[3] = {tp[0] - pv[0], tp[1] - pv[1], tp[2] - pv[2]};
+                        const float Pt[3] = {mouthM[0] - Am[0] * sp.thumbGap * u + rn[0] * sp.sheathR * u, mouthM[1] - Am[1] * sp.thumbGap * u + rn[1] * sp.sheathR * u, mouthM[2] - Am[2] * sp.thumbGap * u + rn[2] * sp.sheathR * u};
+                        const float d1[3] = {Pt[0] - pv[0], Pt[1] - pv[1], Pt[2] - pv[2]};
+                        fbik::moveSet(pose, C.sub[C.first], C.nSub[C.first], fbik::scaled(fbik::arc(d0, d1), sp.snapW[0] * sp.holdW[0]), pv); nThumbAimed++; } }
+            }
         }
     }
     if (any) nArmSolves++;
@@ -1850,12 +2125,19 @@ static void hideInPose(u8 *nd, float *pose) {
             const float n00 = N[0] * N[0] + N[1] * N[1] + N[2] * N[2], n11 = N[4] * N[4] + N[5] * N[5] + N[6] * N[6];
             if (n00 > 1e-6f && n11 > 1e-6f) { sh[0] = (w0 * N[0] + w1 * N[1]) / n00; sh[1] = (w0 * N[4] + w1 * N[5]) / n11;
                 const float l = sqrtf(sh[0] * sh[0] + sh[1] * sh[1]), mx = g_fp.underMaxCm * s; if (l > mx && l > 1e-4f) { sh[0] *= mx / l; sh[1] *= mx / l; } }
+            // 0.18.31 (owner: "sometimes Jin's body would randomly move behind me to the right"; the log: your head 57 cm from Jin's while
+            // reaching for the sword, standing): leaning to the sword moved the whole body (and the sheath with it) under your head. While
+            // a hand is near / on the katana the body stays where it is (your hips do not follow a lean either); it follows again after.
+            static float held[2] = {0, 0}; if (underHold.load()) { sh[0] = held[0]; sh[1] = held[1]; nUnderHeld++; } else { held[0] = sh[0]; held[1] = sh[1]; }
+            {   // where the offset points, in the drawn body's frame (forward / left of Jin as drawn), for the log
+                const float b = bodyYaw.load(std::memory_order_relaxed), c = cosf(b), sn = sinf(b); underFwdCm = (c * sh[0] + sn * sh[1]) / s; underLeftCm = (-sn * sh[0] + c * sh[1]) / s; }
         }
         {   // 0.18.17 (owner: "Jin's body should smoothly move to follow the headset, rather than immediately centre below it"): low-pass
             // (fp_body_under_follow_s 0.5); the filter steps on fresh poses only (copied poses reuse the last value)
             static float shF[2] = {0, 0}; static u64 shMs = 0;
             if (!copied) { const u64 nw = GetTickCount64(); const float dts = shMs ? fminf((float)(nw - shMs) * 0.001f, 0.1f) : 0.0f; shMs = nw;
                 const float k = g_fp.underTau > 0.0f ? 1.0f - expf(-dts / g_fp.underTau) : 1.0f; shF[0] += (sh[0] - shF[0]) * k; shF[1] += (sh[1] - shF[1]) * k; }
+            { static float lastF[2] = {0, 0}; static u64 jMs = 0; const u64 nw2 = GetTickCount64(); if (nw2 - jMs >= 1000) { const float d[2] = {shF[0] - lastF[0], shF[1] - lastF[1]}; const float jl = sqrtf(d[0] * d[0] + d[1] * d[1]) / s; if (jl > underJumpCm.load()) underJumpCm = jl; lastF[0] = shF[0]; lastF[1] = shF[1]; jMs = nw2; } }
             sh[0] = shF[0]; sh[1] = shF[1]; underCm = sqrtf(sh[0] * sh[0] + sh[1] * sh[1]) / s;
         }
         {   // 0.18.25 (owner: "when I move and Jin's body moves too, the camera kind of rotates around the body"; "the headset follows the
@@ -1873,7 +2155,7 @@ static void hideInPose(u8 *nd, float *pose) {
                 T[0] = T[1] = 0.0f;
                 if (!ridingNow.load() && g_fp.headRigid) { const float b = bodyYaw.load(std::memory_order_relaxed), c = cosf(b), sn = sinf(b);
                     T[0] = (c * hzS[0] - sn * hzS[1]) - H0[0]; T[1] = (sn * hzS[0] + c * hzS[1]) - H0[1];
-                    const float l = sqrtf(T[0] * T[0] + T[1] * T[1]), mx = 40.0f * s; if (!(l < mx)) { T[0] = T[1] = 0.0f; } }   // fail closed on nonsense
+                    const float l = sqrtf(T[0] * T[0] + T[1] * T[1]), mx = 70.0f * s; if (!std::isfinite(l)) { T[0] = T[1] = 0.0f; } else if (l > mx) { T[0] *= mx / l; T[1] *= mx / l; nTClamped++; } }   // 0.18.37 (owner: "moving back / right / left, Jin's body keeps teleporting behind me"): 0.18.25 dropped T to 0 past 40 cm - running backward the body turned 180 deg puts the run lean (head ~20 cm ahead of the root) on the other side: T ~ 40 cm, flipping between T and 0 every frame. Now clamped smoothly at 70 cm
                 hzT[0] = T[0]; hzT[1] = T[1];
             }
             sh[0] += T[0]; sh[1] += T[1];
@@ -2007,6 +2289,7 @@ static void hAnimJob(u8 *job) {
     nHeroJobs++;
     float *pose = *(float **)(job + 0xA8); if (!pose) { nJobsNoBuf++; return; }
     snapTake(nd, pose);   // 0.18.25: the game's own pose / world matrices, before the mod changes them (put back when the game freezes)
+    g_animPose = nullptr; g_animCnt = 0; for (int q = 0; q < 2; q++) if (snap[q].pose == pose && snap[q].cnt > 0) { g_animPose = snap[q].p; g_animCnt = snap[q].cnt; }   // 0.18.34
     if (g_fp.arms && !armsReady.load() && parState.load() >= 0) { int cnt = nJ; for (int b = 0; b < 2; b++) if (*(float **)(nd + 0x508 + b * 0x18) == pose) { const int c = *(int *)(nd + 0x510 + b * 0x18); if (c > 0 && c < cnt) cnt = c; } analyseArms(job, nd, pose, cnt); }
     if (armsReady.load()) {   // 0.18.9: the ANIMATION lifts a hand to head height (climbing, ledges, grappling, the flute) -> the game owns the arms
         const int k2 = hpubIdx.load(std::memory_order_acquire); if (k2 >= 0 && hpub[k2].head >= 0 && hpub[k2].head < nJ) {
@@ -2016,7 +2299,8 @@ static void hAnimJob(u8 *job) {
             const u64 tj = GetTickCount64(), sinceJ = tj - vrin::jumpAt.load(), sinceAir = tj - airAt.load();
             const bool jumping = sinceJ < 1200 || (sinceJ < 4000 && sinceAir < 600);
             if (jumping && sinceJ >= 1200) nJumpHeld++;
-            for (int sd = 0; sd < 2 && !jumping; sd++) { const int h = armsD[sd].hand; if (h >= 0 && h < nJ && pose[(size_t)h * 16 + 14] > hz - 15.0f * s) { raisedUntil = GetTickCount64() + 400; nRaised++; break; } } } }
+            bool swordHeld = false; { const int ks = spubIdx.load(std::memory_order_acquire); if (ks >= 0) swordHeld = spub[ks].state != sword::S_SHEATHED || spub[ks].onHilt; }   // 0.18.37: the game's draw / sheathe raises the animated hands - the katana in your hands keeps the VR arms
+            for (int sd = 0; sd < 2 && !jumping && !swordHeld; sd++) { const int h = armsD[sd].hand; if (h >= 0 && h < nJ && pose[(size_t)h * 16 + 14] > hz - 15.0f * s) { raisedUntil = GetTickCount64() + 400; nRaised++; break; } } } }
     {   // 0.18.13 idle hold: only a fresh pose of an active first person (a copied pose already carries it)
         const int k3 = hpubIdx.load(std::memory_order_acquire);
         if (k3 >= 0 && hpub[k3].head >= 0 && hpub[k3].head < nJ && (u32)(frameCtr() - hideFrame.load(std::memory_order_relaxed)) <= 2u && len3(pose + (size_t)hpub[k3].head * 16) >= 0.01f) {
@@ -2034,6 +2318,7 @@ static void collapse() {}   // 0.17.2's world-array collapse is gone (the GPU ne
 // anchor at every render-camera update (the last one before the frame snapshot sees the animated hero; the low-pass filters
 // advance once per tick from the previous tick's state, so repeating is idempotent) and the right tick of the pair REUSES the
 // left tick's final anchor - one body pose per pair, like one head-pose sample per pair (playbook ch10: both eyes from one moment).
+static float frameAvFast = 1;
 static float relUpC = 0, relHC[3] = {0, 0, 0}, latC = 0, latF = 0, frameAv = 1, frameAh = 1; static bool recompute = false; static u32 pairLeftFrame = 0xFFFFFFF0u;
 static std::atomic<float> lrDiffMax{0}, headLat{0}; static std::atomic<u64> nRecompute{0}, nPairReuse{0};
 static bool anchorFrom(float out[3]) {
@@ -2059,7 +2344,11 @@ static bool anchorFrom(float out[3]) {
     }
     const float up = (hp[0] - root[12]) * U[0] + (hp[1] - root[13]) * U[1] + (hp[2] - root[14]) * U[2]; headUp = up;
     float hz[3]; for (int c = 0; c < 3; c++) hz[c] = (hp[c] - root[12 + c]) - up * U[c];
-    relUpF = relUpC + (up - relUpC) * frameAv; for (int c = 0; c < 3; c++) relHF[c] = relHC[c] + (hz[c] - relHC[c]) * frameAh;
+    {   // 0.18.37 (owner: "the camera smoothing when getting up from a crouch is too slow - the body moves before the headset"): the head's
+        // height is smoothed (fp_vertical_smoothing_s 0.35) to calm the gait bob; a change bigger than a bob (crouch / stand: > 4 cm off)
+        // now follows in 0.06 s, fully past 10 cm
+        const float err = fabsf(up - relUpC) / (g_cfg.unitsPerM * 0.01f); const float kf = fminf(1.0f, fmaxf(0.0f, (err - 4.0f) / 6.0f));
+        relUpF = relUpC + (up - relUpC) * (frameAv + (frameAvFast - frameAv) * kf); } for (int c = 0; c < 3; c++) relHF[c] = relHC[c] + (hz[c] - relHC[c]) * frameAh;
     const float s = g_cfg.unitsPerM * 0.01f;   // cm -> game units
     const float rz = standApplied.load();   // 0.18.9: the drawn body raised by stand tall - the eyes go with it
     float hw[3] = {relHF[0], relHF[1], relHF[2]};
@@ -2117,7 +2406,7 @@ static bool update(float *gm) {
         if (!relInit) { float hz[3]; for (int c = 0; c < 3; c++) hz[c] = (hp[c] - root[12 + c]) - up * U[c]; relUpC = up; for (int c = 0; c < 3; c++) relHC[c] = hz[c]; latC = latF; relInit = true; frameAv = frameAh = 1; }
         else {
             relUpC = relUpF; for (int c = 0; c < 3; c++) relHC[c] = relHF[c]; latC = latF;   // the end state of the previous tick
-            frameAv = g_fp.vertTau > 0.0f ? 1.0f - expf(-dtc / g_fp.vertTau) : 1.0f; frameAh = g_fp.horizTau > 0.0f ? 1.0f - expf(-dtc / g_fp.horizTau) : 1.0f;
+            frameAv = g_fp.vertTau > 0.0f ? 1.0f - expf(-dtc / g_fp.vertTau) : 1.0f; frameAvFast = 1.0f - expf(-dtc / 0.06f); frameAh = g_fp.horizTau > 0.0f ? 1.0f - expf(-dtc / g_fp.horizTau) : 1.0f;
         }
         bodyStep(root, U, F, wasActive);   // 0.18.5
         {   // 0.18.9 stand tall: the standing head height is tracked (rises at once, sinks over ~20 s); a SHALLOW drop below it while
@@ -2254,11 +2543,14 @@ static void hListener(u8 *mgr) {
 typedef void (*FnE)(u8 *); static FnE oEmitter = nullptr;
 typedef int (*FnSetPos)(u64, const float *); static FnSetPos setPos = nullptr;
 static float selfRadiusCm = 35.0f, selfAheadCm = 25.0f; static std::atomic<int> selfOn{1}; static std::atomic<u64> nSelf{0}, nEmit{0};
-static bool emitterWorld(u8 *src, float *p) {   // the game's own formula (0x5B5D90)
-    if (!src || !readable(src, 0x60)) return false; u8 *own = *(u8 **)(src + 0x38); const int j = *(int *)(src + 0x48); const float *L = (const float *)(src + 0x50);
-    if (!own || !readable(own, 0x288)) return false; const int cid = fp::classId(own); if (cid < 10 || cid > 219) return false;
+// 0.18.27 (owner: "the performance was much worse this time"; log: 55 eye renders / s against ~120 in 0.18.25): 0.18.26 checked every
+// emitter (~2100 / s) with five VirtualQuery calls - a system call that walks the whole address space - on the audio update. Now
+// nothing is queried: the game itself has just used the emitter, its source and owner, so the only test is a pointer compare - is the
+// owner Jin's own node? - and only his emitters (a handful) go any further.
+static bool emitterWorld(u8 *src, float *p) {   // the game's own formula (0x5B5D90); src / owner already validated by the caller
+    u8 *own = *(u8 **)(src + 0x38); const int j = *(int *)(src + 0x48); const float *L = (const float *)(src + 0x50);
     const float *M = (const float *)(own + 0x150);
-    if (j >= 0) { const float *W = *(const float **)(own + 0x278); if (!W || j > 4096 || !readable(W + (size_t)(j + 1) * 16, 64)) return false; M = W + (size_t)(j + 1) * 16; }
+    if (j >= 0) { const float *W = *(const float **)(own + 0x278); if (!W || j >= fp::nJ) return false; M = W + (size_t)(j + 1) * 16; }
     for (int c = 0; c < 3; c++) p[c] = L[0] * M[c] + L[1] * M[4 + c] + L[2] * M[8 + c] + M[12 + c];
     return std::isfinite(p[0]) && std::isfinite(p[1]) && std::isfinite(p[2]);
 }
@@ -2270,8 +2562,10 @@ static bool (*selfUse)() = []() -> bool { return g_cfg.xr == 4 && fp::activeNow 
 static void hEmitter(u8 *e) {
     oEmitter(e); nEmit++;
     if (!e || !selfOn.load() || !on.load() || !setPos || !selfUse()) return;
+    u8 *hero = fp::node; if (!hero) return;
+    u8 *src = *(u8 **)(e + 0x28); if (!src || *(u8 **)(src + 0x38) != hero) return;   // not Jin's: done (no memory queries on this path)
     float H[16]; if (!read(H)) return;
-    u8 *src = readable(e, 0x30) ? *(u8 **)(e + 0x28) : nullptr; float w[3]; if (!emitterWorld(src, w)) return;
+    float w[3]; if (!emitterWorld(src, w)) return;
     const float sc = g_cfg.unitsPerM * 0.01f; const float d[3] = {w[0] - H[12], w[1] - H[13], w[2] - H[14]};
     if (d[0] * d[0] + d[1] * d[1] + d[2] * d[2] > selfRadiusCm * selfRadiusCm * sc * sc) return;
     const u64 id = *(const u64 *)(e + 0x18); if (id == 0 || id >= (u64)-32) return;
@@ -2292,18 +2586,46 @@ static void hEmitter(u8 *e) {
 namespace swd {
 static float grip[2][3]; static int gripOk[2] = {0, 0}; static float squeeze[2] = {0, 0}, trigger[2] = {0, 0}, stick[2][2] = {{0, 0}, {0, 0}}; static u32 btns[2] = {0, 0};
 static sword::Sys sys; static sword::Cfg cfg; static int on = 1, joint = 646, calOk = 0; static float mouthL[3] = {0, 0, 0}, axisL[3] = {1, 0, 0};
-static std::atomic<int> probeIdx{-1}; static const int kCand[] = {646, 647, 645, 653, 654, 652, 591, 592, 593, 594, 586, 587, 588, 589, 590};
+static std::atomic<int> probeIdx{-1}, probeHold{-1}; static int keepJ = -1; static const int kCand[] = {646, 647, 645, 653, 654, 652, 591, 592, 593, 594, 586, 587, 588, 589, 590};
 static float railMouth[3], railAxis[3]; static bool railOk = false; static std::atomic<int> calReq{0};
+static int gameDraw = 0; static bool gameDrawn = false; static u64 nPinned[2] = {0, 0}; static float fw[2] = {0, 0};   // 0.18.28 (0.18.29: the game's draw off by default - owner: "free flowing combat, not the game's")
+// 0.18.29 hands locked on the sword, the blade joint apart from the sheath, sheathing, the game's attacks held off
+static float gripM[2][16]; static std::atomic<int> resetReq{0}; static int blade = -1; static std::atomic<int> probeMode{0};   // probeMode 0 = the sheath / katana joint (kCand), 1 = the blade (fp::bladeCand)
+static fing::Aff lockL[2], drawLock; static bool lockOn[2] = {false, false}, drawLockOk = false; static float lw[2] = {0, 0}, bladeAxF[3] = {0, 0, 1};
+static float guardCfg = -1.0f, rightHandCm = 9.0f, leftHandCm = 4.5f; static float pubML[3] = {0, 0, 0}, pubAL[3] = {0, 0, 1}; static bool pubMLok = false; static std::atomic<int> adjReq[2]; /* 0.18.38 */
+static float intoGripCm = 0.0f, thumbGapCm = 0.3f, sheathRCm = 1.6f; static int wristFwd = 1; static float wwt = 0.0f; static int fromJoints = 1, underHoldOn = 1; static float bladePitch = 0.0f; static bool twoHand = false, twoHover = false; static float twoGap = 10.0f, twoT = 0.0f; static u64 nTwoFrames = 0; /* 0.18.32 */ static float tw2 = 0.0f, fwdT = 0.0f, dsw = 0.0f, bladeSign = 0.0f; static int bladeSignCfg = 0; static fing::Aff cap[2]; static bool capOk[2] = {false, false}; static float drawRot[9] = {1, 0, 0, 0, 1, 0, 0, 0, 1}; static bool drawRotOk = false; static int edgeFlip = 0; static int gameBladeJ = -1, useGameBlade = 0; static u64 gbReqAt = 0; static int gbReqKind = 0, gbResends = 0; static u64 nGbDraw = 0, nGbSheathe = 0; static std::atomic<int> capReq[2]; static u64 capAt[2] = {0, 0}; /* 0.18.33 */ static int blockAttacks = 1; static float secTipMs = 0.0f, lastTip[3] = {0, 0, 0}; static bool lastTipOk = false; static u64 nBlockedFrames = 0;
 // per-second log accumulators
 static u32 secBtn[2] = {0, 0}; static float secTrig[2] = {0, 0}, secGrip[2] = {0, 0}, secStick[2][2]; static u64 secHeldS = 0, secHeldH = 0, secFrames = 0; static float secMaxS = 0;
 static void iniWrite(const wchar_t *k, float v) { wchar_t ini[MAX_PATH]; swprintf(ini, MAX_PATH, L"%ls\\gotvr.ini", g_dir); wchar_t b[32]; swprintf(b, 32, L"%.3f", v); WritePrivateProfileStringW(L"gotvr", k, b, ini); }
 static void load(const wchar_t *ini) {
     auto f = [&](const wchar_t *k, float d) { wchar_t b[32]; GetPrivateProfileStringW(L"gotvr", k, L"", b, 32, ini); return b[0] ? (float)_wtof(b) : d; };
     on = GetPrivateProfileIntW(L"gotvr", L"sword_draw", 1, ini) ? 1 : 0; joint = GetPrivateProfileIntW(L"gotvr", L"sword_joint", 646, ini);
-    cfg.bladeCm = f(L"sword_blade_cm", 72.0f); cfg.hiltCm = f(L"sword_hilt_cm", 25.0f); cfg.grabCm = f(L"sword_grab_cm", 12.0f); cfg.needSheathHand = GetPrivateProfileIntW(L"gotvr", L"sword_need_sheath_hand", 1, ini) ? 1 : 0;
+    cfg.bladeCm = f(L"sword_blade_cm", 72.0f); cfg.hiltCm = f(L"sword_hilt_cm", 25.0f); cfg.grabCm = f(L"sword_grab_cm", 12.0f); cfg.hiltGrabCm = f(L"sword_hilt_grab_cm", 10.0f); cfg.needSheathHand = GetPrivateProfileIntW(L"gotvr", L"sword_need_sheath_hand", 0, ini) ? 1 : 0; gameDraw = 0; blade = GetPrivateProfileIntW(L"gotvr", L"sword_blade_joint", -1, ini); keepJ = GetPrivateProfileIntW(L"gotvr", L"sword_keep_joint", -1, ini);
+    cfg.drawCm = f(L"sword_draw_pull_cm", 40.0f); intoGripCm = f(L"sword_hand_into_grip_cm", 0.0f); thumbGapCm = f(L"sword_thumb_gap_cm", 0.3f); wristFwd = GetPrivateProfileIntW(L"gotvr", L"sword_blade_forward", 1, ini) ? 1 : 0; fromJoints = GetPrivateProfileIntW(L"gotvr", L"sword_rail_from_joints", 1, ini) ? 1 : 0; bladePitch = f(L"sword_blade_pitch_deg", 0.0f); bladeSignCfg = GetPrivateProfileIntW(L"gotvr", L"sword_blade_sign", 0, ini); bladeSignCfg = bladeSignCfg > 0 ? 1 : bladeSignCfg < 0 ? -1 : 0; underHoldOn = GetPrivateProfileIntW(L"gotvr", L"sword_hold_body_still", 1, ini) ? 1 : 0; sheathRCm = f(L"sword_sheath_radius_cm", 1.6f); cfg.freeExt = f(L"sword_free_arm_reach", 0.93f); cfg.freeMinFrac = f(L"sword_free_min_frac", 0.6f); blockAttacks = GetPrivateProfileIntW(L"gotvr", L"sword_block_game_attacks", 1, ini) ? 1 : 0;
+    cfg.sheathTipCm = f(L"sword_sheathe_tip_cm", 7.0f); cfg.sheathDeg = f(L"sword_sheathe_deg", 30.0f);
     calOk = GetPrivateProfileIntW(L"gotvr", L"sword_calibrated", 0, ini);
+    for (int h = 0; h < 2; h++) { capOk[h] = GetPrivateProfileIntW(L"gotvr", h ? L"sword_cap_r_ok" : L"sword_cap_l_ok", 0, ini) != 0;
+        if (capOk[h]) { wchar_t k2[40]; for (int q = 0; q < 12; q++) { swprintf(k2, 40, L"sword_cap_%ls_%d", h ? L"r" : L"l", q); const float v = f(k2, q % 4 == 0 && q < 9 ? 1.0f : 0.0f); if (q < 9) cap[h].R[q] = v; else cap[h].t[q - 9] = v; } } }
+    drawRotOk = GetPrivateProfileIntW(L"gotvr", L"sword_drawrot_ok", 0, ini) != 0; if (drawRotOk) { wchar_t k2[40]; for (int q = 0; q < 9; q++) { swprintf(k2, 40, L"sword_drawrot_%d", q); drawRot[q] = f(k2, q % 4 == 0 ? 1.0f : 0.0f); } }
+    edgeFlip = GetPrivateProfileIntW(L"gotvr", L"sword_edge_flip", 0, ini) ? 1 : 0;
+    gameBladeJ = (int)f(L"sword_drawn_blade_joint", -1.0f); useGameBlade = 0;
+    {   // 0.18.38: the hands' places on the katana (owner: "the ini settings for grip placement don't seem to do anything"), and the
+        // 0.18.37 game-sword keys removed (the game is never asked to draw / sheathe again)
+        wchar_t b[32]; GetPrivateProfileStringW(L"gotvr", L"sword_guard_cm", L"auto", b, 32, ini); guardCfg = (b[0] && _wcsicmp(b, L"auto") != 0) ? (float)_wtof(b) : -1.0f;
+        rightHandCm = f(L"sword_right_hand_cm", 9.0f); leftHandCm = f(L"sword_left_hand_cm", 4.5f);
+        auto def2 = [&](const wchar_t *k, const wchar_t *v) { wchar_t c[8]; if (!GetPrivateProfileStringW(L"gotvr", k, L"", c, 8, ini)) WritePrivateProfileStringW(L"gotvr", k, v, ini); };
+        def2(L"sword_guard_cm", L"auto"); def2(L"sword_right_hand_cm", L"9"); def2(L"sword_left_hand_cm", L"4.5");
+        const wchar_t *gone[] = {L"sword_grip_lower_cm", L"sword_sheath_hand_cm", L"sword_use_game_blade", L"sword_game_draw", L"sword_game_grip_ok", L"taa_per_eye"};
+        for (const wchar_t *k : gone) WritePrivateProfileStringW(L"gotvr", k, NULL, ini);
+        for (int q = 0; q < 12; q++) { wchar_t k2[40]; swprintf(k2, 40, L"sword_game_grip_%d", q); WritePrivateProfileStringW(L"gotvr", k2, NULL, ini); } }
+    if (false) { wchar_t k2[40]; fing::Aff R; for (int q = 0; q < 12; q++) { swprintf(k2, 40, L"sword_game_grip_%d", q); const float v = f(k2, q % 4 == 0 && q < 9 ? 1.0f : 0.0f); if (q < 9) R.R[q] = v; else R.t[q - 9] = v; } fp::relHand = R; fp::relHandOk = 1; }
+    {   // 0.18.33 (owner: "I can't find the setting in the ini"): the katana settings are written into gotvr.ini with their defaults when missing
+        auto def = [&](const wchar_t *k, const wchar_t *v) { wchar_t b[8]; if (!GetPrivateProfileStringW(L"gotvr", k, L"", b, 8, ini)) WritePrivateProfileStringW(L"gotvr", k, v, ini); };
+        def(L"sword_blade_pitch_deg", L"0"); def(L"sword_blade_forward", L"1"); def(L"sword_draw_pull_cm", L"40");
+        def(L"sword_free_min_frac", L"0.6"); def(L"sword_free_arm_reach", L"0.93"); def(L"sword_thumb_gap_cm", L"0.3"); def(L"sword_rail_from_joints", L"1"); def(L"sword_hold_body_still", L"1");
+        def(L"sword_block_game_attacks", L"1"); def(L"sword_need_sheath_hand", L"0"); def(L"fp_index_tween_s", L"0.07"); def(L"fp_finger_tween_s", L"0.15"); }
     mouthL[0] = f(L"sword_mouth_x", 0); mouthL[1] = f(L"sword_mouth_y", 0); mouthL[2] = f(L"sword_mouth_z", 0); axisL[0] = f(L"sword_axis_x", 1); axisL[1] = f(L"sword_axis_y", 0); axisL[2] = f(L"sword_axis_z", 0);
-    logf("katana draw: %s, katana joint %d, %s (blade %.0f cm, hilt %.0f cm, grab radius %.0f cm%s)", on ? "ON" : "off (sword_draw = 0)", joint, calOk ? "rail calibrated" : "rail from the default guess (Ctrl+F10 calibrates)", cfg.bladeCm, cfg.hiltCm, cfg.grabCm, cfg.needSheathHand ? ", left hand on the sheath needed" : "");
+    logf("katana draw: %s, katana (sheath) joint %d, blade joint %d%s, %s (blade %.0f cm, hilt %.0f cm, grab radius %.0f cm%s)", on ? "ON" : "off (sword_draw = 0)", joint, blade, blade < 0 ? " (not chosen: the whole katana + sheath moves - Ctrl+F7 / Ctrl+F8 picks the blade)" : "", calOk ? "rail calibrated" : "rail from the default guess (Ctrl+F10 calibrates)", cfg.bladeCm, cfg.hiltCm, cfg.grabCm, cfg.needSheathHand ? ", left hand on the sheath needed" : "");
 }
 static void calibrate(const float *W) {   // left grip = the sheath mouth, right grip = the end of the hilt -> in the joint's own frame
     if (!gripOk[0] || !gripOk[1]) { logf("katana draw: Ctrl+F10 needs both controllers tracked"); return; }
@@ -2313,37 +2635,281 @@ static void calibrate(const float *W) {   // left grip = the sheath mouth, right
     const fing::Aff ml = fing::mul(Ai, Lm), pl = fing::mul(Ai, Rp); float ax[3] = {pl.t[0] - ml.t[0], pl.t[1] - ml.t[1], pl.t[2] - ml.t[2]}; const float L = sqrtf(ax[0] * ax[0] + ax[1] * ax[1] + ax[2] * ax[2]);
     if (!(L > 3.0f)) { logf("katana draw: Ctrl+F10 - the hands are only %.1f units apart, hold them at the sheath mouth and the hilt end", L); return; }
     for (auto &x : ax) x /= L; const float u = g_cfg.unitsPerM * 0.01f;
-    memcpy(mouthL, ml.t, 12); memcpy(axisL, ax, 12); cfg.hiltCm = L / u; calOk = 1;
+    memcpy(mouthL, ml.t, 12); memcpy(axisL, ax, 12); cfg.hiltCm = L / u; calOk = 1; sys.reset();
     iniWrite(L"sword_mouth_x", mouthL[0]); iniWrite(L"sword_mouth_y", mouthL[1]); iniWrite(L"sword_mouth_z", mouthL[2]); iniWrite(L"sword_axis_x", axisL[0]); iniWrite(L"sword_axis_y", axisL[1]); iniWrite(L"sword_axis_z", axisL[2]);
     iniWrite(L"sword_hilt_cm", cfg.hiltCm); iniWrite(L"sword_calibrated", 1.0f);
     logf("katana draw: CALIBRATED - sheath mouth (%.1f %.1f %.1f) in joint %d, draw direction (%.2f %.2f %.2f), hilt %.0f cm (saved to gotvr.ini)", mouthL[0], mouthL[1], mouthL[2], joint, axisL[0], axisL[1], axisL[2], cfg.hiltCm);
     vrin::pulse(0, 0.6f, 40); vrin::pulse(1, 0.6f, 40);
 }
-static void frame() {   // game thread, pair phase 0, first person active, after the controller poses
+// 0.18.29 a rotation matrix (row-major, column vectors) taken part of the way from the identity: R^w (through its quaternion)
+static void rotPart(const float *R, float w, float *o) {
+    float q[4]; const float tr = R[0] + R[4] + R[8];
+    if (tr > 0.0f) { const float S = sqrtf(tr + 1.0f) * 2.0f; q[3] = 0.25f * S; q[0] = (R[7] - R[5]) / S; q[1] = (R[2] - R[6]) / S; q[2] = (R[3] - R[1]) / S; }
+    else if (R[0] > R[4] && R[0] > R[8]) { const float S = sqrtf(1.0f + R[0] - R[4] - R[8]) * 2.0f; q[3] = (R[7] - R[5]) / S; q[0] = 0.25f * S; q[1] = (R[1] + R[3]) / S; q[2] = (R[2] + R[6]) / S; }
+    else if (R[4] > R[8]) { const float S = sqrtf(1.0f + R[4] - R[0] - R[8]) * 2.0f; q[3] = (R[2] - R[6]) / S; q[0] = (R[1] + R[3]) / S; q[1] = 0.25f * S; q[2] = (R[5] + R[7]) / S; }
+    else { const float S = sqrtf(1.0f + R[8] - R[0] - R[4]) * 2.0f; q[3] = (R[3] - R[1]) / S; q[0] = (R[2] + R[6]) / S; q[1] = (R[5] + R[7]) / S; q[2] = 0.25f * S; }
+    if (q[3] < 0) for (auto &x : q) x = -x;
+    const float id[4] = {0, 0, 0, 1}; float r[4]; stab::qslerp(id, q, w < 0 ? 0 : w > 1 ? 1 : w, r);
+    const float x = r[0], y = r[1], z = r[2], ww = r[3];
+    o[0] = 1 - 2 * (y * y + z * z); o[1] = 2 * (x * y - z * ww); o[2] = 2 * (x * z + y * ww);
+    o[3] = 2 * (x * y + z * ww); o[4] = 1 - 2 * (x * x + z * z); o[5] = 2 * (y * z - x * ww);
+    o[6] = 2 * (x * z - y * ww); o[7] = 2 * (y * z + x * ww); o[8] = 1 - 2 * (x * x + y * y);
+}
+// 0.18.31 the rail through the katana joint (origin) and its child cl (both in the katana joint's frame) when the child lies along the
+// calibrated line (within 35 deg, 15..40 cm away): the end nearer the calibrated mouth is the mouth, the axis points to the other end
+static bool railFromJoints(const float *mouthC, const float *axisC, const float *cl, float u, float *mOut, float *aOut, float &ang, float &d0, float &d1) {
+    const float dl = sqrtf(cl[0] * cl[0] + cl[1] * cl[1] + cl[2] * cl[2]); if (!(dl > 15.0f * u && dl < 40.0f * u)) return false;
+    const float dn[3] = {cl[0] / dl, cl[1] / dl, cl[2] / dl}; const float ca = dn[0] * axisC[0] + dn[1] * axisC[1] + dn[2] * axisC[2]; ang = acosf(fminf(1.0f, fabsf(ca))) * 57.2957795f;
+    d0 = sqrtf(mouthC[0] * mouthC[0] + mouthC[1] * mouthC[1] + mouthC[2] * mouthC[2]);
+    d1 = sqrtf((mouthC[0] - cl[0]) * (mouthC[0] - cl[0]) + (mouthC[1] - cl[1]) * (mouthC[1] - cl[1]) + (mouthC[2] - cl[2]) * (mouthC[2] - cl[2]));
+    if (!(ang < 35.0f)) return false;
+    if (d0 <= d1) { mOut[0] = mOut[1] = mOut[2] = 0.0f; for (int k = 0; k < 3; k++) aOut[k] = dn[k]; } else { memcpy(mOut, cl, 12); for (int k = 0; k < 3; k++) aOut[k] = -dn[k]; }
+    return true;
+}
+// 0.18.38 where the hands go on the katana, in cm along the rail from its origin (the katana joint):
+//  - the guard: sword_guard_cm, or "auto" = your captured left grip (Ctrl+F6, thumb on the guard) + a fist's half width, else 16.5
+//  - the right fist: sword_right_hand_cm below the guard (Ctrl+PageDown / Ctrl+PageUp move it 1 cm down / up the hilt, live)
+//  - the left fist on the sheath: sword_left_hand_cm below the guard (Ctrl+End / Ctrl+Home move it 1 cm down / up the sheath)
+static float capAxial(int h) { const float u = g_cfg.unitsPerM * 0.01f; return (cap[h].t[0] * pubAL[0] + cap[h].t[1] * pubAL[1] + cap[h].t[2] * pubAL[2]) / u; }
+static float guardNow() { if (guardCfg >= 0.0f) return guardCfg; if (capOk[0] && pubMLok) return capAxial(0) + cfg.handHalfCm; return 16.5f; }
+static float sheathG() { return guardNow() - leftHandCm; }
+static fing::Aff capShifted(int h) {   // a captured grip, moved along the rail to where the settings put that hand (rotation and the offset off the line kept)
+    fing::Aff c = cap[h]; if (!pubMLok) return c; const float u = g_cfg.unitsPerM * 0.01f;
+    const float want = h ? sword::Sys::rightT(cfg) : sheathG(), d = (want - capAxial(h)) * u; for (int k = 0; k < 3; k++) c.t[k] += pubAL[k] * d; return c; }
+static bool swingStab(int h) { return h == 1 ? (sys.state == sword::S_DRAWN || sys.state == sword::S_SHEATHING) : twoHand; }   // 0.18.35
+static void frame(fp::ArmPub &ap) {   // game thread, pair phase 0, first person active, after the controller poses (before ap is published)
     const int pr = probeIdx.load();
-    float W[16]; const bool kOk = fp::kGameRead(W);
+    float W[16]; const bool kOk = fp::kGameRead(W, fp::node);
+    // (0.18.27's left-trigger calibration removed in 0.18.28 - owner: "unbind the trigger from the temporary Ctrl+F10 binding"; Ctrl+F10 stays)
     if (calReq.exchange(0) && kOk) calibrate(W);
+    if (resetReq.exchange(0)) { sys.reset(); lockOn[0] = lockOn[1] = false; drawLockOk = false; }
     static LARGE_INTEGER fq{}, lq{}; if (!fq.QuadPart) QueryPerformanceFrequency(&fq); LARGE_INTEGER qn; QueryPerformanceCounter(&qn);
     const float dt = lq.QuadPart ? fminf((float)(qn.QuadPart - lq.QuadPart) / (float)fq.QuadPart, 0.1f) : 0.0f; lq = qn;
-    railOk = false;
+    railOk = false; pubMLok = false;
     if (on && kOk && fp::node) {
-        if (calOk) { for (int c = 0; c < 3; c++) { railMouth[c] = mouthL[0] * W[c] + mouthL[1] * W[4 + c] + mouthL[2] * W[8 + c] + W[12 + c]; railAxis[c] = axisL[0] * W[c] + axisL[1] * W[4 + c] + axisL[2] * W[8 + c]; } }
+        float mL[3] = {mouthL[0], mouthL[1], mouthL[2]}, aL[3] = {axisL[0], axisL[1], axisL[2]};
+        if (calOk && fromJoints) {   // 0.18.31 (owner photos: the hands snapped beside the hilt / the sheath): the calibration came from where your
+            // CONTROLLERS were, a few cm off the drawn katana. If the katana joint's child lies along the calibrated line (the other end of
+            // the hilt), the rail is the line through the two joints - the drawn hilt itself - with the end nearer the calibrated mouth as the mouth
+            float cl[3]; int chn = -1; for (int t = 0; t < 4; t++) { const LONG a = fp::kcSeq; if (a & 1) continue; MemoryBarrier(); memcpy(cl, fp::kChildL, 12); chn = fp::kChild.load(); MemoryBarrier(); if (a == fp::kcSeq) break; chn = -1; }
+            const float u = g_cfg.unitsPerM * 0.01f, dl = sqrtf(cl[0] * cl[0] + cl[1] * cl[1] + cl[2] * cl[2]);
+            if (chn >= 0) { float ang = 0, d0 = 0, d1 = 0; const bool use = railFromJoints(mouthL, axisL, cl, u, mL, aL, ang, d0, d1);
+                static int told = -1; if (told != (use ? 1 : 0)) { told = use ? 1 : 0;
+                    logf("katana: joint %d's child %d is %.1f cm away, %.0f deg from the calibrated hilt line, calibrated mouth %.1f cm from joint %d / %.1f cm from %d -> rail %s", joint, chn, dl / u, ang, d0 / u, joint, d1 / u, chn,
+                         use ? "FROM THE TWO JOINTS (the drawn hilt)" : "from the calibration (the joints are not along it)"); }
+                if (use) cfg.hiltCm = dl / u; }
+        }
+        pubML[0] = mL[0]; pubML[1] = mL[1]; pubML[2] = mL[2]; { float al = sqrtf(aL[0] * aL[0] + aL[1] * aL[1] + aL[2] * aL[2]); if (al > 1e-4f) for (int c = 0; c < 3; c++) pubAL[c] = aL[c] / al; } pubMLok = calOk;
+        { static bool toldG = false; if (pubMLok && !toldG) { toldG = true; logf("katana: hands on the katana - guard %.1f cm out along the rail (%s), right fist %.1f cm below it (sword_right_hand_cm; Ctrl+PageDown / PageUp), left fist %.1f cm below it on the sheath (sword_left_hand_cm; Ctrl+End / Home)", guardNow(), guardCfg >= 0.0f ? "sword_guard_cm" : capOk[0] ? "auto: your captured left grip" : "auto", rightHandCm, leftHandCm); } }
+        if (calOk) { for (int c = 0; c < 3; c++) { railMouth[c] = mL[0] * W[c] + mL[1] * W[4 + c] + mL[2] * W[8 + c] + W[12 + c]; railAxis[c] = aL[0] * W[c] + aL[1] * W[4 + c] + aL[2] * W[8 + c]; } }
         else {   // the default guess: the joint is the mouth, the hilt points forward and 25 deg up along the drawn body's heading
             const float *N = (const float *)(fp::node + 0x150); float F[3] = {N[0], N[1], 0}; float l = sqrtf(F[0] * F[0] + F[1] * F[1]); if (l > 1e-4f) { F[0] /= l; F[1] /= l; }
             const float b = fp::bodyYawCur, c = cosf(b), sn = sinf(b); const float Fd[2] = {F[0] * c - F[1] * sn, F[0] * sn + F[1] * c};
             const float a = 25.0f / 57.2957795f; railAxis[0] = Fd[0] * cosf(a); railAxis[1] = Fd[1] * cosf(a); railAxis[2] = sinf(a); for (int c2 = 0; c2 < 3; c2++) railMouth[c2] = W[12 + c2]; }
         float l = sqrtf(railAxis[0] * railAxis[0] + railAxis[1] * railAxis[1] + railAxis[2] * railAxis[2]); if (l > 1e-4f) { for (auto &x : railAxis) x /= l; railOk = true; }
     }
+    const float u = g_cfg.unitsPerM * 0.01f;
+    // 0.18.29 the frames: the sheath at its mouth (the katana joint's own axes), the blade = the sheath frame slid s along the rail
+    fing::Aff Sf; if (kOk) { Sf = fing::fromPose(W); memcpy(Sf.t, railMouth, 12); }
+    auto bladeFrame = [&](float sv) { fing::Aff b = Sf; for (int c = 0; c < 3; c++) b.t[c] += railAxis[c] * sv * u; return b; };
+    // 0.18.33 the blade's direction in your hand (owner: "when I hold the controller forward, the katana also faces forward"; photos: 0.18.31's
+    // grip -Z pointed it up, 0.18.32's grip -Y across to the right): the controller's forward = left x up of its rows (row 2 x row 0),
+    // pitched by sword_blade_pitch_deg about its side
+    float bladeDir[3]; { const float *r0 = gripM[1], *r2 = gripM[1] + 8; fbik::cross3(r2, r0, bladeDir); }
+    if (bladePitch != 0.0f) { float ax[3] = {gripM[1][8], gripM[1][9], gripM[1][10]}; if (fbik::norm3(ax)) { const fbik::Rot R = fbik::axisAngle(ax, bladePitch / 57.2957795f); float t2[3]; fbik::rotv(R, bladeDir, t2); memcpy(bladeDir, t2, 12); } }
+    fbik::norm3(bladeDir);
+    {   // which way is the controller's forward (the rows' handedness is not documented): the first time the katana comes free with your
+        // controller held level-ish, its forward must point the way your head faces - latched for the session (sword_blade_sign overrides)
+        if (bladeSignCfg != 0) bladeSign = (float)bladeSignCfg;
+        else if (bladeSign == 0.0f && sys.state == sword::S_DRAWN && fp::headOk) { const float d = bladeDir[0] * fp::headF[0] + bladeDir[1] * fp::headF[1];
+            if (fabsf(d) > 0.5f) { bladeSign = d > 0 ? 1.0f : -1.0f; logf("katana: the controller's forward = %s of its rows (latched for this session; sword_blade_sign = 1 / -1 overrides)", d > 0 ? "row 2 x row 0" : "row 0 x row 2"); } }
+        const float sg = bladeSign == 0.0f ? 1.0f : bladeSign; for (auto &x : bladeDir) x *= sg;
+    }
+    // 0.18.33 the drawn katana (world), from the RIGHT CONTROLLER - never from where Jin's hand is drawn (playbook: steer with the raw pose):
+    //  1. as you took the hilt: blade = grip o drawLock^-1 (the hilt through your grip point, along your fist as you held it in the sheath)
+    //  2. turned about the held point so the blade runs along the controller's forward (eased in over 0.25 s after it comes free -
+    //     the wrist turning the blade forward, as in a real draw); sword_blade_forward = 0 keeps 1.
+    //  3. with the left hand on the hilt too: turned toward the line between your two controllers (twoSteer, a soft limit)
+    // K1 (1 + 2) gates the second hand and K (+ 3) is the katana you see, so the second hand's steering never feeds back into its own gate.
+    bool bOk = false; float tipW[3] = {0, 0, 0}, dirW[3] = {0, 0, 0}, guardW[3] = {0, 0, 0}, a1[3] = {0, 0, 0}, g1[3] = {0, 0, 0};
+    fing::Aff Kd; for (int i2 = 0; i2 < 9; i2++) Kd.R[i2] = (i2 % 4 == 0) ? 1.0f : 0.0f; Kd.t[0] = Kd.t[1] = Kd.t[2] = 0;
+    { const bool want = wristFwd && sys.state == sword::S_DRAWN; fwdT = fminf(1.0f, fmaxf(0.0f, fwdT + (want ? dt : -dt) / 0.25f)); }
+    if (railOk && sys.state == sword::S_DRAWN && drawLockOk && gripOk[1]) {
+        fing::Aff Li; if (fing::inv(drawLock, Li)) {
+            const fing::Aff Kt = fing::mul(fing::fromPose(gripM[1]), Li); float at[3]; for (int c = 0; c < 3; c++) at[c] = Kt.R[c * 3] * bladeAxF[0] + Kt.R[c * 3 + 1] * bladeAxF[1] + Kt.R[c * 3 + 2] * bladeAxF[2];
+            if (fbik::norm3(at)) {
+                auto turnAbout = [&](const fing::Aff &A0, const fbik::Rot &R, const float *H) { fing::Aff B; for (int r = 0; r < 3; r++) for (int c = 0; c < 3; c++) B.R[r * 3 + c] = R.m[r * 3] * A0.R[c] + R.m[r * 3 + 1] * A0.R[3 + c] + R.m[r * 3 + 2] * A0.R[6 + c];
+                    float d[3] = {A0.t[0] - H[0], A0.t[1] - H[1], A0.t[2] - H[2]}, e[3]; fbik::rotv(R, d, e); for (int c = 0; c < 3; c++) B.t[c] = H[c] + e[c]; return B; };
+                float H[3]; for (int c = 0; c < 3; c++) H[c] = Kt.t[c] + at[c] * sys.hiltT * u;
+                const float bt[3] = {-at[0], -at[1], -at[2]}; const float wf = 0.5f - 0.5f * cosf(fwdT * 3.14159265f);
+                fing::Aff K1;
+                if (drawRotOk) {   // 0.18.35 the captured drawn grip: the katana's turn relative to your controller, the hilt through the grip point at hiltT
+                    const fing::Aff C = fing::fromPose(gripM[1]); float Rk[9]; for (int r = 0; r < 3; r++) for (int c = 0; c < 3; c++) Rk[r * 3 + c] = C.R[r * 3] * drawRot[c] + C.R[r * 3 + 1] * drawRot[3 + c] + C.R[r * 3 + 2] * drawRot[6 + c];
+                    float Rd[9]; for (int r = 0; r < 3; r++) for (int c = 0; c < 3; c++) Rd[r * 3 + c] = Rk[r * 3] * Kt.R[c * 3] + Rk[r * 3 + 1] * Kt.R[c * 3 + 1] + Rk[r * 3 + 2] * Kt.R[c * 3 + 2];   // Rk Kt.R^T
+                    float Rw[9]; rotPart(Rd, wf, Rw); for (int r = 0; r < 3; r++) for (int c = 0; c < 3; c++) K1.R[r * 3 + c] = Rw[r * 3] * Kt.R[c] + Rw[r * 3 + 1] * Kt.R[3 + c] + Rw[r * 3 + 2] * Kt.R[6 + c];
+                    for (int c = 0; c < 3; c++) a1[c] = K1.R[c * 3] * bladeAxF[0] + K1.R[c * 3 + 1] * bladeAxF[1] + K1.R[c * 3 + 2] * bladeAxF[2]; fbik::norm3(a1);
+                    for (int c = 0; c < 3; c++) { const float Hb = H[c] + (C.t[c] - H[c]) * wf; K1.t[c] = Hb - a1[c] * sys.hiltT * u; }
+                } else { const fbik::Rot Rf = fbik::scaled(fbik::arc(bt, bladeDir), wf); K1 = turnAbout(Kt, Rf, H); fbik::rotv(Rf, at, a1); }
+                memcpy(g1, K1.t, 12); Kd = K1;
+                if (tw2 > 0.0f) { float L[3] = {grip[0][0] - grip[1][0], grip[0][1] - grip[1][1], grip[0][2] - grip[1][2]}; const float sep = sqrtf(L[0] * L[0] + L[1] * L[1] + L[2] * L[2]) / u;
+                    if (fbik::norm3(L)) { const float fade = fminf(1.0f, fmaxf(0.0f, (sep - 4.0f) / 2.0f)) * (0.5f - 0.5f * cosf(tw2 * 3.14159265f)); float tg[3]; fp::twoSteer(a1, L, fade, tg);
+                        float H1[3]; for (int c = 0; c < 3; c++) H1[c] = K1.t[c] + a1[c] * sys.hiltT * u; Kd = turnAbout(K1, fbik::arc(a1, tg), H1); fp::nTwoSteer++; } }
+                for (int c = 0; c < 3; c++) dirW[c] = Kd.R[c * 3] * bladeAxF[0] + Kd.R[c * 3 + 1] * bladeAxF[1] + Kd.R[c * 3 + 2] * bladeAxF[2];
+                if (fbik::norm3(dirW)) { memcpy(guardW, Kd.t, 12); for (int c = 0; c < 3; c++) tipW[c] = guardW[c] - dirW[c] * cfg.bladeCm * u; bOk = true; }
+            }
+        }
+    }
+    if (bOk) {   // swing groundwork: the tip's speed (m/s), the highest each second in SWORD/s
+        if (lastTipOk && dt > 0.0f) { const float d[3] = {tipW[0] - lastTip[0], tipW[1] - lastTip[1], tipW[2] - lastTip[2]}; secTipMs = fmaxf(secTipMs, sqrtf(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]) / g_cfg.unitsPerM / dt); }
+        memcpy(lastTip, tipW, 12); lastTipOk = true; } else lastTipOk = false;
+    // 0.18.33 (owner: "assign a hotkey so I can put my hand in the correct general area and you can capture it"): Ctrl+F5 captures your
+    // RIGHT controller as it should hold the hilt, Ctrl+F6 your LEFT controller as it should hold the sheath. Press the key, then within
+    // 3 s put the controller there (a tick each second on that controller); at 3 s its pose relative to the sheath is saved (gotvr.ini,
+    // sword_cap_r_* / sword_cap_l_*) and used for every grab from then on (where along the hilt / sheath the hand sits, and how it is
+    // turned). Ctrl+Shift+F5 / F6 clears it.
+    for (int h = 0; h < 2; h++) {
+        const int rq = capReq[h].exchange(0); const u64 nowC = GetTickCount64();
+        if (rq == 2) { capOk[h] = false; capAt[h] = 0; if (h) { drawRotOk = false; wchar_t ini2[MAX_PATH]; swprintf(ini2, MAX_PATH, L"%ls\\gotvr.ini", g_dir); WritePrivateProfileStringW(L"gotvr", L"sword_drawrot_ok", L"0", ini2); } wchar_t ini[MAX_PATH]; swprintf(ini, MAX_PATH, L"%ls\\gotvr.ini", g_dir); WritePrivateProfileStringW(L"gotvr", h ? L"sword_cap_r_ok" : L"sword_cap_l_ok", L"0", ini); logf("katana: %s hand grip capture cleared", h ? "right" : "left"); }
+        else if (rq == 1) { capAt[h] = nowC; vrin::pulse(h, 0.3f, 20); logf("katana: capturing your %s hand's grip in 3 s - %s", h ? "right" : "left", h && sys.state == sword::S_DRAWN ? "point the right controller straight ahead like the sword, and look straight ahead" : h ? "hold the right controller where Jin's right hand should hold the hilt" : "hold the left controller where Jin's left hand should hold the sheath"); }
+        if (capAt[h]) { const u64 el = nowC - capAt[h]; static u64 ticked[2] = {0, 0};
+            if (el / 1000 > ticked[h] && el < 3000) { ticked[h] = el / 1000; vrin::pulse(h, 0.25f, 15); }
+            if (el >= 3000 && h == 1 && sys.state == sword::S_DRAWN && kOk && gripOk[1] && fp::headOk) { capAt[h] = 0; ticked[h] = 0;
+                // 0.18.35 (owner photo: holding the controller forward, the katana points left; "the grip needs to rotate 90 deg about x and 90
+                // about y"): with the katana DRAWN, Ctrl+F5 captures how it should sit in your hand - point the right controller straight ahead
+                // like a sword and look straight ahead: the blade is set along your view's forward, its edge down, and that orientation is kept
+                // relative to your controller from then on (sword_drawrot_*; Ctrl+Shift+F5 clears both right-hand captures)
+                const float p = fp::headPitchDeg.load() / 57.2957795f; float fw[3] = {cosf(p) * fp::headF[0], cosf(p) * fp::headF[1], sinf(p)}; fbik::norm3(fw);
+                float up[3] = {0, 0, 1}; { const float d = fbik::dot3(up, fw); for (int c = 0; c < 3; c++) up[c] -= d * fw[c]; fbik::norm3(up); }
+                float aL[3] = {bladeAxF[0], bladeAxF[1], bladeAxF[2]}; fbik::norm3(aL);
+                float eL[3] = {Sf.R[6], Sf.R[7], Sf.R[8]};   // world up in the sheath's frame (row 2 of R = R^T (0,0,1)): the edge, worn edge-up
+                { const float d = fbik::dot3(eL, aL); for (int c = 0; c < 3; c++) eL[c] -= d * aL[c]; if (!fbik::norm3(eL)) { eL[0] = 1; eL[1] = 0; eL[2] = 0; } }
+                const float aW[3] = {-fw[0], -fw[1], -fw[2]}; float eW[3] = {-up[0], -up[1], -up[2]}; if (edgeFlip) for (auto &x : eW) x = -x;
+                const fbik::Rot Rt = fbik::frameTo(aL, eL, aW, eW); const fing::Aff C = fing::fromPose(gripM[1]);
+                for (int r = 0; r < 3; r++) for (int c = 0; c < 3; c++) drawRot[r * 3 + c] = C.R[r] * Rt.m[c] + C.R[3 + r] * Rt.m[3 + c] + C.R[6 + r] * Rt.m[6 + c];   // C.R^T Rt
+                drawRotOk = true; wchar_t ini[MAX_PATH]; swprintf(ini, MAX_PATH, L"%ls\\gotvr.ini", g_dir); wchar_t k2[40], b[32];
+                for (int q = 0; q < 9; q++) { swprintf(k2, 40, L"sword_drawrot_%d", q); swprintf(b, 32, L"%.5f", drawRot[q]); WritePrivateProfileStringW(L"gotvr", k2, b, ini); }
+                WritePrivateProfileStringW(L"gotvr", L"sword_drawrot_ok", L"1", ini); vrin::pulse(1, 0.8f, 60);
+                logf("katana: DRAWN grip CAPTURED - the blade along your view (pitch %.0f deg), edge down, kept relative to your right controller (saved; Ctrl+Shift+F5 clears)", p * 57.2957795f); }
+            if (el >= 3000) { capAt[h] = 0; ticked[h] = 0;
+                const float dm[3] = {grip[h][0] - railMouth[0], grip[h][1] - railMouth[1], grip[h][2] - railMouth[2]}; const float dmc = sqrtf(dm[0] * dm[0] + dm[1] * dm[1] + dm[2] * dm[2]) / u;
+                fing::Aff Si; if (!railOk || !kOk || !gripOk[h] || sys.state != sword::S_SHEATHED || !(dmc < 45.0f) || !fing::inv(Sf, Si)) logf("katana: %s grip NOT captured (%s; the controller %.0f cm from the sheath mouth, needs < 45 cm with the katana sheathed)", h ? "right" : "left", !railOk ? "no rail" : !gripOk[h] ? "controller not tracked" : sys.state != sword::S_SHEATHED ? "the katana is out" : "too far", dmc);
+                else { cap[h] = fing::mul(Si, fing::fromPose(gripM[h])); capOk[h] = true; sys.reset(); lockOn[0] = lockOn[1] = false;
+                    float ax[3]; for (int c = 0; c < 3; c++) ax[c] = Sf.R[c] * railAxis[0] + Sf.R[3 + c] * railAxis[1] + Sf.R[6 + c] * railAxis[2]; const float al = (cap[h].t[0] * ax[0] + cap[h].t[1] * ax[1] + cap[h].t[2] * ax[2]) / u;
+                    wchar_t ini[MAX_PATH]; swprintf(ini, MAX_PATH, L"%ls\\gotvr.ini", g_dir); wchar_t k2[40], b[32];
+                    for (int q = 0; q < 12; q++) { swprintf(k2, 40, L"sword_cap_%ls_%d", h ? L"r" : L"l", q); swprintf(b, 32, L"%.5f", q < 9 ? cap[h].R[q] : cap[h].t[q - 9]); WritePrivateProfileStringW(L"gotvr", k2, b, ini); }
+                    WritePrivateProfileStringW(L"gotvr", h ? L"sword_cap_r_ok" : L"sword_cap_l_ok", L"1", ini);
+                    {   // 0.18.38 the capture also sets the hand's place along the katana (the settings / hotkeys move it from there)
+                        const float g = guardNow(); if (h) { rightHandCm = al - g; iniWrite(L"sword_right_hand_cm", rightHandCm); } else { leftHandCm = g - al; iniWrite(L"sword_left_hand_cm", leftHandCm); }
+                        logf("katana: the guard is %.1f cm out along the rail (%s); %s fist %.1f cm below it", g, guardCfg >= 0.0f ? "sword_guard_cm" : "auto", h ? "right" : "left", h ? rightHandCm : leftHandCm); }
+                    vrin::pulse(h, 0.8f, 60); logf("katana: %s grip CAPTURED - %.1f cm %s the mouth along the %s, %.1f cm off its line (saved; Ctrl+Shift+%s clears)", h ? "right" : "left", fabsf(al), al >= 0 ? "out of" : "below", h ? "hilt" : "sheath",
+                        sqrtf(fmaxf(0.0f, dmc * dmc - al * al)), h ? "F5" : "F6"); } } }
+    }
+    for (int h = 0; h < 2; h++) {   // 0.18.38 live: Ctrl+PageDown / PageUp (right hand down / up the hilt), Ctrl+End / Home (left hand down / up the sheath)
+        const int d = adjReq[h].exchange(0); if (!d) continue; const float u2 = g_cfg.unitsPerM * 0.01f;
+        if (h) { const float t0 = sword::Sys::rightT(cfg); rightHandCm = fminf(40.0f, fmaxf(0.0f, rightHandCm + (float)d)); cfg.rightCm = rightHandCm; const float t1 = sword::Sys::rightT(cfg), m = (t1 - t0) * u2;
+            if (lockOn[1]) for (int c = 0; c < 3; c++) lockL[1].t[c] += pubAL[c] * m;
+            if (drawLockOk) for (int c = 0; c < 3; c++) drawLock.t[c] += pubAL[c] * m;
+            iniWrite(L"sword_right_hand_cm", rightHandCm); logf("katana: right fist %.0f cm below the guard%s (sword_right_hand_cm, saved)", rightHandCm, t1 == t0 ? " - at the end of the hilt already" : ""); }
+        else { leftHandCm = fminf(40.0f, fmaxf(-10.0f, leftHandCm + (float)d)); if (lockOn[0]) for (int c = 0; c < 3; c++) lockL[0].t[c] -= pubAL[c] * (float)d * u2;
+            iniWrite(L"sword_left_hand_cm", leftHandCm); logf("katana: left fist %.1f cm below the guard on the sheath (sword_left_hand_cm, saved)", leftHandCm); }
+        vrin::pulse(h, 0.25f, 15); }
     sword::Out o{}; const int st0 = sys.state; const bool hs0 = sys.onSheath, hh0 = sys.onHilt;
     if (railOk && pr < 0) {
         sword::In in{}; for (int h = 0; h < 2; h++) { memcpy(in.hand[h], grip[h], 12); in.grip[h] = squeeze[h]; in.valid[h] = gripOk[h] != 0; }
-        memcpy(in.mouth, railMouth, 12); memcpy(in.axis, railAxis, 12); in.dt = dt; in.unitsPerCm = g_cfg.unitsPerM * 0.01f;
+        memcpy(in.mouth, railMouth, 12); memcpy(in.axis, railAxis, 12); in.dt = dt; in.unitsPerCm = u;
+        in.bladeOk = bOk; memcpy(in.tip, tipW, 12); memcpy(in.dir, dirW, 12); in.armExt = fp::armExt[1].load();
+        // 0.18.38: the hilt and the sheath grip where they really are (the guard guardNow() out along the rail), the fists at the settings'
+        // places (0.18.35's grab radius widened to the captured left grip is not needed any more: the sheath grab is centred on it)
+        cfg.guardCm = guardNow(); cfg.rightCm = rightHandCm; cfg.leftAx = sheathG();
         sys.step(in, cfg, o);
+        if (sys.onHilt || sys.state == sword::S_DRAWN || sys.state == sword::S_SHEATHING) sys.hiltT = sword::Sys::rightT(cfg);   // live (Ctrl+PageUp / PageDown)
         for (int h = 0; h < 2; h++) if (o.pulseHand[h]) vrin::pulse(h, o.pulseAmp[h], (u32)o.pulseMs[h]);
-        { static float acc = 0; acc += dt; if (o.rumble > 0.0f && acc >= 0.04f) { acc = 0; vrin::pulse(1, o.rumble, 45); vrin::pulse(0, o.rumble * 0.5f, 45); } }   // the blade rasping out of the sheath
+        { static float acc = 0; acc += dt; if (o.rumble > 0.0f && acc >= 0.04f) { acc = 0; vrin::pulse(1, o.rumble, 45); vrin::pulse(0, o.rumble * 0.5f, 45); } }   // the blade rasping in the sheath
     } else if (sys.state != sword::S_SHEATHED || sys.onHilt || sys.onSheath) { sys.reset(); o.event = true; o.what = "katana draw paused (no rail / probe on)"; }
+    {   // 0.18.29 (owner: "the right hand is not totally gripping the hilt, a little above, and free to rotate - it needs to be locked onto
+        // the hilt"; "the left hand needs to grip the sheath higher up, at the mouth"): a hand that takes the sword is LOCKED to it -
+        // position and rotation. At the grab the controller's handle axis (grip -Z, the line through your fist) is turned onto the
+        // sword's line (the right hand's index side toward the guard, the left hand's toward the mouth - whichever way round you took
+        // it), the fist's centre is put ON the line (right: where you took the hilt, riding out with the blade; left: sword_sheath_hand_cm
+        // from the mouth, -3), and that pose is kept relative to the blade / the sheath until you let go. The whole hand target (wrist,
+        // fingers, thumb, palm) moves rigidly about the grip point, sword_hand_into_grip_cm (2) toward the palm so the handle sits in
+        // the fist. Eased in over 0.1 s; out over 0.25 s (after the draw the hand, with the katana, settles back onto your controller).
+        for (int h = 0; h < 2; h++) {
+            const bool ride = railOk && gripOk[h] && (h ? (sys.onHilt && sys.state != sword::S_DRAWN) : sys.onSheath);
+            if (ride && !lockOn[h]) {
+                if (h && sys.state == sword::S_SHEATHING && drawLockOk) { lockL[1] = drawLock; lockOn[1] = true; }   // back on the rail: the hand where it holds the blade
+                else if (capOk[h]) {   // 0.18.33 your captured grip (Ctrl+F5 right on the hilt / Ctrl+F6 left on the sheath); 0.18.38 slid along the rail to the settings' place
+                    lockL[h] = capShifted(h); lockOn[h] = true;
+                    if (h) { drawLock = lockL[1]; drawLockOk = true; for (int c = 0; c < 3; c++) bladeAxF[c] = Sf.R[c] * railAxis[0] + Sf.R[3 + c] * railAxis[1] + Sf.R[6 + c] * railAxis[2]; } }
+                else {
+                    fing::Aff C = fing::fromPose(gripM[h]); float rod[3] = {C.R[0], C.R[3], C.R[6]}; fbik::norm3(rod);   // 0.18.33: the fist's tube along the sword again (0.18.30, "the angle is right")
+                    const float sd = rod[0] * railAxis[0] + rod[1] * railAxis[1] + rod[2] * railAxis[2];
+                    const float sg = h ? (sd > 0.3f ? 1.0f : -1.0f) : (sd < -0.3f ? -1.0f : 1.0f); const float tg[3] = {railAxis[0] * sg, railAxis[1] * sg, railAxis[2] * sg};
+                    { const fbik::Rot A = fbik::arc(rod, tg); float Rn[9];
+                        for (int r = 0; r < 3; r++) for (int c = 0; c < 3; c++) Rn[r * 3 + c] = A.m[r * 3] * C.R[c] + A.m[r * 3 + 1] * C.R[3 + c] + A.m[r * 3 + 2] * C.R[6 + c];
+                        memcpy(C.R, Rn, 36); }
+                    const float ta = h ? sys.s + sys.hiltT : sheathG(); for (int c = 0; c < 3; c++) C.t[c] = railMouth[c] + railAxis[c] * ta * u;
+                    const fing::Aff F = h ? bladeFrame(sys.s) : Sf; fing::Aff Fi;
+                    if (fing::inv(F, Fi)) { lockL[h] = fing::mul(Fi, C); lockOn[h] = true;
+                        if (h) { drawLock = lockL[1]; drawLockOk = true; for (int c = 0; c < 3; c++) bladeAxF[c] = Sf.R[c] * railAxis[0] + Sf.R[3 + c] * railAxis[1] + Sf.R[6 + c] * railAxis[2]; } }
+                }
+            }
+            if (!ride) lockOn[h] = false;
+            if (!gripOk[h] || !railOk) { lw[h] = 0.0f; continue; }
+            lw[h] = fminf(1.0f, fmaxf(0.0f, lw[h] + (ride && lockOn[h] ? dt / 0.1f : -dt / 0.25f))); if (lw[h] <= 0.0f) continue;
+            const fing::Aff L = fing::mul(h ? bladeFrame(sys.s) : Sf, lockL[h]); const fing::Aff C = fing::fromPose(gripM[h]);
+            float Q[9]; for (int r = 0; r < 3; r++) for (int c = 0; c < 3; c++) Q[r * 3 + c] = L.R[r * 3] * C.R[c * 3] + L.R[r * 3 + 1] * C.R[c * 3 + 1] + L.R[r * 3 + 2] * C.R[c * 3 + 2];   // L.R C.R^T
+            const float w = 0.5f - 0.5f * cosf(lw[h] * 3.14159265f); float Qw[9]; rotPart(Q, w, Qw);
+            auto rot = [&](float *v) { const float a[3] = {v[0], v[1], v[2]}; for (int c = 0; c < 3; c++) v[c] = Qw[c * 3] * a[0] + Qw[c * 3 + 1] * a[1] + Qw[c * 3 + 2] * a[2]; };
+            float d[3] = {ap.pos[h][0] - C.t[0], ap.pos[h][1] - C.t[1], ap.pos[h][2] - C.t[2]}; rot(d); rot(ap.fing[h]); rot(ap.thumb[h]); rot(ap.palm[h]);
+            for (int c = 0; c < 3; c++) ap.pos[h][c] = C.t[c] + (L.t[c] - C.t[c]) * w + d[c] + ap.palm[h][c] * intoGripCm * u * w;
+            nPinned[h]++;
+        }
+        {   // 0.18.32 / 0.18.33 (owner: "dual wielding - the left hand can grab the hilt when it is held in the right hand"; 0.18.32 log: the
+            // two-hand hold took and dropped every 50 ms - its gate used the katana AS DRAWN, which the second hand itself steers). Playbook
+            // HAND-017 / FEAR VR: one hand OWNS (the right; letting go of it ends the hold), the support hand only steers; gated on geometry
+            // against the UNSTEERED katana (K1, from the right controller alone): the left grip within 12 cm of the hilt's line, 4..30 cm
+            // behind the right hand toward the pommel; squeeze 0.65 / 0.45; leaves at 20 cm off the line or outside -3..40 cm.
+            const bool canTwo = railOk && sys.state == sword::S_DRAWN && bOk && gripOk[0] && !sys.onSheath;
+            float t = 0, perp = 1e9f;
+            if (canTwo) { float H[3]; for (int c = 0; c < 3; c++) H[c] = g1[c] + a1[c] * sys.hiltT * u; const float d[3] = {grip[0][0] - H[0], grip[0][1] - H[1], grip[0][2] - H[2]}; t = (d[0] * a1[0] + d[1] * a1[1] + d[2] * a1[2]) / u;
+                float q[3]; for (int c = 0; c < 3; c++) q[c] = d[c] - a1[c] * t * u; perp = sqrtf(q[0] * q[0] + q[1] * q[1] + q[2] * q[2]) / u; }
+            const bool inZone = canTwo && perp < 12.0f && t > 4.0f && t < 30.0f;
+            float sepCm = 0.0f; { const float d2[3] = {grip[0][0] - grip[1][0], grip[0][1] - grip[1][1], grip[0][2] - grip[1][2]}; sepCm = sqrtf(d2[0] * d2[0] + d2[1] * d2[1] + d2[2] * d2[2]) / u; }
+            if (inZone && !twoHover && !twoHand) vrin::pulse(0, 0.12f, 10); twoHover = inZone;
+            if (!twoHand && inZone && squeeze[0] > 0.65f) { twoHand = true; twoT = t; vrin::pulse(0, 0.5f, 25); o.event = true; o.what = "left hand took the hilt too (two hands)"; }
+            else if (twoHand && (!canTwo || squeeze[0] < 0.35f || sepCm > 90.0f)) {   /* 0.18.37 (owner: "increase the distance the left grip can stay attached by a good amount - when I swing it keeps coming apart"): only letting go, or the controllers 90 cm apart */   /* 0.18.36 (owner: "the left hand falls off too easily"; log: dropped at grip 1.0): once held, only letting go or a hand far off ends it */ twoHand = false; o.event = true; o.what = "left hand let go of the hilt (one hand)"; }
+            if (twoHand) { twoGap = fminf(14.0f, fmaxf(8.0f, t)); nTwoFrames++; }
+            tw2 = fminf(1.0f, fmaxf(0.0f, tw2 + (twoHand ? dt : -dt) / 0.15f));
+        }
+        // the finger hold poses (fingers wrapped round the hilt / the sheath), eased in and out over 0.12 s
+        for (int h = 0; h < 2; h++) { const bool hf = railOk && gripOk[h] && (h ? (sys.onHilt || sys.state == sword::S_DRAWN || sys.state == sword::S_SHEATHING) : (sys.onSheath || twoHand));
+            fw[h] = fminf(1.0f, fmaxf(0.0f, fw[h] + (hf ? dt : -dt) / 0.12f)); }
+    }
+    // 0.18.29 (owner: "I want free flowing combat... I do not want unsheathing the sword to begin any attack animations; when the player
+    // unsheathes the sword they physically hold it, so all attack animations need to be disabled"): while your hand is on the hilt or
+    // the blade is out, the game's light / heavy attack buttons (pad X / Y = Square / Triangle) are held off (sword_block_game_attacks)
+    fp::underHold = (railOk && underHoldOn && ((sys.state != sword::S_DRAWN && (sys.onHilt || sys.onSheath)) || (sys.state == sword::S_DRAWN && sys.tipNear))) ? 1 : 0;   // 0.18.38 (owner: "Jin no longer moves underneath the headset"): only while a hand actually GRIPS the sheathed katana (or the tip is at the mouth) - a hand hanging within 25 cm of the hip held the body still most of the time
+    { const bool out = on && (sys.onHilt || sys.state != sword::S_SHEATHED); vrin::blockMask = (blockAttacks && out) ? (u32)(vrin::XB_X | vrin::XB_Y | vrin::OX_RT | vrin::OX_LT) : 0u;   /* 0.18.36: the triggers too (your index on the trigger while holding the katana fired R2 / L2 and counted as pad input - the idle hold let go) */ if (out && blockAttacks) nBlockedFrames++; }
+    if (fp::relHandSave.exchange(0)) { wchar_t ini[MAX_PATH]; swprintf(ini, MAX_PATH, L"%ls\\gotvr.ini", g_dir); wchar_t k2[40], b[32]; const fing::Aff R = fp::relHand;
+        for (int q = 0; q < 12; q++) { swprintf(k2, 40, L"sword_game_grip_%d", q); swprintf(b, 32, L"%.5f", q < 9 ? R.R[q] : R.t[q - 9]); WritePrivateProfileStringW(L"gotvr", k2, b, ini); } WritePrivateProfileStringW(L"gotvr", L"sword_game_grip_ok", L"1", ini); }
+    // 0.18.38 (owner: "STOP MAKING JIN'S SHEATHING ANIMATIONS PLAY - I DO NOT WANT HIM TO ANIMATE SHEATHING OR UNSHEATHING. IT IS PLAYER
+    // DRIVEN"): the 0.18.37 requests for the game's own draw / sheathe are gone. The game is never asked to draw or sheathe.
+    {   // 0.18.28 the game's own draw / sheathe - 0.18.29: OFF by default (sword_game_draw = 0; owner: the physical sword replaces the game's)
+        static int lastState = sword::S_SHEATHED;
+        if (gameDraw && sys.state != lastState) {
+            if (sys.state == sword::S_DRAWN && !gameDrawn) { vrin::requestChord(vrin::XB_RIGHT | vrin::OX_RSR); gameDrawn = true; logf("katana: asked the game to DRAW (touchpad swipe right)"); }
+            else if (sys.state == sword::S_SHEATHED && gameDrawn) { vrin::requestChord(vrin::XB_RIGHT | vrin::OX_RSR); gameDrawn = false; logf("katana: asked the game to SHEATHE (touchpad swipe right)"); }
+        }
+        lastState = sys.state;
+    }
     {   // publish for the job
-        const int k = fp::spubIdx.load() == 0 ? 1 : 0; fp::SwordPub &sp = fp::spub[k]; sp.state = sys.state; sp.s = sys.s; memcpy(sp.axisW, railAxis, 12); sp.probe = pr; sp.joint = on ? joint : -1; fp::spubIdx.store(k, std::memory_order_release);
+        const int k = fp::spubIdx.load() == 0 ? 1 : 0; fp::SwordPub &sp = fp::spub[k]; sp.state = sys.state; sp.s = sys.s; memcpy(sp.axisW, railAxis, 12); sp.probe = pr; sp.probeHold = pr >= 0 ? probeHold.load() : -1; sp.keep = keepJ; sp.joint = on ? joint : -1; sp.blade = blade; memcpy(sp.mouthW, railMouth, 12); for (int h = 0; h < 2; h++) sp.snapW[h] = railOk ? 0.5f - 0.5f * cosf(lw[h] * 3.14159265f) : 0.0f; sp.hiltAx = sys.s + sys.hiltT; sp.hiltT = sys.hiltT; sp.thumbGap = thumbGapCm; sp.sheathR = sheathRCm; { const bool hw = wristFwd && railOk && gripOk[1] && (sys.onHilt || sys.state == sword::S_DRAWN || sys.state == sword::S_SHEATHING); wwt = fminf(1.0f, fmaxf(0.0f, wwt + (hw ? dt : -dt) / 0.15f)); sp.wristW = 0.5f - 0.5f * cosf(wwt * 3.14159265f); memcpy(sp.ctrlFwd, gripM[1], 12); }
+        memcpy(sp.bladeW, bladeDir, 12); memcpy(sp.rawG[0], grip[0], 12); memcpy(sp.rawG[1], grip[1], 12); memcpy(sp.mouthL, pubML, 12); sp.mouthLok = pubMLok ? 1 : 0; sp.sheathG = sheathG(); sp.twoHand = twoHand ? 1 : 0; sp.twoGap = twoGap;
+        sp.twoW = 0.5f - 0.5f * cosf(tw2 * 3.14159265f); sp.gameBlade = useGameBlade ? gameBladeJ : -1; sp.capNoSnap[0] = capOk[0] ? 1 : 0; sp.capNoSnap[1] = capOk[1] ? 1 : 0;
+        sp.katOk = bOk ? 1 : 0; memcpy(sp.katR, Kd.R, 36); memcpy(sp.katT, Kd.t, 12); memcpy(sp.katAx, dirW, 12);
+        { dsw = fminf(1.0f, fmaxf(0.0f, dsw + (bOk ? dt / 0.1f : -dt / 0.2f))); sp.dSnapW = 0.5f - 0.5f * cosf(dsw * 3.14159265f); }
+        if (capOk[0]) { float ax[3]; for (int c = 0; c < 3; c++) ax[c] = Sf.R[c] * railAxis[0] + Sf.R[3 + c] * railAxis[1] + Sf.R[6 + c] * railAxis[2]; sp.sheathG = (cap[0].t[0] * ax[0] + cap[0].t[1] * ax[1] + cap[0].t[2] * ax[2]) / u; } sp.onHilt = (sys.onHilt || sys.state == sword::S_DRAWN) ? 1 : 0; sp.onSheath = sys.onSheath ? 1 : 0; for (int h = 0; h < 2; h++) sp.holdW[h] = 0.5f - 0.5f * cosf(fw[h] * 3.14159265f); fp::spubIdx.store(k, std::memory_order_release);
     }
     // logging (owner: "log player input when holding the katana in the sheath and out of it; log when the player holds the hilt and / or the sheath")
     const bool holding = sys.onSheath || sys.onHilt || sys.state != sword::S_SHEATHED;
@@ -2354,9 +2920,9 @@ static void frame() {   // game thread, pair phase 0, first person active, after
         for (int h = 0; h < 2; h++) { secBtn[h] |= btns[h]; secTrig[h] = fmaxf(secTrig[h], trigger[h]); secGrip[h] = fmaxf(secGrip[h], squeeze[h]); for (int a = 0; a < 2; a++) if (fabsf(stick[h][a]) > fabsf(secStick[h][a])) secStick[h][a] = stick[h][a]; } }
 }
 static void perSecond() {
-    logf("   SWORD/s: %s | joint %d%s, rail %s | left hand %.0f cm from the sheath mouth, right hand %.0f cm from the hilt | frames held %llu (sheath %llu, hilt %llu), blade out up to %.0f cm | input while held - left: buttons 0x%x trigger %.2f grip %.2f stick %.2f %.2f; right: buttons 0x%x trigger %.2f grip %.2f stick %.2f %.2f | katana moves %llu",
+    logf("   SWORD/s: %s | joint %d%s, rail %s | left hand %.0f cm from the sheath mouth, right hand %.0f cm from the hilt | frames held %llu (sheath %llu, hilt %llu), blade out up to %.0f cm | input while held - left: buttons 0x%x trigger %.2f grip %.2f stick %.2f %.2f; right: buttons 0x%x trigger %.2f grip %.2f stick %.2f %.2f | hands locked on the sword %llu / %llu frames, hold fingers %llu / %llu, game drawn %d | blade joint %d, tip speed up to %.1f m/s, tip vs mouth %.0f cm along / %.0f cm off / %.0f deg, game attacks held off %llu frames (%llu presses) | fists snapped onto the sword left %llu right %llu (finger circle %.1f / %.1f cm), left thumb on the guard %llu, katana through the fist %llu, right arm reach %.2f, blade-forward wrist %llu, sheath joint held %d, two hands %llu frames (steered %llu, gap %.0f cm), game draw census %llu | start-up turn kicks %llu | joint 637 %.0f cm from the katana joint | game sword %s (joint %d, its grip %s, in Jin's fist %llu frames, draw / sheathe asked %llu / %llu) | swing filter frames %llu, drawn grip captured %d, katana carried by the fist %llu (fist off its target %.1f cm) | katana moves %llu",
          on ? sword::kStateName[sys.state] : "off", joint, probeIdx.load() >= 0 ? " (PROBE: the lifted candidate)" : "", railOk ? (calOk ? "calibrated" : "default guess") : "none", sys.dSheath > 1e8f ? -1.0f : sys.dSheath, sys.dHilt > 1e8f ? -1.0f : sys.dHilt,
-         (unsigned long long)secFrames, (unsigned long long)secHeldS, (unsigned long long)secHeldH, secMaxS, secBtn[0], secTrig[0], secGrip[0], secStick[0][0], secStick[0][1], secBtn[1], secTrig[1], secGrip[1], secStick[1][0], secStick[1][1], (unsigned long long)fp::nSwordMoves.exchange(0));
+         (unsigned long long)secFrames, (unsigned long long)secHeldS, (unsigned long long)secHeldH, secMaxS, secBtn[0], secTrig[0], secGrip[0], secStick[0][0], secStick[0][1], secBtn[1], secTrig[1], secGrip[1], secStick[1][0], secStick[1][1], (unsigned long long)nPinned[0], (unsigned long long)nPinned[1], (unsigned long long)fp::nHoldPosed[0].exchange(0), (unsigned long long)fp::nHoldPosed[1].exchange(0), (int)gameDrawn, blade, secTipMs, sys.tipAx, sys.tipPerp, sys.tipDeg, (unsigned long long)nBlockedFrames, (unsigned long long)vrin::nBlocked.exchange(0), (unsigned long long)fp::nSnapped[0].exchange(0), (unsigned long long)fp::nSnapped[1].exchange(0), fp::fistRadCm[0].load(), fp::fistRadCm[1].load(), (unsigned long long)fp::nThumbAimed.exchange(0), (unsigned long long)fp::nKatanaInFist.exchange(0), fp::armExt[1].load(), (unsigned long long)fp::nWristFwd.exchange(0), keepJ, (unsigned long long)nTwoFrames, (unsigned long long)fp::nTwoSteer.exchange(0), twoGap, (unsigned long long)fp::nCensus.load(), (unsigned long long)vrin::nKicks.load(), fp::d637.load(), fp::gameDrawn.load() ? "DRAWN" : "sheathed", gameBladeJ, fp::relHandOk.load() ? "learned" : "not learned yet", (unsigned long long)fp::nGameBlade.exchange(0), (unsigned long long)nGbDraw, (unsigned long long)nGbSheathe, (unsigned long long)fp::nSwingStab.exchange(0), (int)drawRotOk, (unsigned long long)fp::nKatFistFix.exchange(0), fp::katFistErrCm.load(), (unsigned long long)fp::nSwordMoves.exchange(0)); nPinned[0] = nPinned[1] = 0; nBlockedFrames = 0; nTwoFrames = 0; secTipMs = 0.0f;
     secFrames = secHeldS = secHeldH = 0; secMaxS = 0; for (int h = 0; h < 2; h++) { secBtn[h] = 0; secTrig[h] = secGrip[h] = 0; secStick[h][0] = secStick[h][1] = 0; }
 }
 } // namespace swd
@@ -2476,13 +3042,14 @@ static void hSlot43(void *cam) {
                             const float sdt = lastS[h].QuadPart ? (float)(qn.QuadPart - lastS[h].QuadPart) / (float)sfq.QuadPart : 0.0f; lastS[h] = qn;
                             static bool rcPend[2] = {false, false}; { const LONG rc = S->theaterRecenter; if (rc != seenRc) { seenRc = rc; rcPend[0] = rcPend[1] = true; } }
                             if (g_fp.stab) { stab::Cfg sc2; sc2.minHz = g_fp.stabMinHz; sc2.beta = g_fp.stabBeta; sc2.rotMinHz = g_fp.stabRotMinHz; sc2.rotBeta = g_fp.stabRotBeta; sc2.deadMm = g_fp.stabDeadMm; sc2.deadDeg = g_fp.stabDeadDeg;
+                                if (swd::swingStab(h)) { sc2.dHz = 10.0f; sc2.rotBeta = 25.0f; sc2.beta = 30.0f; sc2.rotMinHz = 2.0f; fp::nSwingStab++; }   // 0.18.35 (owner: "the katana lagged behind my hand when I swung it")
                                 if (fp::stabLost[h]) { fp::stabLost[h] = 0; sf[h].init = false; fp::stabResets[stab::R_LOST]++; }
                                 const int r = stab::step(sf[h], hd[h].grip.q, hd[h].grip.p, true, sdt, sc2, rcPend[h] ? stab::R_RECENTER : stab::R_NONE); rcPend[h] = false;
                                 if (r != stab::R_NONE) { fp::stabResets[r]++; } else fp::stabFiltered++; fp::stabSpeed[h] = sf[h].v; }
                             else sf[h].init = false;
                         }
                         float oh[16]; compose(&hd[h].grip, oh);   // rows: fwd = grip -Z, left = grip -X, up = grip +Y (world)
-                        memcpy(swd::grip[h], oh + 12, 12); swd::gripOk[h] = 1; swd::squeeze[h] = hd[h].squeeze; swd::trigger[h] = hd[h].trigger; swd::btns[h] = hd[h].buttons; swd::stick[h][0] = hd[h].stick[0]; swd::stick[h][1] = hd[h].stick[1];   // 0.18.26 katana draw
+                        memcpy(swd::grip[h], oh + 12, 12); memcpy(swd::gripM[h], oh, 64); swd::gripOk[h] = 1; swd::squeeze[h] = hd[h].squeeze; swd::trigger[h] = hd[h].trigger; swd::btns[h] = hd[h].buttons; swd::stick[h][0] = hd[h].stick[0]; swd::stick[h][1] = hd[h].stick[1];   // 0.18.26 katana draw
                         // hand frame from the grip (rows: fwd = -Z, left = -X, up = +Y). [HEADSET] 0.18.7 (-Y fingers, -Z thumb): upside down; 0.18.9 (+Y, -Z):
                         // "only right when the controller points straight down" -> 0.18.10 = 0.18.9 pitched up 90 deg: fingers along -Z, thumb along -Y
                         // 0.18.12 (owner: "the hands rotate around a point near the wrist, not the wrist itself; palms down the controllers are a
@@ -2512,14 +3079,14 @@ static void hSlot43(void *cam) {
                             LARGE_INTEGER qn; QueryPerformanceCounter(&qn);
                             const float dq = lastQ[h].QuadPart ? fminf((float)(qn.QuadPart - lastQ[h].QuadPart) / (float)fq0.QuadPart, 0.1f) : 0.0f; lastQ[h] = qn;
                             const float om = 3.9f / fmaxf(0.02f, g_fp.fingerTween);
-                            fing::spring(gS[h], gV[h], gt, om, dq); fing::spring(tS[h], tV[h], ttc, om, dq); fing::spring(thS[h], thV[h], tht, om, dq);
+                            fing::spring(gS[h], gV[h], gt, om, dq); fing::spring(tS[h], tV[h], ttc, 3.9f / fmaxf(0.02f, g_fp.indexTween), dq);   // 0.18.31 the index (trigger / its touch) on its own, faster tween fing::spring(thS[h], thV[h], tht, om, dq);
                             (void)dt;
                             ap.grip[h] = gS[h]; ap.trig[h] = tS[h]; ap.thumbC[h] = thS[h]; fp::fingCurlOut[h] = gS[h]; fp::thumbOut[h] = thS[h];
                         }
                     }
                     // the controller hand order is left = 0, right = 1, the same as fbik's sides (Jin's left arm = +y)
+                    swd::frame(ap);   // 0.18.26 the katana draw (0.18.28: before the arm targets are published - it pins the hands to the sword)
                     fp::apubIdx.store(k, std::memory_order_release);
-                    swd::frame();   // 0.18.26 the katana draw
                 }
             }
             if (right && ((vr && pk.stereo) || offT)) {
@@ -4926,6 +5493,8 @@ static DWORD WINAPI worker(void *) {
         if (!g_ui.theater) ui::theaterMode = 2;
         occ::fastDeg = g_fastTurnDeg; occ::fastDegLeft = g_fastTurnDegLeft; occ::viewMode = g_foliageOcc; occ::fastMode = g_fastTurnMode; logf("fast head-turn limit for occlusion history: left eye %.2f deg, right eye %.1f deg per eye frame pair", occ::fastDegLeft, occ::fastDeg);
         bool ok = cutp::apply(); applyPreset(ok ? g_cfg.histMode : 4);
+        // 0.18.38: the 0.18.37 per-eye TAA on top of the preset is gone (owner: "it did not fix the issue and made things look worse")
+        { wchar_t ini[MAX_PATH]; swprintf(ini, MAX_PATH, L"%ls\\gotvr.ini", g_dir); WritePrivateProfileStringW(L"gotvr", L"taa_per_eye", NULL, ini); }
         if (!ok) logf("cut overrides unavailable -> history preset 5 RESET (0.9.0 behaviour)");
         logf("history preset %s", kPresets[g_preset.load()].name);
     }
@@ -4934,19 +5503,43 @@ static DWORD WINAPI worker(void *) {
     bool prev[11] = {}; u64 lastRep = GetTickCount64(), lastCallers = lastRep;
     for (;;) {
         Sleep(50);
+        if (g_cfg.hotkeys && g_cfg.xr == 4 && !g_playFlat) {   // 0.18.38 the hands' places on the katana, live (saved in gotvr.ini)
+            static bool pa[4] = {}; const int ak[4] = {VK_NEXT, VK_PRIOR, VK_END, VK_HOME};
+            for (int i = 0; i < 4; i++) { const bool dn = (GetAsyncKeyState(ak[i]) & 0x8000) != 0;
+                if (dn && !pa[i] && (GetAsyncKeyState(VK_CONTROL) & 0x8000)) { swd::adjReq[i < 2 ? 1 : 0] += (i % 2 == 0) ? 1 : -1;
+                    logf("HOTKEY Ctrl+%s: %s hand 1 cm %s", i == 0 ? "PageDown" : i == 1 ? "PageUp" : i == 2 ? "End" : "Home", i < 2 ? "right" : "left", i % 2 == 0 ? (i < 2 ? "down the hilt (toward the pommel)" : "down the sheath") : (i < 2 ? "up the hilt (toward the guard)" : "up the sheath (toward the guard)")); }
+                pa[i] = dn; } }
         if (g_cfg.xr == 4 && g_ui.layer) ui::hostUiOk = S && S->uiOk ? 1 : 0;
         if (g_cfg.hotkeys) {
             const int keys[11] = {VK_F7, VK_F8, VK_F9, VK_F10, VK_F11, VK_F6, VK_F5, VK_F4, VK_F3, VK_F2, VK_F1};
             for (int i = 0; i < 11; i++) {
                 bool down = (GetAsyncKeyState(keys[i]) & 0x8000) != 0;
                 if (down && !prev[i] && (!g_playFlat || i == 1)) {   // 0.18.24 flat play: only F8 (MARK); the VR test keys stay off
-                    if (g_cfg.xr == 4 && (GetAsyncKeyState(VK_CONTROL) & 0x8000) && !(GetAsyncKeyState(VK_MENU) & 0x8000) && (i == 0 || i == 1 || i == 3)) {   // 0.18.26 katana draw tools
-                        if (i == 0) { const int n = (int)(sizeof swd::kCand / sizeof swd::kCand[0]); static int ci = -1; ci = (ci + 1) % (n + 1);
-                            if (ci == n) { swd::probeIdx = -1; logf("HOTKEY Ctrl+F7 katana joint probe OFF"); }
-                            else { swd::probeIdx = swd::kCand[ci]; logf("HOTKEY Ctrl+F7 katana joint probe: joint %d lifted 15 cm - look at Jin's hips; Ctrl+F8 keeps it as the katana, Ctrl+F7 the next one", swd::kCand[ci]); } }
-                        else if (i == 1) { const int pj = swd::probeIdx.load(); if (pj >= 0) { swd::joint = pj; swd::probeIdx = -1; swd::calOk = 0; swd::iniWrite(L"sword_joint", (float)pj); swd::iniWrite(L"sword_calibrated", 0.0f);
-                                               logf("HOTKEY Ctrl+F8 katana joint = %d (saved; the rail is the default guess until Ctrl+F10)", pj); }
-                                           else logf("HOTKEY Ctrl+F8: no probe running (Ctrl+F7 first) - the katana joint stays %d", swd::joint); }
+                    if (g_cfg.xr == 4 && (GetAsyncKeyState(VK_CONTROL) & 0x8000) && !(GetAsyncKeyState(VK_MENU) & 0x8000) && (i == 0 || i == 1 || i == 2 || i == 3 || i == 5 || i == 6)) {   // 0.18.26 katana draw tools (0.18.32: Ctrl+F9 the game draw census)
+                        // 0.18.29: once the katana is calibrated, Ctrl+F7 / Ctrl+F8 pick the BLADE joint (only the blade moves on a draw);
+                        // Ctrl+Shift+F7 / Ctrl+Shift+F8 pick the katana (sheath) joint as before
+                        const bool sheathPick = (GetAsyncKeyState(VK_SHIFT) & 0x8000) || !swd::calOk || fp::bladeCandN.load() <= 0;
+                        if (i == 0) { static int ci = -1, cb = -1; const int mode = sheathPick ? 0 : 1;
+                            if (mode != swd::probeMode.load()) { ci = cb = -1; swd::probeMode = mode; }
+                            if (mode == 0) { const int n = (int)(sizeof swd::kCand / sizeof swd::kCand[0]); ci = (ci + 1) % (n + 1);
+                                if (ci == n) { swd::probeIdx = -1; logf("HOTKEY Ctrl+F7 katana joint probe OFF"); }
+                                else { swd::probeIdx = swd::kCand[ci]; logf("HOTKEY Ctrl+F7 katana joint probe: joint %d lifted 15 cm - look at Jin's hips; Ctrl+F8 keeps it as the katana, Ctrl+F7 the next one", swd::kCand[ci]); } }
+                            else {   // 0.18.31: first the katana lifted with each joint under it HELD still (one of them may be the sheath), then the candidates
+                                const int nd = fp::bladeCandDesc.load(), n = fp::bladeCandN.load() + nd; cb = (cb + 1) % (n + 1);
+                                if (cb == n) { swd::probeIdx = -1; swd::probeHold = -1; logf("HOTKEY Ctrl+F7 blade probe OFF"); }
+                                else if (cb < nd) { swd::probeHold = fp::bladeCand[cb]; swd::probeIdx = swd::joint; logf("HOTKEY Ctrl+F7 BLADE probe %d of %d: the katana (joint %d) lifted 15 cm with joint %d HELD STILL - if only the sword lifts and the sheath stays, Ctrl+F8 keeps this [the game has the sword %s: joint 637 %.0f cm from the katana]", cb + 1, n, swd::joint, fp::bladeCand[cb], fp::d637.load() < 90.0f ? "DRAWN" : "sheathed", fp::d637.load()); }
+                                else { const int c2 = cb - nd; swd::probeHold = -1; swd::probeIdx = fp::bladeCand[c2]; logf("HOTKEY Ctrl+F7 BLADE probe %d of %d: joint %d lifted 15 cm - if ONLY the sword (not the sheath) lifts, Ctrl+F8 keeps it; Ctrl+F7 the next one [the game has the sword %s: joint 637 %.0f cm from the katana]", cb + 1, n, fp::bladeCand[c2], fp::d637.load() < 90.0f ? "DRAWN" : "sheathed", fp::d637.load()); } } }
+                        else if (i == 1) { const int pj = swd::probeIdx.load();
+                            if (pj >= 0 && swd::probeMode.load() == 1 && fp::d637.load() < 90.0f) {   // 0.18.36 found while the GAME has the sword drawn: the drawn sword's own joint
+                                swd::iniWrite(L"sword_drawn_blade_joint", (float)pj); swd::probeIdx = -1; swd::probeHold = -1;
+                                logf("HOTKEY Ctrl+F8 with the game's sword DRAWN: joint %d carries the drawn sword alone (saved as sword_drawn_blade_joint - the next build uses it)", pj); }
+                            else if (pj >= 0 && swd::probeMode.load() == 1) { const int ph = swd::probeHold.load(); swd::blade = pj; swd::keepJ = ph; swd::probeIdx = -1; swd::probeHold = -1; swd::iniWrite(L"sword_blade_joint", (float)pj); swd::iniWrite(L"sword_keep_joint", (float)ph); swd::resetReq = 1;
+                                logf("HOTKEY Ctrl+F8 BLADE joint = %d%s (saved): only it moves on a draw, the sheath stays on the hip", pj, ph >= 0 ? ", with the sheath joint held still" : ""); if (ph >= 0) logf("   sheath joint (held still) = %d", ph); }
+                            else if (pj >= 0) { swd::joint = pj; swd::probeIdx = -1; swd::calOk = 0; swd::blade = -1; fp::bladeCandN = -1; swd::iniWrite(L"sword_joint", (float)pj); swd::iniWrite(L"sword_calibrated", 0.0f); swd::iniWrite(L"sword_blade_joint", -1.0f);
+                                               logf("HOTKEY Ctrl+F8 katana joint = %d (saved; the rail is the default guess until Ctrl+F10, the blade joint is reset)", pj); }
+                            else logf("HOTKEY Ctrl+F8: no probe running (Ctrl+F7 first) - the katana joint stays %d, the blade joint %d", swd::joint, swd::blade); }
+                        else if (i == 5 || i == 6) { const int hh = i == 6 ? 1 : 0; swd::capReq[hh] = (GetAsyncKeyState(VK_SHIFT) & 0x8000) ? 2 : 1; logf("HOTKEY Ctrl+%sF%d: %s %s hand grip capture", (GetAsyncKeyState(VK_SHIFT) & 0x8000) ? "Shift+" : "", i == 6 ? 5 : 6, (GetAsyncKeyState(VK_SHIFT) & 0x8000) ? "clear the" : "start the", hh ? "right" : "left"); }
+                        else if (i == 2) { fp::censusReq = 1; logf("HOTKEY Ctrl+F9: joint census now and 1.5 s after (0.18.38: the game is never asked to draw / sheathe - draw it yourself with an attack if you need it)"); }
                         else { swd::calReq = 1; logf("HOTKEY Ctrl+F10 katana rail calibration: left hand at the sheath mouth, right hand at the end of the hilt"); }
                         prev[i] = down; continue;
                     }
@@ -5097,7 +5690,7 @@ static DWORD WINAPI worker(void *) {
                     logf("   NEAR/s: first-person near plane %.1f cm (0 = game's own; camera now %.1f, environment entries set %llu) applied left %llu right %llu, projection not recognised %llu | hand trims pitch %.1f yaw %.1f roll %.1f deg (F1/F2/F3, Shift = back), wrist back %.1f up %.1f thumb %.1f cm (Ctrl+F1/F2/F3) | AO fix (fp_ao_off, Shift+F6) %d: the game holds screen-space shadows %d, ambient occlusion %d (applies %llu)", g_fp.nearCm, cn, (unsigned long long)stipple::nNear.exchange(0),
                          (unsigned long long)fp::nearHits[0].exchange(0), (unsigned long long)fp::nearHits[1].exchange(0), (unsigned long long)fp::nearMiss.exchange(0), g_fp.handPitch, g_fp.handYaw, g_fp.handRoll, g_fp.handBackCm, g_fp.handUpCm, g_fp.handSideCm, shade::mode.load(), shade::seenS.load(), shade::seenA.load(), (unsigned long long)shade::writes.exchange(0)); }
                     { static const char *iw[] = {"holding", "off", "pad input", "moving", "game owns the arms", "riding", "animation moving", "pose size"}; const int w = fp::idleWhy.load();
-                      logf("   UNDER/s: body under the headset %s, offset %.1f cm (max %.0f)", g_fp.bodyUnder ? "on" : "off (fp_body_under_hmd)", fp::underCm.load(), g_fp.underMaxCm);
+                      logf("   UNDER/s: body under the headset %s, offset %.1f cm (max %.0f) = %.1f cm forward / %.1f cm left of Jin as drawn, moved up to %.1f cm in a second, held while a hand is at the katana %llu frames", g_fp.bodyUnder ? "on" : "off (fp_body_under_hmd)", fp::underCm.load(), g_fp.underMaxCm, fp::underFwdCm.load(), fp::underLeftCm.load(), fp::underJumpCm.exchange(0), (unsigned long long)fp::nUnderHeld.exchange(0));
                       logf("   IDLE/s: idle hold %s | weight %.2f | stance turned %.1f deg to face forward | held poses %llu, let go %llu", w >= 0 && w <= 7 ? iw[w] : "-", fp::idleWOut.load(), -fp::idleSquareDeg.load(), (unsigned long long)fp::nIdleHeld.exchange(0), (unsigned long long)fp::nIdleRelease.exchange(0)); }
                     logf("   FINGERS/s: %s | posed %llu | grip curl left %.2f right %.2f | thumb down left %.2f right %.2f | hand stabilisation %s: filtered %llu, hand speed left %.2f right %.2f m/s, resets: first %llu lost %llu recenter %llu jump %llu time step %llu non-finite %llu", fp::fingState.load() == 1 ? (g_fp.fingers ? "VR fingers on" : "off (fp_fingers)") : fp::fingState.load() < 0 ? "not usable (animated)" : "not analysed yet", (unsigned long long)fp::nFingPosed.exchange(0), fp::fingCurlOut[0].load(), fp::fingCurlOut[1].load(), fp::thumbOut[0].load(), fp::thumbOut[1].load(), g_fp.stab ? "on" : "off", (unsigned long long)fp::stabFiltered.exchange(0), fp::stabSpeed[0].load(), fp::stabSpeed[1].load(), (unsigned long long)fp::stabResets[1].exchange(0), (unsigned long long)fp::stabResets[2].exchange(0), (unsigned long long)fp::stabResets[3].exchange(0), (unsigned long long)fp::stabResets[4].exchange(0), (unsigned long long)fp::stabResets[5].exchange(0), (unsigned long long)fp::stabResets[6].exchange(0));
                     logf("   ARMS/s: %s | solves %llu, held off %llu | hand blend left %.2f right %.2f | parent table %d | game owns the arms %.2f (input holds %llu, animation raised a hand %llu) | stand tall %.1f cm applied %.1f (%llu poses) | forearm twist left %.0f right %.0f deg (%d / %d twist joints), arm stretch left %.1f right %.1f cm, jump windows held %llu", fp::armsReady.load() ? (fp::armsWant.load() && g_fp.arms ? "VR arms ON" : "VR arms off (Shift+F10 / fp_arms)") : "arm chains not found yet",
@@ -5106,8 +5699,8 @@ static DWORD WINAPI worker(void *) {
                     swd::perSecond();
                     logf("   AUDIO/s: listener %s: head %llu / game camera %llu updates | emitters %llu, Jin's own centred %llu", aud::on.load() ? "head (first person)" : "the game's camera (audio_head = 0)", (unsigned long long)aud::nHead.exchange(0), (unsigned long long)aud::nGame.exchange(0), (unsigned long long)aud::nEmit.exchange(0), (unsigned long long)aud::nSelf.exchange(0));
                     logf("   ROOMSCALE/s: %s | your head %.0f cm from Jin's | walks %llu, covered for you %.0f cm, blocked %llu", g_fp.roomscale ? (GetTickCount64() < vrin::rsOkUntil.load() ? "on" : "on (held: riding / climbing / jump / menu)") : "off (fp_roomscale)", sqrtf(vrin::rsOff[0].load() * vrin::rsOff[0].load() + vrin::rsOff[1].load() * vrin::rsOff[1].load()), (unsigned long long)vrin::nRsDrive.exchange(0), fp::rsApplied.exchange(0), (unsigned long long)fp::nRsBlocked.exchange(0));
-                    logf("   BODY/s: body drawn facing your forward: frames %llu, render poses turned %llu (items %llu), now %.0f deg | Jin faces %.0f deg from your forward, speed %.1f m/s | stance hips %.0f deg (squared while standing) | turns: dead zone %llu, snap %llu; body turned past the forward while moving %.0f deg, forward taken at move starts %llu (all %llu) | held off: riding %llu, fast %llu, refused %llu (fp_body_follow %d)",
-                         (unsigned long long)fp::nBodyFrames.exchange(0), (unsigned long long)fp::nBodyJobs.exchange(0), (unsigned long long)fp::nWorldTurned.exchange(0), fp::bodyDeg.load(), fp::facingDeg.load(), fp::speedMs.load(), fp::hipYawDeg.load(), (unsigned long long)fp::nDeadTurns.exchange(0), (unsigned long long)fp::nSnapTurns.exchange(0), fp::moveOffDeg.load(), (unsigned long long)vrin::nMoveStarts.load(), (unsigned long long)vrin::nMoveCaps.load(),
+                    logf("   BODY/s: body drawn facing your forward: frames %llu, render poses turned %llu (items %llu), now %.0f deg | Jin faces %.0f deg from your forward, speed %.1f m/s | stance hips %.0f deg (squared while standing) | turns: dead zone %llu, snap %llu, on stopping %llu; body turned past the forward while moving %.0f deg, forward taken at move starts %llu (all %llu) | held off: riding %llu, fast %llu, refused %llu (fp_body_follow %d)",
+                         (unsigned long long)fp::nBodyFrames.exchange(0), (unsigned long long)fp::nBodyJobs.exchange(0), (unsigned long long)fp::nWorldTurned.exchange(0), fp::bodyDeg.load(), fp::facingDeg.load(), fp::speedMs.load(), fp::hipYawDeg.load(), (unsigned long long)fp::nDeadTurns.exchange(0), (unsigned long long)fp::nSnapTurns.exchange(0), (unsigned long long)fp::nStopTurns.exchange(0), fp::moveOffDeg.load(), (unsigned long long)vrin::nMoveStarts.load(), (unsigned long long)vrin::nMoveCaps.load(),
                          (unsigned long long)fp::nBodyRiding.exchange(0), (unsigned long long)fp::nBodyFast.exchange(0), (unsigned long long)fp::nBodyRefused.exchange(0), g_fp.bodyFollow);
                     f0 = g0; f1 = g1; f2 = g2; f3 = g3; f4 = g4; f5 = g5; f6 = g6; f7 = g7; f8 = g8; f9 = g9; f10 = g10; }
                 { static u64 s0, s1; u64 y0 = ui::sReads, y1 = ui::sHits;
@@ -5550,6 +6143,7 @@ extern "C" __declspec(dllexport) int GoTVR_SelfTest(const wchar_t *exePath) {
         }
         g_stFrame = 102; hand = 60; anim(hand);   // the hand drops to 60 cm (84 cm from the neck)
         fp::hAnimJob(job); ok &= len3_st(pose[0] + 29 * 16) > 0.9f && len3_st(pose[0] + 27 * 16) == 0.0f;   // the stray hand is drawn, the head is not
+        { const int sps = fp::parState.load(); fp::parState = 1; fp::censusReq = 1; fp::hAnimJob(job); logf("   census request consumed by the job: %s", fp::censusReq.load() == 0 ? "yes" : "NO"); fp::censusReq = 0; fp::parState = sps; }
         ok &= fp::update(gm) && fp::nHide == 4 && fp::nDropped.load() == 1;   // ...and it leaves the set for good
         g_stFrame = 103; ui::mode = ui::M_CINEMA; ui::camCut = 1; float gm2[16]; ident(gm2, 1000, 1700, 450); ok &= !fp::update(gm2) && gm2[13] == 1700;   // cutscene: the game's camera
         g_stFrame = 107; fp::hAnimJob(job); ok &= len3_st(pose[0] + 27 * 16) > 0.9f;   // ...and the head is drawn again
@@ -5690,6 +6284,24 @@ extern "C" __declspec(dllexport) int GoTVR_SelfTest(const wchar_t *exePath) {
             const float tgt = a - b0; const bool tw = b1 < 0.25f * tgt && b8 > 0.8f * tgt && fabsf(bEnd - tgt) < 1.0f / 57.2957795f;
             fp::refOk = sro; fp::headOk = sho; g_fp.bodyFollow = sbf; g_fp.bodyHead = sbh; fp::bodyYawCur = sby; g_fp.headDeadDeg = sdd; g_fp.bodyTurnS = sbts; fp::nLone = sln; fp::headTurning = false; fp::bodyLastMs = 0; fp::lastRootOk = false; fp::bodyYaw = 0;
             ok &= tw; logf("body turn tween test (past the threshold the body eases round: %.0f %% after 50 ms, %.0f %% after 0.4 s, settled %.1f deg): %s", 100.0f * b1 / tgt, 100.0f * b8 / tgt, bEnd * 57.2957795f, tw ? "PASS" : "FAIL");
+        }
+        {   // 0.18.28 stopping squares the body to the headset: running with a 12 deg look (inside the 20 deg dead zone) keeps the body; stop -> it turns
+            float root[16] = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1}; const float U[3] = {0, 0, 1}, F[3] = {1, 0, 0};
+            const bool sro = fp::refOk, sho = fp::headOk; const int sbf = g_fp.bodyFollow, sbh = g_fp.bodyHead, smh = vrin::cfg.moveHead, ssq = g_fp.bodySquareOnStop; const float sby = fp::bodyYawCur, sdd = g_fp.headDeadDeg, sbts = g_fp.bodyTurnS, sup = g_cfg.unitsPerM; const int sln = fp::nLone;
+            bool sq = true; float bk[2] = {0, 0}, bMove[2] = {0, 0};
+            for (int pass = 0; pass < 2; pass++) {
+                g_fp.bodySquareOnStop = pass == 0 ? 1 : 0; g_fp.bodyFollow = 1; g_fp.bodyHead = 1; vrin::cfg.moveHead = 1; g_fp.headDeadDeg = 20.0f; g_fp.bodyTurnS = 0.35f; g_cfg.unitsPerM = 100.0f;
+                fp::refOk = true; fp::headOk = true; fp::refF[0] = 1; fp::refF[1] = 0; fp::nLone = 0; fp::bodyYawCur = 0; fp::headTurning = false; fp::lastRootOk = false; root[12] = 0; fp::bodyLastMs = GetTickCount64() - 50; fp::bodyStep(root, U, F, false);
+                auto stepN = [&](int n, float mv) { for (int i = 0; i < n; i++) { root[12] += mv; fp::bodyLastMs = GetTickCount64() - 50; fp::bodyStep(root, U, F, true); } };
+                fp::headF[0] = 1; fp::headF[1] = 0; stepN(60, 5.0f);
+                const float a = 12.0f / 57.2957795f; fp::headF[0] = cosf(a); fp::headF[1] = sinf(a); stepN(40, 5.0f); bMove[pass] = fp::bodyYawCur;
+                stepN(60, 0.0f); bk[pass] = fp::bodyYawCur;
+            }
+            const float a = 12.0f / 57.2957795f;
+            sq = fabsf(bMove[0]) < 1.0f / 57.2957795f && fabsf(bk[0] - a) < 1.0f / 57.2957795f && fabsf(bk[1]) < 1.0f / 57.2957795f;
+            g_fp.bodySquareOnStop = ssq; vrin::cfg.moveHead = smh; g_fp.headDeadDeg = sdd; g_fp.bodyTurnS = sbts; g_cfg.unitsPerM = sup;
+            fp::refOk = sro; fp::headOk = sho; g_fp.bodyFollow = sbf; g_fp.bodyHead = sbh; fp::bodyYawCur = sby; fp::nLone = sln; fp::headTurning = false; fp::bodyLastMs = 0; fp::lastRootOk = false; fp::bodyYaw = 0; fp::speedMs = 0;
+            ok &= sq; logf("stop squares the body test (running, 12 deg look inside the dead zone: body %.1f deg; stopped: %.1f deg, with fp_body_square_on_stop=0: %.1f deg): %s", bMove[0] * 57.2957795f, bk[0] * 57.2957795f, bk[1] * 57.2957795f, sq ? "PASS" : "FAIL");
         }
         {   // 0.18.21 moving: the forward is NOT rewritten when the body turns past the threshold; a new forward squares the body to it
             float root[16] = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1}; const float U[3] = {0, 0, 1}, F[3] = {1, 0, 0};
@@ -5858,7 +6470,7 @@ extern "C" __declspec(dllexport) int GoTVR_SelfTest(const wchar_t *exePath) {
             ok &= ob; logf("flat play observer test (a hero flag change logged with old / new value, floats ignored, a per-tick counter set aside): %s", ob ? "PASS" : "FAIL");
         }
         {   // 0.18.26 katana draw state machine: sheath + hilt grabs with hysteresis, the blade rides the rail, rumbles while moving, frees at the top
-            sword::Sys S2; sword::Cfg c; sword::In in{}; sword::Out o{}; in.unitsPerCm = 1.0f; in.dt = 1.0f / 90.0f; in.valid[0] = in.valid[1] = true; in.axis[0] = 1;
+            sword::Sys S2; sword::Cfg c; c.drawCm = c.drawnFrac * c.bladeCm; c.needSheathHand = 1; sword::In in{}; sword::Out o{}; in.unitsPerCm = 1.0f; in.dt = 1.0f / 90.0f; in.valid[0] = in.valid[1] = true; in.axis[0] = 1;
             auto at = [&](int h, float x, float y, float g) { in.hand[h][0] = x; in.hand[h][1] = y; in.hand[h][2] = 0; in.grip[h] = g; };
             at(0, 0, 0, 0.0f); at(1, 50, 30, 0.0f); S2.step(in, c, o); bool sw = !S2.onSheath && !S2.onHilt;
             at(0, 2, 0, 0.8f); S2.step(in, c, o); sw &= S2.onSheath && o.pulseHand[0];                                   // left hand takes the sheath (a pulse)
@@ -5870,7 +6482,76 @@ extern "C" __declspec(dllexport) int GoTVR_SelfTest(const wchar_t *exePath) {
             at(1, 0, 60, 0.8f); S2.step(in, c, o); sw &= S2.state == sword::S_DRAWN;                                      // in the hand anywhere
             at(1, 0, 60, 0.0f); S2.step(in, c, o); sw &= S2.state == sword::S_SHEATHED && S2.s == 0.0f;                   // let go (stage 1: back in the sheath)
             sword::Sys S3; at(0, 50, 50, 0.0f); at(1, 12.5f, 0, 0.8f); S3.step(in, c, o); at(1, 40, 0, 0.8f); S3.step(in, c, o); sw &= S3.onHilt && S3.s == 0.0f;   // no hand on the sheath: no slide
-            ok &= sw; logf("katana draw test (grab sheath + hilt with hysteresis and pulses, blade rides the rail with rumble, free at the top, no slide without the sheath hand): %s", sw ? "PASS" : "FAIL");
+            {   // 0.18.28 the hilt is a segment: grabbed near the pommel (22 cm out) as well as near the guard; 12 cm to the side is too far
+                sword::Sys S4; at(0, 2, 0, 0.8f); at(1, 22.0f, 6, 0.8f); S4.step(in, c, o); sw &= S4.onSheath && S4.onHilt && S4.s == 0.0f;
+                at(1, 50.0f, 6, 0.8f); S4.step(in, c, o); sw &= fabsf(S4.s - 28.0f) < 0.01f;   // no jump at the grab: the blade comes out as far as the hand moved
+                sword::Sys S5; at(1, 12.5f, 12, 0.8f); S5.step(in, c, o); sw &= !S5.onHilt;
+                if (!sw) logf("   katana hilt segment: FAIL (S4 on %d/%d s %.2f, S5 %d)", (int)S4.onSheath, (int)S4.onHilt, S4.s, (int)S5.onHilt);
+            }
+            {   // 0.18.29 the draw gain (40 cm of pull frees the blade), sliding home when let go, sheathing by the tip, pulling back out
+                sword::Cfg g; sword::Sys S6; bool gk = true; at(0, 2, 0, 0.8f); at(1, 12.5f, 2, 0.8f); S6.step(in, g, o);
+                at(1, 32.5f, 2, 0.8f); S6.step(in, g, o); gk &= S6.state == sword::S_DRAWING && fabsf(S6.s - 20.0f * g.gain()) < 0.05f;
+                at(1, 12.5f + 40.5f, 2, 0.8f); S6.step(in, g, o); gk &= S6.state == sword::S_DRAWN;
+                in.bladeOk = true; const float cA = cosf(0.7854f), sA = sinf(0.7854f);
+                in.tip[0] = 2; in.tip[1] = 0; in.tip[2] = 0; in.dir[0] = cA; in.dir[1] = sA; in.dir[2] = 0; S6.step(in, g, o); gk &= S6.state == sword::S_DRAWN;   // 45 deg off: not taken
+                in.dir[0] = 1; in.dir[1] = 0; S6.step(in, g, o); gk &= S6.state == sword::S_SHEATHING && fabsf(S6.s - 72.0f) < 0.01f;         // lined up at the mouth: on the rail
+                in.bladeOk = false; at(1, 53.0f - 20.0f, 2, 0.8f); S6.step(in, g, o); gk &= S6.state == sword::S_SHEATHING && fabsf(S6.s - (72.0f - 20.0f * g.gain())) < 0.05f;
+                at(1, 53.0f - 44.0f, 2, 0.8f); S6.step(in, g, o); gk &= S6.state == sword::S_SHEATHED && S6.s == 0.0f && S6.onHilt;           // home, the hand still on the hilt
+                at(1, 9.0f + 20.0f, 2, 0.8f); S6.step(in, g, o); gk &= S6.state == sword::S_DRAWING;                                            // draw again at once
+                at(1, 29.0f, 2, 0.0f); S6.step(in, g, o); gk &= S6.state == sword::S_DRAWING && S6.homing;                                      // let go: it slides home
+                for (int t = 0; t < 30; t++) S6.step(in, g, o); gk &= S6.state == sword::S_SHEATHED && S6.s == 0.0f;
+                // pulled back out of a sheathing
+                sword::Sys S7; at(1, 12.5f, 2, 0.8f); S7.step(in, g, o); at(1, 53.0f, 2, 0.8f); S7.step(in, g, o); in.bladeOk = true; in.dir[0] = 1; S7.step(in, g, o); in.bladeOk = false;
+                at(1, 53.0f + 7.0f, 2, 0.8f); S7.step(in, g, o); gk &= S7.state == sword::S_DRAWN;
+                if (!gk) logf("   katana gain / sheathe: FAIL (S6 %d s %.2f, S7 %d)", S6.state, S6.s, S7.state);
+                in.bladeOk = false; sw &= gk;
+                // the hand lock's partial rotation: none at 0, all at 1, half twice = all
+                const fbik::Rot R = fbik::axisAngle((const float[3]){0.267f, 0.535f, 0.802f}, 1.2f); float R0[9], R1[9], Rh[9], Rhh[9]; swd::rotPart(R.m, 0.0f, R0); swd::rotPart(R.m, 1.0f, R1); swd::rotPart(R.m, 0.5f, Rh);
+                for (int r = 0; r < 3; r++) for (int cc = 0; cc < 3; cc++) Rhh[r * 3 + cc] = Rh[r * 3] * Rh[cc] + Rh[r * 3 + 1] * Rh[3 + cc] + Rh[r * 3 + 2] * Rh[6 + cc];
+                float e0 = 0, e1 = 0, e2 = 0; for (int i = 0; i < 9; i++) { e0 = fmaxf(e0, fabsf(R0[i] - ((i % 4 == 0) ? 1.0f : 0.0f))); e1 = fmaxf(e1, fabsf(R1[i] - R.m[i])); e2 = fmaxf(e2, fabsf(Rhh[i] - R.m[i])); }
+                const bool rp = e0 < 1e-5f && e1 < 2e-3f && e2 < 2e-3f; sw &= rp; if (!rp) logf("   hand lock rotation blend: FAIL (%.5f %.5f %.5f)", e0, e1, e2);
+            }
+            {   // 0.18.30 right hand only; past half the blade an arm at 90 % reach frees it; the fist clear of the guard; the finger circle centre
+                sword::Cfg g; sword::Sys S8; bool fk = true; at(0, 80, 80, 0.0f); at(1, 12.5f, 2, 0.8f); in.armExt = 0.5f; S8.step(in, g, o); fk &= S8.onHilt && !S8.onSheath && fabsf(S8.hiltT - (g.guardCm + g.rightCm)) < 0.01f;
+                at(1, 12.5f + 28.0f, 2, 0.8f); S8.step(in, g, o); fk &= S8.state == sword::S_DRAWING && S8.s > g.freeMinFrac * g.bladeCm;   // no left hand needed
+                in.armExt = 0.95f; S8.step(in, g, o); fk &= S8.state == sword::S_DRAWN; in.armExt = 0.0f;
+                sword::Sys S9; at(1, -5.0f, 2, 0.8f); S9.step(in, g, o); fk &= S9.onHilt && fabsf(S9.hiltT - (g.guardCm + g.rightCm)) < 0.01f;
+                {   // 0.18.38 the guard away from the rail's origin: the hilt is guardCm .. guardCm + hiltCm, the fist rightCm below the guard, clamped
+                    sword::Cfg g2 = g; g2.guardCm = 15.0f; g2.rightCm = 9.0f; sword::Sys S10; at(1, 5.0f, 2, 0.8f); S10.step(in, g2, o); fk &= !S10.onHilt;   // 10 cm short of the guard: not the hilt
+                    at(1, 30.0f, 2, 0.8f); S10.step(in, g2, o); fk &= S10.onHilt && fabsf(S10.hiltT - 24.0f) < 0.01f;
+                    g2.rightCm = 60.0f; sword::Sys S11; S11.step(in, g2, o); fk &= S11.onHilt && fabsf(S11.hiltT - (15.0f + g2.hiltCm - g2.handHalfCm)) < 0.01f;
+                    g2.leftAx = 10.0f; sword::Sys S12; at(0, 10.0f, 3, 0.8f); S12.step(in, g2, o); fk &= S12.onSheath; at(0, 0.0f, 0, 0.0f); }
+                const float a[3] = {2, 0, 0}, b[3] = {0, 2, 0}, e[3] = {-2, 0, 0}; float cc[3]; fk &= fp::circumC(a, b, e, cc) && fabsf(cc[0]) < 1e-4f && fabsf(cc[1]) < 1e-4f && fabsf(cc[2]) < 1e-4f;
+                const float a2[3] = {11, 5, 3}, b2[3] = {10, 6, 3}, e2[3] = {9, 5, 3}; fk &= fp::circumC(a2, b2, e2, cc) && fabsf(cc[0] - 10) < 1e-3f && fabsf(cc[1] - 5) < 1e-3f;
+                if (!fk) logf("   katana one-hand / reach / fist circle: FAIL (S8 %d s %.1f, S9 hiltT %.2f)", S8.state, S8.s, S9.hiltT);
+                sw &= fk;
+            }
+            {   // 0.18.31 the rail from the two joints: the child along the calibrated line -> mouth at the nearer end, axis to the far end
+                const float mC[3] = {-3.6f, -3.3f, -6.7f}, aC[3] = {0.005f, 0.188f, -0.982f}; float mO[3], aO[3], ang, d0, d1;
+                const float c1[3] = {0, 2, -25}; bool rj = swd::railFromJoints(mC, aC, c1, 1.0f, mO, aO, ang, d0, d1) && mO[2] == 0.0f && aO[2] < -0.9f;
+                const float c2[3] = {20, 0, 0}; rj &= !swd::railFromJoints(mC, aC, c2, 1.0f, mO, aO, ang, d0, d1);   // across the line: the calibration stays
+                const float c3[3] = {0, 0, -5}; rj &= !swd::railFromJoints(mC, aC, c3, 1.0f, mO, aO, ang, d0, d1);    // too close
+                if (!rj) logf("   katana rail from joints: FAIL"); sw &= rj;
+            }
+            {   // 0.18.32 two hands: 30 deg off -> the hand line exactly; 120 deg off -> compressed under 90 deg; fade 0 -> unchanged
+                const float d[3] = {1, 0, 0}; const float L1[3] = {cosf(0.5236f), sinf(0.5236f), 0}, L2[3] = {cosf(2.094f), sinf(2.094f), 0}; float o1[3], o2[3], o3[3];
+                fp::twoSteer(d, L1, 1.0f, o1); fp::twoSteer(d, L2, 1.0f, o2); fp::twoSteer(d, L2, 0.0f, o3);
+                const float a1 = acosf(fminf(1.0f, o1[0])) * 57.2957795f, a2 = acosf(fminf(1.0f, o2[0])) * 57.2957795f;
+                const bool ts = fabsf(a1 - 30.0f) < 0.1f && a2 > 55.0f && a2 < 90.0f && fabsf(o3[0] - 1.0f) < 1e-5f; sw &= ts;
+                if (!ts) logf("   two-hand steer: FAIL (%.1f, %.1f deg)", a1, a2);
+            }
+            ok &= sw; logf("katana draw test (grab sheath + hilt with hysteresis and pulses, blade rides the rail with rumble, free at the top, no slide without the sheath hand; 0.18.29: draw gain, slide home, sheathing by the tip, pulling back out, hand lock rotation; 0.18.30: right hand alone, freed at arm reach, fist clear of the guard, finger circle centre): %s", sw ? "PASS" : "FAIL");
+        }
+        {   // 0.18.28 hold fingers: holdW 1 -> the hilt / sheath tables, full curl, the index wrapped too; 0 -> untouched; the game draw chord queued
+            const int sk = fp::spubIdx.load(); fp::SwordPub sv0 = fp::spub[0]; fp::spub[0] = fp::SwordPub{}; fp::spub[0].holdW[0] = 1.0f; fp::spub[0].holdW[1] = 0.5f; fp::spubIdx = 0;
+            fing::Curl c1; c1.grip = 0.2f; c1.index = 0.0f; c1.thumb = 0.0f; fing::Tune t1; fp::holdBlend(0, c1, t1);
+            fing::Curl c2; c2.grip = 0.2f; c2.index = 0.0f; c2.thumb = 0.0f; fing::Tune t2; fp::holdBlend(1, c2, t2);
+            fp::spub[0].holdW[0] = 0.0f; fing::Curl c3; c3.grip = 0.2f; fing::Tune t3; fp::holdBlend(0, c3, t3);
+            bool hb = fabsf(c1.grip - 1.0f) < 1e-4f && fabsf(c1.index - 1.0f) < 1e-4f && fabsf(t1.longDeg[0] - 60.0f) < 1e-3f && fabsf(t1.thumbDeg[1] - 10.0f) < 1e-3f
+                && fabsf(c2.index - 0.5f) < 1e-4f && fabsf(t2.longDeg[1] - 92.5f) < 1e-3f && fabsf(c3.grip - 0.2f) < 1e-6f && fabsf(t3.longDeg[0] - 80.0f) < 1e-6f;
+            fp::spub[0] = sv0; fp::spubIdx = sk;
+            const u64 q0 = vrin::extReqSeq.load(); vrin::requestChord(vrin::XB_RIGHT | vrin::OX_RSR); hb &= vrin::extReqSeq.load() == q0 + 1 && vrin::extReqMask.load() == (u32)(vrin::XB_RIGHT | vrin::OX_RSR); vrin::extSeen = vrin::extReqSeq.load();   // not played into later tests
+            ok &= hb; logf("katana hold fingers test (sheath table full on the left, half-blended hilt on the right, none when not holding; the draw chord queued): %s", hb ? "PASS" : "FAIL");
         }
         {   // 0.18.24 room-scale: shifting the reference takes exactly Jin's step out of the head offset (any reference yaw, any view yaw)
             const GvPose sref = g_ref; const bool sv = g_refValid; bool rs = true;
@@ -5908,9 +6589,12 @@ extern "C" __declspec(dllexport) int GoTVR_SelfTest(const wchar_t *exePath) {
             aud::oEmitter = [](u8 *) {}; aud::setPos = [](u64 id, const float *t) -> int { gid = id; memcpy(got, t, 36); nset++; return 1; }; aud::selfUse = []() -> bool { return true; }; aud::w2a = I4; aud::on = 1; aud::selfOn = 1;
             const float sup = g_cfg.unitsPerM; g_cfg.unitsPerM = 100.0f;
             float H[16] = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1000, 2000, 160, 1}; aud::publish(H);
+            u8 *const snd = fp::node; const int snj2 = fp::nJ; fp::node = own; fp::nJ = 10;
             aud::hEmitter(em); bool vs = nset == 1 && gid == 0x1234 && fabsf(got[6] - 1025.0f) < 0.01f && fabsf(got[7] - 2000.0f) < 0.01f && got[0] == 1.0f && got[5] == 1.0f;
             Lo[0] = 100; aud::hEmitter(em); vs &= nset == 1;                    // 1 m away: where the game put it
             Lo[0] = 10; aud::selfOn = 0; aud::hEmitter(em); vs &= nset == 1;    // off
+            { static u8 other[0x300]; memcpy(other, own, sizeof other); *(u8 **)(src + 0x38) = other; aud::hEmitter(em); vs &= nset == 1; *(u8 **)(src + 0x38) = own; }   // someone else's emitter: untouched
+            fp::node = snd; fp::nJ = snj2;
             aud::oEmitter = so; aud::setPos = ssp; aud::selfUse = su; aud::w2a = sw; aud::on = son; aud::selfOn = sso; aud::nSelf = 0; aud::nEmit = 0; g_cfg.unitsPerM = sup;
             ok &= vs; logf("3D audio own-sound test (an emitter at the head is heard centred in front, one a metre away keeps its place, off = untouched): %s", vs ? "PASS" : "FAIL");
         }
