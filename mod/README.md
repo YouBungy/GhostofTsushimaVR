@@ -22,6 +22,20 @@ refused to send images ("FRAME GENERATION is on" in the log, although it was off
 same-frame stereo (both eyes every frame) gets built. Please press **F10** once in each of: main menu, standing
 outdoors, riding, a cutscene, photo mode.
 
+## 0.18.79: flat round 5 (where the game decides a block)
+
+**Install:** `xinput1_4.dll`.
+
+- **Round 4 result:** Ctrl+Shift+N (fixed) ran without a crash, but writing the block marks into the blow only stopped
+  the damage. There was no spark, clang or recoil, and the enemy's swing kept hitting (7 hits in 30 ms). So the block
+  is decided on the attacker's side, and the blow only carries the result.
+- **Round 5 logs the attacker's side:** every blow the game builds against Jin, with the code that built it (`GTR DESC`).
+  The blocked ones lead to the game's own "is this blocked / parried?" decision. That is the code to call, or to steer,
+  for a full in-game block or parry in VR.
+- **Red / blue:** the swordsmen's blue attacks always use the same attack data, and the glint shows about 0.25 s into
+  the wind-up. No single flag stood out yet. The block decision above should also show how the game tells an
+  unblockable attack apart.
+
 ## 0.18.78: flat round 4 (the Ctrl+Shift+N crash fixed)
 
 **Install:** `xinput1_4.dll`.

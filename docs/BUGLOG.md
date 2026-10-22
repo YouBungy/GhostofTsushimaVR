@@ -2635,3 +2635,6 @@ spaces, session, instance → TerminateProcess.
 - `[LIVE]` Ctrl+Shift+N crash: the full signal set rec+0xF0 = the mod's static gTags (the game frees the record's tag list) and the hash from
   another attack. guardFull = +0x34 -1, +0x3C |= 1, +0x40 = 9, +0xE0 0 only. VR parry_signal_full (0) until the flat test proves it.
 - gtr_attacks.bin v2: + 0x800 of *(interaction+0x580) and *(+0xEE8), up to 1500 dumps.
+
+## GoTVR 0.18.78 → 0.18.79
+- Flat round 4: full record marks = damage-only guard (no FX, attacker unaware). Round 5: hook 0x85A5D0 (all threads) -> GTR DESC chains.

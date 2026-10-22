@@ -442,3 +442,14 @@ Still to find:
   definition, 0x...39539c00) and params +0x190 hash 0xf488a0ce524d5919; his follow-ups use other definitions. The glint is a property of the
   attack definition -> v2 dumps carry 0x800 bytes of both definitions.
 - Video freeze time and the single hit flash agree on the log offset within 0.12 s.
+
+## Session 31 (0.18.78 flat round 4, 2026-10-22): the record is downstream of the block decision
+- Ctrl+Shift+N (+0x34 -1, +0x3C |= 1, +0x40 9, no damage) at HitProc: 17 blows composed 0x03800000, no crash, but no spark / clang / recoil
+  and the attack kept producing records (4 in 30 ms, 7 in 90 ms) - the attacker never learned it was blocked.
+- Records: constructor 0x84B0D0 sets +0x34 = -1 and +0x3C = 0x100 by default; 0x85A5D0 SubmitHitFromDesc(desc, imm) pops a record, fills it
+  from the descriptor (0x68BDA0, desc = record + 0x30) and submits it; 19 callers (0x6A0D70, 0x6A4210, 0x6A4590, 0x6A7590, 0x6A93D0,
+  0x8750A0 (0x84B600(desc, index) with index -1 when its param_3 != 0), 0x8E52F0, 0x8FA410, 0x943EFB, 0x9DC73B, 0xA121BB, 0xA1E362,
+  0xAB5876, 0xAB6050, 0xB5AEDE, 0xB86366, 0xBAD49A, 0xC3FEF7, 0xCD1F3D). Round 5 hooks it for the chains.
+- Video (111 s): 20 blue glints, 2 red. Wind-up starts 180-300 ms before the blue glint share definitions 3a039c00 (3 swordsmen), 37d4db40,
+  38620350 (their small index arrays start at 2: "2 3 4 5 0 4" vs plain "1 2 3 4 5 0"); the red (a brute, 3c202390) looks like an
+  unglinted 3b5640c0 in those arrays - no single flag yet.

@@ -102,6 +102,15 @@ Same as round 3: record with Win+Alt+R (clips of 3 minutes or less), `play_mode=
 2. Long glint fights: as many red AND blue attacks as possible, from several enemy types (swordsmen, spearmen, brutes, shield
    men). Dodge reds, parry blues. Two or three clips.
 
+## Guard trace round 5 (0.18.79, flat play)
+
+Record with Win+Alt+R as before (clips of 3 minutes or less). No hotkeys needed.
+1. Hold block well before 3-4 ordinary blows (blocked).
+2. Take 2-3 ordinary hits without blocking.
+3. HOLD block against 2-3 BLUE attacks (they should break through).
+4. PARRY 2-3 blue attacks (tap block just before they land).
+5. A few RED attacks (dodge, or let one hit).
+
 ## After the session
 
 Report what passed, fix what didn't, and update BUGLOG / COMBAT_FINDINGS / WRIST_HUD. No git push unless the owner says.
