@@ -22,6 +22,31 @@ refused to send images ("FRAME GENERATION is on" in the log, although it was off
 same-frame stereo (both eyes every frame) gets built. Please press **F10** once in each of: main menu, standing
 outdoors, riding, a cutscene, photo mode.
 
+## 0.18.71: fixes from VR session 25
+
+**Install:** `xinput1_4.dll` only.
+
+- **Parry versus block was too easy to tip:**
+  - The log showed blade "speeds" of 9-35 m/s while the sword was barely moving. The blade's world position minus
+    Jin's position (which only moves on simulated ticks) made walking itself look like fast blade motion.
+  - The parry motion is now measured from your right controller in the room, using the tip about 85 cm along it.
+    Jin's movement never enters into it.
+  - A parry now needs the tip to actually go somewhere within the parry window (220 ms before the blow):
+    `parry_min_net_cm` (20) net movement and `parry_min_travel_cm` (25) of path (changed once).
+  - Holding the sword up and jiggling it is a BLOCK.
+- **Swinging into the enemy's attack was counted as a hit on him:**
+  - The blade is now checked every frame against each enemy's weapon (its sword from its skeleton: right hand,
+    `parry_enemy_blade_cm` along the forearm) while your tip moves at least 1 m/s.
+  - Meeting the weapon is a CLASH: no blow on that enemy for 0.3 s, a rumble, and his next attack within
+    `parry_clash_ms` (700) is PARRIED (no damage to you, he staggers). `parry_clash_cm` (18) is how close counts.
+- **Jin's sword stance after sheathing:** the game's sword stays out after yours is home, so the stance is now held
+  off while standing whenever the game's sword is out, not only while you hold yours. The walking stance was already
+  squared.
+- **Slowed down when drawing:** the game's hidden draw animation slows Jin. It now waits while you move faster than
+  1.2 m/s (up to 2.5 s); your katana is in your hand meanwhile.
+- **Guard engine:** the stillness that holds the game's guard is also measured from the controller (under 0.8 m/s),
+  and the fresh "parry" press needs 2 m/s and 10 cm of net movement.
+
 ## 0.18.70: the game's own block and parry in VR (from the HIT SCAN flat test)
 
 **Install:** `xinput1_4.dll` only.
