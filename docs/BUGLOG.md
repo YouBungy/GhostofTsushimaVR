@@ -2630,3 +2630,8 @@ spaces, session, instance → TerminateProcess.
   game camera. cineRead ignores the HUD image while HP < 40 % (> 1.5) and hurt < 30 s ago.
 - Owner: invisible snap turn on draw / sheathe -> turn kick 0.7 s after S_DRAWN / S_SHEATHED and after the draw chord.
 - `[LIVE]` 22 swing steps of 25 cm logged, not felt: 55 ms stick pushes; now closed loop on the hero position (stepStart / stepTick, 450 ms max).
+
+## GoTVR 0.18.77 → 0.18.78
+- `[LIVE]` Ctrl+Shift+N crash: the full signal set rec+0xF0 = the mod's static gTags (the game frees the record's tag list) and the hash from
+  another attack. guardFull = +0x34 -1, +0x3C |= 1, +0x40 = 9, +0xE0 0 only. VR parry_signal_full (0) until the flat test proves it.
+- gtr_attacks.bin v2: + 0x800 of *(interaction+0x580) and *(+0xEE8), up to 1500 dumps.

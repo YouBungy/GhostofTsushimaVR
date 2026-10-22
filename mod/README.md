@@ -22,6 +22,21 @@ refused to send images ("FRAME GENERATION is on" in the log, although it was off
 same-frame stereo (both eyes every frame) gets built. Please press **F10** once in each of: main menu, standing
 outdoors, riding, a cutscene, photo mode.
 
+## 0.18.78: flat round 4 (the Ctrl+Shift+N crash fixed)
+
+**Install:** `xinput1_4.dll`.
+
+- **The crash on Ctrl+Shift+N:** the experiment pointed the blow's tag list at the mod's own memory, which the game frees
+  along with the blow. The game crashed the instant the first blow landed (the video freezes on that frame).
+  - Real blocked blows also keep their attack's own id, so that copy was wrong too.
+  - Ctrl+Shift+N now writes exactly the marks a real blocked blow has and an unblocked one lacks: `+0x34 = -1`, `+0x3C` bit 0,
+    `+0x40 = 9`, no damage.
+- **VR is unchanged:** it keeps the proven two-field block signal. `parry_signal_full=1` switches VR to the fuller set
+  once the flat test shows it is safe and brings the spark / clang.
+- **Red / blue attacks:** in the video, one swordsman's blue-glint attacks all used the same attack definition, and his
+  combo follow-ups used others. The attack log (`gtr_attacks.bin`) now saves those definitions too. More glints from
+  several enemy types will show which field in them means red or blue.
+
 ## 0.18.77: fixes from VR session 29
 
 **Install:** `xinput1_4.dll`.

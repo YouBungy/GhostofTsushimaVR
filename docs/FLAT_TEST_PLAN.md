@@ -95,6 +95,13 @@ needed; the video finds the glints.
 Analysis: tools/glint_video.py finds the glints and aligns the video to the log. Each glint is matched to the enemy's
 wind-up dump in gtr_attacks.bin; red vs blue vs plain attacks are then compared field by field.
 
+## Guard trace round 4 (0.18.78, flat play)
+
+Same as round 3: record with Win+Alt+R (clips of 3 minutes or less), `play_mode=flat`.
+1. Ctrl+Shift+N (fixed), then 2-3 blows without blocking. Does the game spark / clang / play Jin's block reaction?
+2. Long glint fights: as many red AND blue attacks as possible, from several enemy types (swordsmen, spearmen, brutes, shield
+   men). Dodge reds, parry blues. Two or three clips.
+
 ## After the session
 
 Report what passed, fix what didn't, and update BUGLOG / COMBAT_FINDINGS / WRIST_HUD. No git push unless the owner says.

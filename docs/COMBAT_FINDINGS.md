@@ -433,3 +433,12 @@ Still to find:
   Video: the blue glint shows 0.21-0.29 s after 0 -> 1, the strike 0.3-0.6 s after the glint. Parry reward at the parried attack's 2 -> 4 / 5.
 - Video glints found by colour (blue: b > 200, b - r > 60; red: r > 220, r - g/b > 120) matched the owner's F6 tags within 0.2-0.35 s; video
   aligned to the log by the hit flashes (tools/glint_video.py). Event-bus ids: nothing glint-specific yet.
+
+## Session 30 (0.18.77 flat round 3, 2026-10-22): guarded marks; the blue attack is its own definition
+- Real guarded records (5): +0x34 = -1, +0x3C 0x101 (unguarded 0x100), +0x40 = 9 (0), damage 0, the attack's OWN hash (b3451229 13721652/53) -
+  round 2's 5aaff71d hash was just another attack. Ctrl+Shift+N with the hash and the TAG LIST POINTER replaced crashed at once (dump
+  GhostOfTsushima.exe.72876.dmp would not upload; the video froze on the blow's frame): the record owns +0xF0 and frees it.
+- gtr_attacks.bin (44 dumps): one swordsman's four BLUE-glint wind-ups (video-labelled) share interaction +0x580 / +0xEE8 (the attack
+  definition, 0x...39539c00) and params +0x190 hash 0xf488a0ce524d5919; his follow-ups use other definitions. The glint is a property of the
+  attack definition -> v2 dumps carry 0x800 bytes of both definitions.
+- Video freeze time and the single hit flash agree on the log offset within 0.12 s.
