@@ -1596,6 +1596,337 @@ spaces, session, instance → TerminateProcess.
   report one eye or both.
 - Self-test PASS (selftest=0, 111): fingers with a shared palm joint and helper leaves (5 chains, index 3 joints), all earlier tests.
 
+## GoTVR 0.18.56 → 0.18.57 — Ctrl+Shift+M crash (reaction bit on the message path); definition search
+- Session 13: Ctrl+Shift+M froze the game. The 0.18.56 message template had 0x11C01041 (reaction bit) without HitSend's
+  composition. Fix: capture() refuses 0x10000000 (and 0x74000000 overall), tplLoad drops such a template from the ini,
+  the message path clears 0x10000000 defensively.
+- strike(): recLoad before the template check; records usable without a message template; the message path refuses
+  cleanly when it has no template.
+- recLearn: defSearch through the moveset entry (mode 1 / 2) and the component's per-attack array (+0x5B0, 0x58 per
+  attack, the moveset index; mode 3 / 4), one indirection each (≤ 0x400). Save format v3 adds defMode / defB. Flat
+  dumps of both entries when not found.
+- Self-test PASS (selftest=0).
+
+## GoTVR 0.18.55 → 0.18.56 — records findable from Jin (two-level search, own definition cell); reacting message templates
+- Session 12: recLearn found no component offset in hero (direct) and no holder in the moveset entry → nothing saved; after a
+  restart the first real blow (a combo opener, no 0x10000000) became the record → no flinch.
+- recLearn: component at hero+off or (hero+off)->+off2 (2nd level ≤ 0x800, heap pointers only); defJ = the definition
+  pointer's offset in the moveset entry (HitSend 0x850880 and the composer 0x84B1A0 only read **(rec+0x50), so a rebuilt
+  record gets its own cell R.cell = definition); save format v2 ("2;compOff;compOff2;o68Off;inComp;k50;defJ;vtRva;
+  flags;damage;nTags;tags;hex"). Flat: `REC near` lines (heap pointers in component / owner / +0x68 object within 16 KB
+  below the holder; holder / definition offsets in hero, component, owner).
+- capture(): any ordinary blow ((fl & 0x41) == 0x41, no 0x64000000, damage in (-5000, -0.5)); a template with 0x10000000
+  is never replaced by one without; the plainest-blow rule only within the same reaction class.
+- Ctrl+Shift+M (hkReq 8): one strike with forceMsg (message path).
+- Self-test PASS (selftest=0).
+
+## GoTVR 0.18.54 → 0.18.55 — record library (flinch through attack data; insta-kill fix; saved for VR)
+- Session 11: flinch with no animation from the record of attack 0x9561... (composed flags 0x11C01041); the 0.18.53 record
+  (0x74bf..., 0x03C00041) never flinched. Insta-kills: a finisher record (0x03C00001, -FLT_MAX) became the template.
+- hHitProc copies Jin's real record (0x120 bytes + its tag list) to a candidate before calling the game; noteHit records the
+  flags / damage the game composed for it (candSeen); recJudge keeps it if (fl & 0x41) == 0x41, no 0x64000000 bits, damage
+  finite in (-5000, -0.5); kind = fl & 0x100; a record with 0x10000000 is never replaced by one without.
+- recLearn: comp found at a hero offset (scan 32 KB), +0x68 object in hero or comp, holder = moveset entry (owner +0x350,
+  0xE0 each, by hash) + k, vtable rva; recSave writes `cbt_rec_light` / `cbt_rec_heavy` ("1;compOff;o68Off;inComp;k50;
+  vtRva;flags;damage;nTags;tags;hex(0x120)"); recLoad at the first strike; recResolve uses the live pointers only while
+  Jin is the same object, else re-derives them (class 24 / moveset entry checks) or refuses to the message path.
+- Strike: rec+0xE0 (base damage) x the multiplier (speed, two hands, heavy fallback 1.6); kill = 1e7 (the game composes
+  the lethal blow); +0x38 = 2; contact rebased (live) or the enemy's position + 1.2 m (saved record).
+- Self-test PASS (selftest=0).
+
+## GoTVR 0.18.53 → 0.18.54 — no attack animations; MSGDIFF + swing test; cbt_assist kept off; resolve max = hero+0x4644 + 3
+- Session 10: cbt_mode 2 strikes identical to the real blow in message +0x00..+0xAF, DLVDIFF and events; no flinch.
+- A first 0.18.54 build pressed the attack button and waited for "attacks in progress" (owner +0x350 / +0x358). Wrong on two
+  counts: the owner wants no attack animations in VR, and that list is Jin's moveset (always non-empty - the blow would
+  have struck at once carrying the first move's hash). Replaced before testing.
+- Now: `cbt_assist` (default 0) = the animated method for comparison only: vrin::forcePress(X / Y, 90 ms) OR-ed after
+  blockMask (padImpl / capsImpl answer in flat once pressed), the blow lands after cbt_assist_delay_ms, Jin's own HitProc
+  records held back in the window.
+- Diagnostics (flat): hDeliver1 dumps the whole delivered message for the first 8 real / 8 own blows and MSGDIFF (every
+  qword of ours that differs from the latest real one). Ctrl+Shift+G swing test: the hotkey thread watches left mouse /
+  pad X after arming; the blow follows by cbt_swing_test_ms with Jin's own blows held back.
+- vitalsTick runs in flat too (logging only without the shared block). vitRes = hero+0x43A4 clamped to the maximum;
+  vitResMax = hero+0x4644 + 3 (1..30 valid, else wrist_resolve_max). VITALS on change or every 10 s.
+- rscan off by default (`cbt_resolve_scan`).
+- Self-test PASS (selftest=0).
+
+## GoTVR 0.18.52 → 0.18.53 — strikes through the game's HitProc (cbt_mode 2); resolve published
+- Session 9 (0.18.52 flat): HITPROC + EVENT show the victim gets the same events from real and injected blows; the real
+  blow additionally runs the attack-side callbacks (0x846290 / 0x872F00 / 0x8466B0 / 0x870FF0 → events 0x11 / 0x12 /
+  0x14 / 0x15 and the target's +0x9C8 hit-ring flag). Still no flinch on ours.
+- Fix: `cbt::strike` in mode 2 copies the captured hit record (recTpl), sets +0x48 = enemy, +0x58 = hero, rebases the
+  contact point, pins the reference count, and calls the original HitProc with `injecting` set. Falls back to the message
+  path until a record is captured. The HitProc hook is installed whenever its signature passes (flat and VR).
+- Safety (from the HitProc / HitSend decompiles): HitProc skips a target whose +0xE2 bit 4 is clear (logged, refused);
+  it pops the hit-message pool with no empty check (the mod checks 0x1434C34F8 first and takes the message path when it is
+  empty); the descriptor's tag list (+0xF0 / +0xF8, read by HitSend, copied by the composer) is heap memory of the real
+  record, so it is copied into the mod's own array at capture. +0x78's vtable is checked too.
+- The EVENT window (evUntil) is now opened before the injection, so our own blow's events are logged.
+- vitalsTick publishes vitRes = hero+0x43A4 (0..30, finite) and vitResMax = `wrist_resolve_max` (10), read before the
+  change tracker so resolve gain / spend edges fire; `VITALS` log line every 5 s with hero+0x4380..0x43BF.
+- Self-test PASS (selftest=0).
+
+## GoTVR 0.18.49 → 0.18.50 — message parity, delivery diff, data watchpoints, quieter resolve scan
+- Session 7 (0.18.49 flat): strikes through Deliver2 (13-15 dwords changed, including +0x1688 / +0x168C / +0x1698), still no
+  flinch. MSG ours vs real (light):
+  - +0x168 = 0 vs Jin (flag 0x800000 cleared by the 0.18.47 rule when the template had no weak handle);
+  - +0x1A0 = 0 vs 1 / 2;
+  - +0x50 null (ini template).
+
+  Jin's heavy blow also carries a +0x1C8 entry (count 1).
+- Fixes:
+  - +0x168 = Jin whenever the template's kind has the flag;
+  - +0x1A0 ≥ 1 with flag 0x02000000;
+  - +0x50 from wkAny50 (any real blow of Jin's, class 24).
+- Diagnostics (flat):
+  - MinHook on Deliver 0x85A770 (signature-checked) → DLVDIFF for the first 8 real and 8 own blows;
+  - dbw:: hardware watchpoints (DR0-DR2 = enemy +0x1694 / +0x1698 / +0x16A4, write, 4 bytes) set on every game thread from
+    the hotkey thread (suspend → set context → resume); a VEH logs RIP + RtlCaptureStackBackTrace; off after 30 writes /
+    90 s / the hotkey.
+- RSCAN: a per-field decaying busy counter (+64 per change between 250 ms snapshots, −⅛ per snapshot, busy ≥ 40 is left
+  out); Ctrl+Shift+R mark.
+- Self-test PASS (selftest=0).
+
+## GoTVR 0.18.48 → 0.18.49 — the game's delivery; resolve finder
+- **Session 6:** HHDIFF real and ours change the same 11-12 dwords (health, the dedupe ring, the history), and no reaction
+  follows. A real blow arrives via 0x59E670 → 0x85AE40 → HitProc 0x8504D0 (composes with 0x84B1A0 + 0x850880, notifies the
+  attack components at hitRecord+0x60 / +0x78) → Deliver2 0x85A4F0 (the +0x1F8 chain, replication when target+0xB8) →
+  Deliver 0x85A770. Deliver:
+  - sets +0x28 = 3 and keeps the message in the latest-hits ring (64, 0x1434C3540, with a reference);
+  - fires event 0x16 on the target and 0x17 on the attacker (0x7E05F0(obj, id, 2, 1));
+  - flag 0x08000000 → 0x9A8B90 (a shake / slow-down);
+  - calls the target's vtable+0x1D8 = HandleHit (classes 14 / 15 / 16 / 17 all point to 0x694080);
+  - flag 0x400 → impact effects (0x6B2790 with +0x170 / +0x190 / +0x1A8 / +0x1B0 / +0x1B8).
+- The game's own simple sender (the resolve heal, 0x68CE70) does pool → 0x84B390 → 0x858F20(amount) → 0x859800 → 0x85A4F0
+  → release. That is the mod's path, so the mod now calls 0x85A4F0, signature-checked (`cbt_deliver`).
+- hasHandleHit checks vtable+0x1D8 exactly. An `injecting` flag keeps our own blow out of the template capture and the
+  diagnostics.
+- **Resolve:** the heal is a script native (0x711FE0 is the script VM's native-call dispatcher), so the spend is scripted
+  too. The runtime finder instead: RSCAN snapshots the hero (32 KB) and the first 4 KB of every object it points to
+  (≤ 640) every 250 ms in flat play, and diffs them at resolve heals (flags 0x40000001), revives (0x04000001) and Jin's
+  kills, at once and 0.6 s later.
+- Self-test PASS (selftest=0).
+
+## GoTVR 0.18.47 → 0.18.48 / GoTVRHost 0.14.4 → 0.15.0 — session 5 fixes; attack parameters; wrist HUD W1
+- Session 5 (docs/COMBAT_FINDINGS.md):
+  - Damage and kills are exact; the pool is clean; everything runs on the game thread.
+  - No reaction: the attack side is missing.
+  - Too strict a hostility gate.
+- **Hostility:** the attitude query 0x9552F0 (table 0x17F7560, faction at character+0x600, 2 = hostile; the threat test
+  0x950C40 uses it), signature-checked; without it, the 0.18.47 rule. Hotkey refusals are always logged.
+- **Templates:** only flags 0x03C00041 (light) / 0x03C00141 (heavy). Session 5's first capture was a 0x11C01041 chip.
+  The plainest blow wins: least damage, then least posture.
+- **Hit reaction:**
+  - `cbt_msg_state` (+0x28 = the template's 3 during delivery, 0 restored before the release so the id is still freed).
+  - Flat diagnostics: HHDIFF (16 KB of the enemy before / after HandleHit, real vs ours), MSG dumps, the real blow's
+    caller chain.
+- **attack.h** (self-tested):
+  - Swing recognition: body-relative tip speed + travel over 150 ms, re-arm under 0.8 m/s.
+  - Heavy charge: two hands + trigger ≥ 0.6 held still `chargeMs` within `chargeMoveCm`, kept while held, lost 250 ms
+    after release, spent by a blow.
+  - Lunge planning: base × (1 + mod × speed fraction), cooldown, stop short of the enemy.
+  - Katana weight: a critically damped direction lag, weight × 60 ms one-handed, ⅓ two-handed.
+- **Lunge = a timed stick push** toward the enemy's world yaw (vrin::lunge, same mechanism as the room-scale drive).
+- **Vitals → host** (shared v16: vitSeq, hp, max, res, changed bits); the heartbeat runs game-side on the left controller.
+- **Host wrist (xrwrist.h):**
+  - A second UI-size swapchain; the HUD rectangle is copied from the UI texture each frame it is shown and cut from the
+    room panel's copy with ClearRenderTargetView(rect).
+  - A quad on the left grip: +X out of the back of the hand, 0.11 m toward the elbow, 0.045 m out; picture right toward
+    the hand, aspect corrected for the anamorphic UI.
+  - vit::Glance, vit::HandAtHead.
+  - The host now logs every runtime extension.
+- **Self-test PASS** (selftest=0): + the attack core, + the vitals core.
+
+## GoTVR 0.18.46 → 0.18.47 — combat stage 1: katana blows as the game's own hit messages
+- Read from the binary (Ghidra; this build only, every function signature-checked):
+  - **The hit message:** a 0x210-byte ref-counted object (+0x08) from its own pool. 0x7686D0 allocates one; the deleting
+    destructor (vtable +0x10, 0x84BD70 → 0x84B800) returns it.
+  - **Constructor:** 0x84B390(msg, target) = base + vtable 0x11F3B70 + a fresh id (NextId 0x9321F0) + the target handle.
+  - **Weak handles:** +0x30 / +0x48 / +0x50 / +0x168. 0x84BB50 sets one, registering the slot in object+0x10; the object nulls the
+    slot when it dies.
+  - **Corrections to 0.18.43's layout:** +0x58 and +0x78 are tag lists (ptr, count +0x60 / +0x80, cap at +0x14); 0x519DB0 copies
+    one. So +0x60 / +0x80 are list counts, not "level" or "category".
+  - **Other lists:** +0x1C8 (stride 0x18, count +0x1D0) and +0x1E0 (stride 8, count +0x1E8).
+  - **Flag payloads:** flag 0x01000000 → 48 bytes at +0x170; 0x02000000 → +0x1A0; 0x800000 → the handle at +0x168.
+  - HandleHit is slot 0 of a secondary vtable. The message composer is 0x850880.
+- **Blow injection** (cbt::strike), run on the game thread after the tick:
+  - Build: pool → constructor → our reference → attacker = Jin → +0x50 / +0x168 from the template's weak handles → tags copied
+    with the game's own copy → template numbers and payload. Payload positions are re-based on the target.
+  - Deliver: damage × speed factor, with a killing blow sent as 0x40 cleared and −FLT_MAX. Then HandleHit (the trampoline), then
+    release.
+  - **Fails closed when:** a signature misses, any HandleHit runs off the tick thread, there is no template, or a character
+    doesn't use this HandleHit.
+- **Template:** Jin's plainest live light hit this session; saved to gotvr.ini as hex.
+- **Enemy registry:** 48 slots held as the game's weak handles, filled from HandleHit (attackers of Jin and Jin's targets =
+  hostile; spawns = known only).
+- **Decision core** (melee.h, after HAND-004):
+  - Closing speed at the contact along the target normal, relative to the target, minus Jin's own velocity.
+  - A swept tip; hysteresis per target (re-arm after leaving) plus a global cooldown; sample gaps over 100 ms restart the
+    history; a 150 ms velocity window.
+  - Counters: evaluated, too slow, too short, cooling.
+- **Research:** docs/MELEE_REFERENCES.md (Bloodborne VR, God of War VR, BotW BetterVR).
+- **Self-test PASS** (selftest=0, 52 lines PASS) including the decision core: one hit per fast pass; no hit when held inside,
+  pushing slowly (1.5 m/s) or walking the blade in (body velocity); a hit when the enemy runs onto the blade, after re-arm, and
+  on a thrust; no hit across a teleport; a full table reuses the stalest entry.
+
+## GoTVR 0.18.45 → 0.18.46 — session 3 (parry / standoff / traversal); enemy watcher on real hits only
+- Session 3:
+  - Parry: Q +64 ms -> 0x1 (+12.5); perfect: Q +22 ms -> 0x1, then a one-blow kill.
+  - Standoff: +0x1070 = 1, +0x1084 = 305, +0x106C ref, +0x107C = 8.
+  - Traversal plane: +0xB60..0xB98 (13 of 14 changes in the tag, 0.5 - 0.9 s after step-on).
+  - The dog = class 16.
+- Bug: the enemy watcher followed the spawn messages (0x60000002 set max health on every spawning enemy). It now needs a real hit:
+  flags without 0x60000000, with 0x41, and an attacker / target other than Jin.
+- Self-test PASS (selftest=0, 128).
+
+## GoTVR 0.18.44 → 0.18.45 — session 2 decoded, enemy watcher, hero watch 32 KB
+- Owner session (0.18.44): 31 tags, 180 marks, 310 hit messages. Caps Lock on (no effect: GetAsyncKeyState). Dogs present, not
+  fought (class 16 = health inits only).
+- Decoded (docs/COMBAT_FINDINGS.md "Session 2"):
+  - The hitInfo layout (+0x38 damage kind, +0x40 move id, +0x48 attacker, +0x60 level, +0x80 category, +0x90 flags, +0x94 health
+    change, +0x98 posture).
+  - Flag kinds: parry = 0x1 (+12.5 on Jin), stagger 0x200, perfect-parry kill 0x401001, crawl 0x2000.
+  - hero+0x3918 / +0x39A0 corrected: paired actions, not incoming attacks (7 events: finisher click +12 ms, horse mount E, ...).
+- obs: NB 0x4100 -> 0x8000 (the test buffer to match).
+  - Enemy watcher (enemyPtr from cbt::hHandleHit: the target, or hitInfo+0x48 for hits on Jin; 16 KB, the same filters, ENEMY/s).
+  - The COMBAT/s label fixed.
+- Self-test PASS (selftest=0, 128). gnu_printf check clean.
+
+## GoTVR 0.18.43 → 0.18.44 — capture tags for the design doc, keyboard / mouse input logging
+- Owner: the updated design doc (combat rework, archery / gadgets, specials, assassinations, traversal, UI). "I can continue acquiring
+  flat screen data - let me know what you need." Ledges / ropes / logs: first person, Jin's own animation takes over.
+- obs: 23 tags (kTag / kTagKey; Ctrl+numpad for the second bank; numpad / * - as extras).
+  - keysTick samples 27 keys plus WASD every tick and logs edges with ms (INPUT/s), because the 0.18.42 session's pad capture read
+    0x0000 (keyboard / mouse play).
+- docs/DATA_CAPTURE_PLAN.md: what to capture per design item, the priorities, and what needs no flat data.
+- Self-test PASS (selftest=0, 128). gnu_printf check clean.
+
+## GoTVR 0.18.42 → 0.18.43 — combat observer (SetHealth / HandleHit hooks), right trigger = Focus
+- Owner: "Parse this log data to figure out the different states and how we can hook into it" (attacking logs: special ability,
+  perfect parry, regular parry, attacking, getting hurt; no standoff). "Set right trigger to be Focus when not holding a kunai."
+- Analysis -> docs/COMBAT_FINDINGS.md.
+  - Health is hero+0x1974 (float). Its sole runtime writer is 0x69F3D0 (SetHealth), found by scanning for disp32 0x1974 writes (one
+    besides the constructor's 100.0).
+  - Callers include 0x694080 (HandleHit; no direct calls, 4 vtables).
+  - The incoming-attack list is +0x3918 (count +0x39A0).
+- cbt::install: separate signature checks (fail closed for these two only) and MinHook detours.
+  - SetHealth(u8*, float) and HandleHit(u8*, u8*) -> u64 passthrough, logged at 40 lines/s at most, with a hit-record hex dump.
+  - obs: COMBAT/s.
+  - A gnu_printf check of every logf is clean.
+- vrinput: right_trigger default "back" (Focus).
+- Self-test PASS (selftest=0, 128).
+
+## GoTVR 0.18.41 → 0.18.42 — catch at the left hand, wider catch, auto-sheathe timing persisted, draw mask to the end, play_mode key, observer floats
+- Owner:
+  - "The sheathing is working, but where it registers the sheath mouth still isn't quite right. Increase the radius and put it more where
+    my left hand sits on the sheath."
+  - "The animation to sheathe still plays occasionally."
+  - "I can't find play_mode = flat in the ini."
+- Log 0.18.41:
+  - 7 catches, all at 29 - 32 deg. The misses were tips at +1..+8 cm along / 2 - 10 cm off but 37 - 46 deg -> the angle was the blocker.
+  - The game's put-away was at 16.3 s every time. The first one in a session was not predicted (only detected).
+  - The background redraw mask was a fixed 1.8 s from the request (the draw lands late).
+- Catch:
+  - mAx = the axial of the tracked left hand while onSheath (clamped +-10 cm of sheathG() + sword_sheathe_shift_cm), else that place.
+  - The defaults in the ini: tip 12 cm, 55 deg, sheathOutCm 12. tipLen still comes from the real mouth (guard - 4.5).
+- Mask:
+  - holdMask(200) while gd for its first 1.8 s (any draw's own animation). After put-away 1.6 s (was 1.2). Draw request maskUntil +3 s.
+  - autoAfterMs is saved to sword_game_autosheathe_ms and loaded at start.
+- play_mode is written as "vr" when missing.
+- obs: decimal values (finite, 0.01..1e5) that change on quiet fields are logged as floats beside the small-int flags.
+- Self-test PASS (selftest=0, 128).
+
+## GoTVR 0.18.40 → 0.18.41 — tip length, the game's auto-sheathe masked, the thumb spring restored, numpad tags
+- Owner:
+  - "The sheathing did not work at all - tip at the sheath mouth, nothing happened, no rumble."
+  - "Sometimes the sheathing animation still played."
+  - "The thumb pose is not responding to my thumb on the sticks."
+  - "Numpad 1 sword combat, 2 archery, 3 climbing, 4 grappling, 6 cutscene" (flat-play logging).
+- Log 0.18.40:
+  - No catch ever. tipAx -45..-48 / 6..12 off / 15..20 deg on the aligned tries: the computed tip (guard - 72 along the blade) was 45 cm
+    deeper than the real one. Draws free at s = 43..48 -> the blade's out-of-mouth travel is about 45.
+  - The draw was re-requested at 525234 -> 543531 -> 561828 -> 580109 (18.3 s): the game's own out-of-combat auto-sheathe (confirmed:
+    Push Square, "Jin sheathes his sword automatically after combat, but only after he has kept it out for a while").
+- Tip:
+  - cfg.tipLenCm = sword_blade_out_cm (45) - mouthAx. tipW = guard - dir * tipLenCm. The sheathing catch s = tipLenCm + axial(tip).
+  - SWORD/s logs the per-second closest approach (score = perp + window overshoot + 0.3 * angle over).
+- Auto-sheathe:
+  - gameSwordScan: gd, more than 3 s since gd rose, and 637 (the game's pose) within 35 cm of 592 = the game putting it away -> maskUntil
+    held +0.9 s each frame. autoAfterMs is learned (the first / shortest).
+  - The predicted window [drawnSince + autoAfter - 1.5 s, + 4 s] is masked. On put-away the mask holds 1.2 s, then the background redraw
+    (hold) masks itself.
+- Gap: homeOk, park found and not gameDrawn while the katana is out -> the sheath is not moved (up to 3 s, then the old fallback).
+  nGap logged.
+- Mask: walking (not still) leaves the hip subtrees (legsD) to the game - the upper body is held.
+- Thumb: the 0.18.31 index-tween comment ran to the end of the line and swallowed `fing::spring(thS, thV, tht, ...)` (the build warned:
+  unused tht / thV). Restored. A gnu_printf format check of every logf is clean.
+- obs: setTag (numpad 1-4, 6) with BEGIN / END banners, and the tag in every STATE/s line.
+- Self-test PASS (selftest=0, 128).
+
+## GoTVR 0.18.39 → 0.18.40 — no game sheathe (player-driven sheathing), "not animated" = put away, tip at the real mouth, sticky drawn grip
+- Owner:
+  - "I want sheathing to be player driven, not an animation - once the sword tip reaches the sheath mouth (around where the left hand
+    default sheath placement is (4.5 cm)), the player must slide it back in."
+  - "An animation plays, and the end of the animation is affecting Jin's pose."
+  - "It keeps playing the sheathing animation multiple times, which stops me from moving properly."
+  - "The unsheathing works well."
+- Log 0.18.39:
+  - Parked at 0 0 0 (the game never writes 637 while its sword is away). homeX learned (0.1 cm from 592).
+  - No "tip is in the sheath mouth" event ever: every sheathe was "let go of the drawn katana - back in the sheath" (instant return),
+    then the game's sheathe 1.5 s later.
+  - Then "put away" every 2.5 s (444921 / 447437 / 449953 / 452468 / 454984). Each time 637 went 24.9 -> 0.4 -> 0.0 cm from 592 and then
+    back to the stance hand (57 - 61 cm).
+  - Cause: once put away, 637 was not animated and held the MOD's last write (home, not the park) -> read as drawn -> another toggle.
+- Fix:
+  - Scan: 637 bit-identical to what the mod left in that pose buffer (wroteM / wroteBuf, recorded at the end of every job) for 3 poses
+    = not animated = put away.
+  - The game-thread sheathe chord is removed. Draw chord: (hold) and not drawn, once per 2.5 s, park found.
+  - maskStance needs inputQuiet and the head within 20 cm of maskRefStand (crouch / aim show through).
+- sword.h:
+  - mouthAx (guard - sword_mouth_below_guard_cm). Tip window: perp < 8, -25 < ta < 8 (relative to mouthAx), < 35 deg.
+  - The catch keeps s = bladeCm + axial(tip) (up to bladeCm + 40, no clamp jump). Pull-out = hand 6 cm back from the catch.
+  - releaseHome 0 (sticky drawn grip; the SHEATHING release only on tracking loss). autoHome 0 (a released blade stays at s).
+  - The DRAWING slide top extends to s0 when it started above bladeCm.
+- Self-test PASS (selftest=0, 128). The draw test now covers the sticky grip, the no-home release, auto-home as an option and the
+  real-mouth window (catch at 20 cm inside, none at 10 cm outside).
+
+## GoTVR 0.18.38 → 0.18.39 — game sword (637) with the draw / sheathe animation masked, toggle-safe requests, two-hand steer halved
+- Owner:
+  - "Push to git first as (WIP) sword grabbing" -> f488e55 on main.
+  - "The game is back to grabbing sword + sheath. I want to just grab the sword and have the sheath stay put ... I'm not saying don't
+    draw the sword, but I don't want the animation to play (or at least have any visual effect / effect on Jin)."
+  - "When dual handing the sword angle changes too much - make it half."
+  - "Lag / jitter in the headset when I look down; the performance monitor shows no dropped frames."
+- 0.18.37 log evidence:
+  - d637 (game pose, 637 to 591): about 107 cm while sheathed (parked), about 58 cm in the drawn stance, and 24-25 cm in the frames
+    where the game draws / sheathes. That is |592 - 591| = 24.9, so 592 is the sheathed sword's pivot and 637 passes it when home.
+  - The "asked again" resends toggled the game back (draw -> sheathe at 557151 / 557154 / 557166). The swipe is a toggle.
+- Job thread: gameSwordScan (the raw pose, right after snapTake).
+  - park = 637 still (< 0.3 cm per pose) and more than 80 cm from 591 for 30 poses. gameDrawn = more than 15 cm from park (back
+    within 5 cm = sheathed). Before the park is found: the old 90 cm rule.
+  - homeX = inv(P591) * P637 from the frame where 637 is within 4 cm of 592 (the best kept), saved as sword_game_home_* / _cm.
+- Job thread: maskApply, before the arm handover gate and the idle hold.
+  - Replaces every joint except the 637 subtree with maskRef (the last fresh pose with the game's sword parked; maskRefStand when still),
+    eased 0.15 s in and 0.3 s out, and the world matrices are written too.
+  - Active while now < maskUntil (the game thread: draw request + 1.8 s, sheathe request + 3.5 s, extended while the game is still
+    drawn) or (maskStance and gameDrawn and still).
+- swordApply gbMode (gameDrawn and homeOk):
+  - SHEATHED: 637 = P591 * homeX (home in the scabbard until the game's sheathe is through).
+  - Otherwise: 637 = (Mt * inv(Pb) * P591) * homeX, from the same Mt as before (rail / drawn K / blend). 591 is not moved.
+- Game thread: hold = onHilt or not SHEATHED. want = hold or released less than 1.5 s ago.
+  - The chord is sent only with park found, at most once per 2.5 s: draw when want and not drawn; sheathe when not want, drawn and we
+    drew it.
+  - maskStance = weDrew and gameDrawn.
+  - SWORD/s: requests, masked frames, the closest 637 came to the scabbard, park found.
+- sword_two_hand_steer (0.5) scales the two-hand turn (fbik::scaled(arc(a1, tg), k)).
+- Look-down judder, diagnosis only (no change):
+  - Host about 72 Hz (VDXR) against about 55 new stereo pairs/s (game about 110 fps, alternate eye), so about 17 frames/s are reused
+    pairs.
+  - The runtime's reprojection corrects rotation only, which fails most on near geometry (the body, arms and sword fill the view looking
+    down). The compositor never drops a frame, so the monitor shows none.
+  - Suggested: an even cadence (90 Hz with the game capped at 90 fps = each pair exactly twice, plus VD's SSW) or more game fps.
+- Self-test PASS (selftest=0, 128).
+
 ## GoTVR 0.18.37 → 0.18.38 — no game draw / sheathe, TAA change reverted, katana frame lag while moving, guard-based hand placement, body under the headset
 - `[HEADSET]` owner, photo plus notes: "STOP MAKING JIN'S SHEATHING ANIMATIONS PLAY ... IT IS PLAYER DRIVEN".
   - Jin no longer under the headset; not facing the headset direction while moving.

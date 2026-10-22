@@ -27,8 +27,8 @@ struct Cfg {
     float drawnFrac = 0.92f;                    // past this much of the blade the katana is free in the hand
     float drawCm = 40.0f;                       // 0.18.29: hand travel along the rail that frees the blade (the gain = drawnFrac * bladeCm / drawCm)
     float homeCmS = 220.0f;                     // 0.18.29: a let-go blade slides home at this speed
-    float sheathTipCm = 7.0f, sheathDeg = 30.0f;   // 0.18.29: the tip within this of the mouth's line, the blade within this angle of the sheath
-    float sheathOutCm = 6.0f, sheathInCm = 4.0f;   //          and the tip between sheathOutCm outside and sheathInCm inside the mouth
+    float sheathTipCm = 8.0f, sheathDeg = 35.0f;   // 0.18.29: the tip within this of the mouth's line, the blade within this angle of the sheath
+    float sheathOutCm = 8.0f, sheathInCm = 4.0f;   //          and the tip between sheathOutCm outside and sheathInCm inside the mouth
     float unsheathCm = 6.0f;                    // 0.18.29: pulling the hand this far back out of a full-length sheathing frees the blade again
     int needSheathHand = 0;                     // 1 = the blade only DRAWS while the left hand holds the sheath (0.18.30 default 0, owner: "draw with just the right hand on the grip")
     float freeMinFrac = 0.6f, freeExt = 0.93f;   // 0.18.31 (owner: "a tiny bit longer"): 0.5 / 0.9 -> 0.6 / 0.93   // 0.18.30 (owner: "until the arm is mostly extended"): past half the blade, an arm at 90 % of its reach frees it
@@ -38,6 +38,16 @@ struct Cfg {
     // wherever you took the hilt, the left fist on the sheath at leftAx along the rail. (0.18.32's gripLowerCm, relative to where your
     // controller took the hilt and clamped to the wrong segment, is gone.)
     float guardCm = 0.0f, rightCm = 6.0f, leftAx = 0.0f;
+    // 0.18.40 (owner: "I want sheathing to be player driven, not an animation - once the sword tip reaches the sheath mouth (around where
+    // the left hand sits), the player must slide it back in"; playbook ch02 guided insertion: a line, a depth along it, the hand riding it):
+    //  - mouthAx: the real sheath mouth along the rail (the guard's place less sword_mouth_below_guard_cm); the tip is taken there, with a
+    //    window that reaches sheathInWinCm INTO the sheath (the blade's true length is not known exactly - the window absorbs it)
+    //  - the blade may sit up to sheathOverCm further out than "fully out" while it is being guided in (no jump at the catch)
+    //  - releaseHome = 0: letting go of a drawn katana keeps it in Jin's hand (it only goes away by sheathing it); 1 = 0.18.26's return
+    //  - autoHome = 0: letting go mid-draw / mid-sheathe leaves the blade where it is in the sheath (take the hilt again to go on); 1 = it slides home
+    // 0.18.41 tipLenCm: from the rail's origin as carried by the drawn katana to the REAL tip (sword_blade_out_cm - mouthAx): the 0.18.40
+    // log had the tip 45 cm too deep with bladeCm (72) - the blade clears the mouth after ~45 cm of rail, which is where your draws free it
+    float mouthAx = 0.0f, sheathInWinCm = 25.0f, sheathOverCm = 40.0f, tipLenCm = 72.0f; int releaseHome = 0, autoHome = 0;
     float handHalfCm = 4.5f;                    // 0.18.30: the fist's half width - its centre stays this far from the guard / the pommel
     float rumbleFullCmS = 80.0f, rumbleMax = 0.35f;
     float gain() const { return drawCm > 1.0f ? drawnFrac * bladeCm / drawCm : 1.0f; }
@@ -76,34 +86,36 @@ struct Sys {
             if (!onHilt && in.valid[1] && in.grip[1] > c.gripOn && dHilt < c.hiltGrabCm) {
                 onHilt = true; homing = false; a0 = hAx; s0 = s; hiltT = rightT(c);   // 0.18.38: always rightCm below the guard (the fist clear of the guard and the pommel)
                 pulse(1, 0.6f, 30); ev("right hand took the hilt");
-            } else if (onHilt && (!in.valid[1] || in.grip[1] < c.gripOff)) { onHilt = false; homing = s > 0.0f; ev(s > 1.0f ? "right hand let go - the blade slides home" : "right hand let go of the hilt"); pulse(1, 0.3f, 20); }
+            } else if (onHilt && (!in.valid[1] || in.grip[1] < c.gripOff)) { onHilt = false; homing = c.autoHome && s > 0.0f; ev(s > 1.0f ? "right hand let go - the blade slides home" : "right hand let go of the hilt"); pulse(1, 0.3f, 20); }
             const bool canSlide = onHilt && (onSheath || !c.needSheathHand);
-            if (canSlide) { const float t = s0 + g * (hAx - a0); s = t < 0.0f ? 0.0f : t > c.bladeCm ? c.bladeCm : t; }
+            if (canSlide) { const float t = s0 + g * (hAx - a0), top = s0 > c.bladeCm ? fminf(s0, c.bladeCm + c.sheathOverCm) : c.bladeCm; s = t < 0.0f ? 0.0f : t > top ? top : t; }
             else if (onHilt && s > 0.0f) { a0 = hAx; s0 = s; }   // the left hand let go mid-draw: the blade stays, the pull starts again from here
             if (!onHilt && homing) { s = fmaxf(0.0f, s - c.homeCmS * in.dt); if (s <= 0.0f) homing = false; }
             if (s > 1.5f && state == S_SHEATHED) { state = S_DRAWING; ev("the blade is coming out"); }
             if (s <= 0.5f && state == S_DRAWING) { state = S_SHEATHED;   /* 0.18.31: 1.5 / 0.5 cm hysteresis (the log flickered out / in at 1 cm) */ s = onHilt ? s : 0.0f; homing = false; ev("the blade is back in the sheath"); pulse(1, 0.5f, 25); pulse(0, 0.35f, 25); }
             if (state == S_DRAWING && onHilt && (s >= c.drawnFrac * c.bladeCm || (s >= c.freeMinFrac * c.bladeCm && in.armExt >= c.freeExt))) { state = S_DRAWN; tipNear = false; pulse(1, 0.9f, 60); pulse(0, 0.5f, 40); ev("DRAWN - the katana is free in your hand"); }
         } else if (state == S_DRAWN) {
-            if (!in.valid[1] || in.grip[1] < c.gripOff) {   // letting go of a drawn katana puts it back (no dropping yet)
+            if (c.releaseHome && (!in.valid[1] || in.grip[1] < c.gripOff)) {   // sword_release_home = 1: letting go of a drawn katana puts it back
                 state = S_SHEATHED; onHilt = false; homing = false; s = 0.0f; pulse(1, 0.4f, 25); ev("right hand let go of the drawn katana - back in the sheath");
-            } else if (in.bladeOk) {   // the tip at the mouth, lined up -> back onto the rail
-                const float ta = axial(in.tip); float pp[3]; for (int k = 0; k < 3; k++) pp[k] = in.tip[k] - (in.mouth[k] + in.axis[k] * ta * u);
+            } else if (in.bladeOk) {   // the tip at the mouth, lined up -> back onto the rail (it stays in Jin's hand otherwise, grip or not)
+                // 0.18.42 the catch at the LEFT HAND while it holds the sheath (where you feel the mouth), within 10 cm of the setting's place
+                float mAx = c.mouthAx; if (onSheath && in.valid[0]) { const float la = axial(in.hand[0]); mAx = la < c.mouthAx - 10.0f ? c.mouthAx - 10.0f : la > c.mouthAx + 10.0f ? c.mouthAx + 10.0f : la; }
+                const float ta0 = axial(in.tip), ta = ta0 - mAx; float pp[3]; for (int k = 0; k < 3; k++) pp[k] = in.tip[k] - (in.mouth[k] + in.axis[k] * ta0 * u);
                 tipAx = ta; tipPerp = sqrtf(pp[0] * pp[0] + pp[1] * pp[1] + pp[2] * pp[2]) / u;
                 float cd = in.dir[0] * in.axis[0] + in.dir[1] * in.axis[1] + in.dir[2] * in.axis[2]; cd = cd > 1 ? 1 : cd < -1 ? -1 : cd; tipDeg = acosf(cd) * 57.2957795f;
-                const bool closeTip = tipPerp < c.sheathTipCm * 1.5f && ta < c.sheathOutCm * 2.0f && ta > -c.sheathInCm * 2.0f && tipDeg < c.sheathDeg * 1.5f;
+                const bool closeTip = tipPerp < c.sheathTipCm * 1.5f && ta < c.sheathOutCm * 2.0f && ta > -c.sheathInWinCm - 5.0f && tipDeg < c.sheathDeg * 1.5f;
                 if (closeTip && !tipNear) pulse(1, 0.15f, 12); tipNear = closeTip;   // a tick: the tip is close to the mouth
-                if (tipPerp < c.sheathTipCm && ta < c.sheathOutCm && ta > -c.sheathInCm && tipDeg < c.sheathDeg) {
-                    state = S_SHEATHING; s = fminf(c.bladeCm, c.bladeCm + ta); s0 = s; a0 = hAx; homing = false;
+                if (tipPerp < c.sheathTipCm && ta < c.sheathOutCm && ta > -c.sheathInWinCm && tipDeg < c.sheathDeg) {
+                    state = S_SHEATHING; s = fminf(c.bladeCm + c.sheathOverCm, fmaxf(0.0f, c.tipLenCm + ta0)); s0 = s; a0 = hAx; homing = false; onHilt = true;   // where the blade IS (no jump)
                     pulse(1, 0.55f, 30); pulse(0, 0.3f, 20); ev("the tip is in the sheath mouth - guide it home");
                 }
             }
         } else if (state == S_SHEATHING) {
-            if (!in.valid[1] || in.grip[1] < c.gripOff) { onHilt = false; homing = true; ev("right hand let go - the blade slides home"); pulse(1, 0.3f, 20); state = S_DRAWING; }
+            if (!in.valid[1] || (c.releaseHome && in.grip[1] < c.gripOff)) { onHilt = false; homing = c.autoHome != 0;   /* 0.18.40: the katana stays in the hand (sword_release_home 0) until it is home, grip or not */ ev(c.autoHome ? "right hand let go - the blade slides home" : "right hand let go - the blade stays where it is in the sheath"); pulse(1, 0.3f, 20); a0 = hAx; s0 = s; state = S_DRAWING; }
             else {
                 const float t = s0 + g * (hAx - a0);
-                if (hAx - a0 > c.unsheathCm && s0 + g * (hAx - a0) > c.bladeCm) { state = S_DRAWN; tipNear = false; pulse(1, 0.5f, 25); ev("pulled back out - the katana is free again"); }
-                else { s = t < 0.0f ? 0.0f : t > c.bladeCm ? c.bladeCm : t;
+                if (hAx - a0 > c.unsheathCm) { state = S_DRAWN; tipNear = false; pulse(1, 0.5f, 25); ev("pulled back out - the katana is free again"); }
+                else { const float top = fminf(s0, c.bladeCm + c.sheathOverCm); s = t < 0.0f ? 0.0f : t > top ? top : t;
                     if (s <= 1.0f) { state = S_SHEATHED; s = 0.0f; a0 = hAx; s0 = 0.0f; pulse(1, 0.8f, 40); pulse(0, 0.6f, 40); ev("SHEATHED - the blade is home"); } }
             }
         }

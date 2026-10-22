@@ -8,5 +8,5 @@ x86_64-w64-mingw32-g++ -O2 -std=c++17 -Wall -Wno-unused-function -Wno-cast-funct
 x86_64-w64-mingw32-g++ -shared -static -static-libgcc -static-libstdc++ -o "$D/build/xinput1_4.dll" "$D/build/gotvr.o" "$D/build/"buffer.o "$D/build/"hook.o "$D/build/"trampoline.o "$D/build/"hde64.o "$D/src/exports.def" -lbcrypt -ldxgi -ldxguid -luuid -Wl,--enable-stdcall-fixup -Wl,--kill-at
 x86_64-w64-mingw32-strip "$D/build/xinput1_4.dll"
 # GoTVRHost.exe: owns the OpenXR session out of process
-x86_64-w64-mingw32-g++ -O2 -std=c++17 -Wall -Wno-unused-function -Wno-cast-function-type -fno-exceptions -fno-rtti -municode -mwindows -I"$OXR" -o "$D/build/GoTVRHost.exe" "$D/src/host.cpp" -static -static-libgcc -static-libstdc++ -ld3d12 -ldxgi -ldxguid -luuid -lshell32 -ladvapi32
+x86_64-w64-mingw32-g++ -O2 -std=c++17 -Wall -Wno-unused-function -Wno-cast-function-type -fno-exceptions -fno-rtti -municode -mwindows -I"$OXR" -o "$D/build/GoTVRHost.exe" "$D/src/host.cpp" -static -static-libgcc -static-libstdc++ -ld3d12 -ldxgi -ldxguid -luuid -lshell32 -ladvapi32 -lgdi32
 x86_64-w64-mingw32-strip "$D/build/GoTVRHost.exe"

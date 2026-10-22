@@ -1,4 +1,4 @@
-# GoTVR 0.18.38 — SYNCHRONIZED STEREO 6DoF (xr=4): both eyes from the same moment of the game
+# GoTVR 0.18.46 — SYNCHRONIZED STEREO 6DoF (xr=4): both eyes from the same moment of the game
 
 Single-player only. Never enter Legends (online) with any GoTVR file installed.
 What changed and why: `docs/BUGLOG.md` (BUG-5, BUG-6).
@@ -21,6 +21,442 @@ refused to send images ("FRAME GENERATION is on" in the log, although it was off
 "R1 census" every 5 s (or on F10): the list of views the engine renders each frame. That decides how true
 same-frame stereo (both eyes every frame) gets built. Please press **F10** once in each of: main menu, standing
 outdoors, riding, a cutscene, photo mode.
+
+## 0.18.57: Ctrl+Shift+M crash fixed; one more step toward saving the flinching blow for VR
+
+**Install:** `xinput1_4.dll` only.
+
+- **Session 13:** Ctrl+Shift+H flinched. Ctrl+Shift+M (the message path) froze and crashed the game: the log stops
+  inside that blow. 0.18.56 had let the message path copy a blow carrying the game's hit-reaction bit (0x11C01041).
+  The bit asks the game to react, but the message path skips the game's own composition of the blow, so the data a
+  reaction needs is missing.
+  - The message path now never carries that bit. A template with it is dropped from gotvr.ini at load, and only plain
+    blows are kept. The message path is therefore damage only (no flinch), and stays the fallback.
+  - **The flinch comes from the record path (Ctrl+Shift+H / the katana).**
+- **Saving the flinching record:** Jin's attack component was found this time (two steps from Jin, hero+0x408 → +0x230),
+  and so was the +0x68 object. Still missing is the attack definition the record points at: it is not in the moveset
+  entry. 0.18.57 also searches the component's per-attack array and one more step from both. If that fails again, the
+  log dumps both entries (`REC moveset entry`, `REC per-attack entry`) so the next build can follow it.
+- Records no longer need a message-path template to be usable.
+
+## 0.18.56: making the flinch survive a restart (and VR)
+
+**Install:** `xinput1_4.dll` only.
+
+- **Session 12 (flat, two runs):**
+  - **Run 1:** the library kept a reacting light record (attack 0x74bf08798839b183, flags 0x11C00841). Ctrl+Shift+H
+    flinched. Ctrl+Shift+K kills **by design**: K is the "kill the nearest enemy" test key; H is the normal blow.
+  - **Run 2 (after the restart): no flinch.** The record had not been saved. Jin's attack component is not stored in
+    Jin's object directly, so the mod could not note where to find it again. The first blows went by the message path
+    (damage only), and then your first real blow, the opener of a combo with no hit-reaction bit, became the record.
+  - The one H blow that killed a full-health enemy (300 → 0) was the game's own decision: it composed a lethal blow
+    itself, most likely because that enemy was not yet aware of Jin (the game's one-hit kill on unaware enemies).
+  - In your own combos the game flags the opener without the reaction and the second blow with it. That is why the
+    library prefers reacting records.
+- **Fixes:**
+  - The component is now searched one step deeper from Jin.
+  - A rebuilt record carries its own copy of the attack definition, found in Jin's moveset by the attack's hash. The
+    game only ever reads that one pointer.
+  - When it still cannot be found, the log lists where the pieces live (`REC near` lines) for the next build.
+  - The message path's templates (always saved, and used whenever no record is available) now also prefer a blow with
+    the hit-reaction bit.
+- **Ctrl+Shift+M:** one blow by the message path, to compare. If that flinches too, VR has a fallback that needs nothing
+  from the session at all.
+
+## 0.18.55: the combat method - the game's own hit path from a library of Jin's real blows (no animation)
+
+**Install:** `xinput1_4.dll` only.
+
+- **Session 11 (flat):** Ctrl+Shift+H made enemies flinch with no animation at all. The difference from session 10 is the
+  blow the record came from:
+  - session 10 copied Jin's attack 0x74bf...: the game composed flags 0x03C00041 and enemies never reacted;
+  - session 11 copied attack 0x9561...: flags 0x11C01041. Bit 0x10000000 is the hit reaction. Enemies flinched.
+  - So the reaction comes with the attack the record belongs to, not with Jin's animation. The swing test (Ctrl+Shift+G)
+    confirmed that a playing animation is not needed.
+- **The insta-kills** were a bad record, not the swing test. After you died, a real blow of Jin's that killed outright
+  (flags 0x03C00001, lethal damage, probably a finisher on a staggered enemy) became the copied record. Every blow after
+  that, from H and G alike, copied a kill.
+- **The method from now on (cbt_mode 2):**
+  - The mod keeps a **record library**. A real blow of Jin's is kept only after the game has composed it, and only if
+    it was an ordinary damaging blow: no finishers, kills, heals, revives or spawns.
+  - Light and heavy blows each get their own record. A blow carrying the hit reaction always wins over one without it.
+  - The katana's speed, two-handed grip and heavy fallback scale the record's own base damage. A kill (Ctrl+Shift+K)
+    is a lethal blow composed by the game itself.
+  - **Saved for VR:** each record is written to gotvr.ini (`cbt_rec_light`, `cbt_rec_heavy`), together with where its
+    pointers live on Jin. A later session, including VR, rebuilds it from Jin without needing a real blow. The log line
+    `REC: pointers found again from Jin ... can be saved for VR` says whether that worked.
+  - The animated method stays available as `cbt_assist=1`, for comparison only.
+- **What to do once in flat:** fight normally for a minute with the game's own light and heavy attacks, so the library
+  gets a reacting light and heavy record. Then use Ctrl+Shift+H / K (no swing) to check the flinch.
+
+## 0.18.54: no attack animations - finding the flinch from the data; the old method kept as a setting; resolve maximum from the game
+
+**Install:** `xinput1_4.dll` only.
+
+- **Session 10 (flat, 0.18.53):** the katana's blows ran the game's entire hit path. The first part of the message, the
+  enemy's changes and the enemy's events were identical to a real blow; damage and kills landed; no flinch.
+- **The mod never presses an attack button** unless you turn on `cbt_assist=1` (owner: no attack animations in VR for
+  free-flowing combat).
+  - `cbt_assist=1` keeps the old idea **only to compare**: every blow taps the game's attack button (light X / heavy Y,
+    `cbt_assist_press_ms` 90) and lands `cbt_assist_delay_ms` (200) later while Jin's attack animation plays; Jin's own
+    blows in that window are held back. Default 0.
+  - (A first 0.18.54 build waited for an "attacks in progress" list; that list turned out to be Jin's whole moveset, so
+    that build was replaced before testing.)
+- **Finding the flinch without animation (flat diagnostics):**
+  - `MSGDIFF`: the whole 0x210-byte message as delivered, real and ours, plus every field of ours that differs from Jin's
+    latest real blow. The game composes the back half of the message while reading Jin's animation state; only the first
+    0xB0 bytes were compared until now. Whatever differs there can be copied in, with no animation.
+  - **Ctrl+Shift+G (swing test):** arms the test; your next attack press (left mouse / pad X) is followed 180 ms later
+    (`cbt_swing_test_ms`) by the katana's blow on the nearest enemy, while your own swing plays, with your own blow held
+    back. If enemies flinch here and not with Ctrl+Shift+H, Jin's playing attack matters, and the MSGDIFF lines show what
+    it changes.
+- **Resolve maximum:** read from the game's own progression value, `hero+0x4644 + 3`, the formula every game function
+  that refills, clamps or shows resolve uses, so it grows with Jin's upgrades. `wrist_resolve_max` is only a fallback.
+  `VITALS` lines (also in flat play) log resolve and its maximum when either changes.
+- The resolve finder is off (`cbt_resolve_scan=0`); its snapshots cost frame time and its job is done.
+
+## 0.18.53: the katana's blows go through the game's whole hit path (the flinch fix, take 3); resolve on the wrist
+
+**Install:** `xinput1_4.dll` only (GoTVRHost 0.15.1 is unchanged).
+
+- **Session 9 (flat, 0.18.52)** showed where the flinch comes from:
+  - The enemy receives the same two events (0x16, 0x17) from a real blow and from ours.
+  - A real blow first runs the game's hit processing (HitProc 0x8504D0). That composes the message and calls Jin's attack
+    components: events 0x11 / 0x12 / 0x14 / 0x15 on his weapon, and a mark in the target's hit ring (+0x9C8). The mod
+    skipped this step, so the enemy took the damage without the "I was struck by an attack" part.
+- **The fix (`cbt_mode 2`, the default):** the first real blow Jin lands in a session is kept as a template (its hit
+  record). Every katana blow then runs the game's own HitProc on a copy of that record, with the target swapped to the
+  enemy you hit and the contact point moved to it. Damage, the reaction, sound and blood all come from the game.
+  - Until Jin has landed one real blow in the session, blows use the 0.18.52 message path (damage only, no flinch). The
+    log says `hit record taken from Jin's own blow` when the template is ready.
+  - `cbt_mode 1` brings back the 0.18.52 behaviour if anything misbehaves.
+- **Resolve on the wrist gauge.** The resolve finder pointed at one value: hero+0x43A4, a float counted in pips (3 → 3.65
+  at a kill, 4.885 → 6.185 at a parry, falling at a heal). The gauge now shows it as pips.
+  - Its maximum is not known yet; `wrist_resolve_max` (default 10) sets how many pip slots to draw.
+  - Every 5 s the log writes a `VITALS` line with health, resolve and the fields around it, to find the maximum.
+- The `EVENT` diagnostic now also logs the events of the mod's own blows (the logging window opened too late before).
+
+## 0.18.52 / GoTVRHost 0.15.1: the wrist gauge (always there); deeper flinch diagnostics; the resolve finder reports candidates
+
+**Install:** `xinput1_4.dll` AND `GoTVR\GoTVRHost.exe`.
+
+- **The wrist HUD shows whenever you look at your forearm,** in and out of combat.
+  - The game fades its own health bar out of combat, so the cropped game art was often empty.
+  - A new gauge is painted from the game's own values: an ivory health bar (like the game's) with the health just lost
+    flashing red. Below 30 % it turns red and the plate pulses with the heartbeat.
+  - Resolve pips appear above the bar as soon as the resolve finder has found it.
+  - `wrist_hud_mode`:
+    - 1 = the game's own art only;
+    - 2 = our gauge only;
+    - 3 (default) = our gauge, with the game's own health / resolve art above it whenever the game shows it.
+- **Session 8 (flinch):**
+  - The game's whole delivery does exactly the same to the enemy for a real blow and for the mod's, so the flinch is
+    decided before the delivery, on Jin's attack side.
+  - New flat diagnostics: the game's own hit processing (`HITPROC`: the attack components' callbacks, the hit record,
+    the caller chain), and every script event a blow fires at a person, real vs ours (`EVENT` lines).
+- **Resolve finder:** instead of long lists it keeps per-field statistics: what rose at gains (kills, parries, staggers,
+  Ctrl+Shift+R) and fell at spends (resolve heals, revives). After every event it logs the best `RESOLVE?` candidates.
+
+## 0.18.50: closer to Jin's own blow; tools to find the flinch and resolve; ready for the VR test
+
+**Install:** `xinput1_4.dll` (the host is 0.15.0 from 0.18.48).
+
+- **Session 7:** still no flinch through the game's delivery. The mod's message differed from Jin's own in three places:
+  - +0x168 (the attacker, always Jin) was empty and its flag cleared;
+  - +0x1A0 (the combo step, 1 / 2 on real blows) was 0;
+  - +0x50 (a class-24 object, probably the weapon) was empty, because the light template came from gotvr.ini.
+
+  All three are filled now; +0x50 comes from Jin's latest real blow of any kind.
+- **If enemies still don't flinch,** two tools find out why (flat play):
+  - **Ctrl+Shift+W** next to an enemy, then hit it with the game's own attack. Hardware watchpoints catch every write to
+    that enemy's reaction fields and log the writing code with its call chain (`DBW` lines). That is the code the mod has
+    to reach. Press Ctrl+Shift+W again, or wait 90 s, to stop.
+  - `DLVDIFF real / ours`: what the game's whole delivery changes on the enemy, for a real blow and for the mod's.
+- **Resolve finder:** fields that are busy all the time (animation, position, timers) are now left out. Only what changes
+  at the moment shows: resolve heals, revives, Jin's kills, and **Ctrl+Shift+R** (a mark: press it right after resolve
+  changes, e.g. after a parry).
+
+## 0.18.49: the katana's blows delivered the game's way (the flinch fix); finding resolve
+
+**Install:** `xinput1_4.dll` (the host is the same as 0.18.48's).
+
+- **Why there was no flinch:** session 6 showed the game's HandleHit does exactly the same thing for a real blow and for
+  the mod's (`HHDIFF real` = `HHDIFF ours`). The flinch, sound and blood come from the delivery around it.
+  - The game's delivery (0x85A770, through 0x85A4F0) marks the hit delivered, keeps it among the latest 64 hits, fires a
+    "hit received" event on the enemy and a "hit dealt" event on Jin, and only then calls HandleHit.
+  - The mod now delivers its blows through that same path, exactly as the game sends its own messages (the resolve heal
+    is sent the same way). `cbt_deliver = 0` goes back to the 0.18.48 direct call.
+- **Finding resolve (flat play):** Jin's state is snapshotted every 250 ms. When you heal with resolve, revive, or kill an
+  enemy, the log lists what changed (`RSCAN` lines). The field that drops at every heal / revive and rises at kills is
+  resolve.
+
+**Flat test:**
+1. Land a light and a heavy attack.
+2. Ctrl+Shift+H / K: do the enemies flinch, bleed and die with the death reaction now?
+3. Heal twice with resolve, kill two or three enemies, and revive once if you get knocked down.
+
+## 0.18.48: combat stage 1b (the design doc's attack parameters) and the wrist HUD (W1)
+
+**Install:** `xinput1_4.dll` AND `GoTVR\GoTVRHost.exe` (the shared block changed to v16, so the two must match).
+
+**Combat**
+- **Enemies are whoever the game counts as hostile.** The mod asks the game's own attitude query (the one its threat system
+  uses), so every Mongol in a camp can be cut from the first swing. Allies and villagers are never struck.
+  - Session 5 refused most strikes because an enemy only counted once it had traded a hit with Jin.
+  - Ctrl+Shift+J now also lists each character's attitude toward Jin, and a hotkey refusal is always logged.
+- **Heavy attacks:** with both hands on the katana, hold the right trigger and keep your hands still for
+  `sword_heavy_charge_ms` (moving more than `sword_heavy_charge_move_cm` starts the charge over).
+  - A rising hum, then a thump in both hands, tells you it's charged.
+  - The next blow is a heavy one (the game's heavy hit, copied from one heavy attack of Jin's; until then a light blow ×1.6).
+  - The charge stays while the trigger is held and is gone 0.25 s after you let go.
+- **Lunge:** a blow moves Jin toward the enemy struck.
+  - Light `sword_lunge_cm`, heavy `sword_lunge_heavy_cm`, longer the faster the swing (`sword_lunge_speed_mod`).
+  - Never within `sword_lunge_cooldown_ms`, and it stops `sword_lunge_stop_cm` short of the enemy.
+  - The playbook's references warn that moving the camera can be uncomfortable. `sword_lunge = 0` turns it off.
+- **Swing rumble:** a recognised swing ticks the right hand (`sword_swing_rumble`); a charged heavy swing thumps both
+  hands (`sword_swing_rumble_heavy`).
+- **Katana weight** (`sword_weight`, 0 = rigid, try 1): the blade lags your hand a little one-handed, a third as much
+  two-handed.
+- **Diagnostics for the missing hit reaction**, flat play only. The first 6 real blows and the first 6 injected ones log
+  `HHDIFF` (what HandleHit changed on the enemy), `MSG` (the whole message) and the real blow's caller chain.
+  - `cbt_msg_state = 1` (default) sends the message in the state real ones arrive in. That may already bring the flinch back.
+
+**The design doc's attack parameters → gotvr.ini:**
+
+| Design doc | Key | Default |
+|---|---|---|
+| Minimum Speed | `sword_hit_min_speed` | 2.2 m/s (closing speed at the contact) |
+| Minimum heavy attack charging time | `sword_heavy_charge_ms` | 450 |
+| Maximum hand movement during heavy attack charge | `sword_heavy_charge_move_cm` | 10 |
+| Minimum Travel Distance | `sword_hit_min_travel_cm` | 18 |
+| Travel Distance Modifier | `sword_lunge_speed_mod` | 0.5 (the lunge grows up to 1.5× at 8 m/s) |
+| Player travel distance | `sword_lunge_cm` | 35 |
+| Player travel distance Heavy | `sword_lunge_heavy_cm` | 60 |
+| Player travel distance cooldown | `sword_lunge_cooldown_ms` | 600 |
+| Attack Cooldown | `sword_hit_cooldown_ms` | 220 |
+| Rearm Time | `sword_hit_rearm_ms` | 120 |
+| Contact Tolerance | `sword_hit_contact_cm` | 6 |
+| Rumble feedback on hitting enemies | `sword_hit_rumble` | 0.9 |
+| Rumble feedback light attack | `sword_swing_rumble` | 0.35 |
+| Rumble feedback heavy attack | `sword_swing_rumble_heavy` | 0.7 |
+| Rumble feedback low health | `wrist_hud_heartbeat_gain` | 0.6 |
+| Katana weight | `sword_weight` | 0 (off) |
+| Parry / perfect parry window multipliers, parry parameters | stage 2 (block / parry) | |
+
+Also: `sword_lunge_stick_speed` 4.5 (m/s at full stick, which turns a lunge distance into a stick push), `sword_lunge_stop_cm` 70,
+`sword_two_hand_damage` 1.0, `sword_swing_rearm_speed` 0.8.
+
+**The wrist HUD, W1** (docs/WRIST_HUD.md):
+- The game's own health / resolve corner of the HUD is shown on a small panel on the **outside of your left forearm**.
+  - It appears when you look at it, stays on below 30 % health and for 2 s after a hit, heal or resolve change, and is cut
+    out of the room HUD panel so it never shows twice.
+  - Hold your left hand up at your head and press its trigger for the whole HUD, objectives included (control scheme).
+  - With no tracked left hand, everything stays as before.
+- **Settings:**
+  - `wrist_hud` 1
+  - `wrist_hud_rect` 0.015,0.865,0.235,0.125: the HUD corner as fractions of the UI, measured on your flat HUD
+  - `wrist_hud_width_m` 0.10
+  - `wrist_hud_from_hand_m` 0.11
+  - `wrist_hud_out_m` 0.045
+  - `wrist_hud_roll_deg` 0
+  - `wrist_hud_glance` 1
+  - `wrist_hud_cut` 1
+  - `wrist_hud_panel_at_head_only` 0: 1 shows the room HUD panel only with the hand at the head
+  - `wrist_hud_low_hp` 0.30
+- **Low-health heartbeat** in the left hand: 60 → 130 bpm below 30 % health, lub-dub, only within 20 s of the last hit
+  (`wrist_hud_heartbeat`, `wrist_hud_heartbeat_gain`, `wrist_hud_heartbeat_mute_s`).
+- **Not yet:**
+  - A floating panel still draws over the world. The world-space version, hidden behind your hand, the katana and walls,
+    is W1b, next.
+  - Resolve as numbers (W0) isn't done yet; the game's own resolve pips are shown.
+
+## 0.18.47: combat stage 1 - the katana cuts
+
+**Install:** `xinput1_4.dll` (the host is unchanged).
+
+- **A blow when your blade meets an enemy fast enough.** Only the cutting edge counts (the last `sword_hit_blade_cm` of the
+  blade, never the hilt). The speed that counts is the **closing speed** at the contact point: blade against enemy, with your
+  own walking taken off (the playbook rule). Walking into an enemy with the blade held out does nothing; an enemy running onto
+  your held blade gets cut.
+- **Fast swings don't slip through.** The tip's path since the last frame is tested too, so a fast swing still connects.
+  Each enemy can be hit once per pass, and only again after the blade has left them (`sword_hit_rearm_ms`). There is also a
+  cooldown between blows (`sword_hit_cooldown_ms`).
+- **The blow is the game's own.** The mod sends the same hit message the game sends for Jin's ordinary light attack (damage,
+  posture, reaction, sound, blood), copied from a real blow of Jin's. Damage scales from **x0.75 at the minimum speed to x1.10
+  at 8 m/s** (the Bloodborne VR curve). A blow that would kill is sent the way the game sends Jin's killing blows.
+- **Only proven enemies can be hit:** anyone who has hit Jin, or whom Jin has hit. Villagers and allies are never struck
+  (`sword_hit_any = 1` lifts this).
+- **Rumble:** strong on a blow (both hands when you hold the katana two-handed), a light tap when the blade touches an enemy
+  too slowly to cut.
+- **One-time setup:** the game's hit message is copied from a real blow. Land one ordinary light attack with the game's own
+  attack, flat or in VR before you draw. The copy is saved in gotvr.ini (`cbt_tpl_light`), so after that it works from the start.
+- **Flat test keys:** **Ctrl+Shift+H** strikes the nearest hostile enemy, **Ctrl+Shift+K** kills it, **Ctrl+Shift+J** lists the
+  enemies the katana can hit. The log shows `STRIKE` lines and a `HITS/s` line (contacts, too slow / too short, blows, peak
+  closing speed).
+- **Settings (gotvr.ini):**
+  - `sword_hit` 1
+  - `sword_hit_min_speed` 2.2 (m/s closing)
+  - `sword_hit_min_travel_cm` 18
+  - `sword_hit_contact_cm` 6
+  - `sword_hit_cooldown_ms` 220
+  - `sword_hit_rearm_ms` 120
+  - `sword_hit_blade_cm` 70
+  - `sword_hit_damage_slow` 0.75
+  - `sword_hit_damage_fast` 1.10
+  - `sword_hit_fast_speed` 8
+  - `sword_hit_rumble` 0.9
+  - `sword_hit_rumble_ms` 70
+  - `sword_hit_any` 0
+- **Not yet:**
+  - Enemies can't guard against these blows yet; the game normally sends a "guarded" variant.
+  - No heavy attacks (trigger charge), lunge, block / parry or hit-stop yet. Those are stage 2.
+
+## 0.18.46: session 3 decoded; the enemy watcher follows real hits only
+
+**Install:** `xinput1_4.dll` (the host is unchanged).
+
+- **Parry and perfect parry** give the same result message (Jin +12.5 health). The game sorts them by how close to the impact block
+  was pressed (22 ms before = perfect, 64 ms = normal). The VR parry presses block at blade contact and lets the game decide.
+- **Standoff state:** hero+0x1070 = 1 (1.5 s after X). Traversal: the beam / rope / ledge plane at hero+0xB60 changes as Jin steps
+  on. Details in docs/COMBAT_FINDINGS.md, "Session 3".
+- **The enemy watcher** no longer jumps to enemies as they spawn.
+
+## 0.18.45: the enemy watched too (for the VR parry), more of the hero watched
+
+**Install:** `xinput1_4.dll` (the host is unchanged).
+
+- **What your second session decoded** (docs/COMBAT_FINDINGS.md, "Session 2"):
+  - **The hit messages:** Jin's sword hits, the enemies' hits, kills, parries (Jin +12.5 health), the parried enemy's stagger, perfect
+    parry counter kills, chip damage, fall damage, resolve heals, and the crawling (finisher) state.
+  - **The attacker:** every message carries the attacker's character.
+- **The enemy watcher (ENEMY/s):** the enemy last in a hit with Jin (hit by him, or the one who hit him) is watched like the hero,
+  so the next session shows his attack wind-up and his stagger.
+- **The hero watch covers 32 KB** (was 16).
+- **The COMBAT/s count is relabelled:** it was "attacks incoming", but those entries are paired actions (finisher, mount,
+  assassination).
+
+## 0.18.44: flat-play capture for the whole design doc
+
+**Install:** `xinput1_4.dll` (the host is unchanged).
+
+- **23 action tags** (they replace 0.18.41's five): numpad 0 - 9, Ctrl+numpad 0 - 9, numpad / * -. Each tag and what to do is in
+  docs/DATA_CAPTURE_PLAN.md.
+- **Keyboard / mouse presses are logged** with their time in each second (INPUT/s: `LMB+@312` = pressed 312 ms into that second,
+  `-` = released; WASD as "moving"). Keyboard / mouse play now gives usable data.
+
+## 0.18.43: combat observer from your flat session, right trigger = Focus
+
+**Install:** `xinput1_4.dll` (the host is unchanged).
+
+- **What your flat session showed** (details: docs/COMBAT_FINDINGS.md):
+  - **Health and its one writer:** Jin's health is a decimal value on the hero (+0x1974; max at +0x1970). The game changes it in ONE
+    function, SetHealth (rva 0x69F3D0), for every character: damage, heals, regen.
+  - **Where hits are processed:** every hit goes through the game's HandleHit (rva 0x694080, a virtual of the character classes). It
+    reads a hit record: an id, flags, damage-like values. That is where a physical katana's hit can be handed to the game.
+  - **The incoming-attack list on Jin** (+0x3918, count at +0x39A0): an enemy's attack is registered there as it starts, about 1 s
+    before your parry marks. That is the parry window.
+- **The new combat observer logs** every hit (whose, the hit record) and every health change, with your tag, plus a COMBAT/s line with
+  the attacks incoming on Jin. It is observe-only and checks the game's code first: if the build differs, it switches itself off and
+  the rest of the mod runs.
+- **Right trigger = Focus (Focused Hearing):** it sends the touchpad press, which is View on an Xbox pad (Fextralife: "Press the
+  Touchpad ... to focus"). `right_trigger` in [controls] changes it. Once kunai / items exist, holding one will take the trigger back.
+
+## 0.18.42: the sheath mouth at your left hand, a wider catch, the game's draw / put-away fully hidden, play_mode in the ini
+
+**Install:** `xinput1_4.dll` (the host is unchanged).
+
+- **Where the sheathing catches:**
+  - While your left hand holds the sheath, the mouth is where your left hand is (within 10 cm of the setting's place). Otherwise it is
+    the left fist's place from `sword_left_hand_cm`. `sword_sheathe_shift_cm` (0) moves it up (+) or down (-) the sheath.
+  - **Wider catch:** 12 cm off the line (`sword_sheathe_tip_cm`), 55 deg (`sword_sheathe_deg`), and 12 cm short of the mouth. In the
+    0.18.41 log your misses were right at the mouth but 37 - 46 deg off the sheath's line, while it only took under 35 deg.
+- **The sheathe animation that still showed now and then:**
+  - The game's own put-away time (16.3 s after its draw) is saved in gotvr.ini (`sword_game_autosheathe_ms`), so from the very first
+    one it is hidden from 1.5 s before it is due. It stays hidden 1.6 s after the sword is in.
+  - The game's draw animation (ours, and the background redraw after the game's put-away) is hidden until 1.8 s after the sword
+    appears, instead of a fixed 1.8 s from the request.
+- **Flat play:** gotvr.ini now has `play_mode=vr`. Set it to `play_mode=flat` for flat-screen play with the logger (and back to `vr` for
+  the headset).
+  - The logger now also records decimal values on Jin that change only now and then (health, resolve, posture-like values), with old
+    -> new value. Before, it recorded only small whole-number flags.
+  - Numpad tags as before (1 sword combat, 2 archery, 3 climbing, 4 grappling, 6 cutscene) and F8 for a numbered MARK. Tag each fight
+    and press F8 at each parry, hit you land or hit you take, so they can be lined up in the log.
+
+## 0.18.41: sheathing catches the real tip, the game's own auto-sheathe hidden, the thumb works again, numpad log tags
+
+**Install:** `xinput1_4.dll` (the host is unchanged).
+
+- **Sheathing never caught: the mod's tip was about 45 cm too deep.** It used the full 72 cm blade length from the rail's origin, but
+  the blade clears the sheath mouth after about 45 cm of rail (that is where your draws come free).
+  - The 0.18.40 log has it exactly: every time you lined the blade up with the sheath (6 - 12 cm off the line, 15 - 20 deg), the mod's
+    tip was 45 - 48 cm inside the mouth, past its 25 cm window.
+  - Now the tip is the real one: `sword_blade_out_cm` (45) = how far the blade travels before its tip leaves the mouth. If the catch
+    feels early or late, change that.
+  - SWORD/s now logs the closest the tip came to being caught in each second, and the limits it has to meet.
+- **The sheathing animation that still played was the game's own automatic sheathe.** The game puts its sword away by itself a while
+  after drawing it (18.3 s each time in your log), with its blood flick.
+  - Now the game's sword heading for its scabbard by itself is hidden on Jin until it is through. The time it took is learned, and from
+    then on the hiding starts 1.5 s before it is due, so the flick is covered too.
+  - If you hold the katana, the game's sword is drawn again in the background, hidden. While it is briefly away (about a second) the
+    sheath stays on the hip instead of flying into your hand with its sword.
+  - **Walking:** whenever an animation is hidden, Jin's legs keep the game's walk. Only his body above the hips is held.
+- **The thumb follows your thumb again** (on the sticks, the buttons or the thumb rest). Since 0.18.31 a comment put in the middle of a
+  line had cut off the thumb's update. The build had been warning about the unused value all along.
+- **Flat-play log tags (NumLock on):** numpad 1 sword combat, 2 archery, 3 climbing, 4 grappling, 6 cutscene.
+  - A key writes a "TAG ... BEGIN" banner, the same key again "TAG ... END" (with how long it lasted), and another key switches.
+  - With `play_mode=flat`, every STATE/s line carries the tag, so the log can be cut by action (search "TAG grappling").
+
+## 0.18.40: sheathing is yours alone - no sheathe animation, no repeats
+
+**Install:** `xinput1_4.dll` (the host is unchanged).
+
+- **The game is never asked to sheathe its sword any more.**
+  - Once drawn (in the background, its animation hidden), the game's sword stays "out" as far as the game is concerned. When you put
+    the katana away, the mod slides that sword home along the sheath with your hand, and it stays there in the scabbard.
+  - Next time you draw, it simply slides out again, with no game animation at all.
+  - If the game puts its sword away by itself (getting on the horse, climbing, an interaction), the next time you take the hilt it is
+    drawn again in the background, hidden.
+- **Why the sheathe animation kept repeating (0.18.39):**
+  - Once the game had put its sword away it stopped moving it, and the mod read its own last placement of the sword as "still drawn".
+    So it asked again every 2.5 s, and each request toggles: draw, sheathe, draw ...
+  - Now a sword the game no longer animates counts as put away.
+- **Sheathing by hand:**
+  - Bring the tip to the sheath mouth: where the guard sits less `sword_mouth_below_guard_cm` (4.5), about where your left hand holds
+    the sheath. The blade has to be roughly lined up with the sheath (within 35 deg).
+  - The tip is caught anywhere from 8 cm before the mouth to 25 cm inside it, so the blade's exact length does not matter. A tick on the
+    controller tells you it is close. The blade is taken onto the rail exactly where it is, with no jump.
+  - Then push it home. Pulling 6 cm back out frees it again.
+- **The katana stays in Jin's hand until you sheathe it.** Letting go of the grip no longer sends it back to the sheath; the fingers
+  stay round the hilt. `sword_release_home=1` brings back the old return.
+- **A blade let go of half in the sheath stays where it is.** Take the hilt again to push it home or draw it. `sword_auto_home=1` makes
+  it slide home by itself as before.
+- **Kept from 0.18.39:** with the game's sword out, standing still shows Jin's own pose from before the draw. Pad input (0.3 s) or a
+  real change of his head height (a crouch) shows the game's pose through. Walking uses the game's legs.
+
+## 0.18.39: only the sword leaves the sheath (the game's draw animation hidden on Jin), two-handed steering halved
+
+**Install:** `xinput1_4.dll` (the host is unchanged).
+
+- **Only the sword comes out; the sheath stays on the hip.**
+  - The sheathed katana is part of the sheath's model, so the separate sword (joint 637, the bone you confirmed) only exists while the
+    game has its sword drawn.
+  - The mod asks the game to draw in the background the moment your right hand takes the hilt, so the sword is there by the time you
+    pull. It asks the game to put it away 1.5 s after the katana is home and your hand has left the hilt.
+- **The draw / sheathe animation is hidden on Jin.**
+  - While it plays, Jin keeps his own pose from just before: body, head, the sheath on the hip. Only the game's sword is left to the
+    mod, so the camera does not move either.
+  - While the game stands in its drawn-sword stance, standing still also keeps that pose. Walking with the katana out still uses the
+    game's legs for that state.
+- **The sword is placed by the mod, not by the game's hand.**
+  - It sits where the sheath model's sword would be: your grip, your captures, the hand placement settings and hotkeys all apply.
+  - **First draw:** the mod learns where the game's sword sits in the scabbard while the game draws it. This is saved as
+    `sword_game_home_*` and logged as "learned where the game's sword sits in the scabbard". Until it is learned, that first draw looks
+    like before.
+- **No more double draws or sheathes:** the touchpad swipe toggles, and 0.18.37's repeats made the game draw again or sheathe on its
+  own. Now a request is only sent when the game's state is known (where it parks its sword while sheathed), never repeated within
+  2.5 s, and only for draws the mod asked for. Drawing with an attack button is left alone.
+  - `sword_use_game_blade=0` turns all of this off (sword and sheath move as one again).
+- **Two hands:** the second hand now turns the katana half as much (`sword_two_hand_steer`, 0.5; 1 = as before).
 
 ## 0.18.38: no game draw / sheathe animations, the 0.18.37 TAA change removed, the katana fixed in the fist while you move, hand placement that works
 

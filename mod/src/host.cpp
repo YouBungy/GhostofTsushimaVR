@@ -27,7 +27,7 @@
 #include "gotvr_shared.h"
 
 typedef uint64_t u64; typedef uint32_t u32;
-#define HOST_VERSION "GoTVRHost 0.14.4 (the headset's own recenter (Meta button) recentres the game view, shared block v15, thumb / trigger touch for the VR fingers, five-option item wheel, shared block v14, item wheel + gesture indicator overlay, VR controllers: canonical controller per hand for Touch / Touch Plus / Index / Vive / WMR / HP / Pico / simple, haptics, pose prediction lead = measured pipeline lag, high GPU priority, pair-atomic xr=4, theatre screen, sharp UI layer: room-fixed HUD panel from the game, full-view cinematic UI, anamorphic 16:9 UI and flat frames of the square render)"
+#define HOST_VERSION "GoTVRHost 0.15.1 (the wrist gauge (W2): health (and resolve once found) painted from the game's values, always there when you look at your forearm - wrist_hud_mode 3 = our gauge + the game's own art above it; 0.15.0: the wrist HUD (W1): the game's own health / resolve rectangle on a quad on the outside of your left forearm when you look at it, cut from the room panel, the whole panel with the left hand at the head; shared block v16; every runtime extension logged; 0.14.4: the headset's own recenter (Meta button) recentres the game view, shared block v15, thumb / trigger touch for the VR fingers, five-option item wheel, shared block v14, item wheel + gesture indicator overlay, VR controllers: canonical controller per hand for Touch / Touch Plus / Index / Vive / WMR / HP / Pico / simple, haptics, pose prediction lead = measured pipeline lag, high GPU priority, pair-atomic xr=4, theatre screen, sharp UI layer: room-fixed HUD panel from the game, full-view cinematic UI, anamorphic 16:9 UI and flat frames of the square render)"
 
 static FILE *g_log; static wchar_t g_dir[MAX_PATH];
 static void logf(const char *fmt, ...) {
@@ -72,6 +72,7 @@ static u64 ownVal[3], ownNext = 1; static int ring;
 static ID3D12Resource *tex[GV_TEXCOUNT]; static ID3D12Fence *gameFence; static LONG texGen; static u32 texW, texH; static DXGI_FORMAT texFmt;
 
 struct Chain { XrSwapchain sc = XR_NULL_HANDLE; u32 w = 0, h = 0; ID3D12Resource *img[8] = {}; u32 n = 0; ID3D12DescriptorHeap *rtv = nullptr; u32 step = 0; DXGI_FORMAT fmt = DXGI_FORMAT_UNKNOWN; bool everReleased = false; bool broken = false; };
+#include "xrwrist.h"   // v16 the wrist HUD (docs/WRIST_HUD.md W1)
 static Chain eyeSc[2]; static Chain uiSc;   // v7: the game UI on its own quad layer
 static ID3D12Resource *uiTex[GV_UITEX]; static LONG uiGenOpen = 0, uiGenFailed = 0;
 struct Shown { bool valid = false; u32 tex = 0; u32 frame = 0; u64 fence = 0; GvPose pose{}; float fov[4]{}; u32 flags = 0; };
@@ -126,7 +127,9 @@ static bool makeChain(Chain &c, u32 w, u32 h, DXGI_FORMAT want) {
     logf("swapchain %ux%u format %d (wanted %d), %u images", w, h, (int)pick, (int)want, n);
     return true;
 }
+static void killChain(Chain &c) { if (c.sc) { PFN_xrDestroySwapchain d = nullptr; gipa(inst, "xrDestroySwapchain", (PFN_xrVoidFunction *)&d); if (d) d(c.sc); } if (c.rtv) c.rtv->Release(); c = Chain{}; }
 static void destroyChains() {
+    killChain(wrist::sc);
     if (uiSc.sc) { PFN_xrDestroySwapchain d = nullptr; gipa(inst, "xrDestroySwapchain", (PFN_xrVoidFunction *)&d); if (d) d(uiSc.sc); } if (uiSc.rtv) uiSc.rtv->Release(); uiSc = Chain{}; S->uiOk = 0;
     for (auto &t : uiTex) if (t) { t->Release(); t = nullptr; } uiGenOpen = 0;
     for (auto &c : eyeSc) { if (c.sc) { PFN_xrDestroySwapchain d = nullptr; gipa(inst, "xrDestroySwapchain", (PFN_xrVoidFunction *)&d); if (d) d(c.sc); } if (c.rtv) c.rtv->Release(); c = Chain{}; shown[&c - eyeSc] = Shown{}; } }
@@ -178,6 +181,7 @@ static void openShared() {
 static void openUi() {
     LONG g = S->uiGen; if (texGen <= 0 || g <= 0 || g == uiGenOpen || g == uiGenFailed) return;
     if (uiSc.sc) { PFN_xrDestroySwapchain d = nullptr; gipa(inst, "xrDestroySwapchain", (PFN_xrVoidFunction *)&d); if (d) d(uiSc.sc); } if (uiSc.rtv) uiSc.rtv->Release(); uiSc = Chain{}; S->uiOk = 0;
+    killChain(wrist::sc);
     for (auto &t : uiTex) if (t) { t->Release(); t = nullptr; }
     bool good = true; wchar_t nm[96], sfx[32];
     for (int i = 0; i < GV_UITEX && good; i++) {
@@ -190,6 +194,7 @@ static void openUi() {
     if (good) good = makeChain(uiSc, S->uiW, S->uiH, srgbOf((DXGI_FORMAT)S->uiFmt));
     if (!good) { logf("UI layer generation %ld unusable -> the game keeps the UI in the 3D image", g); for (auto &t : uiTex) if (t) { t->Release(); t = nullptr; } uiSc = Chain{}; uiGenFailed = g; return; }
     uiGenOpen = g; S->uiOk = 1; logf("UI layer: opened UI images gen %ld: %ux%u format %u", g, S->uiW, S->uiH, S->uiFmt);
+    if (wrist::on && !makeChain(wrist::sc, S->uiW, S->uiH, srgbOf((DXGI_FORMAT)S->uiFmt))) { logf("wrist HUD: no swapchain -> off"); killChain(wrist::sc); wrist::on = false; }
 }
 
 // Acquire + wait. XR_TIMEOUT_EXPIRED is a success code, so loop on it; an image that was acquired but could
@@ -372,6 +377,7 @@ static XrRect2Di screenRect(u32 w, u32 h, bool crop) {   // the part of the game
 // lead integrates that lag, so the game renders for the moment its image is actually on the display (playbook ch09
 // #runtime-owns-pacing / XR-005: one wait, one prediction, declare what you rendered; the declared pose stays the rendered one).
 #include "xroverlay.h"
+#include "xrgauge.h"   // v16 the wrist gauge (WRIST_HUD.md W2)
 
 struct LeadRec { XrTime t; GvPose e0; };
 static LeadRec leadRing[128]; static u32 leadPos = 0; static double leadNs = 0, lagEma = 0; static u64 lagN = 0; static u32 lastLeadFrame = 0xFFFFFFFFu;
@@ -453,14 +459,30 @@ static void frame() {
     }
     const bool uiFresh = uiPick.valid && shown[0].valid && (int)(uiPick.frame - pick[0].frame) >= -3 && (uiFlags & (GV_UI_HEAD | GV_UI_WORLD | GV_UI_FULL));
     u32 uiIdx = 0; const bool uiAcq = uiFresh && acquire(uiSc, uiIdx);
+    wrist::decide(hl.pose, headOk, uiSc.w, uiSc.h);   // v16 the wrist HUD: where, whether shown, whether the room panel is cut
+    u32 wrIdx = 0; const bool wrAcq = uiAcq && !(uiFlags & GV_UI_FULL) && wrist::shownNow && (wrist::mode & 1) && wrist::sc.sc && !wrist::sc.broken && acquire(wrist::sc, wrIdx);
+    const bool wrCut = uiAcq && !(uiFlags & GV_UI_FULL) && wrist::cutNow;
     const u64 ovNow = GetTickCount64(); const bool ovNeed = useGame && ov::wantDraw(ovNow); u32 ovIdx = 0; const bool ovAcq = ovNeed && acquire(ov::sc, ovIdx);   // v13 overlay
+    u32 gaIdx = 0; const bool gaAcq = useGame && wrist::shownNow && (wrist::mode & 2) && gauge::want(ovNow, wrist::gcfg.low) && !gauge::sc.broken && acquire(gauge::sc, gaIdx);   // v16 W2: our own gauge
     auto *c = beginCl();
     if (ovAcq) ov::record(c, ov::sc.img[ovIdx], ring, ovNow);
+    if (gaAcq) gauge::record(c, gauge::sc.img[gaIdx], ring, ovNow, wrist::gcfg.low);
     if (uiAcq) {
         D3D12_RESOURCE_BARRIER br = barrier(uiSc.img[uiIdx], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_DEST); c->ResourceBarrier(1, &br);
         D3D12_TEXTURE_COPY_LOCATION dst{uiSc.img[uiIdx], D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX, {}}, src{uiTex[uiPick.tex], D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX, {}};
         c->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
         br = barrier(uiSc.img[uiIdx], D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET); c->ResourceBarrier(1, &br);
+        const int *wp = wrist::px;
+        if (wrAcq) {   // v16 the health / resolve rectangle into the wrist image (same place, same size as in the UI image)
+            D3D12_RESOURCE_BARRIER b2 = barrier(wrist::sc.img[wrIdx], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_DEST); c->ResourceBarrier(1, &b2);
+            D3D12_TEXTURE_COPY_LOCATION d2{wrist::sc.img[wrIdx], D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX, {}}; const D3D12_BOX box{(UINT)wp[0], (UINT)wp[1], 0, (UINT)(wp[0] + wp[2]), (UINT)(wp[1] + wp[3]), 1};
+            c->CopyTextureRegion(&d2, (UINT)wp[0], (UINT)wp[1], 0, &src, &box);
+            b2 = barrier(wrist::sc.img[wrIdx], D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET); c->ResourceBarrier(1, &b2);
+        }
+        if (wrCut && uiSc.rtv) {   // ... and cut out of the room panel (transparent), so it is never shown twice
+            const D3D12_RECT r{wp[0], wp[1], wp[0] + wp[2], wp[1] + wp[3]}; const float z[4] = {0, 0, 0, 0};
+            c->ClearRenderTargetView({uiSc.rtv->GetCPUDescriptorHandleForHeapStart().ptr + (SIZE_T)uiIdx * uiSc.step}, z, 1, &r);
+        }
     }
     for (int e = 0; e < 2; e++) {
         if (!acq[e]) continue;
@@ -480,6 +502,8 @@ static void frame() {
     submitCl();                                                       // work is on the queue BEFORE release (review #1)
     for (int e = 0; e < 2; e++) if (acq[e]) release(*ch[e]);
     if (uiAcq) release(uiSc);
+    if (wrAcq) release(wrist::sc);
+    if (gaAcq) { release(gauge::sc); gauge::haveImage = true; }
     if (ovAcq) { release(ov::sc); ov::sigDrawn = ov::sigOf(ovNow); ov::haveImage = true; }
     XrCompositionLayerProjectionView pv[2]; bool layerOk = true;
     for (int e = 0; e < 2; e++) {
@@ -567,9 +591,26 @@ static void frame() {
                     wLast = now; uq.space = local; uq.pose = wPose;
                 }
             } else { uq.space = viewSp; uq.pose.orientation.w = 1; uq.pose.position = {0, -d * tanf(S->hudDown / 57.29578f), -d}; }
-            layers[nLayers++] = (XrCompositionLayerBaseHeader *)&uq; S->hostUi++;
+            if (!(wrist::panelAtHead && wrist::on && !wrist::headNow)) { layers[nLayers++] = (XrCompositionLayerBaseHeader *)&uq; S->hostUi++; }
         }
         static u32 wasUi = 0; static float wasDa = -1; if (uiFlags != wasUi || da != wasDa) { logf("UI layer: %s quad %.2f x %.2f m (%ux%u%s)", how, w, h, uiSc.w, uiSc.h, da > 0.5f ? ", anamorphic: shown at the game's layout aspect" : ""); wasUi = uiFlags; wasDa = da; }
+    }
+    XrCompositionLayerQuad gaq{XR_TYPE_COMPOSITION_LAYER_QUAD}; float gaH = 0.0f;
+    if (wrist::shownNow && (wrist::mode & 2) && gauge::ok && gauge::haveImage && gauge::sc.everReleased && !theatre && layerOk && nLayers < 8) {   // v16 W2 our gauge on your left forearm
+        gaH = wrist::widthM * (float)gauge::H / (float)gauge::W;
+        gaq.layerFlags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT; gaq.space = local; gaq.eyeVisibility = XR_EYE_VISIBILITY_BOTH;
+        gaq.subImage.swapchain = gauge::sc.sc; gaq.subImage.imageRect = {{0, 0}, {(int32_t)gauge::W, (int32_t)gauge::H}}; gaq.pose = wrist::pose; gaq.size = {wrist::widthM, gaH};
+        layers[nLayers++] = (XrCompositionLayerBaseHeader *)&gaq;
+    }
+    XrCompositionLayerQuad wrq{XR_TYPE_COMPOSITION_LAYER_QUAD};
+    if (wrAcq && wrist::sc.everReleased && !theatre && layerOk && nLayers < 8) {   // v16 the wrist HUD quad on your left forearm
+        const float da = S->dispAspect, pw = (float)wrist::px[2], ph = (float)wrist::px[3];
+        const float hM = da > 0.5f ? wrist::widthM * (ph / (float)uiSc.h) / (pw / (float)uiSc.w) / da : wrist::widthM * ph / pw;   // anamorphic UI (v10): physical aspect
+        wrq.layerFlags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT | (S->uiPremul ? 0 : XR_COMPOSITION_LAYER_UNPREMULTIPLIED_ALPHA_BIT);
+        wrq.space = local; wrq.eyeVisibility = XR_EYE_VISIBILITY_BOTH; wrq.subImage.swapchain = wrist::sc.sc; wrq.subImage.imageRect = {{wrist::px[0], wrist::px[1]}, {wrist::px[2], wrist::px[3]}};
+        wrq.pose = wrist::pose; wrq.size = {wrist::widthM, hM};
+        if (gaH > 0.0f) { const float up[3] = {0.0f, 0.5f * (gaH + hM) + 0.004f, 0.0f}; float o[3]; wrist::rot(wrist::pose.orientation, up, o); wrq.pose.position = {wrist::pose.position.x + o[0], wrist::pose.position.y + o[1], wrist::pose.position.z + o[2]}; }   // mode 3: the game's art above our gauge
+        layers[nLayers++] = (XrCompositionLayerBaseHeader *)&wrq;
     }
     // v13 overlay: the item wheel above the hand that holds it open, the head-gesture indicator low in the view (both premultiplied)
     XrCompositionLayerQuad wq{XR_TYPE_COMPOSITION_LAYER_QUAD}, gq{XR_TYPE_COMPOSITION_LAYER_QUAD};
@@ -629,6 +670,7 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR cmd, int) {
     S = (GvShared *)MapViewOfFile(m, FILE_MAP_ALL_ACCESS, 0, 0, sizeof(GvShared));
     if (!S || S->magic != GV_MAGIC || S->version != GV_VERSION) { logf("shared block version mismatch (game DLL and host must be the same build)"); return 1; }
     S->hostPid = GetCurrentProcessId(); logf("attached to game pid %u, mode %u", g_pid, S->mode);
+    wrist::load(g_dir);   // v16 the wrist HUD settings (gotvr.ini, next to this exe)
     {   // v11 (BUG-69): the host's copies and the runtime's submission must not queue behind a GPU-bound game (playbook ch19
         // host starvation). WDDM GPU scheduling class: HIGH (4), else ABOVE_NORMAL (3).
         typedef LONG(APIENTRY * FnPrio)(HANDLE, int); S->hostGpuPrio = -1;

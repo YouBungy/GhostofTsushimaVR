@@ -7,7 +7,7 @@
 #include <stdint.h>
 
 #define GV_MAGIC 0x52565447u /* 'GTVR' */
-#define GV_VERSION 15u
+#define GV_VERSION 16u
 #define GV_TEXCOUNT 6        /* 2 eyes x 3 buffers (game writes round-robin, never waits on the host) */
 #define GV_UITEX 3           /* v8: UI-layer images, own size (the UI target's), names Local\GoTVR_<pid>_u<uiGen>_ui<i> */
 
@@ -134,6 +134,14 @@ struct GvShared {
     // bumped when the runtime announces a recentre of the LOCAL space (XR_TYPE_EVENT_DATA_REFERENCE_SPACE_CHANGE_PENDING: holding
     // the Meta / Oculus button, or Virtual Desktop's own reset); the game runs its own recenter (= F11) right after the change
     volatile LONG hostRecenterSeq;
+    // v16 wrist HUD (docs/WRIST_HUD.md): game -> host, seqlock. Jin's health (hero+0x1974 / +0x1970) and resolve (0 / 0 until W0 finds
+    // it), what changed (vit:: bits) and when, so the host can force the wrist panel on at low health and after a change
+    volatile LONG vitSeq;
+    float vitHp, vitHpMax, vitRes, vitResMax;
+    uint32_t vitOk;                   // 1 = health read this tick (gameplay with a hero)
+    uint32_t vitChangedSeq;           // bumped per change (vitChanged = its bits)
+    uint32_t vitChanged;
+    uint32_t wristHostOn;             // host -> game: 1 = the wrist panel is in use this frame (diagnostics)
 };
 // head-locked HUD quad / world-locked panel / v9 FULL: the UI covers the whole view of each eye exactly like on the monitor
 // (cinematics: letterbox bars, fades and subtitles at the screen edges) - one quad per eye on the frustum its image used

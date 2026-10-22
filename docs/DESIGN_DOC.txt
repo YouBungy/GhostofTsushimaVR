@@ -1,0 +1,112 @@
+[OVERALL TO-DO LIST]
+
+TECHNICAL:
++Native Stereo
++UI high res and scaled down
++Prerendered cutscenes and settings into 2D floating screens
++Game renders in square aspect and dynamic window resolution scaler
++VR Controllers work and have rumble
++VR Settings panel 
++Toggleable first person mode
+
+FIRST PERSON:
++Make the head disappear 
++Make the hands IK
++Make the finger poses
++8D Audio
++Hand/Head Collision
++Special UI placements
++Combat rework
+
+[GENERAL]
+Move using left stick, snap(default)/smooth turning with left stick
+Holding down the left stick causes the player to run
+Crouch button and physical crouching that, past a certain height threshold compared to normal height, is considered crouching in-game.
+*Possible physical crouching if that can be done.*
+
+[GESTURES]
+Bowing in real life is considered a bow in-game.
+Player can wipe blood off by squeezing sword between forearm and bicep like in the original game, and pulling it through.
+
+[COMBAT DESIGN]
+Direct combat:
+The sword stays sheathed by the players left hip; when the player grabs the sheath, they are stuck 'on rails' where the katana can only move up and down the sheath until a certain point where it is fully drawn and in the players hand. The player can two hand their sword.
+Combat involves light attacks where the player must swing for physical contact with their sword into the enemy. When they do, the player's body lunges forward a bit. Heavy attacks are triggered when the player holds right trigger down while 'charging' their attack (with both hands on the katana), causing more controller rumble. Parameters are below. Blocking is done by simply holding their sword still when in contact with an enemy weapon. Deflecting requires some velocity into the opponents weapon. There are two variants of parrying we should test:
+1. Parrying triggers the original parry animation in first person, with the player facing the enemy by the end
+2. Parrying has no player animation, but the enemy still plays theirs.
+
+There are no stances anymore. All player attacks register as the best stance for the enemy they fight, or some new 'universal' stance.
+Standoffs are now triggered via left trigger when the UI pop up happens. The standoff attack now counts when the player unsheathes their sword to the unsheathing distance.
+
+Attack parameters:
+Minimum Speed - The minimum speed required for a swing to be recognized as a valid attack.
+Minimum heavy attack charging time - the minimum time required for a swing to be recognized as a heavy attack.
+Maximimum hand movement during heavy attack charge - the most the hand can move while charging the heavy attack to still be considered charging.
+Minimum Travel Distance - How far the blade needs to travel for the swing to count as a hit.
+Travel Distance Modifier - the amount the attack swing speed modifies how far you travel
+Player travel distance - how far the player travels on swing.
+Player travel distance Heavy - How far the player moves forward on a heavy attack
+Player travel distance cooldown - The cooldown for displacing the player on attacks
+Attack Cooldown - The minimum time between hit attempts.
+Rearm Time - How long the sword must remain outside the target before another attack can register.
+Contact Tolerance - Extra margin around the collision volume used to detect contact.
+Parry window multiplier - the amount of scaling applied to the parry window.
+Perfect parry window multiplier - the amount of scaling applied to the perfect parry window.
+Rumble feedback on hitting enemies - multiplier of rumble feedback when hitting enemies.
+Rumble feedback light attack - the rumble feedback on doing a light swing
+Rumble feedback heavy attack - the rumble feedback while doing a heavy swing
+Rumble feedback on a parry - the rumble feedback on a parry
+Rumble feedback low health - the amount of phased controller rumble that happens when the player is low health
+Katana weight - how heavy the katana feels to swing (one hand).
+
+Parry paramaters:
+Blade-to-Blade Tolerance - Adjust how precisely the weapons need to meet.
+Contact Validity Window - How long a previous interception can still count toward a successful defense.
+Minimum Parry Speed - Require sufficient hand movement.
+Minimum Parry Travel Distance - Prevent small hand tremors from triggering deflections.
+Show Contact and Result - Distinguish between detected contact, a requested defense, and a result accepted by the game.
+
+The player has a sidestep button like in the original game that simply causes them to dodge in whatever direction they are moving.
+
+There are no finisher animations UNLESS the enemy is crawling away. If they are, the animation plays like normal. Otherwise, they simply die.
+
+[ARCHERY]
+Reaching over the players left shoulder grabs the bow once unlocked. It should work like a traditional bow and arrow, where grabbing over the right shoulder with the bow held grabs arrows, which can be loaded into the bow to fire. When hold, holding left trigger enables the slow-down time mechanic for everyone but the player, and pressing Y with the bow held switches to the long bow if unlocked.
+
+Archery parameters:
+Regular bow drawback speed - the speed/difficulty for drawing back the regular bow.
+Long bow drawback speed - the speed/difficulty for drawing back the long bow.
+
+
+Gadgets:
+Kunai is on the wrist, and must be grabbed and thrown, using attached references for how to implement throwing - it should autolock onto enemy if throw is reasonable
+The blowgun is on the players chest, and must simply be aimed before pressing trigger to shoot the equipped ammunition. Throwables must be grabbed from right arm and thrown physically.
+
+Special moves:
+For heavenly strike, the player must sheathe their sword again and hold trigger while swinging
+For dance of wrath, the player must sheathe their sword again and hold grip while swinging. Then, the player will automatically be turned to face each locked on enemy during the dance. Each time they swing will they launch towards the next locked on enemy
+
+Assassinations:
+The player must unsheathe the Sakai tanto by grabbing it, before attacking an unaware enemy, much like the base game. No animations play UNLESS THE PLAYER JUMPS FOR AN ASSASSINATION FROM A HEIGHT, in which case the regular animation plays in first person VR
+
+[TRAVERSAL DESIGN]
+Player must be mid-air and looking at grapple hook point for option to hook appear; then, they hit a button, and the hook comes out of their body, much like the original game.
+
+Holding the right hand up to the players head and hitting trigger causes the gust of wind navigational tool
+
+[UI]
+Pre-rendered cutscenes and menus are just floating squares/graphics in front of player, like any other VR game.
+Health bar and resolve is on left forearm, very diagetic.
+Holding left hand up to head shows full in-game hud, including objectives, to the player
+
+[Performance]
+Make the desktop window of the game very small resolution (720x720). Also, find a way to make DLSS work. Improve culling (maybe??)
+
+[REFERENCES]
+FRIK (the Fallout 4 VR body mod): the clavicle reach toward far targets and its constants (src/core/vr/arm_ik.h).
+BetterVR (the Breath of the Wild VR mod for Cemu): the elbow pole in body space, out to the side, down and back (arm_ik.h BodyPole).
+HIGGS (the Skyrim VR hands mod) and Valve's SteamVR Interaction System: throw release velocity taken from the hand's recent peak, and the release rule for a grip opened while the hand still speeds up (src/core/vr/quick_items.h).
+God of War VR mod (https://github.com/adore11s/God-of-War-VR-Mod): Combat design and general
+BldbnVR mod (https://github.com/bldbrne-vr/bldbrne-vr): Full body IK and combat design, and UI design.
+Other bloodborne vr mod (https://github.com/laughtt/bloodborne-vr): Weapon wheel
+BOTW VR https://github.com/Crementif/BotW-BetterVR: Important for bow, etc.

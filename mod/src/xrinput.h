@@ -81,6 +81,9 @@ static void pickExtensions(PFN_xrGetInstanceProcAddr gpa) {
     std::vector<XrExtensionProperties> ep(n, {XR_TYPE_EXTENSION_PROPERTIES}); en(nullptr, n, &n, ep.data());
     for (const char *w : kWantExt) for (auto &e : ep) if (!strcmp(e.extensionName, w)) { enabledExt.push_back(w); break; }
     std::string l; for (auto *e : enabledExt) { l += " "; l += e; } logf("controllers: optional profile extensions offered and enabled:%s", l.empty() ? " none" : l.c_str());
+    // WRIST_HUD.md W1/W3: every extension the runtime offers, logged once (does it have XR_FB_composition_layer_depth_test /
+    // XR_KHR_composition_layer_depth - can a quad be hidden behind the game's world?)
+    std::string all; for (auto &e : ep) { all += " "; all += e.extensionName; } logf("runtime extensions (%u):%s", n, all.c_str());
 }
 static bool extOn(const char *e) { if (!e) return true; for (auto *x : enabledExt) if (!strcmp(x, e)) return true; return false; }
 

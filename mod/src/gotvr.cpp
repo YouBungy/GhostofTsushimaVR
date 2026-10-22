@@ -21,11 +21,13 @@
 #include <cstring>
 #include <cstdint>
 #include <cmath>
+#include <cfloat>
+#include <cstddef>
 #include "MinHook.h"
 #include "gotvr_shared.h"
 
 typedef uint64_t u64; typedef uint32_t u32; typedef uint8_t u8;
-#define GOTVR_VERSION "GoTVR 0.18.38 (the game never asked to draw / sheathe (no draw / sheathe animation), the 0.18.37 per-eye TAA removed, the katana and the hands on it no longer a frame behind the body while you move, the guard found from your captured left grip so the right fist goes where sword_right_hand_cm says (Ctrl+PageDown / PageUp, Ctrl+End / Home move the hands live), the body follows the headset unless a hand grips the sheathed katana; 0.18.37: the game's own drawn sword (joint 637) held in Jin's fist with the game's grip, the game drawn / sheathed with your draw, per-eye TAA on top of the culling preset (no arm / katana ghost), no body teleport when running back / sideways, faster stand-up camera, two hands hold until let go; 0.18.36: katana carried by Jin's actual fist (never beyond the hand), captured left grip turned thumb-up the sheath, two hands hold until let go, triggers held off while the katana is held (idle hold), blade probe logs whether the game has its sword drawn; 0.18.35: katana: drawn-grip capture (Ctrl+F5 with the sword out), captured grips shown as captured, swing filter (no katana lag), the original 0.18.26 joints back in the blade probe; 0.18.34: katana probe: the game-draw joints 637 / 644 / 651 in the Ctrl+F7 list, Ctrl+F9 census sampled every 50 ms with the game's own pose and 637 in the hand / katana frames; 0.18.33: katana: grip capture hotkeys (Ctrl+F5 right on the hilt, Ctrl+F6 left on the sheath), the drawn katana steered from the right controller with the blade turned along its forward, fists snapped onto it, two-handed gate on the unsteered katana (no flicker), katana settings written into gotvr.ini; 0.18.32: katana: blade along the controller's forward (knuckles to the side), the right fist lower on the hilt, the left hand up at the sheath mouth, two-handed grip (left hand on the hilt steers), drawn katana published for sheathing, Ctrl+F9 game-draw joint census; 0.18.31: katana rail from the katana joints (the drawn hilt), right wrist bent so the blade points along the controller, blade probe with the sheath joint held still, body held still while you reach for the katana, faster index finger, a slightly longer draw; 0.18.30: Jin's own fist snapped onto the hilt / sheath, left thumb along the sheath to the guard, katana held through the fist, right-hand-only draw freed at arm reach, start-up turn kick for the movement forward; 0.18.29 physical katana: hands locked on the hilt / sheath, only the blade moves (blade joint pick), draw frees at 40 cm of pull, sheathing by the tip along the rail, the game's draw off and its attacks held off while the katana is out; 0.18.28 katana: hold finger poses on the hilt and the sheath, hands pinned to the sword while drawing, the game draws / sheathes with you, the hilt grabbed anywhere along it; body squares to the headset when you stop; left-trigger calibration removed; no memory queries in the audio emitter hook, katana draw stage 1: sheath + hilt grab, rail, rumble, logs, joint probe and calibration; Jin's own sounds centred; physical dodging off; crouched start; hand deadband; look-down threshold 30; arm stretch, 3D audio: the Wwise listener is your head, Jin's own pose back in frozen frames (head shown in pause / cutscene starts), view rigid on the drawn body (no orbit when Jin turns to walk), faster room-scale, body turn eases in, AO fix through the game's own settings apply (AO off + screen-space shadows on), hand stabilisation, body threshold 20 deg, X = item wheel, play_mode=flat with state / flag logging, room-scale: Jin walks under your head, ambient occlusion held off in first person (see-through arms), VR arms kept through the landing, eyes 3 cm right / 2 cm up, body turns faster, headset recenter button recentres the game, forearm twist with the wrist, movement always follows the headset, body turns to the headset past 7.5 deg standing and moving, movement forward only when you start moving, fingers bend on one hinge each (no sideways fingers), thumb curls across like a fist, fingers ease into their poses, Shift+F6 arm shading test (screen-space shadows / AO), near clip back to the game, fingers: thumb by length + the hand's own palm, thumb / trigger touch, forward taken as you start moving, the body turns past the threshold while moving too, gesture indicator off, fingers from leaf paths + structure log, riding needs two markers (jumps keep the VR arms), movement forward taken at stops, Shift+F4 HUD-layer test, VR fingers: bind-pose fingers on the IK hands, grip curls a fist, trigger the index, movement forward = headset forward at snap / start / menu exit, view direction kept across menus, body dead zone 45 deg, body under the headset smoothed, body heading kept in world yaw with an even dead zone, movement faces the headset, body under the headset, smoother eye anchor, Shift+F7 near-plane A/B, standing hips squared to the body follow, hips turned square after a snap turn, Shift+F7 TAA A/B, 0.18.12-14 transparency changes removed, standing stance squared to face forward, idle animations held still in first person, near-focus stipple off in first person, snap turn without the catch-up wobble, wrist point from the grip (back / up / thumb, Ctrl+F1-F3), near clip in the environment too (TAA reprojection agrees), eyes 3 cm further back, each eye culled by its own view - no cross-eye occlusion (preset 7), eyes 5 cm further back, near plane 2 cm in first person, F1/F2/F3 hand trims saved to gotvr.ini, near stipple fade off in first person, hands pitched, grip unbound, per-eye occlusion by tracked slot ownership, hands flipped, near plane 4 cm, stand tall in the sword stance, arms handed to the game for flute / climbing / takedowns, arm chains by bone chain, F11 resets the per-eye histories, five-option wheel with flute and recenter, eyes centred on the head, AA diagnostics, motion blur off in VR, carried items turn with the body, body drawn facing forward when running back, eye-order swap diagnostic, head found by its joint cluster - lone gear above it is skipped, left eye composed before the tick, VR controllers for any OpenXR controller: virtual pad, snap turn, item wheel, head gestures, rumble; first person with the head hidden in the render pose, xr=4 SYNCHRONIZED-SEQUENTIAL stereo: both eyes from one simulation tick, pair-atomic presentation, per-eye occlusion + TAA history, left-eye monitor mirror, HUD on its own sharp layer that stays put in the room (lazy follow), cinematic letterbox bars and fades over the whole view, theatre screen for videos/pause/menus/loading (flat-rendered); xr=3 experimental)"
+#define GOTVR_VERSION "GoTVR 0.18.57 (Ctrl+Shift+M crash fixed: the message path never carries the hit-reaction bit (a template with it is dropped from gotvr.ini); the attack definition searched through the moveset entry and the component's per-attack array so a record can be saved for VR; 0.18.56: records found again from Jin one step deeper and with their own attack-definition cell (session 12: not saved - the component is not in Jin directly), the message path's templates prefer the hit-reaction bit, Ctrl+Shift+M = one blow by the message path to compare; 0.18.55: the katana's blows through the game's whole hit path from a RECORD LIBRARY: only ordinary damaging blows kept (no finishers / kills - the insta-kill fix), light and heavy, a record whose blow carries the game's hit reaction always preferred, damage scaled on the record's own base damage, saved to gotvr.ini with how to find its pointers from Jin again so VR needs no real blow; 0.18.54: flinch hunt without any attack animation: the whole delivered message real vs ours (MSGDIFF), flat swing test Ctrl+Shift+G (the katana's blow during YOUR own swing); cbt_assist=1 keeps the old method (the game's attack pressed, its animation plays) for comparison, off by default; resolve maximum from the game's own progression value (hero+0x4644 + 3), VITALS lines in flat play; resolve scan off; 0.18.53: the katana's blows run the game's whole hit path - its composer and attack callbacks on a copy of Jin's own hit record - for the enemy's flinch (cbt_mode 2); resolve (hero+0x43A4) on the wrist gauge (wrist_resolve_max 10) with VITALS log lines to find its maximum; the strike's own script events logged; 0.18.52: flat diagnostics: the game's own hit processing and the script events a blow fires, real vs ours; 0.18.51: parries and staggers marked in the resolve scan automatically; 0.18.50: blows carry Jin as the attacker (+0x168) and a combo step like his own, delivery diff + Ctrl+Shift+W data watchpoints to find the enemy flinch; 0.18.49: the katana's blows delivered the game's own way (its delivery 0x85A770: the hit events that make enemies flinch, bleed and sound), not straight into HandleHit; 0.18.48: combat stage 1b: every enemy the game itself counts as hostile can be cut (its own attitude query, not only those already in a hit), heavy blows (two hands + right trigger held still to charge), a lunge toward the enemy struck, swing / charge / heavy rumble, katana weight, all from the design doc's attack parameters; hit-reaction diagnostics; 0.18.47: combat stage 1: the katana cuts - a blow when the blade meets a hostile enemy fast enough (closing speed at the contact, your own walking taken off, swept tip, one blow per pass), sent as the game's own hit message copied from Jin's own blows (damage x0.75..x1.10 by speed, killing blows the game's way), rumble on the blow, a light tap on a slow touch, Ctrl+Shift+H / K / J flat test keys; 0.18.46: the enemy watcher follows real hits only (spawns no longer grab it); 0.18.45: flat capture: the enemy last in a hit with Jin watched like the hero (its attack wind-up for a VR parry), 32 KB of the hero watched; 0.18.44: flat-play capture for the design doc: 23 action tags (numpad, Ctrl+numpad, numpad / * -) and keyboard / mouse presses logged with their time; 0.18.43: combat observer: the game's SetHealth (0x69F3D0) and HandleHit (0x694080) logged for every character, hits with their hit records, COMBAT/s with the attacks incoming on Jin; the right trigger = Focus (touchpad press / View); flat log with decimal values; 0.18.42: the sheath mouth caught at your left hand, a wider catch (12 cm, 55 deg - your tries were 37-46 deg off), the game's auto-sheathe timing remembered from the start and both its draw and put-away animations masked to the end, play_mode written into gotvr.ini; 0.18.41: sheathing catches the REAL tip (sword_blade_out_cm 45 - the tip was 45 cm too deep), the game's own auto-sheathe masked (learned timing) and redrawn in the background, the sheath never flies to the hand while the game's sword is briefly away, the walking legs kept under the mask, the thumb follows your thumb again, numpad action tags for the flat-play log; 0.18.40: sheathing is yours alone - the game is never asked to sheathe (no animation, no repeats), the tip taken at the real sheath mouth and slid home along the rail, the katana stays in Jin's hand until you sheathe it, a blade let go of stays where it is in the sheath; 0.18.39: the sword alone out of the sheath again - the game's own sword drawn in the background with its draw / sheathe animation masked on Jin (his pose from before, the camera unmoved), placed in your hand by the mod, the sheath stays on the hip; two-handed steering halved (sword_two_hand_steer 0.5); 0.18.38: the game never asked to draw / sheathe (no draw / sheathe animation), the 0.18.37 per-eye TAA removed, the katana and the hands on it no longer a frame behind the body while you move, the guard found from your captured left grip so the right fist goes where sword_right_hand_cm says (Ctrl+PageDown / PageUp, Ctrl+End / Home move the hands live), the body follows the headset unless a hand grips the sheathed katana; 0.18.37: the game's own drawn sword (joint 637) held in Jin's fist with the game's grip, the game drawn / sheathed with your draw, per-eye TAA on top of the culling preset (no arm / katana ghost), no body teleport when running back / sideways, faster stand-up camera, two hands hold until let go; 0.18.36: katana carried by Jin's actual fist (never beyond the hand), captured left grip turned thumb-up the sheath, two hands hold until let go, triggers held off while the katana is held (idle hold), blade probe logs whether the game has its sword drawn; 0.18.35: katana: drawn-grip capture (Ctrl+F5 with the sword out), captured grips shown as captured, swing filter (no katana lag), the original 0.18.26 joints back in the blade probe; 0.18.34: katana probe: the game-draw joints 637 / 644 / 651 in the Ctrl+F7 list, Ctrl+F9 census sampled every 50 ms with the game's own pose and 637 in the hand / katana frames; 0.18.33: katana: grip capture hotkeys (Ctrl+F5 right on the hilt, Ctrl+F6 left on the sheath), the drawn katana steered from the right controller with the blade turned along its forward, fists snapped onto it, two-handed gate on the unsteered katana (no flicker), katana settings written into gotvr.ini; 0.18.32: katana: blade along the controller's forward (knuckles to the side), the right fist lower on the hilt, the left hand up at the sheath mouth, two-handed grip (left hand on the hilt steers), drawn katana published for sheathing, Ctrl+F9 game-draw joint census; 0.18.31: katana rail from the katana joints (the drawn hilt), right wrist bent so the blade points along the controller, blade probe with the sheath joint held still, body held still while you reach for the katana, faster index finger, a slightly longer draw; 0.18.30: Jin's own fist snapped onto the hilt / sheath, left thumb along the sheath to the guard, katana held through the fist, right-hand-only draw freed at arm reach, start-up turn kick for the movement forward; 0.18.29 physical katana: hands locked on the hilt / sheath, only the blade moves (blade joint pick), draw frees at 40 cm of pull, sheathing by the tip along the rail, the game's draw off and its attacks held off while the katana is out; 0.18.28 katana: hold finger poses on the hilt and the sheath, hands pinned to the sword while drawing, the game draws / sheathes with you, the hilt grabbed anywhere along it; body squares to the headset when you stop; left-trigger calibration removed; no memory queries in the audio emitter hook, katana draw stage 1: sheath + hilt grab, rail, rumble, logs, joint probe and calibration; Jin's own sounds centred; physical dodging off; crouched start; hand deadband; look-down threshold 30; arm stretch, 3D audio: the Wwise listener is your head, Jin's own pose back in frozen frames (head shown in pause / cutscene starts), view rigid on the drawn body (no orbit when Jin turns to walk), faster room-scale, body turn eases in, AO fix through the game's own settings apply (AO off + screen-space shadows on), hand stabilisation, body threshold 20 deg, X = item wheel, play_mode=flat with state / flag logging, room-scale: Jin walks under your head, ambient occlusion held off in first person (see-through arms), VR arms kept through the landing, eyes 3 cm right / 2 cm up, body turns faster, headset recenter button recentres the game, forearm twist with the wrist, movement always follows the headset, body turns to the headset past 7.5 deg standing and moving, movement forward only when you start moving, fingers bend on one hinge each (no sideways fingers), thumb curls across like a fist, fingers ease into their poses, Shift+F6 arm shading test (screen-space shadows / AO), near clip back to the game, fingers: thumb by length + the hand's own palm, thumb / trigger touch, forward taken as you start moving, the body turns past the threshold while moving too, gesture indicator off, fingers from leaf paths + structure log, riding needs two markers (jumps keep the VR arms), movement forward taken at stops, Shift+F4 HUD-layer test, VR fingers: bind-pose fingers on the IK hands, grip curls a fist, trigger the index, movement forward = headset forward at snap / start / menu exit, view direction kept across menus, body dead zone 45 deg, body under the headset smoothed, body heading kept in world yaw with an even dead zone, movement faces the headset, body under the headset, smoother eye anchor, Shift+F7 near-plane A/B, standing hips squared to the body follow, hips turned square after a snap turn, Shift+F7 TAA A/B, 0.18.12-14 transparency changes removed, standing stance squared to face forward, idle animations held still in first person, near-focus stipple off in first person, snap turn without the catch-up wobble, wrist point from the grip (back / up / thumb, Ctrl+F1-F3), near clip in the environment too (TAA reprojection agrees), eyes 3 cm further back, each eye culled by its own view - no cross-eye occlusion (preset 7), eyes 5 cm further back, near plane 2 cm in first person, F1/F2/F3 hand trims saved to gotvr.ini, near stipple fade off in first person, hands pitched, grip unbound, per-eye occlusion by tracked slot ownership, hands flipped, near plane 4 cm, stand tall in the sword stance, arms handed to the game for flute / climbing / takedowns, arm chains by bone chain, F11 resets the per-eye histories, five-option wheel with flute and recenter, eyes centred on the head, AA diagnostics, motion blur off in VR, carried items turn with the body, body drawn facing forward when running back, eye-order swap diagnostic, head found by its joint cluster - lone gear above it is skipped, left eye composed before the tick, VR controllers for any OpenXR controller: virtual pad, snap turn, item wheel, head gestures, rumble; first person with the head hidden in the render pose, xr=4 SYNCHRONIZED-SEQUENTIAL stereo: both eyes from one simulation tick, pair-atomic presentation, per-eye occlusion + TAA history, left-eye monitor mirror, HUD on its own sharp layer that stays put in the room (lazy follow), cinematic letterbox bars and fades over the whole view, theatre screen for videos/pause/menus/loading (flat-rendered); xr=3 experimental)"
 static const u32 EXPECTED_TIMESTAMP = 1782230973u;
 static const char EXPECTED_SHA[] = "ed0931b6f6d3ca3874baf39ebc16d95ff0e93296891182f96c3a790da7109f63";
 
@@ -240,6 +242,7 @@ static std::atomic<int> g_eyeSwap{0}; static int g_eyeSwapLatched = 0;
 static std::atomic<int> g_mblurOff{1};   // 0.18.6: hold the game's motion blur at 0 while in VR
 namespace mblur { static void tick(bool force = false); static void restore(); }
 namespace obs { static void tick(); static void mark(); }
+namespace cbt { static void tick(); }   // 0.18.47 the katana's blows, sent after the game's tick
 namespace fp { static void snapRestore(); }
 namespace shade { static void tick(bool force = false); static void restore(); static std::atomic<int> mode{1}; }
 namespace stipple { static void tick(bool fpOn); }
@@ -324,7 +327,8 @@ static void loadConfig() {
     g_cfg.xr = GetPrivateProfileIntW(L"gotvr", L"xr", 0, ini);
     g_audioHead = GetPrivateProfileIntW(L"gotvr", L"audio_head", 1, ini) ? 1 : 0;   // 0.18.25 3D audio
     {   // 0.18.24 play_mode: vr (default) or flat (no headset, the game's own camera and pad, the observer logs Jin's state and flags)
-        wchar_t pm[32]; GetPrivateProfileStringW(L"gotvr", L"play_mode", L"vr", pm, 32, ini);
+        wchar_t pm[32]; GetPrivateProfileStringW(L"gotvr", L"play_mode", L"", pm, 32, ini);
+        if (!pm[0]) { WritePrivateProfileStringW(L"gotvr", L"play_mode", L"vr", ini); wcscpy(pm, L"vr"); }   // 0.18.42 (owner: "I can't find play_mode = flat in the ini"): written when missing; set it to flat for flat play
         if (!_wcsicmp(pm, L"flat")) { g_playFlat = true; g_cfg.xr = 0; }
     }
     g_cfg.census = GetPrivateProfileIntW(L"gotvr", L"census", 1, ini);
@@ -439,6 +443,9 @@ struct XINPUT_VIBRATION { WORD wLeftMotorSpeed, wRightMotorSpeed; };
 #include "fingers.h"
 #include "stab.h"
 #include "sword.h"
+#include "melee.h"
+#include "attack.h"   // 0.18.48 swing / heavy charge / lunge / katana weight (the design doc's attack parameters)
+#include "vitals.h"   // wrist health / resolve decision core (docs/WRIST_HUD.md; not wired in yet)
 
 // One packet per game frame, built on the game thread the first time the frame touches the render
 // camera, and found again at Present by the frame id the engine tags its Present with (desc[0]).
@@ -1180,9 +1187,9 @@ static void waitPresented(u32 f) {
 // sessions and the pop-in stayed `[HEADSET]` -> removed in 0.18.5 (owner: no cost without a fix).
 static void hGameTick() {
     c_tick++; t_tick = GetCurrentThreadId();
-    if (g_cfg.xr != 4) { oGameTick(); obs::tick(); return; }
+    if (g_cfg.xr != 4) { oGameTick(); obs::tick(); cbt::tick(); return; }
     uiDecide();   // 0.13.0: flat context for this tick (pause / video / no world / F10)
-    if (g_flatRender.load()) { fp::snapRestore(); g_simTicks++; oGameTick(); g_pairPhase = 0; return; }   // 0.18.25: Jin's own pose back in frozen frames   // every tick simulated and shown; the next stereo pair starts with the left eye
+    if (g_flatRender.load()) { fp::snapRestore(); g_simTicks++; oGameTick(); cbt::tick(); g_pairPhase = 0; return; }   // 0.18.25: Jin's own pose back in frozen frames   // every tick simulated and shown; the next stereo pair starts with the left eye
     const bool freeze = g_pairPhase == 1 && S && hostFresh() && S->imagesOk && !S->gameRefuse;
     float *clk = (float *)(g_base + RVA_CLOCK); float saved[24];
     if (g_renderSync && t_present && t_present != t_tick && (freeze || g_renderSync >= 2)) waitPresented(frameCtr());   // the previous frame left the render thread
@@ -1190,6 +1197,7 @@ static void hGameTick() {
     else g_simTicks++;
     oGameTick();
     if (freeze) { g_freezeNow = 0; g_lockGame = false; memcpy(clk, saved, sizeof saved); }   // the next tick's early code sees tick A's steps again
+    else cbt::tick();   // 0.18.47 the katana's blows (queued during this simulated tick) - never inside a frozen one
     g_pairPhase ^= 1;
 }
 
@@ -1764,8 +1772,61 @@ static std::atomic<int> censusReq{0}; static std::atomic<u64> nCensus{0}; static
 // sword drawn; the sheathed sword is part of the katana joint 591's model, which then shows the empty sheath). gameDrawn: the game's own
 // pose (before the mod) has 637 near the katana. relHand: how the game's own animated right hand holds that sword (637 in the hand's
 // frame), learned while the game's sword is drawn and the relation holds still for 0.5 s, saved to gotvr.ini.
+static std::atomic<u64> maskUntil{0}, autoAfterMs{0}, nAutoSheathe{0}; static std::atomic<int> autoSave{0}; static std::atomic<int> maskStance{0}, maskMoved{0}; static std::atomic<u64> nMasked{0}; static std::atomic<float> maskWOut{0};   // 0.18.39
+static std::atomic<u64> nGap{0};
 static std::atomic<int> gameDrawn{0}; static fing::Aff relHand; static std::atomic<int> relHandOk{0}; static std::atomic<int> relHandSave{0}; static std::atomic<u64> nGameBlade{0};
 static fing::Aff sheathX; static bool sheathXok = false;
+// 0.18.39 (owner: "I want to just grab the sword and have the sheath stay put ... I'm not saying don't draw the sword, but I don't want
+// the animation to play, or at least have any visual effect / effect on Jin"): the game's separate sword (637) is used again, but:
+//  - its place in your hand is OURS: where the sheathed katana model's sword would be (the same K as before, the same grip, the same
+//    capture), through homeX = how 637 sits in the katana joint's frame when it is home in the scabbard. homeX is learned from the
+//    game's own draw / sheathe: the frame its sword passes the katana joint's child (592, the sheathed sword's pivot, 24.9 cm out -
+//    0.18.37's log has 637 at 24-25 cm from 591 exactly then), saved to gotvr.ini (sword_game_home_*)
+//  - the game's draw / sheathe animation is MASKED: while it plays (and while the game stands in its drawn-sword stance) Jin's pose is
+//    replaced by his own pose from just before - body, head (so the camera does not move), the sheath on the hip; only 637 is left to us
+//  - gameDrawn: 637 away from its parking spot (where the game keeps it while sheathed: still in the model's frame, ~100 cm from 591)
+static fing::Aff homeX; static std::atomic<int> homeOk{0}, homeSave{0}; static float homeBestCm = 1e9f; static std::atomic<float> homeDistCm{1e9f};
+static float wroteM[2][16]; static const float *wroteBuf[2] = {nullptr, nullptr}; static int wroteGb = -1; static std::atomic<u64> nNotAnimated{0};   // 0.18.40 what the mod last wrote into 637, per pose buffer
+static float parkP[3], parkPrev[3]; static std::atomic<bool> parkOk{false}; static int parkN = 0; static std::atomic<float> parkDistCm{-1.0f};
+static void gameSwordScan(const float *pose, int cnt) {   // job thread, the game's own fresh pose (before the mod changes it)
+    const int k = spubIdx.load(std::memory_order_acquire); if (k < 0) { gameDrawn = 0; return; } const int gb = spub[k].gameBlade, j = spub[k].joint;
+    if (gb < 0 || gb >= cnt || j < 0 || j >= cnt || parState.load() <= 0) { gameDrawn = 0; return; }
+    const float u = g_cfg.unitsPerM * 0.01f; const float *P7 = pose + (size_t)gb * 16 + 12, *P1 = pose + (size_t)j * 16 + 12;
+    const float d1[3] = {P7[0] - P1[0], P7[1] - P1[1], P7[2] - P1[2]}; const float d = fbik::len3f(d1) / u;
+    if (!parkOk) {   // parked: far from the katana and not moving in the model's frame for 30 poses
+        const float dm[3] = {P7[0] - parkPrev[0], P7[1] - parkPrev[1], P7[2] - parkPrev[2]};
+        if (d > 80.0f && parkN > 0 && fbik::len3f(dm) < 0.3f * u) parkN++; else parkN = d > 80.0f ? 1 : 0; memcpy(parkPrev, P7, 12);
+        if (parkN >= 30) { memcpy(parkP, P7, 12); parkOk = true; logf("katana: the game's sword (joint %d) is parked at %.0f %.0f %.0f cm while the game's sword is sheathed - away from there = the game has drawn", gb, P7[0] / u, P7[1] / u, P7[2] / u); } }
+    // 0.18.40: a game that has put its sword away stops animating 637 - the buffer then still holds what the MOD wrote last frame (the sword
+    // in the scabbard or in your hand), which read as drawn. Bit for bit the mod's own matrix = not animated by the game = put away.
+    bool notAnimated = false; for (int q = 0; q < 2; q++) if (wroteBuf[q] == pose && wroteGb == gb && memcmp(pose + (size_t)gb * 16, wroteM[q], 64) == 0) notAnimated = true;
+    static int naRun = 0; naRun = notAnimated ? naRun + 1 : 0; if (notAnimated) nNotAnimated++;
+    bool gd;
+    if (naRun >= 3) gd = false;   // three poses running
+    else if (parkOk) { const float dp[3] = {P7[0] - parkP[0], P7[1] - parkP[1], P7[2] - parkP[2]}; const float pd = fbik::len3f(dp) / u; parkDistCm = pd; gd = gameDrawn.load() ? pd > 5.0f : pd > 15.0f; }
+    else gd = d < 90.0f;
+    {   // 0.18.41 (owner: "sometimes the sheathing animation still played"; log 0.18.40: the game put its sword away by itself 18.3 s after every
+        // draw - its out-of-combat auto-sheathe, with the blood flick): the game's own sword heading for its scabbard in its OWN pose (it
+        // never comes within 35 cm of it in the drawn stance) = the auto-sheathe has started -> masked until it is through; the time it
+        // took is learned, and from then on the mask starts 1.5 s before it is due (the flick comes first) and holds 4 s.
+        static bool wasGd = false, autoNow = false; static u64 drawnSince = 0; const u64 now = GetTickCount64();
+        if (gd && !wasGd) { drawnSince = now; autoNow = false; }
+        const int ch0 = kChild.load(); float dcA = 1e9f; if (ch0 >= 0 && ch0 < cnt) { const float *Pc = pose + (size_t)ch0 * 16 + 12; const float q[3] = {P7[0] - Pc[0], P7[1] - Pc[1], P7[2] - Pc[2]}; dcA = fbik::len3f(q) / u; }
+        auto holdMask = [&](u64 ms) { const u64 mu = now + ms; if (maskUntil.load() < mu) maskUntil = mu; };
+        if (gd && drawnSince && now - drawnSince > 3000 && dcA < 35.0f) { if (!autoNow) { autoNow = true; nAutoSheathe++; const u64 t = now - drawnSince; if (!autoAfterMs.load() || t < autoAfterMs.load()) { autoAfterMs = t; autoSave = 1; }
+                logf("katana: the game is putting its own sword away by itself (%.1f s after it drew) - hidden on Jin; the next one is masked from %.1f s", t / 1000.0, (autoAfterMs.load() - 1500) / 1000.0); }
+            holdMask(900); }
+        const u64 at = autoAfterMs.load(); if (gd && drawnSince && at && now + 1500 >= drawnSince + at && now < drawnSince + at + 4000) holdMask(300);
+        if (gd && drawnSince && now - drawnSince < 1800) holdMask(200);   // 0.18.42 the draw's own animation after it lands (any draw: ours or the background redraw)
+        if (!gd && wasGd) { if (autoNow) holdMask(1600); autoNow = false; drawnSince = 0; }
+        wasGd = gd;
+    }
+    gameDrawn = gd ? 1 : 0;
+    const int ch = kChild.load();
+    if (gd && ch >= 0 && ch < cnt) { const float *Pc = pose + (size_t)ch * 16 + 12; const float dc3[3] = {P7[0] - Pc[0], P7[1] - Pc[1], P7[2] - Pc[2]}; const float dc = fbik::len3f(dc3) / u; if (dc < homeDistCm.load()) homeDistCm = dc;
+        if (dc < 4.0f && dc < homeBestCm - 0.2f) { fing::Aff Pj = fing::fromPose(pose + (size_t)j * 16), Pji; if (fing::inv(Pj, Pji)) { homeX = fing::mul(Pji, fing::fromPose(pose + (size_t)gb * 16)); homeBestCm = dc; homeOk = 1; homeSave = 1;
+            logf("katana: learned where the game's sword sits in the scabbard (joint %d %.1f cm from joint %d as the game drew / sheathed it) - it is held in your hand from now on, the sheath stays on the hip", gb, dc, ch); } } }
+}
 static void census(const float *pose, int cnt) {
     // 0.18.34: 2.5 s after the request, every 50 ms: the watched joints (the katana 591 and its child, the drawn-weapon candidates 637 /
     // 644 / 651, the right hand 561 - as ANIMATED by the game, before the mod's IK) - position from the root (cm) and how far it moved
@@ -1830,30 +1891,17 @@ static bool swordApply(u8 *nd, float *pose, int cnt) {   // job thread, after th
         return moveSub(sp.probe, D); }
     static int lastState = sword::S_SHEATHED; static fing::Aff lastMt; static bool lastMtOk = false; static float blendT = 1.0f; static LARGE_INTEGER bq{}, bf{};
     const int gb = sp.gameBlade;
-    if (gb >= 0 && gb < cnt && j >= 0 && j < cnt && g_animPose && g_animCnt >= cnt) {   // 0.18.37 the game's sword state and its own grip
-        const float *a7 = g_animPose + (size_t)gb * 16 + 12, *a1 = g_animPose + (size_t)j * 16 + 12; const float d[3] = {a7[0] - a1[0], a7[1] - a1[1], a7[2] - a1[2]};
-        const bool gd = fbik::len3f(d) / (g_cfg.unitsPerM * 0.01f) < 90.0f; gameDrawn = gd ? 1 : 0;
-        static int stableN = 0; static fing::Aff lastRel; static bool lastRelOk = false; const int hj = armsD[1].hand;
-        if (!gd && sp.state == sword::S_SHEATHED) sheathXok = false;   // the game has put its sword away: the sheathed model shows it again
-        if (gd && hj >= 0 && hj < cnt) { fing::Aff H = fing::fromPose(g_animPose + (size_t)hj * 16), Hi; if (fing::inv(H, Hi)) { const fing::Aff R = fing::mul(Hi, fing::fromPose(g_animPose + (size_t)gb * 16));
-                bool same = lastRelOk; if (same) { float dm = 0; for (int i = 0; i < 9; i++) dm = fmaxf(dm, fabsf(R.R[i] - lastRel.R[i])); const float dt3[3] = {R.t[0] - lastRel.t[0], R.t[1] - lastRel.t[1], R.t[2] - lastRel.t[2]}; same = dm < 0.02f && fbik::len3f(dt3) < 0.3f * g_cfg.unitsPerM * 0.01f; }
-                stableN = same ? stableN + 1 : 0; lastRel = R; lastRelOk = true;
-                if (stableN == 30) { relHand = R; relHandOk = 1; relHandSave = 1; logf("katana: learned how the game's hand holds its drawn sword (joint %d in the hand: %.1f %.1f %.1f cm)", gb, R.t[0] / (g_cfg.unitsPerM * 0.01f), R.t[1] / (g_cfg.unitsPerM * 0.01f), R.t[2] / (g_cfg.unitsPerM * 0.01f)); } } }
-        else { stableN = 0; lastRelOk = false; }
-    }
-    // 0.18.37 the game's sword shown in Jin's fist: while the game has its sword drawn (and we know its grip), joint 637 = Jin's VR hand o the
-    // game's grip; the katana joint (591) is left as the game draws it (the sheath on the hip). Sheathed by us but the game not yet put
-    // its sword away: 637 is kept in the sheath (where the blade went home) until the game swaps back.
-    if (gb >= 0 && gb < cnt && gameDrawn.load() && relHandOk.load() && parState.load() > 0 && armsD[1].hand >= 0 && armsD[1].hand < cnt) {
-        const fing::Aff P7 = fing::fromPose(pose + (size_t)gb * 16); fing::Aff P7i; if (!fing::inv(P7, P7i)) return false;
-        fing::Aff M7; const fing::Aff Sm = fing::fromPose(pose + (size_t)j * 16);   // the sheath frame (the katana joint, as the game draws it now)
-        if (sp.state == sword::S_SHEATHED && sheathXok) M7 = fing::mul(Sm, sheathX);
-        else if (sp.state != sword::S_SHEATHED) { M7 = fing::mul(fing::fromPose(pose + (size_t)armsD[1].hand * 16), relHand); fing::Aff Si; if (fing::inv(Sm, Si)) { sheathX = fing::mul(Si, M7); sheathXok = true; } }
-        else return false;
-        lastState = sp.state; lastMtOk = false; nGameBlade++;
-        return moveSub(gb, fing::mul(M7, P7i));
-    }
+    // 0.18.39 the game's sword in our hand: while the game has it drawn and we know where it sits in the scabbard, 637 goes where the
+    // katana model's sword would go (below); the katana joint (the sheath) is never moved.
+    const bool gbMode = gb >= 0 && gb < cnt && j >= 0 && j < cnt && gameDrawn.load() && homeOk.load() && parState.load() > 0;
+    if (gbMode && sp.state == sword::S_SHEATHED) {   // home in the scabbard (the game's sword still out until its sheathe is through)
+        const fing::Aff P7 = fing::fromPose(pose + (size_t)gb * 16); fing::Aff P7i; lastMtOk = false; lastState = sp.state; if (!fing::inv(P7, P7i)) return false;
+        nGameBlade++; return moveSub(gb, fing::mul(fing::mul(fing::fromPose(pose + (size_t)j * 16), homeX), P7i)); }
     if (sp.state == sword::S_SHEATHED || j < 0 || j >= cnt || parState.load() <= 0) { lastMtOk = false; lastState = sp.state; return false; }
+    {   // 0.18.41 the game's sword briefly away (its auto-sheathe, before the background redraw lands): the sheath stays on the hip rather than
+        // flying into your hand with its sword; after 3 s without the game's sword the old whole-katana fallback shows
+        static u64 gapSince = 0; const u64 nowG = GetTickCount64();
+        if (gb >= 0 && gb < cnt && homeOk.load() && parkOk && !gameDrawn.load()) { if (!gapSince) gapSince = nowG; if (nowG - gapSince < 3000) { lastMtOk = false; lastState = sp.state; nGap++; return false; } } else gapSince = 0; }
     const float n00 = N[0] * N[0] + N[1] * N[1] + N[2] * N[2], n11 = N[4] * N[4] + N[5] * N[5] + N[6] * N[6], n22 = N[8] * N[8] + N[9] * N[9] + N[10] * N[10]; if (!(n00 > 1e-6f && n11 > 1e-6f && n22 > 1e-6f)) return false;
     const float u = g_cfg.unitsPerM * 0.01f;
     // 0.18.29 (owner: "when drawing, the whole sheath and sword move - just the sword should move"): the BLADE joint (sword_blade_joint,
@@ -1888,6 +1936,9 @@ static bool swordApply(u8 *nd, float *pose, int cnt) {   // job thread, after th
         orthoCols(Mt.R); }
     lastState = sp.state; lastMt = Mt; lastMtOk = true;
     fing::Aff PbI; if (!fing::inv(Pb, PbI)) return false;
+    if (gbMode) {   // 0.18.39: the katana joint where the drawn katana would put it, then the game's sword in it (homeX); the sheath stays
+        const fing::Aff Jn = fing::mul(Mt, fing::mul(PbI, fing::fromPose(pose + (size_t)j * 16))); const fing::Aff P7 = fing::fromPose(pose + (size_t)gb * 16); fing::Aff P7i; if (!fing::inv(P7, P7i)) return false;
+        nGameBlade++; if (moveSub(gb, fing::mul(fing::mul(Jn, homeX), P7i))) { nSwordMoves++; return true; } return false; }
     // the sheath's own subtree, kept when the blade joint carries it
     static uint16_t ssub[512]; static float ssave[64][16]; int ns = 0; bool keepSheath = false;
     const int kj = (sp.keep >= 0 && sp.keep < cnt && sp.keep != b) ? sp.keep : (b != j ? j : -1);   // 0.18.31: sword_keep_joint (the sheath under the katana joint)
@@ -2182,6 +2233,7 @@ static void hideInPose(u8 *nd, float *pose) {
         moved |= solveArms(nd, pose, cnt, jobApplied);
         moved |= swordApply(nd, pose, cnt);   // 0.18.26 the katana draw
         moved |= idleMoved.load() != 0;   // 0.18.13: the held idle pose (carried items follow it)
+        moved |= maskMoved.load() != 0;   // 0.18.39: the game's draw / sheathe masked
         moved |= underMoved;               // 0.18.16: the body moved under the headset
         if (moved) worldFromPose(nd, pose, cnt, p);
     }
@@ -2262,6 +2314,38 @@ static bool idleApply(u8 *nd, float *pose, int cnt, bool inputQuiet) {   // job 
 // animating, the copies are put back, so the frozen frame shows the game's own Jin, head and all.
 struct Snap { float *pose = nullptr; int cnt = 0; u8 *nd = nullptr; float *W = nullptr; u64 seq = 0; bool dirty = false; float p[JOINT_CAP * 16]; float w[(JOINT_CAP + 1) * 16]; };
 static Snap snap[2]; static u64 snapSeq = 0; static std::atomic<u64> nSnapRestores{0};
+// 0.18.39 the game's draw / sheathe animation masked on Jin: while it plays (maskUntil, set by the game thread when it asks) and while the
+// game stands in its drawn-sword stance for a draw the mod asked for (standing still - walking keeps the game's legs), every joint but
+// the game's sword (637 and below) is replaced by Jin's own pose from before (the last fresh pose with the game's sword parked; standing
+// still: the last one standing). The world matrices follow, so the eye anchor (the head) does not move either. Eased 0.15 s in, 0.3 s out.
+static float maskRef[JOINT_CAP * 16], maskRefStand[JOINT_CAP * 16]; static int maskRefCnt = 0, maskStandCnt = 0; static float maskW = 0.0f; static u64 maskLastMs = 0; static const float *maskUse = nullptr;
+static uint8_t maskExcl[JOINT_CAP]; static int maskExclFor = -2, maskExclCnt = 0;
+static bool maskApply(u8 *nd, float *pose, int cnt, bool inputQuiet) {   // job thread, a FRESH pose of active first person, before the idle hold
+    if (cnt <= 0 || cnt > JOINT_CAP) return false;
+    const u64 now = GetTickCount64(); const float dt = maskLastMs ? fminf((float)(now - maskLastMs) * 0.001f, 0.1f) : 0.0f; maskLastMs = now;
+    const int k = spubIdx.load(std::memory_order_acquire); const int gb = k >= 0 ? spub[k].gameBlade : -1;
+    const bool gd = gameDrawn.load() != 0, trans = now < maskUntil.load(), still = speedMs.load() < 0.3f;
+    if (!gd && !trans && maskW <= 0.0f) { memcpy(maskRef, pose, (size_t)cnt * 64); maskRefCnt = cnt; if (still) { memcpy(maskRefStand, pose, (size_t)cnt * 64); maskStandCnt = cnt; } }
+    // the drawn stance standing still is held only while you give no pad input (0.3 s) and the game keeps Jin's head about where it was
+    // (a crouch, an aim or anything else that really changes his pose shows through)
+    bool stanceOk = maskStance.load() && gd && still && inputQuiet && maskStandCnt == cnt;
+    if (stanceOk) { const int kh = hpubIdx.load(std::memory_order_acquire); const int hd = kh >= 0 ? hpub[kh].head : -1;
+        if (hd >= 0 && hd < cnt) stanceOk = fabsf(pose[(size_t)hd * 16 + 14] - maskRefStand[(size_t)hd * 16 + 14]) < 20.0f * g_cfg.unitsPerM * 0.01f; }
+    const bool want = g_fp.on && gb >= 0 && (trans || stanceOk);
+    if (want && maskW <= 0.0f) maskUse = (still && maskStandCnt == cnt) ? maskRefStand : maskRefCnt == cnt ? maskRef : nullptr;   // the pose to hold, chosen as it starts
+    maskW = fminf(1.0f, fmaxf(0.0f, maskW + (want ? dt / 0.15f : -dt / 0.3f))); maskWOut = maskW;
+    if (maskW <= 0.0f || !maskUse) return false;
+    if (maskExclFor != gb || maskExclCnt != cnt) { memset(maskExcl, 0, sizeof maskExcl); maskExclFor = gb; maskExclCnt = cnt; if (gb >= 0 && gb < cnt && parState.load() > 0) { static uint16_t sb[512]; const int n = fbik::subtree(parents, cnt, gb, sb, 512); for (int i = 0; i < n; i++) if (sb[i] < JOINT_CAP) maskExcl[sb[i]] = 1; } }
+    const float w = 0.5f - 0.5f * cosf(maskW * 3.14159265f);
+    static uint8_t legEx[JOINT_CAP]; static int legFor = -1; if (legFor != cnt && legsReady.load() && parState.load() > 0) { legFor = cnt; memset(legEx, 0, sizeof legEx); for (int sd = 0; sd < 2; sd++) { static uint16_t lb[512]; const int h = legsD[sd].hip; if (h < 0 || h >= cnt) continue; const int n = fbik::subtree(parents, cnt, h, lb, 512); for (int i = 0; i < n; i++) if (lb[i] < JOINT_CAP) legEx[lb[i]] = 1; } }
+    const bool legsFree = !still && legFor == cnt;   // 0.18.41 walking: the game's legs keep walking, the upper body is held
+    for (int jj = 0; jj < cnt; jj++) { if (maskExcl[jj] || (legsFree && legEx[jj])) continue; float *m = pose + (size_t)jj * 16; const float *r = maskUse + (size_t)jj * 16; if (w >= 0.999f) memcpy(m, r, 64); else for (int i = 0; i < 16; i++) m[i] += (r[i] - m[i]) * w; }
+    nMasked++;
+    { float *W = *(float **)(nd + 0x278); const float *N = (const float *)(nd + 0x150);
+      if (W) for (int jj = 0; jj < cnt; jj++) { const float *M = pose + (size_t)jj * 16; float *o = W + (size_t)(jj + 1) * 16;
+          for (int r = 0; r < 4; r++) { const float *v = M + 4 * r; for (int c = 0; c < 3; c++) o[4 * r + c] = v[0] * N[c] + v[1] * N[4 + c] + v[2] * N[8 + c] + (r == 3 ? N[12 + c] : 0.0f); } } }
+    return true;
+}
 static void snapTake(u8 *nd, float *pose) {
     const bool willChange = (u32)(frameCtr() - hideFrame.load(std::memory_order_relaxed)) <= 2u;
     int sl = pose == snap[0].pose ? 0 : pose == snap[1].pose ? 1 : -1;
@@ -2290,6 +2374,13 @@ static void hAnimJob(u8 *job) {
     float *pose = *(float **)(job + 0xA8); if (!pose) { nJobsNoBuf++; return; }
     snapTake(nd, pose);   // 0.18.25: the game's own pose / world matrices, before the mod changes them (put back when the game freezes)
     g_animPose = nullptr; g_animCnt = 0; for (int q = 0; q < 2; q++) if (snap[q].pose == pose && snap[q].cnt > 0) { g_animPose = snap[q].p; g_animCnt = snap[q].cnt; }   // 0.18.34
+    {   // 0.18.39 the game's sword state (from its own pose) and the draw / sheathe animation masked - before anything reads the pose
+        const int k3 = hpubIdx.load(std::memory_order_acquire);
+        if (k3 >= 0 && hpub[k3].head >= 0 && hpub[k3].head < nJ && (u32)(frameCtr() - hideFrame.load(std::memory_order_relaxed)) <= 2u && len3(pose + (size_t)hpub[k3].head * 16) >= 0.01f) {
+            int cnt = nJ; for (int b = 0; b < 2; b++) if (*(float **)(nd + 0x508 + b * 0x18) == pose) { const int c = *(int *)(nd + 0x510 + b * 0x18); if (c > 0 && c < cnt) cnt = c; }
+            gameSwordScan(pose, cnt); maskMoved = maskApply(nd, pose, cnt, vrin::nowMs() - vrin::lastAct.load() > 300) ? 1 : 0;
+        } else maskMoved = 0;
+    }
     if (g_fp.arms && !armsReady.load() && parState.load() >= 0) { int cnt = nJ; for (int b = 0; b < 2; b++) if (*(float **)(nd + 0x508 + b * 0x18) == pose) { const int c = *(int *)(nd + 0x510 + b * 0x18); if (c > 0 && c < cnt) cnt = c; } analyseArms(job, nd, pose, cnt); }
     if (armsReady.load()) {   // 0.18.9: the ANIMATION lifts a hand to head height (climbing, ledges, grappling, the flute) -> the game owns the arms
         const int k2 = hpubIdx.load(std::memory_order_acquire); if (k2 >= 0 && hpub[k2].head >= 0 && hpub[k2].head < nJ) {
@@ -2309,6 +2400,11 @@ static void hAnimJob(u8 *job) {
         } else idleMoved = 0;
     }
     hideInPose(nd, pose);
+    {   // 0.18.40 remember what this pose buffer's game sword (637) holds as the mod leaves it - if the game does not animate it next time, it is put away
+        const int ks = spubIdx.load(std::memory_order_acquire); const int gb = ks >= 0 ? spub[ks].gameBlade : -1;
+        if (gb >= 0 && gb < nJ) { static int nq = 1; const int q = wroteBuf[0] == pose ? 0 : wroteBuf[1] == pose ? 1 : (nq ^= 1);
+            memcpy(wroteM[q], pose + (size_t)gb * 16, 64); wroteBuf[q] = pose; wroteGb = gb; }
+    }
 }
 static void collapse() {}   // 0.17.2's world-array collapse is gone (the GPU never sees that array)
 // BUG-70 (0.17.4: "the stutter only happens in the LEFT eye"): the anchor was computed once per tick at its FIRST render-camera
@@ -2464,12 +2560,48 @@ static bool update(float *gm) {
 //    swimming... each switches flags there, and the log shows which, next to the button that started it;
 //  - F8 writes a numbered MARK line ("I'm climbing now") so the moments are easy to find.
 namespace obs {
+static std::atomic<u64> cbtDummy[4]; static std::atomic<u64> *cbtHits = &cbtDummy[0], *cbtHitsHero = &cbtDummy[1], *cbtHealth = &cbtDummy[2], *cbtHealthHero = &cbtDummy[3];   // 0.18.43 set by cbt::install
+// 0.18.44 (owner's design doc: data for the whole combat / traversal design): 23 tags - numpad 0-9, Ctrl+numpad 0-9, numpad / * -
+static const int NTAG = 24;
+static const char *kTag[NTAG] = {nullptr, "light attacks", "heavy attacks", "blocking", "parry", "perfect parry", "dodge / perfect dodge", "taking hits", "standoff", "finisher (crawling enemy)",
+    "assassination (ground / from height)",
+    "bow", "longbow + concentrated aim", "kunai", "blowgun", "heavenly strike", "dance of wrath", "grapple", "wall climbing", "ledges / ropes / logs / beams", "crouch / stealth",
+    "healing / resolve", "cutscene", "horse"};
+static const char *kTagKey[NTAG] = {"", "numpad 1", "numpad 2", "numpad 3", "numpad 4", "numpad 5", "numpad 6", "numpad 7", "numpad 8", "numpad 9", "numpad 0",
+    "Ctrl+numpad 1", "Ctrl+numpad 2", "Ctrl+numpad 3", "Ctrl+numpad 4", "Ctrl+numpad 5", "Ctrl+numpad 6", "Ctrl+numpad 7", "Ctrl+numpad 8", "Ctrl+numpad 9", "Ctrl+numpad 0", "numpad /", "numpad *", "numpad -"};
+// 0.18.44 keyboard / mouse presses (the owner plays flat on keyboard and mouse - the pad capture saw nothing): edges with their time
+static const struct { int vk; const char *n; } kKeys[] = {{VK_LBUTTON, "LMB"}, {VK_RBUTTON, "RMB"}, {VK_MBUTTON, "MMB"}, {VK_XBUTTON1, "Mouse4"}, {VK_XBUTTON2, "Mouse5"},
+    {VK_SPACE, "Space"}, {VK_LSHIFT, "LShift"}, {VK_LCONTROL, "LCtrl"}, {VK_LMENU, "LAlt"}, {VK_TAB, "Tab"}, {'Q', "Q"}, {'E', "E"}, {'R', "R"}, {'F', "F"}, {'C', "C"}, {'X', "X"},
+    {'Z', "Z"}, {'V', "V"}, {'G', "G"}, {'T', "T"}, {'Y', "Y"}, {'H', "H"}, {'B', "B"}, {'1', "1"}, {'2', "2"}, {'3', "3"}, {'4', "4"}, {'W', "W"}, {'A', "A"}, {'S', "S"}, {'D', "D"}};
+static const int NK = (int)(sizeof kKeys / sizeof kKeys[0]); static bool kDown[64]; static char keyLog[1024]; static int keyLogN = 0; static u32 wasdOr = 0;
+static void keysTick(u32 ms) { for (int i = 0; i < NK; i++) { const bool d = (GetAsyncKeyState(kKeys[i].vk) & 0x8000) != 0; if (d != kDown[i]) { kDown[i] = d; if (i >= NK - 4) continue;   // WASD: only held (below)
+            if (keyLogN < (int)sizeof keyLog - 24) keyLogN += snprintf(keyLog + keyLogN, sizeof keyLog - (size_t)keyLogN, " %s%s@%u", kKeys[i].n, d ? "+" : "-", ms); } } }
+static std::atomic<int> tag{0}; static u64 tagAt = 0, tagN = 0;
 static std::atomic<int> on{0}; static std::atomic<u64> nMarks{0};
-static const int NB = 0x4100, NW = NB / 4;
+static const int NB = 0x8000, NW = NB / 4;   // 0.18.45: 32 KB of the hero (was 16)
 static u32 prevW[NW]; static uint16_t chg[NW]; static uint8_t noisy[NW]; static bool have = false; static u8 *lastHero = nullptr; static int nNoisy = 0;
-struct Ev { u32 off, a, b; u32 ms; }; static Ev ev[192]; static int nEv = 0, nDropped = 0;
+struct Ev { u32 off, a, b; u32 ms; u8 isF; }; static Ev ev[192]; static int nEv = 0, nDropped = 0;
 static float lastP[3] = {0, 0, 0}; static bool lastPOk = false; static LARGE_INTEGER fq{}, lastQ{}, secQ{}; static float vzMax = 0, spMax = 0, vzMin = 0; static u32 btnOr = 0; static u8 ltMax = 0, rtMax = 0;
 static inline bool small(u32 v) { return v < 0x10000u; }
+static inline bool plainF(u32 v) { float f; memcpy(&f, &v, 4); const float a = fabsf(f); return std::isfinite(f) && a >= 0.01f && a <= 100000.0f; }   // 0.18.42 a value like health / resolve / posture
+// 0.18.45 (owner's 0.18.44 session: a parry can only be read AFTER it lands - the +12.5 health message - so a VR parry needs the ENEMY's
+// attack wind-up): the enemy last involved in a hit (hit by Jin, or the attacker of a hit on Jin = hitInfo+0x48) is watched like the hero
+static std::atomic<u8 *> enemyPtr{nullptr};
+static const int NBE = 0x4000, NWE = NBE / 4;
+static u32 eprev[NWE]; static uint16_t echg[NWE]; static uint8_t enoisy[NWE]; static u8 *eObj = nullptr; static Ev eev[128]; static int eN = 0, eDrop = 0, eNoisy = 0;
+static void enemyTick(u32 ms) {
+    u8 *e = enemyPtr.load(); if (!e || !readable(e, NBE)) { eObj = nullptr; return; }
+    const u32 *W = (const u32 *)e;
+    if (e != eObj) { eObj = e; memcpy(eprev, W, NBE); memset(echg, 0, sizeof echg); memset(enoisy, 0, sizeof enoisy); eNoisy = 0; eN = 0; logf("OBS: watching enemy %p (class %d) - the last one in a hit with Jin", (void *)e, fp::classId(e)); return; }
+    for (int i = 0; i < NWE; i++) { const u32 v = W[i]; if (v == eprev[i]) continue; if (echg[i] < 0xFFFF) echg[i]++;
+        if (!enoisy[i] && ((small(v) && small(eprev[i])) || (plainF(v) && plainF(eprev[i])))) { if (eN < (int)(sizeof eev / sizeof eev[0])) eev[eN++] = {(u32)(i * 4), eprev[i], v, ms, (u8)(small(v) ? 0 : 1)}; else eDrop++; }
+        eprev[i] = v; } }
+static void enemySecond() {
+    if (!eObj) return; int nn = 0; for (int i = 0; i < NWE; i++) { if (echg[i] > 6 && !enoisy[i]) { enoisy[i] = 1; eNoisy++; nn++; } echg[i] = 0; }
+    if (eN || eDrop) logf("   ENEMY/s: %p (class %d) health %.1f | changes %d (%d dropped; %d busy fields ignored, %d new)", (void *)eObj, fp::classId(eObj), readable(eObj + 0x1974, 4) ? *(const float *)(eObj + 0x1974) : -1.0f, eN, eDrop, eNoisy, nn);
+    int shown = 0; for (int k = 0; k < eN && shown < 60; k++) { const Ev &x = eev[k]; if (enoisy[x.off / 4]) continue; shown++;
+        if (x.isF) { float fa, fb; memcpy(&fa, &x.a, 4); memcpy(&fb, &x.b, 4); logf("      enemy+0x%04x: %g -> %g (float, +%u ms)", x.off, fa, fb, x.ms); } else logf("      enemy+0x%04x: %u -> %u (+%u ms)", x.off, x.a, x.b, x.ms); }
+    eN = 0; eDrop = 0; }
 static void tick() {   // game thread (GameTick), flat play only
     if (!on.load()) return;
     if (!fq.QuadPart) QueryPerformanceFrequency(&fq); LARGE_INTEGER qn; QueryPerformanceCounter(&qn); if (!secQ.QuadPart) secQ = qn;
@@ -2487,21 +2619,682 @@ static void tick() {   // game thread (GameTick), flat play only
     }
     if (g_padHave[0][0]) { btnOr |= *(const uint16_t *)(g_padLast[0][0] + 4); ltMax = g_padLast[0][0][6] > ltMax ? g_padLast[0][0][6] : ltMax; rtMax = g_padLast[0][0][7] > rtMax ? g_padLast[0][0][7] : rtMax; }
     const u32 ms = (u32)((qn.QuadPart - secQ.QuadPart) * 1000 / fq.QuadPart);
+    keysTick(ms); enemyTick(ms); for (int i = NK - 4; i < NK; i++) if (kDown[i]) wasdOr |= 1u << (i - (NK - 4));
     for (int i = 0; i < NW; i++) { const u32 v = W[i]; if (v == prevW[i]) continue;
         if (chg[i] < 0xFFFF) chg[i]++;
-        if (!noisy[i] && small(v) && small(prevW[i])) { if (nEv < (int)(sizeof ev / sizeof ev[0])) ev[nEv++] = {(u32)(i * 4), prevW[i], v, ms}; else nDropped++; }
+        if (!noisy[i] && ((small(v) && small(prevW[i])) || (plainF(v) && plainF(prevW[i])))) { if (nEv < (int)(sizeof ev / sizeof ev[0])) ev[nEv++] = {(u32)(i * 4), prevW[i], v, ms, (u8)(small(v) ? 0 : 1)}; else nDropped++; }
         prevW[i] = v; }
     if ((qn.QuadPart - secQ.QuadPart) >= fq.QuadPart) {   // once a second
         int newNoisy = 0; for (int i = 0; i < NW; i++) { if (chg[i] > 6 && !noisy[i]) { noisy[i] = 1; nNoisy++; newNoisy++; } chg[i] = 0; }
-        logf("   STATE/s: Jin %.0f %.0f %.0f | ground speed up to %.1f m/s, vertical %+.1f..%+.1f m/s%s | pad buttons 0x%04x LT %d RT %d | hero flag changes %d (%d dropped; %d busy fields ignored, %d new)",
-             lastP[0], lastP[1], lastP[2], spMax, vzMin, vzMax, (vzMax > 0.8f || vzMin < -0.8f) ? " (in the air)" : "", btnOr, ltMax, rtMax, nEv, nDropped, nNoisy, newNoisy);
+        logf("   STATE/s:%s%s Jin %.0f %.0f %.0f | ground speed up to %.1f m/s, vertical %+.1f..%+.1f m/s%s | pad buttons 0x%04x LT %d RT %d | hero flag changes %d (%d dropped; %d busy fields ignored, %d new)",
+             tag.load() ? " TAG " : "", tag.load() ? kTag[tag.load()] : "", lastP[0], lastP[1], lastP[2], spMax, vzMin, vzMax, (vzMax > 0.8f || vzMin < -0.8f) ? " (in the air)" : "", btnOr, ltMax, rtMax, nEv, nDropped, nNoisy, newNoisy);
+        enemySecond();
+        if (keyLogN || wasdOr) { logf("   INPUT/s: keys%s | moving %s%s%s%s", keyLogN ? keyLog : " none", wasdOr & 1 ? "W" : "", wasdOr & 2 ? "A" : "", wasdOr & 4 ? "S" : "", wasdOr & 8 ? "D" : ""); keyLogN = 0; keyLog[0] = 0; wasdOr = 0; }   // 0.18.44 (key+ / key- at ms in this second)
+        {   // 0.18.43 the combat observer's second (it is declared further down: counters read through these pointers)
+            const int inc = readable(h + 0x39A0, 4) ? *(const int *)(h + 0x39A0) : -1;
+            logf("   COMBAT/s: hits %llu (on Jin %llu), health changes %llu (Jin %llu), paired actions (hero+0x39A0: finisher / mount / assassination) %d, Jin's health %.1f of %.1f",
+                 (unsigned long long)cbtHits->exchange(0), (unsigned long long)cbtHitsHero->exchange(0), (unsigned long long)cbtHealth->exchange(0), (unsigned long long)cbtHealthHero->exchange(0), inc,
+                 readable(h + 0x1974, 4) ? *(const float *)(h + 0x1974) : -1.0f, readable(h + 0x1970, 4) ? *(const float *)(h + 0x1970) : -1.0f); }
         int shown = 0;
-        for (int k = 0; k < nEv && shown < 60; k++) { const Ev &e = ev[k]; if (noisy[e.off / 4]) continue; shown++; logf("      hero+0x%04x: %u -> %u (+%u ms)", e.off, e.a, e.b, e.ms); }
+        for (int k = 0; k < nEv && shown < 60; k++) { const Ev &e = ev[k]; if (noisy[e.off / 4]) continue; shown++; if (e.isF) { float fa, fb; memcpy(&fa, &e.a, 4); memcpy(&fb, &e.b, 4); logf("      hero+0x%04x: %g -> %g (float, +%u ms)", e.off, fa, fb, e.ms); } else logf("      hero+0x%04x: %u -> %u (+%u ms)", e.off, e.a, e.b, e.ms); }
         nEv = 0; nDropped = 0; spMax = 0; vzMax = 0; vzMin = 0; btnOr = 0; ltMax = rtMax = 0; secQ = qn;
     }
 }
 static void mark() { const u64 n = ++nMarks; logf("==================== MARK %llu (F8) ====================", (unsigned long long)n); }
+// 0.18.41 (owner: "I'm going to load a modded save to play flat screen with everything unlocked and log different actions - numpad 1 sword
+// combat, 2 archery, 3 climbing, 4 grappling, 6 cutscene"): a numpad key starts that tag (a banner in the log), the same key again ends it,
+// another key switches; every STATE/s line carries the tag, so the log can be cut by action (grep "TAG sword combat").
+static void setTag(int t) { const int cur = tag.load(); const u64 now = GetTickCount64();
+    if (cur) logf("==================== TAG %s END (%.1f s) ====================", kTag[cur], (now - tagAt) / 1000.0);
+    if (t == cur) { tag = 0; return; }
+    tag = t; tagAt = now; tagN++; logf("==================== TAG %s BEGIN (#%llu, %s) ====================", kTag[t], (unsigned long long)tagN, kTagKey[t]); }
 } // namespace obs
+// ---------------- 0.18.43 combat observer (the owner's flat-play session 0.18.42: sword combat, parries, hits taken) ----------------
+// Found from that log + the binary (rva = image offset, this build only - both signature-checked, fail closed, observe only):
+//  - hero+0x1974 float = health (+0x1970 = max). Its ONE runtime writer is SetHealth(character, float) at 0x69F3D0 - every damage,
+//    heal (+122.5 per resolve heal) and regen tick (+7) of EVERY character goes through it.
+//  - HandleHit(character, hitInfo) at 0x694080 (a virtual - four character vtables): drops repeats of hitInfo+0x2C (the hit id, a
+//    16-entry ring at +0x1990), logs the hit into a 32-entry history at +0x19E0 (+0x19D8 index, +0x19DC count): time, id, +0x94 and
+//    +0x98 (floats), +0x9C / +0xA0 / +0xA4 when +0x90 has bits 2 / 8 / 0x80; +0x90 bit 20 = the kill path (SetHealth 0, state 2).
+//  - hero+0x3918.. = a list of PAIRED actions (16-byte entries, count at +0x39A0) - 0.18.45 correction (0.18.44 session): set 12 ms
+//    after the click of a finisher on a crawling enemy, at a horse mount (E), around assassinations - not incoming attacks.
+// Logged per call (rate-limited) so the next flat session tells which field is the damage, which the attacker, which the hit kind.
+namespace cbt {
+static const u32 RVA_SETHEALTH = 0x69F3D0, RVA_HANDLEHIT = 0x694080;
+typedef void (*FnSetHealth)(u8 *, float); static FnSetHealth oSetHealth = nullptr;
+typedef u64 (*FnHandleHit)(u8 *, u8 *); static FnHandleHit oHandleHit = nullptr;
+static std::atomic<u64> nHealth{0}, nHits{0}, nHitsHero{0}, nHealthHero{0}; static std::atomic<int> secLogs{0}; static std::atomic<u64> secMs{0};
+static bool allow() { const u64 now = GetTickCount64(); if (now - secMs.load() >= 1000) { secMs = now; secLogs = 0; } return secLogs.fetch_add(1) < 40; }
+static float rdF(const u8 *p) { float v = 0; if (readable(p, 4)) memcpy(&v, p, 4); return v; }
+static void callers(const char *what);   // below (WRIST_HUD.md W0)
+static void hSetHealth(u8 *ch, float hp) {
+    const float old = rdF(ch + 0x1974);
+    if (g_playFlat && ch == fp::heroPtr() && hp - old > 20.0f) { static u64 last = 0; const u64 now = GetTickCount64(); if (now - last > 300) { last = now; char w[96]; snprintf(w, sizeof w, "Jin healed %.1f -> %.1f", old, hp); callers(w); } }   // WRIST_HUD.md W0
+    oSetHealth(ch, hp); nHealth++;
+    const bool hero = ch == fp::heroPtr(); if (hero) nHealthHero++;
+    if (allow()) logf("COMBAT health: %s %p (class %d) %.1f -> %.1f (%+.1f) of %.1f%s", hero ? "JIN" : "other", (void *)ch, fp::classId(ch), old, hp, hp - old, rdF(ch + 0x1970), obs::tag.load() ? obs::kTag[obs::tag.load()] : "");
+}
+namespace rscan { static void event(const char *what); }
+static int resScan = 0;   // 0.18.54: the resolve finder found it (hero+0x43A4 / max hero+0x4644 + 3) - off unless cbt_resolve_scan=1 (its snapshots cost time)   // 0.18.49 below
+static void noteHit(u8 *ch, u8 *d);   // 0.18.47 hit templates + the enemy registry (below)
+static bool candOn = false, candSeen = false; static u32 candFl = 0; static float candDmg = 0;   // 0.18.55 record library: the blow the game composed from a real record
+static bool diffWant(u8 *ch, u8 *d);   // below (0.18.48 diagnostics)
+static void diffReal(u8 *ch, u8 *d, bool before);
+static u64 hHandleHit(u8 *ch, u8 *d) {
+    noteHit(ch, d);
+    const bool dw = diffWant(ch, d); if (dw) diffReal(ch, d, true);
+    const float before = rdF(ch + 0x1974); const u64 r = oHandleHit(ch, d); const float after = rdF(ch + 0x1974); nHits++;
+    if (dw) diffReal(ch, d, false);
+    const bool hero = ch == fp::heroPtr(); if (hero) nHitsHero++;
+    { const u32 fk = d && readable(d + 0x90, 4) ? *(const u32 *)(d + 0x90) : 0u; const bool fight = (fk & 0x60000000u) == 0 && (fk & 0x41u) != 0;   // 0.18.46: not the spawn messages (0x6000000x set max health) - a real hit
+      u8 *en = hero ? (d && readable(d + 0x48, 8) ? *(u8 **)(d + 0x48) : nullptr) : ch; if (fight && en && en != fp::heroPtr() && !((u64)en & 7)) obs::enemyPtr = en; }   // 0.18.45 the enemy to watch
+    if (d && readable(d, 0xB0) && allow()) {
+        const u32 fl = *(const u32 *)(d + 0x90);
+        logf("COMBAT hit on %s %p (class %d): id %u flags 0x%08x | +94 %.2f +98 %.2f +9C %.2f +A0 %.2f +A4 %.2f | health %.1f -> %.1f | returned %llu%s%s", hero ? "JIN" : "other", (void *)ch, fp::classId(ch),
+             *(const u32 *)(d + 0x2C), fl, rdF(d + 0x94), rdF(d + 0x98), rdF(d + 0x9C), rdF(d + 0xA0), rdF(d + 0xA4), before, after, (unsigned long long)(r & 0xFF), obs::tag.load() ? " | " : "", obs::tag.load() ? obs::kTag[obs::tag.load()] : "");
+        char b[1200]; int o = 0; for (int q = 0; q < 0xB0 / 8 && o < 1150; q++) o += snprintf(b + o, sizeof b - (size_t)o, "%s%016llx", q % 4 ? " " : (q ? " | " : ""), (unsigned long long)*(const u64 *)(d + q * 8));
+        logf("   hitInfo 0x00..0xAF: %s", b); }
+    return r;
+}
+// ---------------- 0.18.47 combat stage 1: your katana's hits, delivered as the game's own hit messages ----------------
+// How the game builds one (this build, all signature-checked; read from the binary - COMBAT_FINDINGS.md "Session 4"):
+//  - a hit message is a 0x210-byte ref-counted object (+0x08 count) from its own pool: 0x7686D0 hands one out, the deleting destructor
+//    (vtable+0x10) puts it back. 0x84B390(msg, target) = the base constructor + the hit vtable + a fresh hit id (+0x2C) + the target.
+//  - +0x30 target, +0x48 attacker, +0x50, +0x168 are weak handles: 0x84BB50 sets one (the slot is registered with the object, which
+//    nulls it when it goes). +0x58 / +0x78 are tag lists (u64 hashes; 0x519DB0 copies one). +0x1C8 / +0x1E0 more lists (left empty).
+//  - +0x90 flags, +0x94 health change, +0x98 posture change, +0x9C..+0xA4 optional (flags 2 / 8 / 0x80), +0x170 48 bytes (flag
+//    0x01000000), +0x1A0 (flag 0x02000000).
+// The template: the last plain hit Jin landed with the game's own attack (flat play, or in VR before the katana comes out) - its numbers,
+// tags and payload kept (gotvr.ini cbt_tpl_light / cbt_tpl_heavy), so a hit from your katana does what Jin's do: the same damage,
+// posture, reaction, sound and blood. A blow that would kill is sent the way the game sends Jin's killing blows (0x40 cleared, -FLT_MAX).
+// Enemies: characters (class 14 people, 16 dogs) seen in a hit with Jin (they hit him or he hit them) - kept as the game's own weak
+// handles, so a dead / unloaded one is never touched. Only those are struck: allies and villagers never (sword_hit_any = 1 lifts it).
+// Everything runs on the game thread (the hits are sent right after the game's tick) and fails closed: a signature miss, HandleHit
+// seen off the game thread, no template yet, a character without this HandleHit -> no hit, logged.
+static const u32 RVA_MSGPOOL = 0x7686D0, RVA_MSGCTOR = 0x84B390, RVA_MSGTAGS = 0x519DB0, RVA_SETHANDLE = 0x84BB50;
+typedef u8 *(*FnPool)(); typedef u8 *(*FnCtor)(u8 *, u8 *); typedef void (*FnTags)(u8 *, const void *); typedef void (*FnSetH)(u8 **, u8 *);
+static FnPool pPool = nullptr; static FnCtor pCtor = nullptr; static FnTags pTags = nullptr; static FnSetH pSetH = nullptr; static bool strikeOk = false;
+static std::atomic<u64> nOnTick{0}, nOffTick{0};
+struct Tpl { u32 ver, v28, m40, n58, n78, flags; u64 h38, t58[16], t78[16]; u8 r90[0x20]; u8 r170[0x40]; float tpos[3], hpos[3]; };
+static Tpl tpl[2]; static bool tplOk[2] = {false, false}, tplLive[2] = {false, false}; static u8 *wk50[2] = {nullptr, nullptr}, *wk168[2] = {nullptr, nullptr};
+static u8 *wkAny50 = nullptr;   // 0.18.50: +0x50 (class 24, Jin's weapon?) of Jin's latest real blow of any kind - session 7 sent blows from the ini template with none
+static const char *kTplName[2] = {"light", "heavy"};
+// settings (gotvr.ini, design-doc names)
+static int hitOn = 1, hitAny = 0; static melee::Cfg mcfg; static float bladeCutCm = 70.0f, dmgMin = 0.75f, dmgMax = 1.10f, fullSpeed = 8.0f, rumble = 0.9f;
+static int rumbleMs = 70, reachCm = 450; static float twoHandMult = 1.0f;
+// 0.18.48 the design doc's attack parameters around the contact (attack.h): swing recognition, heavy charge, lunge, katana weight
+static atk::Cfg acfg; static float swingRumble = 0.35f, swingRumbleHeavy = 0.7f, lungeSpeed = 4.5f; static int lungeOn = 1;
+static u32 secSwings = 0, secHeavy = 0, secLunges = 0, secCharges = 0; static atk::Intent intent; static atk::Weight weightLag;
+// the enemy registry (game thread only)
+static const int NR = 48; static u8 *reg[NR] = {}; static u64 regSeen[NR] = {}; static u8 regHostile[NR] = {}; static u32 regGen[NR] = {};
+static float rdF3(const u8 *m, float *p) { if (!m || !readable(m + 0x150, 64)) return 0; const float *M = (const float *)(m + 0x150); p[0] = M[12]; p[1] = M[13]; p[2] = M[14]; return std::isfinite(p[0]) && std::isfinite(p[1]) && std::isfinite(p[2]) ? 1.0f : 0.0f; }
+static int clsOf(u8 *c) { return c && !((u64)c & 7) && readable(c, 8) ? fp::classId(c) : -1; }
+static bool alive(u8 *c) { const int k = clsOf(c); return (k == 14 || k == 16) && readable(c + 0x1970, 8) && rdF(c + 0x1974) > 0.0f; }
+static void regNote(u8 *c, bool hostile, u64 now) {
+    if (!pSetH || !c || c == fp::heroPtr()) return; const int k = clsOf(c); if (k != 14 && k != 16) return;
+    int fr = -1, old = -1; for (int i = 0; i < NR; i++) { if (reg[i] == c) { regSeen[i] = now; if (hostile && !regHostile[i]) { regHostile[i] = 1; logf("STRIKE: enemy %p (class %d) now known hostile (in a hit with Jin)", (void *)c, k); } return; }
+        if (!reg[i]) { if (fr < 0) fr = i; } else if (old < 0 || regSeen[i] < regSeen[old]) old = i; }
+    const int i = fr >= 0 ? fr : old; if (i < 0) return;
+    pSetH(&reg[i], c); regSeen[i] = now; regHostile[i] = hostile ? 1 : 0; regGen[i]++;   // the game's own weak handle: it nulls reg[i] when c goes
+}
+// 0.18.48 (owner session 5: most strikes refused - an enemy counted only after a hit with Jin): the game's own attitude query decides
+// who is an enemy. 0x9552F0(table 0x17F7560, a, b) = a's attitude toward b (the faction index at character+0x600; 2 = hostile) - it is
+// what the threat test 0x950C40 asks before an attacker enters a victim's threat list. Game thread only (it fills a small cache).
+static const u32 RVA_ATTITUDE = 0x9552F0, RVA_ATTTABLE = 0x17F7560;
+typedef u64 (*FnAtt)(u8 *, u8 *, u8 *); static FnAtt pAtt = nullptr;
+static int attitude(u8 *a, u8 *b) { if (!pAtt || !a || !b || !readable(a + 0x600, 4) || !readable(b + 0x600, 4)) return -1; return (int)(pAtt(g_base + RVA_ATTTABLE, a, b) & 0xFF); }
+static bool hostile(int i) { if (hitAny || regHostile[i]) return true; return attitude(reg[i], fp::heroPtr()) == 2; }
+static bool listCopy(const u8 *d, u32 off, u64 *dst, u32 &n) { const u64 *p = *(u64 *const *)(d + off); const int c = *(const int *)(d + off + 8);
+    if (c < 0 || c > 16 || (c && (!p || !readable(p, (size_t)c * 8)))) return false; n = (u32)c; if (c) memcpy(dst, p, (size_t)c * 8); return true; }
+static void tplSave(int k) {
+    wchar_t ini[MAX_PATH]; swprintf(ini, MAX_PATH, L"%ls\\gotvr.ini", g_dir); static wchar_t hx[sizeof(Tpl) * 2 + 4]; const u8 *b = (const u8 *)&tpl[k];
+    for (size_t i = 0; i < sizeof(Tpl); i++) swprintf(hx + i * 2, 3, L"%02x", b[i]); WritePrivateProfileStringW(L"gotvr", k ? L"cbt_tpl_heavy" : L"cbt_tpl_light", hx, ini); }
+static void tplLoad(const wchar_t *ini, int k) {
+    static wchar_t hx[sizeof(Tpl) * 2 + 8]; const DWORD n = GetPrivateProfileStringW(L"gotvr", k ? L"cbt_tpl_heavy" : L"cbt_tpl_light", L"", hx, sizeof hx / sizeof hx[0], ini);
+    if (n != sizeof(Tpl) * 2) return; Tpl t; u8 *b = (u8 *)&t; for (size_t i = 0; i < sizeof(Tpl); i++) { unsigned v = 0; if (swscanf(hx + i * 2, L"%2x", &v) != 1) return; b[i] = (u8)v; }
+    if (t.ver != 1 || t.n58 > 16 || t.n78 > 16) return;
+    if (t.flags & 0x10000000u) { logf("STRIKE: %s hit template in gotvr.ini carries the hit-reaction bit (0x%08x) - not used (the message path crashed with it, session 13); a plain blow replaces it", kTplName[k], t.flags); WritePrivateProfileStringW(L"gotvr", k ? L"cbt_tpl_heavy" : L"cbt_tpl_light", nullptr, ini); return; }
+    tpl[k] = t; tplOk[k] = true; tplLive[k] = false;
+    float dm; memcpy(&dm, t.r90 + 4, 4); logf("STRIKE: %s hit template from gotvr.ini (flags 0x%08x, health %.1f, %u + %u tags)", kTplName[k], t.flags, dm, t.n58, t.n78); }
+static void capture(int k, u8 *ch, const u8 *d) {
+    Tpl t; memset(&t, 0, sizeof t); t.ver = 1; t.v28 = *(const u32 *)(d + 0x28); t.m40 = *(const u32 *)(d + 0x40); t.h38 = *(const u64 *)(d + 0x38); t.flags = *(const u32 *)(d + 0x90);
+    if (!listCopy(d, 0x58, t.t58, t.n58) || !listCopy(d, 0x78, t.t78, t.n78)) return;
+    memcpy(t.r90, d + 0x90, 0x20); memcpy(t.r170, d + 0x170, 0x40); rdF3(ch, t.tpos); rdF3(fp::heroPtr(), t.hpos);
+    float dn, dc; memcpy(&dn, t.r90 + 4, 4); memcpy(&dc, tpl[k].r90 + 4, 4);
+    float pn, pc; memcpy(&pn, t.r90 + 8, 4); memcpy(&pc, tpl[k].r90 + 8, 4);
+    const bool rNew = false, rOld = false;   // 0.18.57: the message path never carries the hit-reaction bit (session 13 crash)
+    const bool first = !tplLive[k]; if (tplLive[k] && rNew == rOld && (fabsf(dn) > fabsf(dc) + 0.01f || (fabsf(dn) > fabsf(dc) - 0.01f && fabsf(pn) > fabsf(pc) + 0.01f))) return;   // the session's plainest blow (the opener of a combo, not its finisher)
+    const bool same = tplOk[k] && !memcmp(&t, &tpl[k], offsetof(Tpl, tpos)); tpl[k] = t; tplOk[k] = true; tplLive[k] = true;
+    u8 *o50 = *(u8 *const *)(d + 0x50), *o168 = (t.flags & 0x800000u) ? *(u8 *const *)(d + 0x168) : nullptr;
+    if (o50 && ((u64)o50 & 7)) o50 = nullptr; if (o168 && ((u64)o168 & 7)) o168 = nullptr;
+    pSetH(&wk50[k], o50); pSetH(&wk168[k], o168);   // weak handles: nulled by the game if those objects go
+    if (!same) tplSave(k);
+    if (first || !same) {
+        const float *f = (const float *)t.r170; char b[400]; int o = 0; for (int i = 0; i < 16 && o < 380; i++) o += snprintf(b + o, sizeof b - (size_t)o, " %.2f", f[i]);
+        logf("STRIKE: %s hit template %s from Jin's own hit on %p (class %d): flags 0x%08x health %.1f posture %.1f | +28 %u +38 0x%llx move %u | tags %u + %u | +50 %p (class %d) +168 %p (class %d) | lists +1D0 %d +1E8 %d | +170:%s | target at %.0f %.0f %.0f, Jin at %.0f %.0f %.0f",
+             kTplName[k], first ? "taken" : "updated", (void *)ch, clsOf(ch), t.flags, dn, *(const float *)(t.r90 + 8), t.v28, (unsigned long long)t.h38, t.m40, t.n58, t.n78, (void *)o50, clsOf(o50), (void *)o168, clsOf(o168),
+             *(const int *)(d + 0x1D0), *(const int *)(d + 0x1E8), b, t.tpos[0], t.tpos[1], t.tpos[2], t.hpos[0], t.hpos[1], t.hpos[2]); }
+}
+static void callers(const char *what) {   // WRIST_HUD.md W0: who sent it - the game frames (rva) of the call chain, to find where resolve is spent
+    void *fr[16]; const USHORT n = RtlCaptureStackBackTrace(1, 16, fr, nullptr); char b[400]; int o = 0;
+    for (int i = 0; i < n && o < 380; i++) { const u8 *a = (const u8 *)fr[i]; if (a >= g_base && a < g_base + 0x4000000) o += snprintf(b + o, sizeof b - (size_t)o, " 0x%llx", (unsigned long long)(a - g_base)); else o += snprintf(b + o, sizeof b - (size_t)o, " -"); }
+    logf("VITALS: %s - called from (game rva, innermost first):%s", what, b); }
+static bool injecting = false;   // 0.18.49: our own blow is being delivered (game thread) - not a template, not a diagnostic
+static void noteHit(u8 *ch, u8 *d) {   // inside HandleHit, before the game handles it
+    if (injecting) return;
+    if (g_playFlat && d && ch == fp::heroPtr() && readable(d + 0x90, 8) && (*(const u32 *)(d + 0x90) & 0x40000000u) && !(*(const u32 *)(d + 0x90) & 0x20000000u)) {
+        static u64 last = 0; const u64 now = GetTickCount64(); if (now - last > 300) { last = now; char w[96]; snprintf(w, sizeof w, "a resolve heal on Jin (flags 0x%08x, %+.1f)", *(const u32 *)(d + 0x90), rdF(d + 0x94)); callers(w); } }
+    const bool onT = GetCurrentThreadId() == t_tick.load(); (onT ? nOnTick : nOffTick)++;
+    if (!onT || !strikeOk || !d || !readable(d, 0x210)) return;
+    u8 *hero = fp::heroPtr(); if (!hero) return;
+    u8 *at = *(u8 **)(d + 0x48); if ((u64)at & 7) at = nullptr; const u32 fl = *(const u32 *)(d + 0x90); const u64 now = GetTickCount64();
+    if (fl & 0x60000000u) { if (ch != hero) regNote(ch, false, now); return; }   // spawn: set max health
+    if (ch == hero) { if ((fl & 0x40000000u) && !(fl & 0x20000000u)) rscan::event("RESOLVE HEAL on Jin"); else if (fl & 0x04000000u) rscan::event("REVIVE of Jin (2 resolve)");
+        else if (fl == 0x00000001u) rscan::event("PARRY by Jin (resolve gain?)");   // 0.18.51 (owner: "when I parry and gain resolve, note it"): marked by the mod itself
+        if (at && at != hero) regNote(at, true, now); return; }      // something hit Jin: its attacker is hostile
+    if (at == hero && candOn && !candSeen) { candSeen = true; candFl = fl; candDmg = rdF(d + 0x94); }   // 0.18.55 the record library judges by this
+    if (at == hero) { regNote(ch, true, now); if (!(fl & 0x40u) && (fl & 1u) && rdF(d + 0x94) < -1e30f) rscan::event("KILL by Jin (resolve gain?)");
+        else if (fl & 0x200u) rscan::event("STAGGER by Jin (resolve gain?)");
+        { u8 *o50 = *(u8 *const *)(d + 0x50); if (o50 && !((u64)o50 & 7) && o50 != wkAny50 && clsOf(o50) == 24) pSetH(&wkAny50, o50); }
+        { const float dd = rdF(d + 0x94); if ((fl & 0x41u) == 0x41u && !(fl & 0x74000000u) && std::isfinite(dd) && dd < -0.5f && dd > -5000.0f) capture((fl & 0x100u) ? 1 : 0, ch, d); } return; }   // 0.18.57: ordinary blows WITHOUT the hit-reaction bit only - session 13: a message carrying it (0x11C01041) without the game's own composition crashed the game   // Jin's own blow (0.18.48: only the plain light / heavy kinds - session 5 took a 0x11C01041 chip first)
+    regNote(ch, false, now); if (at) regNote(at, false, now);
+}
+static bool hasHandleHit(u8 *c) {   // this character's class has the HandleHit we know at vtable+0x1D8 (where the game's delivery calls it)
+    u8 *vt = *(u8 **)c; return vt && readable(vt + 0x1D8, 8) && *(u8 **)(vt + 0x1D8) == g_base + RVA_HANDLEHIT; }
+// 0.18.49 (session 6: HHDIFF real == HHDIFF ours - HandleHit does the same for both; the flinch, sound and blood come from the delivery
+// around it): the game delivers a hit with 0x85A770(msg) - it marks the message delivered (+0x28 = 3), keeps it in the ring of the 64
+// latest hits (0x1434C3540, with a reference), fires event 0x16 on the target and 0x17 on the attacker (0x7E05F0(obj, id, 2, 1) - the
+// reaction / sound / blood listeners), flag 0x08000000 a shake, then calls the target's HandleHit (vtable+0x1D8), flag 0x400 impact
+// effects. Its caller 0x85A4F0 walks the message chain (+0x1F8) and replicates (multiplayer); 0x8504D0 composes (0x84B1A0 + 0x850880).
+// 0.18.49: the game sends its own simple messages (the resolve heal, 0x68CE70) exactly this way: pool -> 0x84B390 -> fill -> 0x85A4F0
+// -> release. 0x85A4F0 is what the katana uses too.
+static const u32 RVA_DELIVER = 0x85A4F0; typedef void (*FnDeliver)(u8 *); static FnDeliver pDeliver = nullptr; static int deliverOn = 1;
+// 0.18.50 diagnostics (flat play): the whole delivery (0x85A770: events 0x16 / 0x17 + HandleHit) diffed on the target for real blows
+// and ours (DLVDIFF), to see whether the reaction fields (+0x1694 / +0x1698 / +0x16A4) are set inside it at all
+static const u32 RVA_DELIVER1 = 0x85A770; static FnDeliver oDeliver1 = nullptr; static int nDlvReal = 0, nDlvOurs = 0; static u8 snapD[0x4000];
+// 0.18.51 diagnostics (flat, session 8: DLVDIFF real == ours, still no flinch - the reaction comes from before the delivery): the game's
+// own hit processing HitProc 0x8504D0(hitRecord, list) logged with its caller chain and the attack components' callbacks, and every
+// script event 0x7E05F0(obj, id, ...) fired at a person within 400 ms after a real blow / ours, with its caller (EVENT lines)
+static const u32 RVA_HITPROC = 0x8504D0, RVA_EVENT = 0x7E05F0;
+typedef void (*FnHitProc)(u8 *, u8 *); static FnHitProc oHitProc = nullptr; typedef void *(*FnEvent)(u8 *, int, u32, u32, u64, u64); static FnEvent oEvent = nullptr;
+static std::atomic<u64> evUntil{0}; static std::atomic<int> evTag{0}; static int nHitProc = 0, nEvLog = 0;
+static void dumpMsg(const char *tag, const u8 *m);   // below
+// 0.18.53 (session 9: the script events at the victim are the same for both; Jin's attack side runs HitProc 0x8504D0(record, list) =
+// compose the message from the hit RECORD (0x84B1A0 + the composer 0x850880: damage, guard, parry, reaction), the attack component's
+// callbacks (events 0x11 / 0x14 / 0x12 / 0x15 on Jin's weapon entity; 0x870FF0 flags the target's +0x9C8 ring when the hero hit it),
+// then the delivery): the katana now runs that WHOLE path with a copy of Jin's latest real hit record, the target swapped
+// (cbt_mode 2). The record: +0x30 descriptor flags, +0x48 target, +0x50 -> the attack definition (+0x88 hash, +0xA4 move),
+// +0x58 attacker, +0x60 / +0x78 the attack component (class 24), +0x80 the attack hash, +0x90 contact point / velocity / direction.
+static int cbtMode = 2; static bool forceMsg = false;   // 0.18.56 Ctrl+Shift+M: one blow by the message path (compare)
+// 0.18.55 the RECORD LIBRARY (session 11: Ctrl+Shift+H made enemies flinch with NO animation once the record came from attack
+// 0x95611255ef4e58cc - the game composed flags 0x11C01041 (bit 0x10000000 = the hit reaction) - while session 10's record (attack
+// 0x74bf02936aeeeb47, flags 0x03C00041) never did; and a finisher's record (0x03C00001, -FLT_MAX) taken as the template made every blow
+// after it a kill). So a record is now kept only after the game has composed its blow: an ordinary damaging blow (0x41 set, no
+// heal / revive / spawn bits, finite damage), light / heavy by 0x100, one with the reaction bit always preferred. A record is 0x120
+// bytes: +0x00 vtable, +0x30 descriptor, +0x48 target, +0x50 -> holder of the attack definition (inside Jin's moveset entry),
+// +0x58 attacker, +0x60 / +0x78 the attack component (class 24), +0x68 an attack object, +0x70 / +0x80 the attack hash, +0x90..
+// contact, +0xE0 the base damage, +0xF0 / +0xF8 the tag list. Saved to gotvr.ini with how to find its pointers again from Jin, so
+// VR sessions need no real blow (cbt_rec_light / cbt_rec_heavy).
+struct RecT { u8 b[0x120]; u64 tags[32]; int nTags = 0; bool ok = false, live = false; u32 fl = 0; float dmg = 0; float tgt[3] = {0, 0, 0}; u8 *hero = nullptr;
+    int compOff = -1, compOff2 = -1, o68Off = -1, o68InComp = 0, k50 = -1, defJ = -1, defMode = 0, defB = 0; u32 vtRva = 0; u64 cell = 0; };
+static RecT recs[2]; static RecT cand;
+static int recFind(u8 *base, int size, u64 v) { if (!base || !readable(base, (size_t)size)) return -1; for (int o = 0; o + 8 <= size; o += 8) if (*(u64 *)(base + o) == v) return o; return -1; }
+static u8 *movesetEntry(u8 *comp, u64 hash) {   // Jin's moveset: (comp+0x28)+0x350 entries of 0xE0, the attack hash first, +0x358 count
+    if (!comp || !readable(comp + 0x28, 8)) return nullptr; u8 *o = *(u8 **)(comp + 0x28); if (!o || ((u64)o & 7) || !readable(o + 0x350, 0x10)) return nullptr;
+    const int n = *(int *)(o + 0x358); u8 *p = *(u8 **)(o + 0x350); if (n <= 0 || n > 4096 || !p || !readable(p, (size_t)n * 0xE0)) return nullptr;
+    for (int k = 0; k < n; k++) if (*(u64 *)(p + (size_t)k * 0xE0) == hash) return p + (size_t)k * 0xE0; return nullptr; }
+// 0.18.57 (session 13: the definition is neither in the moveset entry nor in Jin / the component / the owner): where it can be reached
+// from the moveset entry for the hash (e) or the component's per-attack array (+0x5B0, 0x58 each, same index as the moveset):
+// mode 1 *(e+a), 2 *(*(e+a)+b), 3 *(arr[idx]+a), 4 *(*(arr[idx]+a)+b)
+static u8 *rdP(u8 *p) { return p && !((u64)p & 7) && readable(p, 8) ? *(u8 **)p : nullptr; }
+static u8 *attackArr(u8 *comp, u8 *e) {
+    u8 *o = rdP(comp + 0x28); if (!o || !readable(o + 0x350, 0x10)) return nullptr; u8 *base = *(u8 **)(o + 0x350); const int n = *(int *)(o + 0x358);
+    if (!base || e < base || ((e - base) % 0xE0) || (e - base) / 0xE0 >= n) return nullptr; u8 *arr = rdP(comp + 0x5B0); const long long idx = (e - base) / 0xE0;
+    return arr && readable(arr + idx * 0x58, 0x58) ? arr + idx * 0x58 : nullptr; }
+static u8 *defVia(u8 *comp, u8 *e, int mode, int a, int b) {
+    u8 *src = mode <= 2 ? e : attackArr(comp, e); if (!src) return nullptr; u8 *q = rdP(src + a); if (mode == 1 || mode == 3) return q;
+    return q && readable(q + b, 8) ? *(u8 **)(q + b) : nullptr; }
+static bool defSearch(u8 *comp, u8 *e, u8 *def, int &mode, int &a, int &b) {
+    const int lim[5] = {0, 0xE0, 0xE0, 0x58, 0x58};
+    for (int m = 1; m <= 4; m++) { u8 *src = m <= 2 ? e : attackArr(comp, e); if (!src || !readable(src, (size_t)lim[m])) continue;
+        for (int x = 0; x < lim[m]; x += 8) { u8 *q = *(u8 **)(src + x); if (m == 1 || m == 3) { if (q == def) { mode = m; a = x; b = 0; return true; } continue; }
+            if (!q || ((u64)q & 7) || !readable(q, 0x400)) continue; for (int y = 0; y < 0x400; y += 8) if (*(u8 **)(q + y) == def) { mode = m; a = x; b = y; return true; } } }
+    return false; }
+static bool heapPtr(u8 *p) { return p && !((u64)p & 7) && (u64)p > 0x10000000ull && (u64)p < 0x7FFFFFFFFFFFull && !(p >= g_base && p < g_base + 0x4000000); }
+static void recLearn(RecT &R) {   // how to find the record's pointers again from Jin (needed for a record saved for a later session, e.g. VR)
+    u8 *hero = R.hero, *comp = *(u8 **)(R.b + 0x60), *o68 = *(u8 **)(R.b + 0x68), *h50 = *(u8 **)(R.b + 0x50); const u64 hash = *(u64 *)(R.b + 0x80);
+    u8 *def = h50 && readable(h50, 8) ? *(u8 **)h50 : nullptr;
+    // the attack component: in Jin (hero+off) or one step away (hero+off -> object +off2) (0.18.55: not directly in Jin)
+    R.compOff = recFind(hero, 0x8000, (u64)comp); R.compOff2 = -1;
+    if (R.compOff < 0 && readable(hero, 0x8000)) for (int o = 0; o < 0x8000 && R.compOff < 0; o += 8) { u8 *p = *(u8 **)(hero + o); if (!heapPtr(p) || p == comp) continue; const int o2 = recFind(p, 0x800, (u64)comp); if (o2 >= 0) { R.compOff = o; R.compOff2 = o2; } }
+    R.o68Off = recFind(hero, 0x8000, (u64)o68); R.o68InComp = 0;
+    if (R.o68Off < 0 && o68) { R.o68Off = recFind(comp, 0x1000, (u64)o68); R.o68InComp = R.o68Off >= 0; }
+    // the attack holder: only its first qword (the attack definition) is ever read (HitSend 0x850880, the composer 0x84B1A0), so a record
+    // rebuilt later carries its own cell holding the definition, found in Jin's moveset entry for the attack's hash
+    u8 *o = comp && readable(comp + 0x28, 8) ? *(u8 **)(comp + 0x28) : nullptr; const int mn = o && readable(o + 0x358, 4) ? *(int *)(o + 0x358) : -1;
+    u8 *e = movesetEntry(comp, hash); R.k50 = e && h50 >= e && h50 < e + 0xE0 ? (int)(h50 - e) : -1; R.defJ = -1; R.defMode = 0; R.defB = 0; if (e && def) { int m, a, b; if (defSearch(comp, e, def, m, a, b)) { R.defMode = m; R.defJ = a; R.defB = b; } }
+    R.vtRva = *(u8 **)R.b >= g_base && *(u8 **)R.b < g_base + 0x4000000 ? (u32)(*(u8 **)R.b - g_base) : 0;
+    const bool can = R.compOff >= 0 && (o68 == nullptr || R.o68Off >= 0) && (R.k50 >= 0 || R.defMode > 0) && R.vtRva;
+    logf("REC: finding it again from Jin: component at hero+0x%x%s%x, +0x68 at %s+0x%x, moveset %d attacks (entry %s), holder %p = entry+0x%x, definition %p (hash 0x%llx move %d) via mode %d +0x%x +0x%x - %s",
+         R.compOff, R.compOff2 >= 0 ? " -> +0x" : " (direct)", R.compOff2 >= 0 ? R.compOff2 : 0, R.o68InComp ? "component" : "hero", R.o68Off, mn, e ? "found" : "NOT found", (void *)h50, R.k50, (void *)def,
+         def && readable(def + 0x88, 0x20) ? (unsigned long long)*(u64 *)(def + 0x88) : 0ull, def && readable(def + 0xA4, 4) ? (*(int *)(def + 0xA4) << 20) >> 20 : -1, R.defMode, R.defJ, R.defB, can ? "SAVED for VR (no real blow needed next session)" : "NOT all found: a later session needs one real blow");
+    if (!can && g_playFlat) {   // flat diagnostics: where the holder / definition / component do live (for the next build)
+        auto nearP = [&](const char *nm, u8 *base, int size, u8 *tgtp) { if (!base || !readable(base, (size_t)size) || !tgtp) return; for (int q = 0; q < size; q += 8) { u8 *p = *(u8 **)(base + q); if (!heapPtr(p)) continue; const long long dlt = (long long)(tgtp - p); if (dlt >= 0 && dlt < 0x4000) logf("   REC near: %s+0x%x = %p, target %p is +0x%llx past it", nm, q, (void *)p, (void *)tgtp, dlt); } };
+        { u8 *ar = e ? attackArr(comp, e) : nullptr; char b1[1000]; int q1 = 0; for (int x = 0; e && x < 0xE0 && q1 < 980; x += 8) q1 += snprintf(b1 + q1, sizeof b1 - (size_t)q1, " %llx", (unsigned long long)*(u64 *)(e + x));
+          logf("   REC moveset entry %p:%s", (void *)e, b1); q1 = 0; for (int x = 0; ar && x < 0x58 && q1 < 980; x += 8) q1 += snprintf(b1 + q1, sizeof b1 - (size_t)q1, " %llx", (unsigned long long)*(u64 *)(ar + x));
+          logf("   REC per-attack entry (component+0x5B0) %p:%s", (void *)ar, ar ? b1 : " (none)"); }
+        nearP("component", comp, 0x1000, h50); nearP("moveset owner", o, 0x1000, h50); nearP("+0x68 object", o68, 0x800, h50);
+        logf("   REC near: holder in hero +0x%x, component +0x%x, owner +0x%x; definition in hero +0x%x, component +0x%x, owner +0x%x", recFind(hero, 0x8000, (u64)h50), recFind(comp, 0x1000, (u64)h50), recFind(o, 0x1000, (u64)h50), recFind(hero, 0x8000, (u64)def), recFind(comp, 0x1000, (u64)def), recFind(o, 0x1000, (u64)def)); } }
+static bool recResolve(RecT &R, u8 *hero, u8 *out) {   // the record ready to send (pointers current for this Jin)
+    memcpy(out, R.b, 0x120);
+    if (R.live && R.hero == hero) return true;   // Jin is the same object as at capture
+    if (R.compOff < 0 || R.k50 < 0 || !R.vtRva || !readable(hero + R.compOff, 8)) return false;
+    u8 *comp = *(u8 **)(hero + R.compOff); if (R.compOff2 >= 0) { if (!heapPtr(comp) || !readable(comp + R.compOff2, 8)) return false; comp = *(u8 **)(comp + R.compOff2); }
+    if (!comp || ((u64)comp & 7) || !readable(comp, 0x30) || clsOf(comp) != 24) return false;
+    u8 *e = movesetEntry(comp, *(u64 *)(R.b + 0x80)); if (!e) return false;
+    u8 *h50 = R.k50 >= 0 ? e + R.k50 : nullptr; if (!h50) { u8 *def = R.defMode ? defVia(comp, e, R.defMode, R.defJ, R.defB) : nullptr; if (!def) return false; if (!heapPtr(def) && !(def >= g_base && def < g_base + 0x4000000)) return false; if (!readable(def + 0x88, 0x20)) return false; R.cell = (u64)def; h50 = (u8 *)&R.cell; }
+    u8 *o68 = nullptr; if (R.o68Off >= 0) { u8 *src = R.o68InComp ? comp : hero; if (!readable(src + R.o68Off, 8)) return false; o68 = *(u8 **)(src + R.o68Off); }
+    *(u8 **)out = g_base + R.vtRva; *(u8 **)(out + 0x50) = h50; *(u8 **)(out + 0x58) = hero; *(u8 **)(out + 0x60) = comp; *(u8 **)(out + 0x78) = comp; *(u8 **)(out + 0x68) = o68;
+    return true; }
+static void recSave(int kind, const RecT &R) {
+    if (R.compOff < 0 || (R.k50 < 0 && R.defMode <= 0) || !R.vtRva || (R.o68Off < 0 && *(const u64 *)(R.b + 0x68))) return; static char h[4096]; int o = 0;
+    o += snprintf(h + o, sizeof h - (size_t)o, "3;%d;%d;%d;%d;%d;%d;%d;%d;%u;%08x;%g;%d;", R.compOff, R.compOff2, R.o68Off, R.o68InComp, R.k50, R.defMode, R.defJ, R.defB, R.vtRva, R.fl, R.dmg, R.nTags);
+    for (int k = 0; k < R.nTags; k++) o += snprintf(h + o, sizeof h - (size_t)o, "%016llx", (unsigned long long)R.tags[k]); h[o++] = ';';
+    for (int k = 0; k < 0x120; k++) o += snprintf(h + o, sizeof h - (size_t)o, "%02x", R.b[k]); h[o] = 0;
+    wchar_t w[4096]; MultiByteToWideChar(CP_UTF8, 0, h, -1, w, 4096); wchar_t ini[MAX_PATH]; swprintf(ini, MAX_PATH, L"%ls\\gotvr.ini", g_dir);
+    WritePrivateProfileStringW(L"gotvr", kind ? L"cbt_rec_heavy" : L"cbt_rec_light", w, ini); }
+static void recLoad(int kind) {
+    wchar_t ini[MAX_PATH]; swprintf(ini, MAX_PATH, L"%ls\\gotvr.ini", g_dir); wchar_t w[4096]; if (!GetPrivateProfileStringW(L"gotvr", kind ? L"cbt_rec_heavy" : L"cbt_rec_light", L"", w, 4096, ini)) return;
+    char h[4096]; WideCharToMultiByte(CP_UTF8, 0, w, -1, h, 4096, nullptr, nullptr); RecT R; int ver = 0, nt = 0; unsigned fl = 0; float dmg = 0; int pos = 0;
+    if (sscanf(h, "%d;%d;%d;%d;%d;%d;%d;%d;%d;%u;%x;%g;%d;%n", &ver, &R.compOff, &R.compOff2, &R.o68Off, &R.o68InComp, &R.k50, &R.defMode, &R.defJ, &R.defB, &R.vtRva, &fl, &dmg, &nt, &pos) < 13 || ver != 3 || nt < 0 || nt > 32) { logf("REC: saved %s record unreadable - ignored", kind ? "heavy" : "light"); return; }
+    const char *c = h + pos; for (int k = 0; k < nt; k++) { unsigned long long v; if (sscanf(c, "%16llx", &v) != 1) return; R.tags[k] = v; c += 16; } if (*c++ != ';') return;
+    for (int k = 0; k < 0x120; k++) { unsigned v; if (sscanf(c + 2 * k, "%2x", &v) != 1) return; R.b[k] = (u8)v; }
+    R.nTags = nt; R.fl = fl; R.dmg = dmg; R.ok = true; R.live = false; recs[kind] = R;
+    logf("REC: saved %s record loaded (attack 0x%llx, flags 0x%08x%s, damage %.1f) - the katana's blows need no real blow this session", kind ? "heavy" : "light", (unsigned long long)*(u64 *)(R.b + 0x80), fl, (fl & 0x10000000u) ? " with the hit reaction" : "", -dmg); }
+static void recJudge() {   // after the game composed and delivered a real blow of Jin's: keep its record?
+    if (!candSeen) return; const u32 fl = candFl; const float d = candDmg;
+    const bool ordinary = (fl & 0x41u) == 0x41u && !(fl & 0x64000000u) && std::isfinite(d) && d < -0.5f && d > -5000.0f; if (!ordinary) return;
+    const int kind = (fl & 0x100u) ? 1 : 0; RecT &R = recs[kind]; const bool react = (fl & 0x10000000u) != 0, oldReact = R.ok && (R.fl & 0x10000000u);
+    if (R.ok && oldReact && !react) return;   // never trade a reacting blow for one without the reaction
+    const bool newKind = !R.ok || *(u64 *)(R.b + 0x80) != *(u64 *)(cand.b + 0x80) || react != oldReact || !R.live;
+    const int keepC = R.compOff, keepC2 = R.compOff2, keepO = R.o68Off, keepI = R.o68InComp, keepK = R.k50, keepJ = R.defJ, keepM = R.defMode, keepB = R.defB; const u32 keepV = R.vtRva;
+    R = cand; R.ok = true; R.live = true; R.fl = fl; R.dmg = d;
+    if (newKind) { logf("REC: %s record from Jin's attack 0x%llx (flags 0x%08x - %s, damage %.1f)", kind ? "heavy" : "light", (unsigned long long)*(u64 *)(R.b + 0x80), fl, react ? "WITH the hit reaction" : "no hit-reaction bit", -d);
+        recLearn(R); recSave(kind, R); } else { R.compOff = keepC; R.compOff2 = keepC2; R.o68Off = keepO; R.o68InComp = keepI; R.k50 = keepK; R.defJ = keepJ; R.defMode = keepM; R.defB = keepB; R.vtRva = keepV; }
+}
+// 0.18.54 (session 10: the game's WHOLE hit path on a copy of Jin's record - identical message, delivery and events - still no flinch).
+// Remaining difference: a real blow lands while Jin's own attack is playing. FLAT-ONLY diagnostic to test that (never in VR, never
+// pressing any button - owner: no attack animations in VR): Ctrl+Shift+G arms the swing test; YOUR next attack press (left mouse / pad X)
+// is followed cbt_swing_test_ms later by the katana's blow on the nearest enemy while your swing plays, Jin's own blows held back.
+static u64 swingUntil = 0;
+static std::atomic<u64> assistUntil{0}; static u64 nHeldBack = 0; static int assistHold = 1;   // flat swing test only
+static void hHitProc(u8 *rec, u8 *list) {
+    const bool hold = !injecting && assistHold && GetTickCount64() < assistUntil.load() && rec && readable(rec, 0x60) && *(u8 **)(rec + 0x58) == fp::heroPtr() && *(u8 **)(rec + 0x48) != fp::heroPtr();
+    if (!injecting && rec && readable(rec, 0x210) && *(u8 **)(rec + 0x58) == fp::heroPtr() && *(u8 **)(rec + 0x48) && *(u8 **)(rec + 0x48) != fp::heroPtr()
+        && readable(*(u8 **)(rec + 0x48), 8) && fp::classId(*(u8 **)(rec + 0x48)) == 14 && GetCurrentThreadId() == t_tick.load()) {   // Jin's own blow on a person
+        // the descriptor's tag list (+0xF0 array / +0xF8 count, read by HitSend and copied by the composer) is heap memory owned by
+        // the real record: keep our own copy, so the template never points at memory the game has freed
+        const int n = *(int *)(rec + 0xF8); u64 *tp = *(u64 **)(rec + 0xF0);
+        if (!hold && n >= 0 && n <= 32 && (!n || (tp && readable(tp, n * 8)))) { if (n) memcpy(cand.tags, tp, n * 8); cand.nTags = n;
+        memcpy(cand.b, rec, 0x120); const float *M = (const float *)(*(u8 **)(rec + 0x48) + 0x150); cand.tgt[0] = M[12]; cand.tgt[1] = M[13]; cand.tgt[2] = M[14]; cand.hero = fp::heroPtr();
+        candOn = true; candSeen = false;
+        } }
+    if (hold) { nHeldBack++; if (nHeldBack <= 40) logf("ASSIST: Jin's own blow on %p held back (the katana's blow replaces it)", (void *)*(u8 **)(rec + 0x48)); *(int *)(rec + 0x38) = 3; return; }
+    if (g_playFlat && rec && readable(rec, 0x100) && *(u8 **)(rec + 0x48)) {
+        evUntil = GetTickCount64() + 400; evTag = 1;
+        if (nHitProc < 6) { nHitProc++; auto cb = [&](u32 co, u32 slot) -> unsigned long long { u8 *c = *(u8 **)(rec + co); if (!c || !readable(c, 8)) return 0; u8 *vt = *(u8 **)c; if (!vt || !readable(vt + slot, 8)) return 0; u8 *f = *(u8 **)(vt + slot); return f >= g_base && f < g_base + 0x4000000 ? (unsigned long long)(f - g_base) : 0; };
+            logf("HITPROC: record %p target %p (class %d) | +60 callbacks a8 0x%llx b0 0x%llx | +78 callbacks c0 0x%llx c8 0x%llx | +58 %p +60 %p +78 %p", (void *)rec, (void *)*(u8 **)(rec + 0x48), fp::classId(*(u8 **)(rec + 0x48)), cb(0x60, 0xA8), cb(0x60, 0xB0), cb(0x78, 0xC0), cb(0x78, 0xC8), (void *)*(u8 **)(rec + 0x58), (void *)*(u8 **)(rec + 0x60), (void *)*(u8 **)(rec + 0x78));
+            dumpMsg("hitRecord", rec); callers("HitProc (a real blow, the attack side)"); } }
+    oHitProc(rec, list);
+    if (candOn) { candOn = false; recJudge(); }
+}
+static void *hEvent(u8 *obj, int id, u32 a, u32 b, u64 c, u64 d) {
+    if (g_playFlat && nEvLog < 300 && GetTickCount64() < evUntil.load() && obj && readable(obj, 8) && fp::classId(obj) >= 14 && fp::classId(obj) <= 16) {
+        nEvLog++; const u8 *ra = (const u8 *)__builtin_return_address(0);
+        logf("EVENT %s: id 0x%x (%d, %u, 0x%llx) on %p (class %d) from rva 0x%llx", injecting ? "ours" : (evTag.load() == 2 ? "after ours" : "real"), id, (int)a, b, (unsigned long long)c, (void *)obj, fp::classId(obj), (unsigned long long)(ra >= g_base ? ra - g_base : 0)); }
+    return oEvent(obj, id, a, b, c, d);
+}
+static void hDeliver1(u8 *m) {
+    u8 *tg = m && readable(m + 0x48, 8) ? *(u8 **)(m + 0x30) : nullptr, *at = m ? *(u8 **)(m + 0x48) : nullptr;
+    const bool want = g_playFlat && tg && at == fp::heroPtr() && tg != at && readable(tg, sizeof snapD) && fp::classId(tg) == 14 && (injecting ? nDlvOurs < 8 : nDlvReal < 8);
+    if (want) memcpy(snapD, tg, sizeof snapD);
+    // 0.18.54 (session 10: only +0x00..+0xAF of the message was compared - identical): the WHOLE 0x210-byte message as delivered, and
+    // for ours every qword that differs from Jin's latest real one (HitSend 0x850880 reads Jin's animation state while composing)
+    if (want && readable(m, 0x210)) { static u8 lastReal[0x210]; static bool haveReal = false; dumpMsg(injecting ? "delivered ours" : "delivered real", m);
+        if (!injecting) { memcpy(lastReal, m, 0x210); haveReal = true; }
+        else if (haveReal) { char b[1500]; int o = 0, n = 0; for (int q = 0; q < 0x210; q += 8) { u64 a, c; memcpy(&a, lastReal + q, 8); memcpy(&c, m + q, 8); if (a == c) continue; n++; if (o < 1420) o += snprintf(b + o, sizeof b - (size_t)o, " +%03x:%llx>%llx", q, (unsigned long long)a, (unsigned long long)c); }
+            logf("   MSGDIFF real -> ours: %d qwords differ:%s", n, b); } }
+    oDeliver1(m);
+    if (want && readable(tg, sizeof snapD)) { (injecting ? nDlvOurs : nDlvReal)++; char b[1500]; int o = 0, n = 0;
+        for (int q = 0; q < (int)sizeof snapD; q += 4) { u32 a, c; memcpy(&a, snapD + q, 4); memcpy(&c, tg + q, 4); if (a == c) continue; n++; if (o < 1440) o += snprintf(b + o, sizeof b - (size_t)o, " +%04x:%x>%x", q, a, c); }
+        logf("   DLVDIFF %s: the delivery changed %d dwords on %p (flags 0x%08x):%s", injecting ? "ours" : "real", n, (void *)tg, *(u32 *)(m + 0x90), b); }
+}
+static std::atomic<int> hkReq{0}; static u64 nStrikes = 0, nKills = 0, nRefused = 0; static float secPeak = 0;
+static u64 lastRefuseLog = 0;
+static bool loudRefuse = false;   // 0.18.48: a hotkey's refusal is always logged (session 5: throttled refusals looked like silent key presses)
+static void refuse(const char *why) { nRefused++; const u64 now = GetTickCount64(); if (loudRefuse || now - lastRefuseLog > 2000) { lastRefuseLog = now; logf("STRIKE refused: %s", why); } }
+// 0.18.48 diagnostics for the missing hit reaction (session 5: on a real hit the enemy's +0x1694 / +0x1698 / +0x16A4 are set, on ours
+// not): in flat play the first real blows of Jin and the first injected ones log what HandleHit changed on the enemy (16 KB before /
+// after), the whole 0x210-byte message, and the real blow's caller chain (the attack side, to decompile)
+static u8 snapE[0x4000]; static int nDiffReal = 0, nDiffOurs = 0;
+static void dumpMsg(const char *tag, const u8 *m) { if (!readable(m, 0x210)) return; for (int r = 0; r < 0x210; r += 0x80) { char b[600]; int o = 0; for (int q = r; q < r + 0x80 && q < 0x210 && o < 560; q += 8) o += snprintf(b + o, sizeof b - (size_t)o, " %016llx", (unsigned long long)*(const u64 *)(m + q)); logf("   MSG %s +%03x:%s", tag, r, b); } }
+static void diffLog(const char *tag, const u8 *en) { if (!readable(en, sizeof snapE)) return; char b[1400]; int o = 0, n = 0;
+    for (int q = 0; q < (int)sizeof snapE; q += 4) { u32 a, c; memcpy(&a, snapE + q, 4); memcpy(&c, en + q, 4); if (a == c) continue; n++; if (o < 1340) o += snprintf(b + o, sizeof b - (size_t)o, " +%04x:%x>%x", q, a, c); }
+    logf("   HHDIFF %s: HandleHit changed %d dwords on %p:%s", tag, n, (void *)en, b); }
+static bool diffWant(u8 *ch, u8 *d) { return !injecting && g_playFlat && nDiffReal < 6 && d && readable(d + 0x48, 8) && *(u8 **)(d + 0x48) == fp::heroPtr() && ch != fp::heroPtr() && clsOf(ch) == 14 && GetCurrentThreadId() == t_tick.load(); }
+static void diffReal(u8 *ch, u8 *d, bool before) {
+    if (before) { if (readable(ch, sizeof snapE)) memcpy(snapE, ch, sizeof snapE); dumpMsg("real", d); callers("Jin's own blow (the attack side)"); return; }
+    nDiffReal++; diffLog("real", ch); }
+static int msgState = 1;   // 0.18.48: 1 = the template's +0x28 (3, as on every real message) while HandleHit runs, 0 restored before the release
+// one blow on registry entry i: mult scales the template's health / posture change; kill forces a killing blow
+static bool strike(int i, float mult, bool kill, int kind, const char *src) {
+    if (!strikeOk) { refuse("off (a signature did not match this build)"); return false; }
+    if (nOnTick.load() == 0 || nOffTick.load() > 0) { refuse(nOffTick.load() ? "the game's hits run off the game thread - not safe" : "no game hit seen yet on the game thread"); return false; }
+    { static bool loaded = false; if (!loaded && cbtMode == 2) { loaded = true; if (!recs[0].ok) recLoad(0); if (!recs[1].ok) recLoad(1); } }
+    const bool recAny = cbtMode == 2 && oHitProc && !forceMsg && (recs[0].ok || recs[1].ok);
+    if (kind && !tplOk[kind] && !recAny) { kind = 0; mult *= 1.6f; }   // no heavy template yet: a light blow 1.6x
+    if (!tplOk[kind] && !recAny) { refuse("no hit template yet - land one ordinary blow with the game's own attack first (flat, or VR before drawing)"); return false; }
+    u8 *hero = fp::heroPtr(), *en = i >= 0 && i < NR ? reg[i] : nullptr; if (!hero || !en || !alive(en)) { refuse("the enemy is gone"); return false; }
+    if (!hasHandleHit(en)) { refuse("this character does not use the known HandleHit"); return false; }
+    if (rdF(hero + 0x1974) <= 0.0f) { refuse("Jin is down"); return false; }
+    if (cbtMode == 2 && oHitProc && !forceMsg) {   // 0.18.53 / 0.18.55 the game's whole hit path (composer, attack callbacks, delivery) on a record from the library
+        int rk = kind; float rm = mult; if (rk && !recs[1].ok) { rk = 0; rm *= 1.6f; }
+        alignas(16) static u8 rec[0x120];
+        if (!(*(u8 *)(en + 0xE2) & 4)) { static u64 lastE = 0; if (GetTickCount64() - lastE > 2000) { lastE = GetTickCount64(); logf("STRIKE: enemy %p does not take hits right now (+0xE2 bit 4 clear - HitProc would skip it)", (void *)en); } return false; }
+        const bool poolOk = *(u8 **)(g_base + 0x34C34F8) != nullptr;   // HitProc's own pool pop has no empty check
+        RecT &R = recs[rk];
+        if (R.ok && poolOk && recResolve(R, hero, rec)) {
+            u8 *at50 = *(u8 **)(rec + 0x50), *comp = *(u8 **)(rec + 0x60), *c78 = *(u8 **)(rec + 0x78);
+            if (at50 && readable(at50, 8) && *(u8 **)at50 && readable(*(u8 **)at50, 0xA8) && comp && readable(comp, 8) && clsOf(comp) == 24 && (!c78 || (readable(c78, 8) && readable(*(u8 **)c78, 0xD0)))) {
+                *(int *)(rec + 8) = 0x40000000;   // never freed by anyone
+                *(u64 **)(rec + 0xF0) = R.tags; *(int *)(rec + 0xF8) = R.nTags;   // our own copy of the tag list
+                *(u8 **)(rec + 0x48) = en; *(u8 **)(rec + 0x58) = hero; *(int *)(rec + 0x38) = 2;
+                float *bd = (float *)(rec + 0xE0); if (kill) *bd = 1.0e7f; else if (std::isfinite(rm) && rm > 0) *bd *= rm;   // the base damage: swing speed, two hands, heavy fallback
+                float ep[3]; if (rdF3(en, ep) > 0) { float *v = (float *)(rec + 0x90); const float dx = v[0] - R.tgt[0], dy = v[1] - R.tgt[1], dz = v[2] - R.tgt[2];
+                    if (R.live && dx * dx + dy * dy + dz * dz < 500.0f * 500.0f) { v[0] = ep[0] + dx; v[1] = ep[1] + dy; v[2] = ep[2] + dz; } else { v[0] = ep[0]; v[1] = ep[1]; v[2] = ep[2] + 120.0f; } }
+                struct Lst { u64 *p; int n, pad; int f, cap; u64 z; } lst{}; const float h0 = rdF(en + 0x1974);
+                evUntil = GetTickCount64() + 400; evTag = 2; injecting = true; oHitProc(rec, (u8 *)&lst); injecting = false;
+                const float h1 = rdF(en + 0x1974); nStrikes++; if (h1 <= 0.0f && h0 > 0.0f) nKills++;
+                logf("STRIKE %s (game hit path, %s record 0x%llx%s, x%.2f) -> %p (class %d): health %.1f -> %.1f%s", src, rk ? "heavy" : "light", (unsigned long long)*(u64 *)(rec + 0x80), (R.fl & 0x10000000u) ? " with the hit reaction" : " NO hit-reaction bit",
+                     kill ? 0.0f : rm, (void *)en, clsOf(en), h0, h1, h1 == h0 ? " (no damage - guarded, parried or refused by the game)" : "");
+                return true; } }
+        if (!poolOk) logf("STRIKE: the game's hit-message pool is empty - this blow takes the message path");
+        else if (!R.ok) { static u64 lastN = 0; if (GetTickCount64() - lastN > 5000) { lastN = GetTickCount64(); logf("STRIKE: no hit record yet (no saved one either) - this blow takes the message path (damage only, no reaction); land one ordinary blow with the game's attack once"); } }
+        else { logf("STRIKE: the %s record's pointers could not be found for this Jin - message path; land one ordinary blow to refresh it", rk ? "heavy" : "light"); R.ok = R.live ? false : R.ok; } }
+    if (!tplOk[kind]) { if (kind && tplOk[0]) { kind = 0; mult *= 1.6f; } else { refuse("no hit template for the message path yet - land one ordinary blow with the game's attack"); return false; } }
+    const Tpl &T = tpl[kind]; u8 *m = pPool(); if (!m) { refuse("the game's hit-message pool is empty"); return false; }
+    pCtor(m, en); *(int *)(m + 8) += 1;   // our reference (released below - the game's own destructor returns it to the pool)
+    *(u64 *)(m + 0x38) = T.h38; *(u32 *)(m + 0x40) = T.m40; pSetH((u8 **)(m + 0x48), hero); { u8 *w = wk50[kind] ? wk50[kind] : wkAny50; if (w) pSetH((u8 **)(m + 0x50), w); }
+    struct Arr { const u64 *p; int n, pad; }; const Arr a58{T.t58, (int)T.n58, 0}, a78{T.t78, (int)T.n78, 0}; pTags(m + 0x58, &a58); pTags(m + 0x78, &a78);
+    memcpy(m + 0x90, T.r90, 0x20); memcpy(m + 0x170, T.r170, 0x40); *(u32 *)(m + 0x90) &= ~0x10000000u;   // 0.18.57 never the hit-reaction bit here (session 13 crash)
+    // 0.18.50 (session 7: our message had +0x168 = 0 and flag 0x800000 cleared; every real blow of Jin's carries +0x168 = Jin and +0x1A0 =
+    // its combo step 1 / 2): the attacker handle is always Jin, the combo step at least 1
+    u32 fl = *(u32 *)(m + 0x90); if (fl & 0x800000u) pSetH((u8 **)(m + 0x168), hero); else if (T.flags & 0x800000u) { fl |= 0x800000u; pSetH((u8 **)(m + 0x168), hero); }
+    if ((fl & 0x02000000u) && *(u32 *)(m + 0x1A0) == 0) *(u32 *)(m + 0x1A0) = 1;
+    float ep[3], hp3[3]; const bool epOk = rdF3(en, ep) > 0, hpOk = rdF3(hero, hp3) > 0;
+    for (int g = 0; g < 3 && (fl & 0x01000000u); g++) { float *v = (float *)(m + 0x170 + g * 16);   // positions in the payload follow the target / Jin
+        const float dt2 = (v[0] - T.tpos[0]) * (v[0] - T.tpos[0]) + (v[1] - T.tpos[1]) * (v[1] - T.tpos[1]) + (v[2] - T.tpos[2]) * (v[2] - T.tpos[2]);
+        const float dh2 = (v[0] - T.hpos[0]) * (v[0] - T.hpos[0]) + (v[1] - T.hpos[1]) * (v[1] - T.hpos[1]) + (v[2] - T.hpos[2]) * (v[2] - T.hpos[2]);
+        if (epOk && dt2 < 500.0f * 500.0f && dt2 <= dh2) for (int c = 0; c < 3; c++) v[c] = ep[c] + (v[c] - T.tpos[c]); else if (hpOk && dh2 < 500.0f * 500.0f) for (int c = 0; c < 3; c++) v[c] = hp3[c] + (v[c] - T.hpos[c]); }
+    const float h0 = rdF(en + 0x1974); float dmg, post; memcpy(&dmg, m + 0x94, 4); memcpy(&post, m + 0x98, 4); dmg *= mult; post *= mult;
+    const bool lethal = kill || h0 + dmg <= 0.0f; if (lethal) { fl &= ~0x40u; dmg = -FLT_MAX; }
+    *(u32 *)(m + 0x90) = fl; memcpy(m + 0x94, &dmg, 4); memcpy(m + 0x98, &post, 4);
+    const bool viaGame = pDeliver && deliverOn;
+    const u32 hid = *(u32 *)(m + 0x2C), st0 = *(u32 *)(m + 0x28); if (msgState && !viaGame) *(u32 *)(m + 0x28) = T.v28;
+    const bool dd = g_playFlat && nDiffOurs < 6 && readable(en, sizeof snapE); if (dd) { memcpy(snapE, en, sizeof snapE); dumpMsg("ours", m); }
+    evUntil = GetTickCount64() + 400; evTag = 2; injecting = true; if (viaGame) { *(int *)(m + 0x28) = 2; pDeliver(m); } else oHandleHit(en, m); injecting = false;   // 0.18.49: the game's own delivery (reaction, sound, blood)
+    if (dd) { nDiffOurs++; diffLog(viaGame ? "ours (game delivery)" : "ours", en); }
+    if (!viaGame) *(u32 *)(m + 0x28) = st0;
+    const float h1 = rdF(en + 0x1974); const int rc = --*(int *)(m + 8); if (rc == 0) (*(void (**)(u8 *, u64))(*(u8 **)m + 0x10))(m, 1);   // the game's deleting destructor: back to its pool
+    nStrikes++; if (lethal) nKills++;
+    logf("STRIKE %s (%s) -> %p (class %d, %s): health %.1f -> %.1f (x%.2f%s), flags 0x%08x, id %u%s", src, kTplName[kind], (void *)en, clsOf(en), regHostile[i] ? "hostile (in a hit with Jin)" : "hostile (attitude)", h0, h1, mult, lethal ? ", killing blow" : "", fl, hid, viaGame ? " [game delivery]" : (rc ? " (the game kept the message)" : ""));
+    return true;
+}
+static int nearest(float maxCm) { u8 *hero = fp::heroPtr(); float hp3[3]; if (!hero || !rdF3(hero, hp3)) return -1; int best = -1; float bd = maxCm * maxCm;
+    for (int i = 0; i < NR; i++) { if (!reg[i] || !alive(reg[i]) || !hostile(i)) continue; float p[3]; if (!rdF3(reg[i], p)) continue;
+        const float d2 = (p[0] - hp3[0]) * (p[0] - hp3[0]) + (p[1] - hp3[1]) * (p[1] - hp3[1]) + (p[2] - hp3[2]) * (p[2] - hp3[2]); if (d2 < bd) { bd = d2; best = i; } } return best; }
+// the VR blade (game thread, swd::frame): capsules of the enemies in reach, the decision core, hits queued for after the tick
+static melee::Core core; struct Req { int i; float mult; u8 kill, kind; }; static Req q[8]; static int qn = 0;
+static u32 secHits = 0; static u64 lastHeroMs = 0; static float lastHero[3] = {0, 0, 0};
+// returns 1 = a blow landed (strong rumble), 2 = the blade touched an enemy too slowly (a light touch), 0 = nothing
+static int vrBlade(const float *guardW, const float *tipW, bool twoHands, bool heavy, float *hitPos, float *hitSpeed) {
+    if (!hitOn || !strikeOk) return 0; u8 *hero = fp::heroPtr(); float hp3[3]; if (!hero || !rdF3(hero, hp3)) return 0;
+    LARGE_INTEGER fq, qc; QueryPerformanceFrequency(&fq); QueryPerformanceCounter(&qc); const u64 now = (u64)(qc.QuadPart * 1000 / fq.QuadPart);   // our own monotonic clock
+    melee::V3 sv; if (lastHeroMs && now > lastHeroMs && now - lastHeroMs < 100) { const float s = 1000.0f / (float)(now - lastHeroMs); sv = melee::v3((hp3[0] - lastHero[0]) * s, (hp3[1] - lastHero[1]) * s, (hp3[2] - lastHero[2]) * s); }
+    lastHeroMs = now; memcpy(lastHero, hp3, 12);
+    melee::Target tg[16]; int idx[16]; int nt = 0;
+    for (int i = 0; i < NR && nt < 16; i++) { if (!reg[i] || !alive(reg[i]) || !hostile(i)) continue; float p[3]; if (!rdF3(reg[i], p)) continue;
+        const float dx = p[0] - hp3[0], dy = p[1] - hp3[1]; if (dx * dx + dy * dy > (float)reachCm * reachCm) continue;
+        const bool dog = clsOf(reg[i]) == 16; melee::Target &T = tg[nt]; T.id = i * 4096 + (int)(regGen[i] & 4095); T.a = melee::v3(p[0], p[1], p[2] + (dog ? 30.0f : 25.0f)); T.b = melee::v3(p[0], p[1], p[2] + (dog ? 55.0f : 170.0f)); T.r = dog ? 32.0f : 26.0f; idx[nt++] = i; }
+    melee::V3 tip = melee::v3(tipW[0], tipW[1], tipW[2]), gd = melee::v3(guardW[0], guardW[1], guardW[2]); const melee::V3 bd = melee::sub(gd, tip); const float bl = melee::len(bd);
+    if (bl > bladeCutCm && bl > 1.0f) gd = melee::add(tip, melee::mul(bd, bladeCutCm / bl));   // the cutting edge only (never the hilt)
+    const u32 slow0 = core.tooSlow + core.tooShort; melee::Hit h[4]; const int nh = core.step(now, gd, tip, tg, nt, mcfg, h, 4, sv);
+    if (core.peakSpeed > secPeak) secPeak = core.peakSpeed; core.peakSpeed = 0;
+    int res = core.tooSlow + core.tooShort != slow0 ? 2 : 0;
+    for (int k = 0; k < nh; k++) { int j = -1; for (int t = 0; t < nt; t++) if (tg[t].id == h[k].target) j = idx[t]; if (j < 0 || qn >= 8) continue;
+        const float u = fminf(1.0f, fmaxf(0.0f, (h[k].speed - mcfg.minSpeed) / fmaxf(0.1f, fullSpeed - mcfg.minSpeed)));
+        q[qn++] = {j, (dmgMin + (dmgMax - dmgMin) * u) * (twoHands ? twoHandMult : 1.0f), 0, (u8)(heavy ? 1 : 0)}; secHits++;
+        if (res != 1) { rdF3(reg[j], hitPos); *hitSpeed = h[k].speed; } res = 1;
+        logf("STRIKE: the blade met enemy %p at %.1f m/s closing (%.0f cm travel) - %s blow queued", (void *)reg[j], h[k].speed, h[k].travel, heavy ? "HEAVY" : "light"); }
+    return res;
+}
+// v16 the wrist HUD's data (docs/WRIST_HUD.md): Jin's health to the host (it forces the wrist panel on at low health and after a
+// change) and the low-health heartbeat in the left hand (design doc "Rumble feedback low health"; vit::Heartbeat - 60 bpm at the line,
+// 130 near death, lub-dub, only within wrist_hud_heartbeat_mute_s of the last health lost)
+static vit::ChangeTracker vitTrack; static vit::Heartbeat heart; static u64 lastHurt = 0, dubAt = 0; static u32 vitSeqN = 0;
+static int heartOn = 1; static float heartGain = 0.6f, heartLow = 0.30f, heartMuteS = 20.0f, resolveMax = 10.0f;
+static void vitalsTick() {
+    u8 *h = fp::heroPtr(); vit::Status st; st.ok = h && readable(h + 0x1970, 8);
+    if (st.ok) { st.hpMax = rdF(h + 0x1970); st.hp = rdF(h + 0x1974); st.ok = std::isfinite(st.hp) && std::isfinite(st.hpMax) && st.hpMax > 0; }
+    const u64 now = GetTickCount64();
+    // 0.18.54 WRIST_HUD.md W0 DONE. Resolve = hero+0x43A4 (float, pips; its only writer 0x8FB210 also mirrors it to [hero+0xB8]+0x7BC).
+    // The MAXIMUM is the game's own progression value: hero+0x4644 + 3.0 - every game function that clamps, refills or shows resolve as a
+    // fraction uses exactly that (0x8EA6D0 refill, 0x8F7200 res / (max), 0x8E1C80, 0x8E2470, 0x905FE0). So it grows with Jin's upgrades
+    // (owner: "the resolve meter changes throughout player progression"). wrist_resolve_max is only the fallback if that read fails.
+    { const bool rOk = st.ok && readable(h + 0x43A4, 4) && readable(h + 0x4644, 4);
+      const float r = rOk ? rdF(h + 0x43A4) : -1.0f, mx = rOk ? rdF(h + 0x4644) + 3.0f : -1.0f;
+      const bool mOk = std::isfinite(mx) && mx >= 1.0f && mx <= 30.0f; st.resMax = mOk ? mx : (rOk ? resolveMax : 0.0f);
+      st.res = std::isfinite(r) && r >= 0.0f && r <= 30.0f ? fminf(r, st.resMax > 0 ? st.resMax : r) : 0.0f;
+      static u64 lastV = 0; static float lr = -9, lm = -9;
+      if (st.ok && (now - lastV > 10000 || fabsf(r - lr) > 0.001f || fabsf(mx - lm) > 0.001f)) { lastV = now; lr = r; lm = mx;
+          logf("   VITALS: health %.1f / %.1f | resolve %.3f of %.3f (hero+0x43A4 / hero+0x4644 + 3%s)", st.hp, st.hpMax, r, st.resMax, mOk ? "" : " - INVALID, wrist_resolve_max used"); } }
+    if (!S) { vitTrack.step(st); return; }   // flat: logged only (no headset, no wrist HUD)
+    const uint32_t bits = vitTrack.step(st); if (bits & vit::CHit) lastHurt = now;
+    gvWriteBegin(&S->vitSeq); S->vitOk = st.ok ? 1 : 0; S->vitHp = st.hp; S->vitHpMax = st.hpMax; S->vitRes = st.res; S->vitResMax = st.resMax; if (bits) { S->vitChanged = bits; S->vitChangedSeq = ++vitSeqN; } gvWriteEnd(&S->vitSeq);
+    static u64 last = 0; const float dt = last ? fminf(0.1f, (now - last) * 0.001f) : 0.0f; last = now;
+    const bool active = heartOn && g_cfg.xr == 4 && st.ok && vit::heartbeatFelt(now, lastHurt, heartMuteS);
+    if (heart.step(dt, st.ok ? st.hp / st.hpMax : 1.0f, active, heartLow)) { vrin::pulse(0, fminf(1.0f, heartGain), 40); dubAt = now + 150; }
+    if (dubAt && now >= dubAt) { dubAt = 0; vrin::pulse(0, fminf(1.0f, heartGain * 0.7f), 35); }
+}
+// 0.18.49 WRIST_HUD.md W0 - finding resolve (flat play only): the hero's 32 KB and the first 4 KB of every object it points to are
+// snapshotted every 250 ms; when Jin spends resolve (a resolve heal, a revive) or earns it (a kill), what changed since the snapshot is
+// logged at once and 0.6 s later (RSCAN lines: [hero+pointer offset]+offset: old -> new). The field that falls at every heal / revive
+// and rises at kills is resolve.
+namespace rscan {
+static const int NOBJ = 640, OBJB = 0x1000; static u8 *buf = nullptr; static u8 *objp[NOBJ]; static uint16_t objOff[NOBJ]; static int nObj = 0; static u8 heroSnap[0x8000]; static u8 *heroS = nullptr;
+static u64 lastSnap = 0, frozenUntil = 0, pendAt = 0; static char pendWhat[64]; static int nEvents = 0;
+// 0.18.50 (session 7: a kill changed 5000+ fields - animation, positions, timers): fields that change between quiet snapshots are BUSY and
+// left out (a decaying counter per field); resolve only moves at the events
+static u8 *busy = nullptr; static u8 busyH[0x8000 / 4]; static u8 *prevP[NOBJ]; static int prevN = 0;
+static inline void bump(u8 &b, bool ch) { b = ch ? (u8)(b > 191 ? 255 : b + 64) : (u8)(b - (b >> 3)); }
+static void snap(u8 *h) {
+    if (!buf) buf = (u8 *)VirtualAlloc(nullptr, (size_t)NOBJ * OBJB, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE); if (!busy) busy = (u8 *)VirtualAlloc(nullptr, (size_t)NOBJ * (OBJB / 4), MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE); if (!buf || !busy) return;
+    if (!readable(h, sizeof heroSnap)) return;
+    if (heroS == h) for (int q = 0; q < (int)sizeof heroSnap; q += 4) bump(busyH[q / 4], memcmp(heroSnap + q, h + q, 4) != 0); else memset(busyH, 0, sizeof busyH);
+    memcpy(heroSnap, h, sizeof heroSnap); heroS = h; for (int i = 0; i < nObj; i++) prevP[i] = objp[i]; prevN = nObj; nObj = 0;
+    for (int off = 0; off < (int)sizeof heroSnap && nObj < NOBJ; off += 8) { u8 *p = *(u8 **)(heroSnap + off);
+        if (!p || ((u64)p & 15) || (p >= g_base && p < g_base + 0x4000000) || (u64)p < 0x10000000ull || (u64)p > 0x7FFFFFFFFFFFull) continue;
+        bool dup = false; for (int i = 0; i < nObj && !dup; i++) dup = objp[i] == p; if (dup || !readable(p, OBJB)) continue;
+        u8 *bz = busy + (size_t)nObj * (OBJB / 4), *old = buf + (size_t)nObj * OBJB;
+        if (nObj < prevN && prevP[nObj] == p) { for (int q = 0; q < OBJB; q += 4) bump(bz[q / 4], memcmp(old + q, p + q, 4) != 0); } else memset(bz, 0, OBJB / 4);
+        objp[nObj] = p; objOff[nObj] = (uint16_t)off; memcpy(old, p, OBJB); nObj++; } }
+static bool plain(u32 v) { float f; memcpy(&f, &v, 4); const float a = fabsf(f); return v < 0x10000u || (std::isfinite(f) && a >= 0.01f && a <= 100000.0f); }
+// 0.18.52 (session 8: 1400-7000 fields changed per event, the log lines cut off): statistics instead of lists. For every field: how often it
+// rose / fell at resolve GAIN events (kills, parries, staggers, Ctrl+Shift+R) and SPEND events (resolve heals, revives); the fields that
+// rise at gains and fall at spends - and do little else - are reported as resolve candidates (RESOLVE? lines) after every event
+static const int NH = 0x8000 / 4, NF = NH + NOBJ * (OBJB / 4);
+struct St { uint16_t gu, gd, su, sd; }; static St *st = nullptr; static u8 *stSlot[NOBJ]; static int nGain = 0, nSpend = 0;
+static inline float val(u32 v) { if (v < 0x10000u) return (float)v; float f; memcpy(&f, &v, 4); return f; }
+static void diff(const char *what, int kind, bool count) {   // kind: 1 gain, 2 spend, 0 unknown
+    u8 *h = fp::heroPtr(); if (!h || h != heroS || !buf) return;
+    if (!st) { st = (St *)VirtualAlloc(nullptr, sizeof(St) * NF, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE); if (!st) return; }
+    int n = 0;
+    auto one = [&](int idx, u32 a, u32 c) { if (a == c || !plain(a) || !plain(c)) return; n++; if (!count || !kind) return; St &x = st[idx]; const bool up = val(c) > val(a);
+        if (kind == 1) { if (up) { if (x.gu < 65535) x.gu++; } else if (x.gd < 65535) x.gd++; } else { if (up) { if (x.su < 65535) x.su++; } else if (x.sd < 65535) x.sd++; } };
+    if (readable(h, sizeof heroSnap)) for (int q = 0; q < (int)sizeof heroSnap; q += 4) { if (q >= 0x1970 && q < 0x1A00) continue; if (busyH[q / 4] >= 40) continue; u32 a, c; memcpy(&a, heroSnap + q, 4); memcpy(&c, h + q, 4); one(q / 4, a, c); }
+    for (int i = 0; i < nObj; i++) { if (*(u8 **)(h + objOff[i]) != objp[i] || !readable(objp[i], OBJB)) continue; if (stSlot[i] != objp[i]) { memset(st + NH + (size_t)i * (OBJB / 4), 0, sizeof(St) * (OBJB / 4)); stSlot[i] = objp[i]; }
+        const u8 *bz = busy + (size_t)i * (OBJB / 4); for (int q = 0; q < OBJB; q += 4) { if (bz[q / 4] >= 40) continue; u32 a, c; memcpy(&a, buf + (size_t)i * OBJB + q, 4); memcpy(&c, objp[i] + q, 4); one(NH + i * (OBJB / 4) + q / 4, a, c); } }
+    if (count && kind == 1) nGain++; if (count && kind == 2) nSpend++;
+    logf("RSCAN %s: %d quiet fields changed (%d objects; gains so far %d, spends %d)", what, n, nObj, nGain, nSpend);
+    if (!count || nGain + nSpend < 2) return;
+    struct C { int idx, sc; }; C top[12]; int nt = 0;
+    for (int idx = 0; idx < NF; idx++) { const St &x = st[idx]; const int good = x.gu + x.sd, bad = x.gd + x.su; if (good < 2 || bad * 2 > good) continue; const int sc = good * 4 - bad * 6;
+        if (nt < 12) top[nt++] = {idx, sc}; else { int m = 0; for (int k = 1; k < 12; k++) if (top[k].sc < top[m].sc) m = k; if (sc > top[m].sc) top[m] = {idx, sc}; } }
+    char b[1400]; int o = 0;
+    for (int k = 0; k < nt && o < 1320; k++) { const int idx = top[k].idx; const St &x = st[idx]; u32 now = 0; char w[24];
+        if (idx < NH) { memcpy(&now, h + idx * 4, 4); snprintf(w, sizeof w, "hero+%x", idx * 4); } else { const int sl = (idx - NH) / (OBJB / 4), q = ((idx - NH) % (OBJB / 4)) * 4; if (sl < nObj && readable(objp[sl] + q, 4)) memcpy(&now, objp[sl] + q, 4); snprintf(w, sizeof w, "[hero+%x]+%x", objOff[sl], q); }
+        o += snprintf(b + o, sizeof b - (size_t)o, " %s=%g (gain +%u/-%u, spend -%u/+%u)", w, val(now), x.gu, x.gd, x.sd, x.su); }
+    logf("RESOLVE? candidates (rise at gains, fall at spends):%s", nt ? b : " none yet"); }
+static int pendKind = 0;
+static void event(const char *what) {   // game thread
+    if (!g_playFlat || !resScan || nEvents >= 80) return; nEvents++; const u64 now = GetTickCount64(); char w[96]; snprintf(w, sizeof w, "%s (at once, snapshot %llu ms old)", what, (unsigned long long)(now - lastSnap));
+    const int kind = (strstr(what, "HEAL") || strstr(what, "REVIVE")) ? 2 : (strstr(what, "KILL") || strstr(what, "PARRY") || strstr(what, "STAGGER") || strstr(what, "MARK")) ? 1 : 0;
+    diff(w, kind, false);
+    snprintf(pendWhat, sizeof pendWhat, "%s (+0.6 s)", what); pendKind = kind; pendAt = now + 600; frozenUntil = now + 700; }
+static void tick() {
+    if (!g_playFlat) return; u8 *h = fp::heroPtr(); if (!h) return; const u64 now = GetTickCount64();
+    if (pendAt && now >= pendAt) { pendAt = 0; diff(pendWhat, pendKind, true); }
+    if (now >= frozenUntil && now - lastSnap >= 250) { lastSnap = now; snap(h); } }
+} // namespace rscan
+// 0.18.50 (session 7: still no flinch through the game's delivery): who writes an enemy's reaction fields on a real blow - hardware data
+// watchpoints (flat play only). Ctrl+Shift+W arms DR0..DR2 on the nearest hostile enemy's +0x1694 / +0x1698 / +0x16A4 in every game
+// thread; each write is logged with the writing instruction and its call chain (DBW lines); disarmed after 30 writes, 90 s or Ctrl+Shift+W.
+namespace dbw {
+struct Rec { u64 rip; u64 dr6; u32 v[3]; void *st[16]; uint16_t n; u32 tid; u64 ms; };
+static Rec ring[64]; static std::atomic<u32> wi{0}; static u32 ri = 0; static std::atomic<u8 *> obj{nullptr}; static std::atomic<int> req{0}; static PVOID veh = nullptr;
+static bool armed = false; static u64 armedAt = 0;
+static LONG CALLBACK onStep(EXCEPTION_POINTERS *e) {
+    if (e->ExceptionRecord->ExceptionCode != EXCEPTION_SINGLE_STEP) return EXCEPTION_CONTINUE_SEARCH;
+    CONTEXT *c = e->ContextRecord; if (!(c->Dr6 & 7)) return EXCEPTION_CONTINUE_SEARCH;
+    const u32 i = wi.fetch_add(1); if (i - ri < 64) { Rec &r = ring[i & 63]; r.rip = c->Rip; r.dr6 = c->Dr6; u8 *b = obj.load(); if (b) { r.v[0] = *(volatile u32 *)(b + 0x1694); r.v[1] = *(volatile u32 *)(b + 0x1698); r.v[2] = *(volatile u32 *)(b + 0x16A4); }
+        r.n = RtlCaptureStackBackTrace(0, 16, r.st, nullptr); r.tid = GetCurrentThreadId(); r.ms = GetTickCount64(); }
+    c->Dr6 = 0; return EXCEPTION_CONTINUE_EXECUTION; }
+static int setAll(u8 *o) {   // hotkey thread: every other thread of the game gets the watchpoints (or loses them)
+    const DWORD me = GetCurrentThreadId(), pid = GetCurrentProcessId(); HANDLE sn = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0); if (sn == INVALID_HANDLE_VALUE) return 0;
+    THREADENTRY32 te{}; te.dwSize = sizeof te; int n = 0;
+    for (BOOL ok = Thread32First(sn, &te); ok; ok = Thread32Next(sn, &te)) { if (te.th32OwnerProcessID != pid || te.th32ThreadID == me) continue;
+        HANDLE t = OpenThread(THREAD_GET_CONTEXT | THREAD_SET_CONTEXT | THREAD_SUSPEND_RESUME, FALSE, te.th32ThreadID); if (!t) continue;
+        if (SuspendThread(t) != (DWORD)-1) { CONTEXT c{}; c.ContextFlags = CONTEXT_DEBUG_REGISTERS;
+            if (GetThreadContext(t, &c)) { if (o) { c.Dr0 = (u64)(o + 0x1694); c.Dr1 = (u64)(o + 0x1698); c.Dr2 = (u64)(o + 0x16A4); c.Dr7 = (1ull | 4ull | 16ull) | (1ull << 16) | (3ull << 18) | (1ull << 20) | (3ull << 22) | (1ull << 24) | (3ull << 26); }
+                else { c.Dr0 = c.Dr1 = c.Dr2 = 0; c.Dr7 = 0; } c.Dr6 = 0; if (SetThreadContext(t, &c)) n++; }
+            ResumeThread(t); }
+        CloseHandle(t); }
+    CloseHandle(sn); return n; }
+static void poll() {   // hotkey thread, every 50 ms
+    const int r = req.exchange(0);
+    if (r == 1 && obj.load()) { if (!veh) veh = AddVectoredExceptionHandler(1, onStep); const int n = setAll(obj.load()); armed = n > 0; armedAt = GetTickCount64(); logf("DBW: watching enemy %p +0x1694 / +0x1698 / +0x16A4 for writes in %d threads - now hit it with the game's own attack", (void *)obj.load(), n); }
+    const u32 w = wi.load(); while (ri != w) { const Rec &x = ring[ri & 63]; ri++; char b[400]; int o = 0;
+        for (int i = 0; i < x.n && o < 380; i++) { const u8 *a = (const u8 *)x.st[i]; if (a >= g_base && a < g_base + 0x4000000) o += snprintf(b + o, sizeof b - (size_t)o, " 0x%llx", (unsigned long long)(a - g_base)); else o += snprintf(b + o, sizeof b - (size_t)o, " -"); }
+        logf("DBW write #%u (dr6 %llx: %s) by rva 0x%llx, thread %u%s: now +1694 %u +1698 %u +16A4 %u | chain:%s", ri, (unsigned long long)x.dr6, (x.dr6 & 1) ? "+1694" : (x.dr6 & 2) ? "+1698" : "+16A4",
+             (unsigned long long)((const u8 *)x.rip >= g_base ? (const u8 *)x.rip - g_base : 0), x.tid, x.tid == t_tick.load() ? " (game thread)" : "", x.v[0], x.v[1], x.v[2], b); }
+    if (armed && (r == 2 || w >= 30 || GetTickCount64() - armedAt > 90000)) { const int n = setAll(nullptr); armed = false; obj = nullptr; logf("DBW: watchpoints off (%d threads; %u writes caught)", n, w); }
+}
+} // namespace dbw
+// 0.18.54 flat swing test (see swingUntil): armed by Ctrl+Shift+G, fired by the hotkey thread when you press attack
+// 0.18.54 cbt_assist=1 (the OLD method, WITH Jin's attack animation, off by default, kept to compare): every blow presses the game's
+// attack button (light X / heavy Y) for cbt_assist_press_ms, then lands cbt_assist_delay_ms later while that attack plays; Jin's own
+// blows in the window are held back (the katana's blow replaces them).
+static int assistOn = 0, assistDelayMs = 200, assistPressMs = 90; struct Pend { int i = -1; float mult = 1; u8 kill = 0, kind = 0; u64 at = 0; const char *src = ""; }; static Pend pend;
+static void request(int i, float mult, bool kill, int kind, const char *src) {
+    if (!assistOn) { strike(i, mult, kill, kind, src); return; }
+    if (pend.i >= 0) { refuse("cbt_assist: a blow is already waiting for Jin's attack"); return; }
+    const u64 now = GetTickCount64(); vrin::forcePress(kind ? vrin::XB_Y : vrin::XB_X, (u32)assistPressMs);
+    pend.i = i; pend.mult = mult; pend.kill = kill ? 1 : 0; pend.kind = (u8)kind; pend.at = now + (u64)assistDelayMs; pend.src = src;
+    assistUntil = now + (u64)assistDelayMs + 600; swingUntil = now + (u64)assistDelayMs + 600;
+    logf("ASSIST (cbt_assist=1, with the attack animation): the game's %s attack pressed - the katana's blow on %p follows in %d ms", kind ? "heavy" : "light", (void *)reg[i], assistDelayMs); }
+static void assistTick() { if (pend.i < 0 || GetTickCount64() < pend.at) return; const Pend p = pend; pend.i = -1; strike(p.i, p.mult, p.kill != 0, p.kind, p.src); }
+static std::atomic<int> swingArmed{0}; static std::atomic<u64> swingFireAt{0}; static int swingDelayMs = 180;
+static void swingTick() {
+    const u64 at = swingFireAt.load(); if (!at || GetTickCount64() < at) return; swingFireAt = 0;
+    loudRefuse = true; const int i = nearest(600.0f); if (i < 0) refuse("swing test: no hostile enemy within 6 m"); else strike(i, 1.0f, false, 0, "swing test (your attack playing)"); loudRefuse = false; }
+static void tick() {   // game thread, after the game's tick
+    vitalsTick(); if (resScan) rscan::tick(); swingTick(); assistTick();
+    if (!strikeOk) return;
+    const int hk = hkReq.exchange(0);
+    if (hk == 6) rscan::event("MARK (Ctrl+Shift+R)");
+    if (hk == 5) { if (dbw::armed) dbw::req = 2; else { const int i = nearest(600.0f); if (i < 0 || !g_playFlat) logf("DBW: %s", g_playFlat ? "no hostile enemy within 6 m" : "flat play only"); else { dbw::obj = reg[i]; dbw::wi = 0; dbw::ri = 0; dbw::req = 1; } } }
+    if (hk == 3) { int n = 0; for (int i = 0; i < NR; i++) if (reg[i]) { float p[3] = {0, 0, 0}; rdF3(reg[i], p); n++; logf("STRIKE registry %d: %p class %d %s (attitude to Jin %d, Jin's to it %d) health %.1f at %.0f %.0f %.0f", i, (void *)reg[i], clsOf(reg[i]), hostile(i) ? "HOSTILE" : "-", attitude(reg[i], fp::heroPtr()), attitude(fp::heroPtr(), reg[i]), rdF(reg[i] + 0x1974), p[0], p[1], p[2]); }
+        logf("STRIKE registry: %d characters; templates light %s heavy %s; HandleHit on the game thread %llu, off it %llu", n, tplOk[0] ? (tplLive[0] ? "live" : "from ini") : "none", tplOk[1] ? (tplLive[1] ? "live" : "from ini") : "none", (unsigned long long)nOnTick.load(), (unsigned long long)nOffTick.load()); }
+    else if (hk == 1 || hk == 2) { loudRefuse = true; const int i = nearest(600.0f); if (i < 0) refuse("no hostile enemy within 6 m"); else if (qn < 8) q[qn++] = {i, 1.0f, (u8)(hk == 2), 0}; }
+    else if (hk == 7) { if (!g_playFlat) logf("SWING TEST: flat play only"); else { swingArmed = 1; logf("SWING TEST armed: press the game's attack (left mouse / pad X) near an enemy - the katana's blow lands %d ms into your swing, your own blow held back", swingDelayMs); } }
+    else if (hk == 8) { loudRefuse = true; const int i = nearest(600.0f); if (i < 0) refuse("no hostile enemy within 6 m"); else { forceMsg = true; strike(i, 1.0f, false, 0, "hotkey (message path)"); forceMsg = false; } loudRefuse = false; }
+    for (int k = 0; k < qn; k++) request(q[k].i, q[k].mult, q[k].kill != 0, q[k].kind, hk ? "hotkey" : "katana");
+    qn = 0; loudRefuse = false;
+    static u64 sec = 0; const u64 now = GetTickCount64(); if (now - sec >= 1000) { if (secHits || core.evaluated || secSwings || secCharges) logf("   HITS/s: blade contacts %u (too slow %u, too short %u, cooling %u), blows %u (heavy %u), closing speed up to %.1f m/s | swings %u, heavy charges %u (restarted by moving %u), lunges %u | total blows %llu (killing %llu), refused %llu",
+        core.evaluated, core.tooSlow, core.tooShort, core.cooling, secHits, secHeavy, secPeak, secSwings, secCharges, intent.restarts, secLunges, (unsigned long long)nStrikes, (unsigned long long)nKills, (unsigned long long)nRefused);
+        sec = now; secHits = 0; secPeak = 0; secSwings = secCharges = secHeavy = secLunges = 0; intent.restarts = 0; core.evaluated = core.tooSlow = core.tooShort = core.cooling = core.contacts = 0; }
+}
+static void installStrike(bool hooksOk) {
+    static const Sig s3{"hit-message pool", RVA_MSGPOOL, "48 83 EC 28 48 8B 05 ?? ?? ?? ?? 48 85 C0 75 27"}, s4{"hit-message constructor", RVA_MSGCTOR, "48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 20 48 8B FA 48 8B D9"},
+        s5{"tag-list copy", RVA_MSGTAGS, "4C 8B DC 49 89 5B 18 49 89 73 20 41 56 48 83 EC 40 4C 8B 32 48 8B D9"}, s6{"weak-handle set", RVA_SETHANDLE, "48 89 5C 24 08 57 48 83 EC 20 48 8B D9 48 8B FA 48 8B 09 48 3B D1"};
+    static const Sig s8{"hit delivery", RVA_DELIVER, "40 53 48 81 EC 80 02 00 00 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 84 24 70 02 00 00 48 8B D9 66 90 F7 83 90 00 00 00 FF FF"};
+    const bool dl = checkSig(s8); logf("sig %s %s", s8.name, dl ? "PASS (blows delivered the game's way: reaction, sound, blood)" : "FAIL (HandleHit only: damage without a reaction)");
+    static const Sig s7{"attitude query", RVA_ATTITUDE, "40 53 56 57 48 83 EC 40 4C 63 92 00 06 00 00 49 8B F8 4D 63 88 00 06 00 00"};
+    const bool a = checkSig(s3), b = checkSig(s4), c = checkSig(s5), e = checkSig(s6), at = checkSig(s7);
+    logf("sig %s %s (%s)", s7.name, at ? "PASS" : "FAIL", at ? "enemies by the game's own attitude" : "only enemies seen in a hit with Jin");
+    wchar_t ini[MAX_PATH]; swprintf(ini, MAX_PATH, L"%ls\\gotvr.ini", g_dir);
+    auto f = [&](const wchar_t *k, float d) { wchar_t v[32]; GetPrivateProfileStringW(L"gotvr", k, L"", v, 32, ini); return v[0] ? (float)_wtof(v) : d; };
+    auto def = [&](const wchar_t *k, const wchar_t *v) { wchar_t t[8]; if (!GetPrivateProfileStringW(L"gotvr", k, L"", t, 8, ini)) WritePrivateProfileStringW(L"gotvr", k, v, ini); };
+    def(L"sword_hit", L"1"); def(L"sword_hit_min_speed", L"2.2"); def(L"sword_hit_min_travel_cm", L"18"); def(L"sword_hit_contact_cm", L"6"); def(L"sword_hit_cooldown_ms", L"220");
+    def(L"sword_hit_rearm_ms", L"120"); def(L"sword_hit_blade_cm", L"70"); def(L"sword_hit_damage_slow", L"0.75"); def(L"sword_hit_damage_fast", L"1.10"); def(L"sword_hit_fast_speed", L"8");
+    def(L"sword_hit_rumble", L"0.9"); def(L"sword_hit_rumble_ms", L"70"); def(L"sword_hit_any", L"0");
+    // 0.18.48 the design doc's [COMBAT DESIGN] attack parameters (README: the doc's name -> the key)
+    def(L"sword_heavy_charge_ms", L"450"); def(L"sword_heavy_charge_move_cm", L"10"); def(L"sword_swing_rearm_speed", L"0.8");
+    def(L"sword_lunge", L"1"); def(L"sword_lunge_cm", L"35"); def(L"sword_lunge_heavy_cm", L"60"); def(L"sword_lunge_speed_mod", L"0.5"); def(L"sword_lunge_cooldown_ms", L"600"); def(L"sword_lunge_stop_cm", L"70"); def(L"sword_lunge_stick_speed", L"4.5");
+    def(L"sword_swing_rumble", L"0.35"); def(L"sword_swing_rumble_heavy", L"0.7"); def(L"sword_weight", L"0"); def(L"sword_two_hand_damage", L"1.0"); def(L"cbt_msg_state", L"1"); def(L"cbt_deliver", L"1");
+    hitOn = (int)f(L"sword_hit", 1) ? 1 : 0; mcfg.minSpeed = f(L"sword_hit_min_speed", 2.2f); mcfg.minTravelCm = f(L"sword_hit_min_travel_cm", 18.0f); mcfg.contactCm = f(L"sword_hit_contact_cm", 6.0f);
+    mcfg.cooldownMs = (int)f(L"sword_hit_cooldown_ms", 220.0f); mcfg.rearmMs = (int)f(L"sword_hit_rearm_ms", 120.0f); bladeCutCm = f(L"sword_hit_blade_cm", 70.0f);
+    dmgMin = f(L"sword_hit_damage_slow", 0.75f); dmgMax = f(L"sword_hit_damage_fast", 1.10f); fullSpeed = f(L"sword_hit_fast_speed", 8.0f); rumble = f(L"sword_hit_rumble", 0.9f); rumbleMs = (int)f(L"sword_hit_rumble_ms", 70.0f); hitAny = (int)f(L"sword_hit_any", 0) ? 1 : 0;
+    acfg.minSpeed = mcfg.minSpeed; acfg.minTravelCm = mcfg.minTravelCm; acfg.rearmSpeed = f(L"sword_swing_rearm_speed", 0.8f); acfg.fullSpeed = fullSpeed;
+    acfg.chargeMs = (int)f(L"sword_heavy_charge_ms", 450.0f); acfg.chargeMoveCm = f(L"sword_heavy_charge_move_cm", 10.0f);
+    lungeOn = (int)f(L"sword_lunge", 1) ? 1 : 0; acfg.lungeCm = f(L"sword_lunge_cm", 35.0f); acfg.lungeHeavyCm = f(L"sword_lunge_heavy_cm", 60.0f); acfg.lungeMod = f(L"sword_lunge_speed_mod", 0.5f);
+    acfg.lungeCooldownMs = (int)f(L"sword_lunge_cooldown_ms", 600.0f); acfg.standoffCm = f(L"sword_lunge_stop_cm", 70.0f); lungeSpeed = fmaxf(0.5f, f(L"sword_lunge_stick_speed", 4.5f));
+    swingRumble = f(L"sword_swing_rumble", 0.35f); swingRumbleHeavy = f(L"sword_swing_rumble_heavy", 0.7f); acfg.weight = fmaxf(0.0f, fminf(5.0f, f(L"sword_weight", 0.0f))); twoHandMult = f(L"sword_two_hand_damage", 1.0f);
+    msgState = (int)f(L"cbt_msg_state", 1) ? 1 : 0; deliverOn = (int)f(L"cbt_deliver", 1) ? 1 : 0;
+    def(L"cbt_mode", L"2"); cbtMode = (int)f(L"cbt_mode", 2);
+    def(L"cbt_swing_test_ms", L"180"); def(L"cbt_resolve_scan", L"0"); def(L"cbt_assist", L"0"); def(L"cbt_assist_delay_ms", L"200"); def(L"cbt_assist_press_ms", L"90");
+    swingDelayMs = (int)fmaxf(0.0f, fminf(1000.0f, f(L"cbt_swing_test_ms", 180.0f))); resScan = (int)f(L"cbt_resolve_scan", 0) ? 1 : 0;
+    assistOn = (int)f(L"cbt_assist", 0) ? 1 : 0; assistDelayMs = (int)fmaxf(0.0f, fminf(1000.0f, f(L"cbt_assist_delay_ms", 200.0f))); assistPressMs = (int)fmaxf(30.0f, fminf(400.0f, f(L"cbt_assist_press_ms", 90.0f)));
+    logf("combat: cbt_assist %s%s; flat swing test (Ctrl+Shift+G) delay %d ms; resolve scan %s", assistOn ? "ON - the game's attack button is pressed for every blow (attack animation plays)" : "off - the mod never presses an attack button", assistOn ? "" : "", swingDelayMs, resScan ? "on" : "off");
+    def(L"wrist_hud_heartbeat", L"1"); def(L"wrist_hud_heartbeat_gain", L"0.6"); def(L"wrist_hud_heartbeat_mute_s", L"20");
+    def(L"wrist_resolve_max", L"10"); resolveMax = fmaxf(1.0f, fminf(20.0f, f(L"wrist_resolve_max", 10.0f)));
+    heartOn = (int)f(L"wrist_hud_heartbeat", 1) ? 1 : 0; heartGain = f(L"wrist_hud_heartbeat_gain", 0.6f); heartMuteS = f(L"wrist_hud_heartbeat_mute_s", 20.0f); heartLow = f(L"wrist_hud_low_hp", 0.30f);
+    logf("sig %s %s | %s %s | %s %s | %s %s", s3.name, a ? "PASS" : "FAIL", s4.name, b ? "PASS" : "FAIL", s5.name, c ? "PASS" : "FAIL", s6.name, e ? "PASS" : "FAIL");
+    if (!hooksOk || !a || !b || !c || !e) { logf("katana hits: OFF (%s)", hooksOk ? "a signature does not match this build" : "the combat hooks are not in"); return; }
+    pPool = (FnPool)(g_base + RVA_MSGPOOL); pCtor = (FnCtor)(g_base + RVA_MSGCTOR); pTags = (FnTags)(g_base + RVA_MSGTAGS); pSetH = (FnSetH)(g_base + RVA_SETHANDLE); strikeOk = true;
+    if (at) pAtt = (FnAtt)(g_base + RVA_ATTITUDE);
+    if (dl) pDeliver = (FnDeliver)(g_base + RVA_DELIVER);
+    {   static const Sig s9{"hit delivery (inner)", RVA_DELIVER1, "48 89 5C 24 10 57 48 81 EC 30 01 00 00 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 84 24 00 01 00 00 C7 41 28 03 00 00 00"};
+        if (g_playFlat && checkSig(s9)) { const MH_STATUS st = MH_CreateHook(g_base + RVA_DELIVER1, (void *)hDeliver1, (void **)&oDeliver1); logf("combat diagnostics: delivery diff hook -> %s (flat play)", MH_StatusToString(st)); }
+        static const Sig s10{"hit processing", RVA_HITPROC, "48 89 7C 24 18 41 56 48 83 EC 20 48 8B 41 48 4C 8B C2 48 8B F9 48 85 C0 0F 84"}, s11{"script event", RVA_EVENT, "48 89 6C 24 18 48 89 74 24 20 57 41 54 41 55 41 56 41 57 48 83 EC 40 33 FF 48 8B E9 48 8B 49 20"};
+        if (checkSig(s10)) { const MH_STATUS a1 = MH_CreateHook(g_base + RVA_HITPROC, (void *)hHitProc, (void **)&oHitProc); logf("combat: hit processing hook -> %s (the katana's blows through the game's whole hit path, cbt_mode %d)", MH_StatusToString(a1), cbtMode); }
+        if (g_playFlat && checkSig(s11)) { const MH_STATUS a2 = MH_CreateHook(g_base + RVA_EVENT, (void *)hEvent, (void **)&oEvent); logf("combat diagnostics: script events -> %s (flat play)", MH_StatusToString(a2)); } }
+    tplLoad(ini, 0); tplLoad(ini, 1);
+    logf("katana hits: %s (min %.1f m/s closing, %.0f cm travel, contact +%.0f cm, cooldown %d ms, re-arm %d ms, cutting edge %.0f cm, damage x%.2f..x%.2f up to %.1f m/s, rumble %.2f / %d ms, %s; light template %s, heavy %s; Ctrl+Shift+H strikes / Ctrl+Shift+K kills the nearest hostile enemy, Ctrl+Shift+J lists them)",
+         hitOn ? "ON" : "off (sword_hit = 0)", mcfg.minSpeed, mcfg.minTravelCm, mcfg.contactCm, mcfg.cooldownMs, mcfg.rearmMs, bladeCutCm, dmgMin, dmgMax, fullSpeed, rumble, rumbleMs, hitAny ? "ANY character in reach (sword_hit_any = 1)" : "proven-hostile enemies only",
+         tplOk[0] ? "ready (gotvr.ini)" : "not yet - land one ordinary blow with the game's own attack", tplOk[1] ? "ready" : "not yet");
+}
+static void install() {
+    static const Sig s1{"SetHealth (character+0x1974)", RVA_SETHEALTH, "48 89 5C 24 08 57 48 81 EC D0 00 00 00 48 8B D9 0F 29 B4 24 C0 00 00 00"};
+    static const Sig s2{"HandleHit (character, hitInfo)", RVA_HANDLEHIT, "40 55 53 56 57 41 55 41 56 48 8D 6C 24 A8 48 81 EC 58 01 00 00 48 8B 05"};
+    const bool a = checkSig(s1), b = checkSig(s2); logf("sig %s rva=0x%x %s | sig %s rva=0x%x %s", s1.name, s1.rva, a ? "PASS" : "FAIL", s2.name, s2.rva, b ? "PASS" : "FAIL");
+    obs::cbtHits = &nHits; obs::cbtHitsHero = &nHitsHero; obs::cbtHealth = &nHealth; obs::cbtHealthHero = &nHealthHero;
+    if (!a || !b) { logf("combat observer: OFF (a signature does not match this build)"); return; }
+    const MH_STATUS x = MH_CreateHook(g_base + RVA_SETHEALTH, (void *)hSetHealth, (void **)&oSetHealth), y = MH_CreateHook(g_base + RVA_HANDLEHIT, (void *)hHandleHit, (void **)&oHandleHit);
+    logf("combat observer: SetHealth -> %s, HandleHit -> %s (logs every health change and hit, 40 lines/s at most)", MH_StatusToString(x), MH_StatusToString(y));
+    installStrike(x == MH_OK && y == MH_OK);
+}
+} // namespace cbt
 
 // 0.18.25 3D ("8D") AUDIO (owner: "begin on 8D spatial audio for VR"; playbook ch20 "the listener is another tracked camera": steer the
 // game's own audio engine with the same transformed head basis the eyes use, keep its mix; God of War VR D-159 does exactly that for
@@ -2592,7 +3385,7 @@ static int gameDraw = 0; static bool gameDrawn = false; static u64 nPinned[2] = 
 // 0.18.29 hands locked on the sword, the blade joint apart from the sheath, sheathing, the game's attacks held off
 static float gripM[2][16]; static std::atomic<int> resetReq{0}; static int blade = -1; static std::atomic<int> probeMode{0};   // probeMode 0 = the sheath / katana joint (kCand), 1 = the blade (fp::bladeCand)
 static fing::Aff lockL[2], drawLock; static bool lockOn[2] = {false, false}, drawLockOk = false; static float lw[2] = {0, 0}, bladeAxF[3] = {0, 0, 1};
-static float guardCfg = -1.0f, rightHandCm = 9.0f, leftHandCm = 4.5f; static float pubML[3] = {0, 0, 0}, pubAL[3] = {0, 0, 1}; static bool pubMLok = false; static std::atomic<int> adjReq[2]; /* 0.18.38 */
+static float twoSteerK = 0.5f, mouthBelowGuard = 4.5f, bladeOutCm = 45.0f, mouthShift = 0.0f; static float secTipBest = 1e9f, secTipA = 0, secTipP = 0, secTipD = 0; static float guardCfg = -1.0f, rightHandCm = 9.0f, leftHandCm = 4.5f; static float pubML[3] = {0, 0, 0}, pubAL[3] = {0, 0, 1}; static bool pubMLok = false; static std::atomic<int> adjReq[2]; /* 0.18.38 */
 static float intoGripCm = 0.0f, thumbGapCm = 0.3f, sheathRCm = 1.6f; static int wristFwd = 1; static float wwt = 0.0f; static int fromJoints = 1, underHoldOn = 1; static float bladePitch = 0.0f; static bool twoHand = false, twoHover = false; static float twoGap = 10.0f, twoT = 0.0f; static u64 nTwoFrames = 0; /* 0.18.32 */ static float tw2 = 0.0f, fwdT = 0.0f, dsw = 0.0f, bladeSign = 0.0f; static int bladeSignCfg = 0; static fing::Aff cap[2]; static bool capOk[2] = {false, false}; static float drawRot[9] = {1, 0, 0, 0, 1, 0, 0, 0, 1}; static bool drawRotOk = false; static int edgeFlip = 0; static int gameBladeJ = -1, useGameBlade = 0; static u64 gbReqAt = 0; static int gbReqKind = 0, gbResends = 0; static u64 nGbDraw = 0, nGbSheathe = 0; static std::atomic<int> capReq[2]; static u64 capAt[2] = {0, 0}; /* 0.18.33 */ static int blockAttacks = 1; static float secTipMs = 0.0f, lastTip[3] = {0, 0, 0}; static bool lastTipOk = false; static u64 nBlockedFrames = 0;
 // per-second log accumulators
 static u32 secBtn[2] = {0, 0}; static float secTrig[2] = {0, 0}, secGrip[2] = {0, 0}, secStick[2][2]; static u64 secHeldS = 0, secHeldH = 0, secFrames = 0; static float secMaxS = 0;
@@ -2602,20 +3395,24 @@ static void load(const wchar_t *ini) {
     on = GetPrivateProfileIntW(L"gotvr", L"sword_draw", 1, ini) ? 1 : 0; joint = GetPrivateProfileIntW(L"gotvr", L"sword_joint", 646, ini);
     cfg.bladeCm = f(L"sword_blade_cm", 72.0f); cfg.hiltCm = f(L"sword_hilt_cm", 25.0f); cfg.grabCm = f(L"sword_grab_cm", 12.0f); cfg.hiltGrabCm = f(L"sword_hilt_grab_cm", 10.0f); cfg.needSheathHand = GetPrivateProfileIntW(L"gotvr", L"sword_need_sheath_hand", 0, ini) ? 1 : 0; gameDraw = 0; blade = GetPrivateProfileIntW(L"gotvr", L"sword_blade_joint", -1, ini); keepJ = GetPrivateProfileIntW(L"gotvr", L"sword_keep_joint", -1, ini);
     cfg.drawCm = f(L"sword_draw_pull_cm", 40.0f); intoGripCm = f(L"sword_hand_into_grip_cm", 0.0f); thumbGapCm = f(L"sword_thumb_gap_cm", 0.3f); wristFwd = GetPrivateProfileIntW(L"gotvr", L"sword_blade_forward", 1, ini) ? 1 : 0; fromJoints = GetPrivateProfileIntW(L"gotvr", L"sword_rail_from_joints", 1, ini) ? 1 : 0; bladePitch = f(L"sword_blade_pitch_deg", 0.0f); bladeSignCfg = GetPrivateProfileIntW(L"gotvr", L"sword_blade_sign", 0, ini); bladeSignCfg = bladeSignCfg > 0 ? 1 : bladeSignCfg < 0 ? -1 : 0; underHoldOn = GetPrivateProfileIntW(L"gotvr", L"sword_hold_body_still", 1, ini) ? 1 : 0; sheathRCm = f(L"sword_sheath_radius_cm", 1.6f); cfg.freeExt = f(L"sword_free_arm_reach", 0.93f); cfg.freeMinFrac = f(L"sword_free_min_frac", 0.6f); blockAttacks = GetPrivateProfileIntW(L"gotvr", L"sword_block_game_attacks", 1, ini) ? 1 : 0;
-    cfg.sheathTipCm = f(L"sword_sheathe_tip_cm", 7.0f); cfg.sheathDeg = f(L"sword_sheathe_deg", 30.0f);
+    cfg.sheathTipCm = f(L"sword_sheathe_tip_cm", 12.0f); cfg.sheathDeg = f(L"sword_sheathe_deg", 55.0f); cfg.sheathOutCm = 12.0f;   /* 0.18.42 (owner: "increase the radius"; 0.18.41 log: tries at the mouth were 37-46 deg off the rail, caught only under 35) */
     calOk = GetPrivateProfileIntW(L"gotvr", L"sword_calibrated", 0, ini);
     for (int h = 0; h < 2; h++) { capOk[h] = GetPrivateProfileIntW(L"gotvr", h ? L"sword_cap_r_ok" : L"sword_cap_l_ok", 0, ini) != 0;
         if (capOk[h]) { wchar_t k2[40]; for (int q = 0; q < 12; q++) { swprintf(k2, 40, L"sword_cap_%ls_%d", h ? L"r" : L"l", q); const float v = f(k2, q % 4 == 0 && q < 9 ? 1.0f : 0.0f); if (q < 9) cap[h].R[q] = v; else cap[h].t[q - 9] = v; } } }
     drawRotOk = GetPrivateProfileIntW(L"gotvr", L"sword_drawrot_ok", 0, ini) != 0; if (drawRotOk) { wchar_t k2[40]; for (int q = 0; q < 9; q++) { swprintf(k2, 40, L"sword_drawrot_%d", q); drawRot[q] = f(k2, q % 4 == 0 ? 1.0f : 0.0f); } }
     edgeFlip = GetPrivateProfileIntW(L"gotvr", L"sword_edge_flip", 0, ini) ? 1 : 0;
-    gameBladeJ = (int)f(L"sword_drawn_blade_joint", -1.0f); useGameBlade = 0;
+    gameBladeJ = (int)f(L"sword_drawn_blade_joint", -1.0f); useGameBlade = GetPrivateProfileIntW(L"gotvr", L"sword_use_game_blade", 1, ini) ? 1 : 0;   /* 0.18.39 back on: the sword alone, the animation masked */
+    { const float hc = f(L"sword_game_home_cm", -1.0f); if (hc >= 0.0f) { wchar_t k2[40]; fing::Aff R; for (int q = 0; q < 12; q++) { swprintf(k2, 40, L"sword_game_home_%d", q); const float v = f(k2, q % 4 == 0 && q < 9 ? 1.0f : 0.0f); if (q < 9) R.R[q] = v; else R.t[q - 9] = v; } fp::homeX = R; fp::homeOk = 1; fp::homeBestCm = hc; } }
+    twoSteerK = fminf(1.0f, fmaxf(0.0f, f(L"sword_two_hand_steer", 0.5f)));
+    mouthBelowGuard = f(L"sword_mouth_below_guard_cm", 4.5f); bladeOutCm = f(L"sword_blade_out_cm", 45.0f); mouthShift = f(L"sword_sheathe_shift_cm", 0.0f); { const float am = f(L"sword_game_autosheathe_ms", 0.0f); if (am > 3000.0f && am < 120000.0f) fp::autoAfterMs = (u64)am; } cfg.releaseHome = GetPrivateProfileIntW(L"gotvr", L"sword_release_home", 0, ini) ? 1 : 0; cfg.autoHome = GetPrivateProfileIntW(L"gotvr", L"sword_auto_home", 0, ini) ? 1 : 0;   /* 0.18.40 */
     {   // 0.18.38: the hands' places on the katana (owner: "the ini settings for grip placement don't seem to do anything"), and the
         // 0.18.37 game-sword keys removed (the game is never asked to draw / sheathe again)
         wchar_t b[32]; GetPrivateProfileStringW(L"gotvr", L"sword_guard_cm", L"auto", b, 32, ini); guardCfg = (b[0] && _wcsicmp(b, L"auto") != 0) ? (float)_wtof(b) : -1.0f;
         rightHandCm = f(L"sword_right_hand_cm", 9.0f); leftHandCm = f(L"sword_left_hand_cm", 4.5f);
         auto def2 = [&](const wchar_t *k, const wchar_t *v) { wchar_t c[8]; if (!GetPrivateProfileStringW(L"gotvr", k, L"", c, 8, ini)) WritePrivateProfileStringW(L"gotvr", k, v, ini); };
         def2(L"sword_guard_cm", L"auto"); def2(L"sword_right_hand_cm", L"9"); def2(L"sword_left_hand_cm", L"4.5");
-        const wchar_t *gone[] = {L"sword_grip_lower_cm", L"sword_sheath_hand_cm", L"sword_use_game_blade", L"sword_game_draw", L"sword_game_grip_ok", L"taa_per_eye"};
+        const wchar_t *gone[] = {L"sword_grip_lower_cm", L"sword_sheath_hand_cm", L"sword_game_draw", L"sword_game_grip_ok", L"taa_per_eye"};
+        def2(L"sword_use_game_blade", L"1"); def2(L"sword_two_hand_steer", L"0.5"); def2(L"sword_mouth_below_guard_cm", L"4.5"); def2(L"sword_blade_out_cm", L"45"); def2(L"sword_sheathe_tip_cm", L"12"); def2(L"sword_sheathe_deg", L"55"); def2(L"sword_sheathe_shift_cm", L"0"); def2(L"sword_release_home", L"0"); def2(L"sword_auto_home", L"0");
         for (const wchar_t *k : gone) WritePrivateProfileStringW(L"gotvr", k, NULL, ini);
         for (int q = 0; q < 12; q++) { wchar_t k2[40]; swprintf(k2, 40, L"sword_game_grip_%d", q); WritePrivateProfileStringW(L"gotvr", k2, NULL, ini); } }
     if (false) { wchar_t k2[40]; fing::Aff R; for (int q = 0; q < 12; q++) { swprintf(k2, 40, L"sword_game_grip_%d", q); const float v = f(k2, q % 4 == 0 && q < 9 ? 1.0f : 0.0f); if (q < 9) R.R[q] = v; else R.t[q - 9] = v; } fp::relHand = R; fp::relHandOk = 1; }
@@ -2753,15 +3550,48 @@ static void frame(fp::ArmPub &ap) {   // game thread, pair phase 0, first person
                 memcpy(g1, K1.t, 12); Kd = K1;
                 if (tw2 > 0.0f) { float L[3] = {grip[0][0] - grip[1][0], grip[0][1] - grip[1][1], grip[0][2] - grip[1][2]}; const float sep = sqrtf(L[0] * L[0] + L[1] * L[1] + L[2] * L[2]) / u;
                     if (fbik::norm3(L)) { const float fade = fminf(1.0f, fmaxf(0.0f, (sep - 4.0f) / 2.0f)) * (0.5f - 0.5f * cosf(tw2 * 3.14159265f)); float tg[3]; fp::twoSteer(a1, L, fade, tg);
-                        float H1[3]; for (int c = 0; c < 3; c++) H1[c] = K1.t[c] + a1[c] * sys.hiltT * u; Kd = turnAbout(K1, fbik::arc(a1, tg), H1); fp::nTwoSteer++; } }
+                        float H1[3]; for (int c = 0; c < 3; c++) H1[c] = K1.t[c] + a1[c] * sys.hiltT * u; Kd = turnAbout(K1, fbik::scaled(fbik::arc(a1, tg), twoSteerK), H1);   /* 0.18.39 (owner: "when dual handing the sword angle changes a bit too much - make it half"): sword_two_hand_steer 0.5 */ fp::nTwoSteer++; } }
+                if (cbt::acfg.weight > 0.0f) {   // 0.18.48 katana weight (design doc): the blade's direction lags the hand (attack.h Weight), turned about the held point
+                    float dw0[3]; for (int c = 0; c < 3; c++) dw0[c] = Kd.R[c * 3] * bladeAxF[0] + Kd.R[c * 3 + 1] * bladeAxF[1] + Kd.R[c * 3 + 2] * bladeAxF[2];
+                    if (fbik::norm3(dw0)) { const atk::V3 lg = cbt::weightLag.step(atk::v3(dw0[0], dw0[1], dw0[2]), dt, tw2 > 0.5f, cbt::acfg); const float lgv[3] = {lg.x, lg.y, lg.z};
+                        float Hw[3]; for (int c = 0; c < 3; c++) Hw[c] = Kd.t[c] + dw0[c] * sys.hiltT * u; Kd = turnAbout(Kd, fbik::arc(dw0, lgv), Hw); } }
                 for (int c = 0; c < 3; c++) dirW[c] = Kd.R[c * 3] * bladeAxF[0] + Kd.R[c * 3 + 1] * bladeAxF[1] + Kd.R[c * 3 + 2] * bladeAxF[2];
-                if (fbik::norm3(dirW)) { memcpy(guardW, Kd.t, 12); for (int c = 0; c < 3; c++) tipW[c] = guardW[c] - dirW[c] * cfg.bladeCm * u; bOk = true; }
+                if (fbik::norm3(dirW)) { memcpy(guardW, Kd.t, 12); for (int c = 0; c < 3; c++) tipW[c] = guardW[c] - dirW[c] * cfg.tipLenCm * u; bOk = true; }   // 0.18.41 the REAL tip (cfg.tipLenCm)
             }
         }
     }
     if (bOk) {   // swing groundwork: the tip's speed (m/s), the highest each second in SWORD/s
         if (lastTipOk && dt > 0.0f) { const float d[3] = {tipW[0] - lastTip[0], tipW[1] - lastTip[1], tipW[2] - lastTip[2]}; secTipMs = fmaxf(secTipMs, sqrtf(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]) / g_cfg.unitsPerM / dt); }
-        memcpy(lastTip, tipW, 12); lastTipOk = true; } else lastTipOk = false;
+        memcpy(lastTip, tipW, 12); lastTipOk = true;
+        // 0.18.47 combat stage 1: the blade against the enemies in reach (closing speed at the contact, swept tip, re-arm, cooldown);
+        // a blow is queued for after the tick and felt at once (sword_hit_rumble), a touch too slow to cut is a light tap
+        // 0.18.48 the attack around it (attack.h, the design doc's parameters), body-relative so walking is never a swing: a recognised
+        // swing ticks the hand (sword_swing_rumble); two hands + the right trigger held still for sword_heavy_charge_ms charges a HEAVY
+        // blow (sword_heavy_charge_move_cm of hand movement allowed), felt as a rising hum and a thump when charged; a blow lunges
+        // Jin toward the enemy (sword_lunge_*)
+        const bool two = tw2 > 0.5f; float hb[3]; const bool hbOk = cbt::rdF3(fp::heroPtr(), hb) > 0; const float u2 = 100.0f / g_cfg.unitsPerM;
+        LARGE_INTEGER fqA, qcA; QueryPerformanceFrequency(&fqA); QueryPerformanceCounter(&qcA); const u64 nowA = (u64)(qcA.QuadPart * 1000 / fqA.QuadPart);
+        if (hbOk) {
+            const atk::V3 tipR = atk::v3((tipW[0] - hb[0]) * u2, (tipW[1] - hb[1]) * u2, (tipW[2] - hb[2]) * u2);
+            atk::V3 hands[2]; for (int h = 0; h < 2; h++) hands[h] = atk::v3((grip[h][0] - hb[0]) * u2, (grip[h][1] - hb[1]) * u2, (grip[h][2] - hb[2]) * u2);
+            const uint32_t ev = cbt::intent.step(nowA, tipR, hands, two, trigger[1], cbt::acfg); static u64 lastHum = 0;
+            if (ev & atk::E_CHARGE_START) vrin::pulse(1, 0.3f, 25);
+            if (ev & atk::E_CHARGED) { vrin::pulse(0, cbt::swingRumbleHeavy, 90); vrin::pulse(1, cbt::swingRumbleHeavy, 90); cbt::secCharges++; }
+            if (ev & atk::E_CHARGE_LOST) logf("katana: heavy charge %s", cbt::intent.heavies ? "let go" : "let go before a blow");
+            if (cbt::intent.charge == 1 && nowA - lastHum >= 150) { lastHum = nowA; const float pr = fminf(1.0f, (float)(nowA - cbt::intent.chargeAt) / (float)cbt::acfg.chargeMs); vrin::pulse(0, 0.3f + 0.3f * pr, 25); vrin::pulse(1, 0.3f + 0.3f * pr, 25); }
+            else if (cbt::intent.heavyReady() && nowA - lastHum >= 300) { lastHum = nowA; vrin::pulse(0, 0.3f, 25); vrin::pulse(1, 0.3f, 25); }
+            if (ev & atk::E_SWING) { cbt::secSwings++; if (cbt::intent.heavyReady()) { vrin::pulse(0, cbt::swingRumbleHeavy, 70); vrin::pulse(1, cbt::swingRumbleHeavy, 70); } else vrin::pulse(1, cbt::swingRumble, 30); }
+        }
+        const bool heavy = cbt::intent.heavyReady(); float hp[3] = {0, 0, 0}, hs = 0;
+        const int hr = cbt::vrBlade(guardW, tipW, two, heavy, hp, &hs);
+        if (hr == 1) {
+            const float amp = fminf(1.0f, cbt::rumble * (heavy ? 1.0f : 0.85f)); vrin::pulse(1, amp, (u32)cbt::rumbleMs + (heavy ? 30u : 0u)); if (two) vrin::pulse(0, amp * 0.8f, (u32)cbt::rumbleMs);
+            if (heavy) { cbt::intent.spend(); cbt::secHeavy++; }
+            if (cbt::lungeOn && hbOk) { const float dx = hp[0] - hb[0], dy = hp[1] - hb[1], dist = sqrtf(dx * dx + dy * dy) * u2; const float d = cbt::intent.lunge(nowA, hs, dist, heavy, cbt::acfg);
+                if (d > 0.0f) { const u32 ms = (u32)(d / (cbt::lungeSpeed * 100.0f) * 1000.0f); vrin::lunge(atan2f(dy, dx) * 57.2957795f, ms); cbt::secLunges++; logf("katana: lunge %.0f cm toward the enemy (%u ms, enemy %.0f cm away)", d, ms, dist); } }
+        }
+        else if (hr == 2) vrin::pulse(1, 0.35f, 30);
+    } else { lastTipOk = false; cbt::weightLag.have = false; }
     // 0.18.33 (owner: "assign a hotkey so I can put my hand in the correct general area and you can capture it"): Ctrl+F5 captures your
     // RIGHT controller as it should hold the hilt, Ctrl+F6 your LEFT controller as it should hold the sheath. Press the key, then within
     // 3 s put the controller there (a tick each second on that controller); at 3 s its pose relative to the sheath is saved (gotvr.ini,
@@ -2820,8 +3650,11 @@ static void frame(fp::ArmPub &ap) {   // game thread, pair phase 0, first person
         in.bladeOk = bOk; memcpy(in.tip, tipW, 12); memcpy(in.dir, dirW, 12); in.armExt = fp::armExt[1].load();
         // 0.18.38: the hilt and the sheath grip where they really are (the guard guardNow() out along the rail), the fists at the settings'
         // places (0.18.35's grab radius widened to the captured left grip is not needed any more: the sheath grab is centred on it)
-        cfg.guardCm = guardNow(); cfg.rightCm = rightHandCm; cfg.leftAx = sheathG();
+        cfg.guardCm = guardNow(); cfg.rightCm = rightHandCm; cfg.leftAx = sheathG(); cfg.mouthAx = cfg.guardCm - mouthBelowGuard;   // 0.18.40 the tip is taken at the real mouth
+        cfg.tipLenCm = fmaxf(10.0f, bladeOutCm - cfg.mouthAx);   // 0.18.41
+        cfg.mouthAx = sheathG() + mouthShift;   // 0.18.42 (owner: "put it more where my left hand sits on the sheath"): the catch at the left fist (sword.h: the tracked left hand while it holds the sheath)
         sys.step(in, cfg, o);
+        if (sys.state == sword::S_DRAWN && bOk) { const float sc = sys.tipPerp + fmaxf(0.0f, sys.tipAx - cfg.sheathOutCm) + fmaxf(0.0f, -cfg.sheathInWinCm - sys.tipAx) + 0.3f * fmaxf(0.0f, sys.tipDeg - cfg.sheathDeg); if (sc < secTipBest) { secTipBest = sc; secTipA = sys.tipAx; secTipP = sys.tipPerp; secTipD = sys.tipDeg; } }   // 0.18.41 the closest the tip came to being taken, per second
         if (sys.onHilt || sys.state == sword::S_DRAWN || sys.state == sword::S_SHEATHING) sys.hiltT = sword::Sys::rightT(cfg);   // live (Ctrl+PageUp / PageDown)
         for (int h = 0; h < 2; h++) if (o.pulseHand[h]) vrin::pulse(h, o.pulseAmp[h], (u32)o.pulseMs[h]);
         { static float acc = 0; acc += dt; if (o.rumble > 0.0f && acc >= 0.04f) { acc = 0; vrin::pulse(1, o.rumble, 45); vrin::pulse(0, o.rumble * 0.5f, 45); } }   // the blade rasping in the sheath
@@ -2891,10 +3724,25 @@ static void frame(fp::ArmPub &ap) {   // game thread, pair phase 0, first person
     // the blade is out, the game's light / heavy attack buttons (pad X / Y = Square / Triangle) are held off (sword_block_game_attacks)
     fp::underHold = (railOk && underHoldOn && ((sys.state != sword::S_DRAWN && (sys.onHilt || sys.onSheath)) || (sys.state == sword::S_DRAWN && sys.tipNear))) ? 1 : 0;   // 0.18.38 (owner: "Jin no longer moves underneath the headset"): only while a hand actually GRIPS the sheathed katana (or the tip is at the mouth) - a hand hanging within 25 cm of the hip held the body still most of the time
     { const bool out = on && (sys.onHilt || sys.state != sword::S_SHEATHED); vrin::blockMask = (blockAttacks && out) ? (u32)(vrin::XB_X | vrin::XB_Y | vrin::OX_RT | vrin::OX_LT) : 0u;   /* 0.18.36: the triggers too (your index on the trigger while holding the katana fired R2 / L2 and counted as pad input - the idle hold let go) */ if (out && blockAttacks) nBlockedFrames++; }
-    if (fp::relHandSave.exchange(0)) { wchar_t ini[MAX_PATH]; swprintf(ini, MAX_PATH, L"%ls\\gotvr.ini", g_dir); wchar_t k2[40], b[32]; const fing::Aff R = fp::relHand;
-        for (int q = 0; q < 12; q++) { swprintf(k2, 40, L"sword_game_grip_%d", q); swprintf(b, 32, L"%.5f", q < 9 ? R.R[q] : R.t[q - 9]); WritePrivateProfileStringW(L"gotvr", k2, b, ini); } WritePrivateProfileStringW(L"gotvr", L"sword_game_grip_ok", L"1", ini); }
-    // 0.18.38 (owner: "STOP MAKING JIN'S SHEATHING ANIMATIONS PLAY - I DO NOT WANT HIM TO ANIMATE SHEATHING OR UNSHEATHING. IT IS PLAYER
-    // DRIVEN"): the 0.18.37 requests for the game's own draw / sheathe are gone. The game is never asked to draw or sheathe.
+    if (fp::autoSave.exchange(0)) iniWrite(L"sword_game_autosheathe_ms", (float)fp::autoAfterMs.load());   // 0.18.42 known from the start next time
+    if (fp::homeSave.exchange(0)) { wchar_t ini[MAX_PATH]; swprintf(ini, MAX_PATH, L"%ls\\gotvr.ini", g_dir); wchar_t k2[40], b[32]; const fing::Aff R = fp::homeX;
+        for (int q = 0; q < 12; q++) { swprintf(k2, 40, L"sword_game_home_%d", q); swprintf(b, 32, L"%.5f", q < 9 ? R.R[q] : R.t[q - 9]); WritePrivateProfileStringW(L"gotvr", k2, b, ini); }
+        swprintf(b, 32, L"%.2f", fp::homeBestCm); WritePrivateProfileStringW(L"gotvr", L"sword_game_home_cm", b, ini); }
+    {   // 0.18.39 / 0.18.40 the game's own sword (637) - drawn in the background, NEVER put away by the mod (owner 0.18.40: "I want sheathing
+        // to be player driven, not an animation ... it keeps playing the sheathing animation multiple times"). The game is asked to draw
+        // (touchpad swipe, a TOGGLE) only while your hand holds the hilt / the katana is out and the game's sword is known to be away, at
+        // most once per 2.5 s. Its draw animation is masked on Jin (fp::maskApply). Sheathing is yours alone: the game's sword slides home
+        // along the rail with your hand and stays there, in the scabbard, while the game thinks it is drawn.
+        // (0.18.39's log: the "is it drawn" test read the mod's own last placement once the game had stopped animating its sword, so the
+        // sheathe request was repeated every 2.5 s and each one toggled the game - draw, sheathe, draw ...)
+        static u64 lastChord = 0; static bool weDrew = false; const u64 nw = GetTickCount64(); const bool gd = fp::gameDrawn.load() != 0;
+        if (useGameBlade && gameBladeJ >= 0 && railOk && fp::parkOk) {
+            const bool hold = sys.onHilt || sys.state != sword::S_SHEATHED;
+            if (hold && !gd && nw - lastChord > 2500) { vrin::requestChord(vrin::XB_RIGHT | vrin::OX_RSR); lastChord = nw; weDrew = true; fp::maskUntil = nw + 3000; nGbDraw++; logf("katana: your hand is on the hilt - the game's own sword drawn in the background (its animation hidden)"); }
+            if (!gd && nw - lastChord > 2500) weDrew = false;   // the game put it away itself (a mount, a climb, an interaction)
+        }
+        fp::maskStance = (weDrew && gd) ? 1 : 0;
+    }
     {   // 0.18.28 the game's own draw / sheathe - 0.18.29: OFF by default (sword_game_draw = 0; owner: the physical sword replaces the game's)
         static int lastState = sword::S_SHEATHED;
         if (gameDraw && sys.state != lastState) {
@@ -2920,9 +3768,9 @@ static void frame(fp::ArmPub &ap) {   // game thread, pair phase 0, first person
         for (int h = 0; h < 2; h++) { secBtn[h] |= btns[h]; secTrig[h] = fmaxf(secTrig[h], trigger[h]); secGrip[h] = fmaxf(secGrip[h], squeeze[h]); for (int a = 0; a < 2; a++) if (fabsf(stick[h][a]) > fabsf(secStick[h][a])) secStick[h][a] = stick[h][a]; } }
 }
 static void perSecond() {
-    logf("   SWORD/s: %s | joint %d%s, rail %s | left hand %.0f cm from the sheath mouth, right hand %.0f cm from the hilt | frames held %llu (sheath %llu, hilt %llu), blade out up to %.0f cm | input while held - left: buttons 0x%x trigger %.2f grip %.2f stick %.2f %.2f; right: buttons 0x%x trigger %.2f grip %.2f stick %.2f %.2f | hands locked on the sword %llu / %llu frames, hold fingers %llu / %llu, game drawn %d | blade joint %d, tip speed up to %.1f m/s, tip vs mouth %.0f cm along / %.0f cm off / %.0f deg, game attacks held off %llu frames (%llu presses) | fists snapped onto the sword left %llu right %llu (finger circle %.1f / %.1f cm), left thumb on the guard %llu, katana through the fist %llu, right arm reach %.2f, blade-forward wrist %llu, sheath joint held %d, two hands %llu frames (steered %llu, gap %.0f cm), game draw census %llu | start-up turn kicks %llu | joint 637 %.0f cm from the katana joint | game sword %s (joint %d, its grip %s, in Jin's fist %llu frames, draw / sheathe asked %llu / %llu) | swing filter frames %llu, drawn grip captured %d, katana carried by the fist %llu (fist off its target %.1f cm) | katana moves %llu",
+    logf("   SWORD/s: %s | joint %d%s, rail %s | left hand %.0f cm from the sheath mouth, right hand %.0f cm from the hilt | frames held %llu (sheath %llu, hilt %llu), blade out up to %.0f cm | input while held - left: buttons 0x%x trigger %.2f grip %.2f stick %.2f %.2f; right: buttons 0x%x trigger %.2f grip %.2f stick %.2f %.2f | hands locked on the sword %llu / %llu frames, hold fingers %llu / %llu, game drawn %d | blade joint %d, tip speed up to %.1f m/s, tip vs mouth (closest this second) %.0f cm along / %.0f cm off / %.0f deg (taken at -%.0f..+%.0f along, < %.0f off, < %.0f deg), game attacks held off %llu frames (%llu presses) | fists snapped onto the sword left %llu right %llu (finger circle %.1f / %.1f cm), left thumb on the guard %llu, katana through the fist %llu, right arm reach %.2f, blade-forward wrist %llu, sheath joint held %d, two hands %llu frames (steered %llu, gap %.0f cm), game draw census %llu | start-up turn kicks %llu | joint 637 %.0f cm from the katana joint | game sword %s (joint %d, scabbard place %s, in your hand %llu frames, draw / sheathe asked %llu / %llu, animation masked %llu frames, closest to the scabbard %.1f cm, parked %s, the game's own put-aways %llu (after %.1f s), away %llu frames, not animated %llu) | swing filter frames %llu, drawn grip captured %d, katana carried by the fist %llu (fist off its target %.1f cm) | katana moves %llu",
          on ? sword::kStateName[sys.state] : "off", joint, probeIdx.load() >= 0 ? " (PROBE: the lifted candidate)" : "", railOk ? (calOk ? "calibrated" : "default guess") : "none", sys.dSheath > 1e8f ? -1.0f : sys.dSheath, sys.dHilt > 1e8f ? -1.0f : sys.dHilt,
-         (unsigned long long)secFrames, (unsigned long long)secHeldS, (unsigned long long)secHeldH, secMaxS, secBtn[0], secTrig[0], secGrip[0], secStick[0][0], secStick[0][1], secBtn[1], secTrig[1], secGrip[1], secStick[1][0], secStick[1][1], (unsigned long long)nPinned[0], (unsigned long long)nPinned[1], (unsigned long long)fp::nHoldPosed[0].exchange(0), (unsigned long long)fp::nHoldPosed[1].exchange(0), (int)gameDrawn, blade, secTipMs, sys.tipAx, sys.tipPerp, sys.tipDeg, (unsigned long long)nBlockedFrames, (unsigned long long)vrin::nBlocked.exchange(0), (unsigned long long)fp::nSnapped[0].exchange(0), (unsigned long long)fp::nSnapped[1].exchange(0), fp::fistRadCm[0].load(), fp::fistRadCm[1].load(), (unsigned long long)fp::nThumbAimed.exchange(0), (unsigned long long)fp::nKatanaInFist.exchange(0), fp::armExt[1].load(), (unsigned long long)fp::nWristFwd.exchange(0), keepJ, (unsigned long long)nTwoFrames, (unsigned long long)fp::nTwoSteer.exchange(0), twoGap, (unsigned long long)fp::nCensus.load(), (unsigned long long)vrin::nKicks.load(), fp::d637.load(), fp::gameDrawn.load() ? "DRAWN" : "sheathed", gameBladeJ, fp::relHandOk.load() ? "learned" : "not learned yet", (unsigned long long)fp::nGameBlade.exchange(0), (unsigned long long)nGbDraw, (unsigned long long)nGbSheathe, (unsigned long long)fp::nSwingStab.exchange(0), (int)drawRotOk, (unsigned long long)fp::nKatFistFix.exchange(0), fp::katFistErrCm.load(), (unsigned long long)fp::nSwordMoves.exchange(0)); nPinned[0] = nPinned[1] = 0; nBlockedFrames = 0; nTwoFrames = 0; secTipMs = 0.0f;
+         (unsigned long long)secFrames, (unsigned long long)secHeldS, (unsigned long long)secHeldH, secMaxS, secBtn[0], secTrig[0], secGrip[0], secStick[0][0], secStick[0][1], secBtn[1], secTrig[1], secGrip[1], secStick[1][0], secStick[1][1], (unsigned long long)nPinned[0], (unsigned long long)nPinned[1], (unsigned long long)fp::nHoldPosed[0].exchange(0), (unsigned long long)fp::nHoldPosed[1].exchange(0), (int)gameDrawn, blade, secTipMs, secTipBest < 1e8f ? secTipA : 0.0f, secTipBest < 1e8f ? secTipP : 0.0f, secTipBest < 1e8f ? secTipD : 0.0f, cfg.sheathInWinCm, cfg.sheathOutCm, cfg.sheathTipCm, cfg.sheathDeg, (unsigned long long)nBlockedFrames, (unsigned long long)vrin::nBlocked.exchange(0), (unsigned long long)fp::nSnapped[0].exchange(0), (unsigned long long)fp::nSnapped[1].exchange(0), fp::fistRadCm[0].load(), fp::fistRadCm[1].load(), (unsigned long long)fp::nThumbAimed.exchange(0), (unsigned long long)fp::nKatanaInFist.exchange(0), fp::armExt[1].load(), (unsigned long long)fp::nWristFwd.exchange(0), keepJ, (unsigned long long)nTwoFrames, (unsigned long long)fp::nTwoSteer.exchange(0), twoGap, (unsigned long long)fp::nCensus.load(), (unsigned long long)vrin::nKicks.load(), fp::d637.load(), fp::gameDrawn.load() ? "DRAWN" : "sheathed", gameBladeJ, fp::homeOk.load() ? "learned" : "not learned yet (draw once)", (unsigned long long)fp::nGameBlade.exchange(0), (unsigned long long)nGbDraw, (unsigned long long)nGbSheathe, (unsigned long long)fp::nMasked.exchange(0), [] { const float v = fp::homeDistCm.exchange(1e9f); return v > 1e8f ? -1.0f : v; }(), fp::parkOk ? "found" : "not yet", (unsigned long long)fp::nAutoSheathe.load(), fp::autoAfterMs.load() / 1000.0, (unsigned long long)fp::nGap.exchange(0), (unsigned long long)fp::nNotAnimated.exchange(0), (unsigned long long)fp::nSwingStab.exchange(0), (int)drawRotOk, (unsigned long long)fp::nKatFistFix.exchange(0), fp::katFistErrCm.load(), (unsigned long long)fp::nSwordMoves.exchange(0)); nPinned[0] = nPinned[1] = 0; nBlockedFrames = 0; nTwoFrames = 0; secTipMs = 0.0f; secTipBest = 1e9f;
     secFrames = secHeldS = secHeldH = 0; secMaxS = 0; for (int h = 0; h < 2; h++) { secBtn[h] = 0; secTrig[h] = secGrip[h] = 0; secStick[h][0] = secStick[h][1] = 0; }
 }
 } // namespace swd
@@ -3079,7 +3927,7 @@ static void hSlot43(void *cam) {
                             LARGE_INTEGER qn; QueryPerformanceCounter(&qn);
                             const float dq = lastQ[h].QuadPart ? fminf((float)(qn.QuadPart - lastQ[h].QuadPart) / (float)fq0.QuadPart, 0.1f) : 0.0f; lastQ[h] = qn;
                             const float om = 3.9f / fmaxf(0.02f, g_fp.fingerTween);
-                            fing::spring(gS[h], gV[h], gt, om, dq); fing::spring(tS[h], tV[h], ttc, 3.9f / fmaxf(0.02f, g_fp.indexTween), dq);   // 0.18.31 the index (trigger / its touch) on its own, faster tween fing::spring(thS[h], thV[h], tht, om, dq);
+                            fing::spring(gS[h], gV[h], gt, om, dq); fing::spring(tS[h], tV[h], ttc, 3.9f / fmaxf(0.02f, g_fp.indexTween), dq); /* 0.18.31 the index (trigger / its touch) on its own, faster tween */ fing::spring(thS[h], thV[h], tht, om, dq);   // 0.18.41: the thumb's spring had been swallowed by that comment since 0.18.31 (owner: "the thumb pose is not responding to my thumb on the sticks")
                             (void)dt;
                             ap.grip[h] = gS[h]; ap.trig[h] = tS[h]; ap.thumbC[h] = thS[h]; fp::fingCurlOut[h] = gS[h]; fp::thumbOut[h] = thS[h];
                         }
@@ -4145,7 +4993,9 @@ namespace vrin {
 struct XS { DWORD packet; XINPUT_GAMEPAD g; };
 static bool padImpl(DWORD, u8 *st, bool realOk) {
     XINPUT_GAMEPAD v; const bool flat = g_flatRender.load() || ui::fpBlockReason() != 0;
-    if (!build(v, flat)) return false;   // no VR input ever: the real pad alone
+    const u32 fm = GetTickCount64() < forceUntil.load() ? forceMask.load() : 0u;   // 0.18.54 cbt_assist (off by default)
+    if (!build(v, flat)) { if (!fm) return false; v = XINPUT_GAMEPAD{}; }   // no VR input ever: the real pad alone (unless cbt_assist presses)
+    v.wButtons |= (WORD)fm;
     XS *x = (XS *)st; XINPUT_GAMEPAD g = realOk ? x->g : XINPUT_GAMEPAD{};
     // merge (playbook ch03: one lane per control by saturation): buttons OR, triggers max, each stick from the larger deflection
     g.wButtons |= v.wButtons; if (v.bLeftTrigger > g.bLeftTrigger) g.bLeftTrigger = v.bLeftTrigger; if (v.bRightTrigger > g.bRightTrigger) g.bRightTrigger = v.bRightTrigger;
@@ -4158,7 +5008,7 @@ static bool padImpl(DWORD, u8 *st, bool realOk) {
 }
 static void rumbleImpl(DWORD, const void *v) { rumble((const XINPUT_VIBRATION *)v); }
 static bool capsImpl(DWORD, u8 *c) {   // after the first VR activation the virtual pad stays connected for the process lifetime
-    if (!everActive) return false;
+    if (!everActive && !nForced.load()) return false;   // 0.18.54: cbt_assist connects the pad in flat play too
     if (c) { memset(c, 0, 20); c[0] = 1; c[1] = 1; *(WORD *)(c + 4) = 0xF3FF; c[6] = c[7] = 255; for (int k = 0; k < 4; k++) *(SHORT *)(c + 8 + 2 * k) = (SHORT)0xFFC0; *(WORD *)(c + 16) = 0xFFFF; *(WORD *)(c + 18) = 0xFFFF; }
     return true;
 }
@@ -5458,6 +6308,7 @@ static DWORD WINAPI worker(void *) {
         {RVA_AUDIO_EMITTER, (void *)aud::hEmitter, (void **)&aud::oEmitter, "Audio_EmitterUpdate (3D audio: Jin's own voice / gear centred)"},
     };
     for (auto &h : hooks) { MH_STATUS st = MH_CreateHook(g_base + h.rva, h.det, h.orig); logf("hook %s -> %s", h.name, MH_StatusToString(st)); if (st != MH_OK) { logf("hook failed -> aborting all hooks"); MH_Uninitialize(); return 0; } }
+    cbt::install();   // 0.18.43 combat observer (its own signature check; off on a mismatch, the rest runs)
     // the shared block must exist before any hook can read it
     if (g_cfg.xr && !startHost()) { logf("xr disabled for this run"); if (!S) g_cfg.xr = 0; }
     if (g_cfg.xr == 4 && S) { wchar_t ini[MAX_PATH]; swprintf(ini, MAX_PATH, L"%ls\\gotvr.ini", g_dir); vrin::install(ini); }
@@ -5503,6 +6354,19 @@ static DWORD WINAPI worker(void *) {
     bool prev[11] = {}; u64 lastRep = GetTickCount64(), lastCallers = lastRep;
     for (;;) {
         Sleep(50);
+        if (g_cfg.hotkeys) {   // 0.18.41 numpad action tags for the flat-play observer log (NumLock on)
+            static bool pn[obs::NTAG] = {}; const bool ctl = (GetAsyncKeyState(VK_CONTROL) & 0x8000) != 0;
+            for (int t = 1; t < obs::NTAG; t++) { int vk; if (t <= 9) vk = VK_NUMPAD0 + t; else if (t == 10) vk = VK_NUMPAD0; else if (t <= 19) vk = VK_NUMPAD0 + (t - 10); else if (t == 20) vk = VK_NUMPAD0; else vk = t == 21 ? VK_DIVIDE : t == 22 ? VK_MULTIPLY : VK_SUBTRACT;
+                const bool wantCtl = t >= 11 && t <= 20; const bool dn = (GetAsyncKeyState(vk) & 0x8000) != 0 && (t > 20 || ctl == wantCtl); if (dn && !pn[t]) obs::setTag(t); pn[t] = dn; } }
+        if (g_cfg.hotkeys) {   // 0.18.47 katana-hit tests: Ctrl+Shift+H strikes / Ctrl+Shift+K kills the nearest hostile enemy, Ctrl+Shift+J lists them
+            cbt::dbw::poll();   // 0.18.50 data watchpoints (Ctrl+Shift+W, flat play)
+            {   // 0.18.54 flat swing test: the first attack press after Ctrl+Shift+G (left mouse or pad X)
+                static bool was = true; const bool dn = (GetAsyncKeyState(VK_LBUTTON) & 0x8000) || (g_padHave[0][0] && (*(const WORD *)(g_padLast[0][0] + 4) & 0x4000));
+                if (cbt::swingArmed.load() && dn && !was) { const u64 n0 = GetTickCount64(); cbt::swingArmed = 0; cbt::swingUntil = n0 + 1200; cbt::assistUntil = n0 + (u64)cbt::swingDelayMs + 600; cbt::swingFireAt = n0 + (u64)cbt::swingDelayMs;
+                    logf("SWING TEST: your attack pressed - the katana's blow follows in %d ms", cbt::swingDelayMs); }
+                was = dn; }
+            static bool ph[7] = {}; const int hk[7] = {'H', 'K', 'J', 'W', 'R', 'G', 'M'}; const bool cs = (GetAsyncKeyState(VK_CONTROL) & 0x8000) && (GetAsyncKeyState(VK_SHIFT) & 0x8000);
+            for (int i = 0; i < 7; i++) { const bool dn = cs && (GetAsyncKeyState(hk[i]) & 0x8000); if (dn && !ph[i]) { cbt::hkReq = i == 3 ? 5 : i == 4 ? 6 : i == 5 ? 7 : i == 6 ? 8 : i + 1; logf("HOTKEY Ctrl+Shift+%c: %s", hk[i], i == 6 ? "strike the nearest hostile enemy by the MESSAGE path (comparison)" : i == 5 ? "swing test (the blow during your own attack)" : i == 0 ? "strike the nearest hostile enemy" : i == 1 ? "kill the nearest hostile enemy" : i == 2 ? "list the enemies the katana can hit" : i == 3 ? "watch the nearest enemy's reaction fields (data watchpoints)" : "resolve scan mark (what changed on Jin just now)"); } ph[i] = dn; } }
         if (g_cfg.hotkeys && g_cfg.xr == 4 && !g_playFlat) {   // 0.18.38 the hands' places on the katana, live (saved in gotvr.ini)
             static bool pa[4] = {}; const int ak[4] = {VK_NEXT, VK_PRIOR, VK_END, VK_HOME};
             for (int i = 0; i < 4; i++) { const bool dn = (GetAsyncKeyState(ak[i]) & 0x8000) != 0;
@@ -6458,7 +7322,7 @@ extern "C" __declspec(dllexport) int GoTVR_SelfTest(const wchar_t *exePath) {
             ok &= st; logf("hand stabilisation test (One Euro: still-hand jitter x%.2f, lag at 1 m/s %.1f cm, resets on jump / recenter / non-finite / first pose / bad time step): %s", ratio, lag * 100.0f, st ? "PASS" : "FAIL");
         }
         {   // 0.18.24 flat play observer: a hero flag flipping is logged with old / new values; a field changing every tick is set aside
-            static u8 hb[0x4100]; memset(hb, 0, sizeof hb); *(int *)(hb + 0x200) = 3; float *M = (float *)(hb + 0x150); M[0] = M[5] = M[10] = M[15] = 1.0f;
+            static u8 hb[0x8000]; memset(hb, 0, sizeof hb); *(int *)(hb + 0x200) = 3; float *M = (float *)(hb + 0x150); M[0] = M[5] = M[10] = M[15] = 1.0f;
             const auto shp = fp::heroPtr; fp::heroPtr = []() -> u8 * { return hb; }; obs::on = 1; obs::have = false; obs::nEv = 0; obs::nNoisy = 0; memset(obs::noisy, 0, sizeof obs::noisy);
             obs::tick();                                                     // snapshot
             *(int *)(hb + 0x200) = 7; *(float *)(hb + 0x300) = 1.5f; obs::tick();   // a flag 3 -> 7 (logged); a float (not a flag: ignored)
@@ -6470,7 +7334,7 @@ extern "C" __declspec(dllexport) int GoTVR_SelfTest(const wchar_t *exePath) {
             ok &= ob; logf("flat play observer test (a hero flag change logged with old / new value, floats ignored, a per-tick counter set aside): %s", ob ? "PASS" : "FAIL");
         }
         {   // 0.18.26 katana draw state machine: sheath + hilt grabs with hysteresis, the blade rides the rail, rumbles while moving, frees at the top
-            sword::Sys S2; sword::Cfg c; c.drawCm = c.drawnFrac * c.bladeCm; c.needSheathHand = 1; sword::In in{}; sword::Out o{}; in.unitsPerCm = 1.0f; in.dt = 1.0f / 90.0f; in.valid[0] = in.valid[1] = true; in.axis[0] = 1;
+            sword::Sys S2; sword::Cfg c; c.drawCm = c.drawnFrac * c.bladeCm; c.needSheathHand = 1; c.releaseHome = 1;   /* 0.18.40: the 0.18.26 return on let-go, as an option */ sword::In in{}; sword::Out o{}; in.unitsPerCm = 1.0f; in.dt = 1.0f / 90.0f; in.valid[0] = in.valid[1] = true; in.axis[0] = 1;
             auto at = [&](int h, float x, float y, float g) { in.hand[h][0] = x; in.hand[h][1] = y; in.hand[h][2] = 0; in.grip[h] = g; };
             at(0, 0, 0, 0.0f); at(1, 50, 30, 0.0f); S2.step(in, c, o); bool sw = !S2.onSheath && !S2.onHilt;
             at(0, 2, 0, 0.8f); S2.step(in, c, o); sw &= S2.onSheath && o.pulseHand[0];                                   // left hand takes the sheath (a pulse)
@@ -6492,14 +7356,21 @@ extern "C" __declspec(dllexport) int GoTVR_SelfTest(const wchar_t *exePath) {
                 sword::Cfg g; sword::Sys S6; bool gk = true; at(0, 2, 0, 0.8f); at(1, 12.5f, 2, 0.8f); S6.step(in, g, o);
                 at(1, 32.5f, 2, 0.8f); S6.step(in, g, o); gk &= S6.state == sword::S_DRAWING && fabsf(S6.s - 20.0f * g.gain()) < 0.05f;
                 at(1, 12.5f + 40.5f, 2, 0.8f); S6.step(in, g, o); gk &= S6.state == sword::S_DRAWN;
+                at(1, 53.0f, 2, 0.0f); S6.step(in, g, o); gk &= S6.state == sword::S_DRAWN; at(1, 53.0f, 2, 0.8f);   // 0.18.40: let go - still in the hand
                 in.bladeOk = true; const float cA = cosf(0.7854f), sA = sinf(0.7854f);
                 in.tip[0] = 2; in.tip[1] = 0; in.tip[2] = 0; in.dir[0] = cA; in.dir[1] = sA; in.dir[2] = 0; S6.step(in, g, o); gk &= S6.state == sword::S_DRAWN;   // 45 deg off: not taken
-                in.dir[0] = 1; in.dir[1] = 0; S6.step(in, g, o); gk &= S6.state == sword::S_SHEATHING && fabsf(S6.s - 72.0f) < 0.01f;         // lined up at the mouth: on the rail
-                in.bladeOk = false; at(1, 53.0f - 20.0f, 2, 0.8f); S6.step(in, g, o); gk &= S6.state == sword::S_SHEATHING && fabsf(S6.s - (72.0f - 20.0f * g.gain())) < 0.05f;
-                at(1, 53.0f - 44.0f, 2, 0.8f); S6.step(in, g, o); gk &= S6.state == sword::S_SHEATHED && S6.s == 0.0f && S6.onHilt;           // home, the hand still on the hilt
-                at(1, 9.0f + 20.0f, 2, 0.8f); S6.step(in, g, o); gk &= S6.state == sword::S_DRAWING;                                            // draw again at once
-                at(1, 29.0f, 2, 0.0f); S6.step(in, g, o); gk &= S6.state == sword::S_DRAWING && S6.homing;                                      // let go: it slides home
-                for (int t = 0; t < 30; t++) S6.step(in, g, o); gk &= S6.state == sword::S_SHEATHED && S6.s == 0.0f;
+                in.dir[0] = 1; in.dir[1] = 0; S6.step(in, g, o); gk &= S6.state == sword::S_SHEATHING && fabsf(S6.s - 74.0f) < 0.01f;         // lined up at the mouth: on the rail where the blade is (0.18.40: no clamp, no jump)
+                in.bladeOk = false; at(1, 53.0f - 20.0f, 2, 0.0f); S6.step(in, g, o); gk &= S6.state == sword::S_SHEATHING && fabsf(S6.s - (74.0f - 20.0f * g.gain())) < 0.05f;   // pushed in (grip or not)
+                at(1, 53.0f - 45.0f, 2, 0.8f); S6.step(in, g, o); gk &= S6.state == sword::S_SHEATHED && S6.s == 0.0f && S6.onHilt;           // home, the hand still on the hilt
+                at(1, 8.0f + 21.0f, 2, 0.8f); S6.step(in, g, o); gk &= S6.state == sword::S_DRAWING;                                            // draw again at once
+                const float sKeep = S6.s; at(1, 29.0f, 2, 0.0f); S6.step(in, g, o); gk &= S6.state == sword::S_DRAWING && !S6.homing;           // 0.18.40 let go: the blade stays put
+                for (int t = 0; t < 30; t++) S6.step(in, g, o); gk &= S6.state == sword::S_DRAWING && fabsf(S6.s - sKeep) < 0.01f;
+                { sword::Cfg ga = g; ga.autoHome = 1; at(1, 29.0f, 2, 0.8f); S6.step(in, ga, o); gk &= S6.onHilt; at(1, 29.0f, 2, 0.0f); S6.step(in, ga, o); gk &= S6.homing;   // sword_auto_home = 1: it slides home
+                  for (int t = 0; t < 30; t++) S6.step(in, ga, o); gk &= S6.state == sword::S_SHEATHED && S6.s == 0.0f; }
+                {   // 0.18.40 the tip taken at the REAL mouth (mouthAx), up to 25 cm inside it; 10 cm outside is not yet
+                    sword::Cfg gm = g; gm.mouthAx = 13.0f; sword::Sys S13; at(1, 12.5f, 2, 0.8f); S13.step(in, gm, o); at(1, 53.0f, 2, 0.8f); S13.step(in, gm, o); gk &= S13.state == sword::S_DRAWN;
+                    in.bladeOk = true; in.dir[0] = 1; in.dir[1] = 0; in.tip[0] = 23; S13.step(in, gm, o); gk &= S13.state == sword::S_DRAWN;
+                    in.tip[0] = -7; S13.step(in, gm, o); gk &= S13.state == sword::S_SHEATHING && fabsf(S13.s - 65.0f) < 0.01f; in.bladeOk = false; in.tip[0] = 2; }
                 // pulled back out of a sheathing
                 sword::Sys S7; at(1, 12.5f, 2, 0.8f); S7.step(in, g, o); at(1, 53.0f, 2, 0.8f); S7.step(in, g, o); in.bladeOk = true; in.dir[0] = 1; S7.step(in, g, o); in.bladeOk = false;
                 at(1, 53.0f + 7.0f, 2, 0.8f); S7.step(in, g, o); gk &= S7.state == sword::S_DRAWN;
@@ -6526,6 +7397,13 @@ extern "C" __declspec(dllexport) int GoTVR_SelfTest(const wchar_t *exePath) {
                 if (!fk) logf("   katana one-hand / reach / fist circle: FAIL (S8 %d s %.1f, S9 hiltT %.2f)", S8.state, S8.s, S9.hiltT);
                 sw &= fk;
             }
+            {   // 0.18.47 the katana-hit decision core (melee.h): a fast slash hits once per pass, a slow push / walking the blade in does not,
+                // an enemy running onto it does, re-arm after leaving, a hitch is no swing, the target table never fills
+                const bool mk = melee::selfTest(); if (!mk) logf("   katana hits decision core: FAIL"); sw &= mk; }
+            {   // WRIST_HUD.md framework: the wrist vitals core (fills, change edges, heartbeat, glance, hand at the head)
+                const bool vk = vit::selfTest(); if (!vk) logf("   wrist vitals core: FAIL"); sw &= vk; }
+            {   // 0.18.48 the attack intent (attack.h): swing recognition and re-arm, heavy charge (two hands + trigger held still), lunge distances / cooldown / stop short, katana weight
+                const bool ak = atk::selfTest(); if (!ak) logf("   katana attack intent core: FAIL"); sw &= ak; }
             {   // 0.18.31 the rail from the two joints: the child along the calibrated line -> mouth at the nearer end, axis to the far end
                 const float mC[3] = {-3.6f, -3.3f, -6.7f}, aC[3] = {0.005f, 0.188f, -0.982f}; float mO[3], aO[3], ang, d0, d1;
                 const float c1[3] = {0, 2, -25}; bool rj = swd::railFromJoints(mC, aC, c1, 1.0f, mO, aO, ang, d0, d1) && mO[2] == 0.0f && aO[2] < -0.9f;
