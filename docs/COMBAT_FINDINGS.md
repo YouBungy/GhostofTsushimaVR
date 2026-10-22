@@ -351,3 +351,47 @@ Still to find:
   tick=0 after it; no STRIKE line). DBW watchpoints were also armed. Cause taken as the reaction bit on a message the game
   did not compose (the reaction needs what HitSend fills in). 0.18.57: message path never carries 0x10000000.
 
+## Session 14 (0.18.57 flat, 2026-10-22): the method is settled; the definition is deeper
+
+- H (record path, light 0x95611255ef4e58cc, 0x11C01041) flinched; M (message path, plain 0x03C00041 template) did 75 damage
+  four times with no flinch and no crash. The ini's reacting message template was dropped at load as intended.
+- REC: component (hero+0x408)+0x230, +0x68 = component+0x318, moveset 209, entry found. Definition 0x1343ebe0720 (asset
+  heap; +0x88 0x672df0e, move 14) not within one step of the moveset entry (0xE0: hash, a 2nd hash, -1s, 1, ptr+0x1C,
+  ptr+5, 9, ptr, ...) or of the component's per-attack entry (0x58 at component+0x5B0[index]). 0.18.58 searches 3 steps.
+- Real records carry +0x90 the contact point, +0xA0 the blade's velocity (cm/s, e.g. (-955, 297, 327)), +0xAC 3.0,
+  +0xB0 its direction (normalised). 0.18.58 writes the VR blade's contact point and tip velocity there.
+
+## Session 15 (0.18.58 flat, 2026-10-22): definitions live apart; the reaction depends on the combo
+
+- 49 hits. Light records seen: 0x74bf02936aefda5e (move 2), 0x74bf02936aeeeb47 (move 8), 0x0e406240d0e87cd2 (move 538),
+  0x74bf08798839b183 (move 14 - 0x03C00041 here, 0x11C00841 / 0x11C01041 in sessions 12-13), 0x74bf02936aeeeb48 (move 6),
+  0x522baba1b8c7943c (move 14, 0x11C00841 - kept). Heavy 0xb9ea921bfd74396d (0x03C00141, 225). The reaction bit is not a
+  fixed property of the attack: it depends on where the blow falls in the combo / the enemy's state.
+- Definitions at 0x17135df0720 / 0930 / 0e00 / 0eb0 / 0f60 (0xB0 apart: one asset array), moveset entries at
+  0x17134f0xxxx, holders on the heap (0x3fea2399718 / 830 / 880 ...). No path of ≤ 3 steps from the moveset entry or the
+  per-attack entry (component+0x5B0, whose qwords +0x10..+0x38 are six heap objects 0x3C0 apart) reaches the definition.
+- 0.18.59: the saved record carries the definition's 0xB0 bytes (only +0x88 / +0x9C / +0xA4 are read by the game's hit
+  path); records load at start.
+
+## Session 16 (0.18.59 flat, 2026-10-22): records saved; dogs
+
+- Every REC line ended "SAVED for VR": component (hero+0x408)+0x230, +0x68 = component+0x318, definition carried (0xB0).
+  ini: light 0x522baba1b8c7943c (0x11C00841, 75), heavy 0xb9ea921bfd74396d (0x03C00141, 225).
+- Reacting light blows seen: 0x74bf08798839b183 (0x11C01041, 170 - a bonus) and 0x522baba1b8c7943c (0x11C00841, 75).
+  "Light" (no 0x100) blows of 150 (0x74bf02936aeeeb4a) and 225 (0xb9ea921bfd74396d, the heavy's own hash) also seen.
+- A real hit on a dog (class 16): 0x11C01041, -85, 125 → 40 - dogs react to the same bit. Records were people-only (class
+  14); 0.18.60 keeps dog slots too.
+
+
+## Session 18 (0.18.61 VR, 2026-10-22): first parry test; flicker; heavy never fired
+
+- PARRY: the blade history covered 76 ms (pushed several times per frame) - too short for timing. Both blows that met the
+  blade were "replayed" after the game had auto-sheathed its sword 0.1 s earlier, so no guard: the game needs its sword out.
+  0.18.62: one sample per 8 ms (HN 64), draw chord on a guard (+450 ms), keep-drawn LB tap while an enemy is within 8 m.
+- Two hands: the explicit spring had a 15 ms period with two hands (stiffer) - unstable at 11-14 ms frames; tip 1600+ m/s,
+  HEAVY spam. 0.18.62: implicit (backward-Euler) step.
+- Heavy: the charge was reset by > 10 cm of hand drift during the 450 ms hold; then the trigger + swing never coincided.
+  0.18.62: 25 cm, charge kept 300 ms into the swing (heavyUntil), one hand allowed.
+- Owner question: "Can you not put a hitbox on the player held sword for parrying?" - 0.18.62 parry_mode=blade: the
+  enemy's weapon = its right hand + 90 cm along its forearm (people share Jin's rig; joint 637 used when in that hand),
+  judged against the katana blade capsule; falls back to the blow's line (dogs).

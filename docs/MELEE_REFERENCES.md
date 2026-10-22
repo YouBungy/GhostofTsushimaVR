@@ -62,3 +62,17 @@ refractory 250 ms after an active attack ends
 10. Haptics: on a hit, amplitude **1.0 for 65-80 ms**, then a decay to ~160 ms, protected for 200 ms. Add a second pulse **40 ms** later on heavies. On commit, a 0.6 tick for 50 ms. Keep amplitude ≥ 0.3 and duration ≥ 25 ms for Quest motors.
 11. Add a short **"bite"** (blade lags the controller 50-100 ms on contact) plus the game's hitstop (~0.09 s). Never lunge the camera. If the game needs a lunge for reach, let only the invisible root move (≤ 0.3-0.5 m) and snap it back.
 12. Notify the enemy AI for heavy or wide swings only (BB's telegraph), so enemies still block and dodge but quick flicks stay unreadable.
+
+## Weapon weight (0.18.58)
+
+- **Blade & Sorcery:** the held weapon is joined to the hand by a spring (position and rotation) that pulls it back to the
+  hand and a damper that gives it inertia, so a heavy weapon builds speed slowly and is hard to stop; the desync between
+  the real and the VR hand is the intended feel, and players tune spring / damper (one reported 1.3 / 0.35). Weapons are
+  deliberately not 1:1 with real masses. Source: Steam community discussion "weapon weight"
+  (https://steamcommunity.com/app/629730/discussions/2/3362406825551877390).
+- **Playbook ch02:** simulated weapon weight is a follow filter; the shippable part is the enumerated reset list (FEAR VR's
+  WeaponWeightResetReason); order: controller pose → two-handed solve → weight → (recoil) → collision; a hard clamp in a
+  tracked path reads as a wall, compress asymptotically instead.
+- GoTVR: attack.h Weight = rotational spring-damper on the blade's forward, gravity sag one-handed, a second hand = a
+  second joint (a third of the lag, a fifth of the sag), soft lag limit, reset list in gotvr.cpp.
+

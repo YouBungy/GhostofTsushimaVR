@@ -22,6 +22,188 @@ refused to send images ("FRAME GENERATION is on" in the log, although it was off
 same-frame stereo (both eyes every frame) gets built. Please press **F10** once in each of: main menu, standing
 outdoors, riding, a cutscene, photo mode.
 
+## 0.18.62 / GoTVRHost 0.15.3: fixes from VR session 18
+
+**Install:** `xinput1_4.dll` AND `GoTVR\GoTVRHost.exe`. Your gotvr.ini gets a few one-time changes (listed below).
+
+- **Black screen when hit:** the 0.18.61 hit flash (the game's HUD over the whole view) went black in the headset.
+  It is off by default now (`ui_hit_fullscreen_ms` 0, changed once in your ini). A red vignette can come later.
+- **Parry / block never appeared:**
+  - The blade history held only 76 ms, because it was written several times a frame. It now takes one sample per
+    8 ms (about half a second).
+  - Both blocks in the log "went through" because the game had put its own sword away by itself 0.1 s earlier.
+    A guard now draws the game's sword first (hidden on Jin) and waits for it.
+  - While you hold the katana and no enemy is within 8 m, the mod taps the game's guard briefly every
+    `sword_keep_drawn_ms` (4000; 0 = off), with Jin's upper body masked for that moment. That should stop the
+    game from auto-sheathing, which caused the sheathe sound and the sheath blink you saw.
+  - **New test option `parry_mode=blade`:** the enemy's own weapon is the hitbox. Its sword is taken from its
+    skeleton: the right hand, then `parry_enemy_blade_cm` (90) along the forearm. Your katana's hitbox is the
+    blade, guard to tip, with `parry_blade_tolerance_cm` (30) around it. The timing rule is the same (early =
+    block, just in time = parry). When the weapon can't be found (dogs, odd rigs), it falls back to the blow's
+    line. The log says which one was used.
+- **Heavy attack:** hold the trigger to charge, then just swing. You can keep holding the trigger.
+  - The charge used to be lost once your hand drifted 10 cm while you waited. The limit is 25 cm now
+    (`sword_heavy_charge_move_cm`, changed once).
+  - The charged state lasts `sword_heavy_swing_window_ms` (300) into the swing.
+  - One hand works too; `sword_heavy_two_hands=1` requires both.
+- **Two-handed flicker:** the katana's weight spring became unstable with two hands, flipping the blade every frame
+  (the log showed the tip at 1600 m/s and endless "HEAVY" swings). The spring is now solved implicitly, which stays
+  stable at any frame time. A self-test covers hitches, two hands, and a target that flips.
+- **VR arms on logs / ropes:** the arms are only handed to the game when a hand is above the head
+  (`arms_game_above_head_cm` 0). After a grapple they stay with the game for `arms_game_hold_ms` (1200), so they no
+  longer flick back in between.
+- **Jin's body when walking backwards:** the 0.18.61 mask froze Jin's upper body while the katana was out, so his
+  walk no longer turned with your headset. It is off by default now (`sword_mask_while_held` 0, changed once).
+- **Judder when looking or moving in some directions, and in menus, with no frame drops:** in xr=4 the game could
+  run faster than the headset's compositor could take frames. It then fought the compositor for the GPU, and Virtual
+  Desktop got frames late. The game is now paced:
+  - `xr_game_fps_cap` 58 stereo pairs/s;
+  - `xr_menu_fps_cap` 60 in flat menus;
+  - 0 = off.
+  `PERF/5s` shows the waits.
+- **Wrist HUD never appeared (host 0.15.3):**
+  - It is on by default again (`wrist_hud_mode` 1, changed once).
+  - It is easier to bring up: a glance within 70 deg of the forearm's face (`wrist_hud_face_deg`), the arm within
+    40 deg of your view (`wrist_hud_view_deg`), up to 0.80 m away (`wrist_hud_max_m`).
+  - The game itself hides its health art out of combat, so the wrist shows nothing then. If you want something
+    there all the time, `wrist_hud_mode=3` adds our gauge.
+  - The host logs every 10 s while it is shown.
+- **Known, not fixed yet:** the black square behind the ration picture when picking an item up. Our best guess is
+  that the game draws that picture so it adds onto the scene (black adds nothing on a flat screen). On the
+  headset's separate HUD layer, though, its opaque black background shows. A fix needs a look at how that draw is
+  set up. It is on the list for the next session.
+
+## 0.18.61 / GoTVRHost 0.15.2: block and parry, frame-rate fix, controls and HUD changes from the first VR combat test
+
+**Install:** `xinput1_4.dll` AND `GoTVR\GoTVRHost.exe`.
+
+- **First VR combat test (0.18.60):** katana blows made enemies flinch (game hit path with the saved record, x0.82..x1.10
+  damage by swing speed). One blow fell back to the message path; it was the first blow after Jin went down, and the
+  record is found again from Jin on the next blow.
+- **Block and parry (new; there was none before):**
+  - **Timing mode (default, `parry_mode=timing`):** when an enemy's blow is about to land on Jin, the mod checks whether
+    your blade was in the blow's path (from the attacker to where it lands, `parry_blade_tolerance_cm` 30).
+    - **Parry:** the blade arrived in the path at most `parry_timing_ms` (220) × `perfect_parry_window_mult` before the
+      blow landed, i.e. you intercepted it in time.
+    - **Block:** it was already there earlier (raised at the start of the attack and held).
+    - No speed is needed. `parry_mode=velocity` keeps the speed-based version.
+  - The game itself decides block / parry / perfect parry / guard break: the mod holds the enemy's blow back, presses
+    the game's own guard (LB: a fresh press for a parry, held for a block), and replays the same blow a moment later
+    (`parry_deflect_delay_ms` 50, `parry_block_delay_ms` 300). Rumble on a parry or block (`parry_rumble`).
+  - `PARRY:` log lines show the contact, what was requested and what the game did with it (design doc "Show Contact
+    and Result").
+  - The enemy's weapon itself is not tracked; the blow's line stands in for it. If parries feel too strict or too
+    loose, change `parry_blade_tolerance_cm`.
+- **Frame rate with the katana out:** the log showed 55-60 game ticks/s with the katana sheathed and 21-37 with it in
+  your hand. The rate was lower the more characters were around. Every per-frame check of an enemy asked Windows
+  about its memory (VirtualQuery), which gets slow on the game's huge memory blocks. Those answers are now kept for
+  200 ms per thread. `PERF/5s` lines show how many checks still reach Windows.
+- **Left hand on the hilt (two hands):** the katana is drawn where Jin's right fist actually is, but the left hand aimed
+  at the controller's katana from a tick earlier, so it slid off while you moved. The left hand now gets the same
+  correction as the katana.
+- **No game sheathe / draw / stance animation while you hold the katana** (`sword_mask_while_held=1`): Jin's upper
+  body keeps his pose from before the draw the whole time the katana is out; the legs still walk. The game's
+  auto-sheathe came anywhere from 16 to 30 s after drawing, so masking it at a learned time could not catch it.
+- **Triggers (your new scheme; your gotvr.ini is changed once):**
+  - RT = the game's own right trigger (interact / pick up supplies), plus standoff (D-pad up) when the game shows
+    the prompt.
+  - LT = Focus when nothing is held. The bow's slow-down will go on LT too, when archery comes.
+  - Both are held off while the katana is out (RT charges the heavy).
+- **Wheel button (X):** a quick press heals (D-pad down, `wheel_tap`); holding it past `wheel_hold_ms` (300) opens
+  the wheel.
+- **Heavy swing:** a big rumble on both hands for `sword_heavy_swing_rumble_ms` (220) when the charged swing is
+  released, so you can feel it went.
+- **Hit flash:** when Jin is hit, the game's HUD (its red hit effect) covers the whole view for `ui_hit_fullscreen_ms`
+  (1500; 0 = off). A custom vignette can replace it later.
+- **Death:** the fade to the death / revive screen no longer counts as a cutscene, so the revive prompt stays on the
+  world-locked HUD panel.
+- **Wrist HUD (host 0.15.2):**
+  - Only the game's own health / resolve art is shown; our gauge is gone (`wrist_hud_mode` 1; your ini is changed
+    once).
+  - It sits on TOP of the left forearm (the outside, like your photo) and no longer rolls with the wrist
+    (`wrist_hud_lock=top`; `hand` brings back the old behaviour). The kunai goes on the inner forearm.
+
+## 0.18.60: records saved - VR is ready to test; dogs get their own records
+
+**Install:** `xinput1_4.dll` only. Keep your gotvr.ini: it now holds the saved records.
+
+- **Session 16 (flat): saved.** Every record found its pointers again, with its own copy of the attack definition
+  (`SAVED for VR`). gotvr.ini now holds:
+  - `cbt_rec_light`: attack 0x522baba1b8c7943c, flags 0x11C00841, **with the hit reaction**, 75 damage;
+  - `cbt_rec_heavy`: attack 0xb9ea921bfd74396d, flags 0x03C00141, 225 damage, posture -150 (no reaction bit, but it
+    breaks guard).
+  - The next session, flat or VR, loads them at start (`REC: saved light record loaded`). Katana blows go through the
+    game's own hit path with no real blow first.
+- **Dogs:** your real hit on a dog was composed with the hit reaction too (0x11C01041, -85). Records are now kept per
+  target type: people light / heavy, dog light / heavy (`cbt_rec_light_dog`, `cbt_rec_heavy_dog`). A dog is struck with
+  a dog record when there is one, otherwise the people's. That dog hit came before this build, so no dog record is saved
+  yet; the next real hit on a dog saves one.
+- **Plainest blow kept:** some "light" blows came out at 150, 170 or 225 damage (stance / combo bonuses). Within the same
+  reaction class the library now keeps the lowest-damage blow, so the katana's base damage stays the ordinary 75. Your
+  swing speed and grip scale from there.
+- **VR test:**
+  1. Draw the katana and cut an enemy.
+  2. The log should show `STRIKE katana (game hit path, light record 0x522baba1b8c7943c with the hit reaction ...)`, and
+     the enemy should flinch.
+  3. Try two hands with the right trigger held still until it charges, then cut (heavy).
+  4. Notice the one-handed weight (`sword_weight`).
+
+## 0.18.59: the flinching blow saved for VR
+
+**Install:** `xinput1_4.dll` only.
+
+- **Session 15 (flat, about 49 blows):**
+  - The library saw 7 different light attacks. Only one composed the hit reaction, attack 0x522baba1b8c7943c (flags
+    0x11C00841); it was kept, as intended. The same attack can come out with or without the reaction depending on the
+    combo, which is why the library keeps a reacting record once it has one.
+  - It still could not be saved. Jin's attack component and the second object were found again, but the attack
+    definition the record points at is not reachable from Jin even three pointer steps away. It lives in its own asset
+    block (definitions 0xB0 bytes apart, e.g. 0x17135df0e00 / 0eb0 / 0f60).
+- **Fix:** the game only ever reads three values from the definition (its hash, one flag word and the move number). So a
+  saved record now carries its own copy of the definition's 0xB0 bytes. Everything else is found again from Jin.
+  - The log line becomes `REC: ... (not found - its 0xB0 bytes are carried instead) - SAVED for VR`.
+- **Saved records load when the game starts.** A reacting record from an earlier session is never replaced by a plainer
+  blow; only another reacting blow replaces it.
+- **VR:** once `cbt_rec_light` is in gotvr.ini, every katana blow in VR runs the game's own hit path with that record,
+  with your blade's contact point and swing direction, scaled by your swing speed. No game attack and no animation.
+  Without a saved record VR blows still do damage (message path), just without the flinch.
+- **One more short flat session is needed to write the record:** land combos until a `REC: light record ... WITH the hit
+  reaction` line appears, followed by `SAVED for VR`.
+
+## 0.18.58: VR combat on the game's own hit path; katana weight
+
+**Install:** `xinput1_4.dll` only. Pushed before this build as "(WIP) VR combat" (0.18.57).
+
+- **Session 14 (flat):** Ctrl+Shift+H flinched and Ctrl+Shift+M did damage only, with no crash. That settles the
+  method: **the katana's blows in VR go through the game's own hit path, from a record of one of Jin's reacting blows**.
+  The message path is the fallback (damage, no flinch).
+- **In VR:**
+  - The game's own attacks are held off while the katana is out, so a VR session cannot make a fresh record. It has to
+    load the saved one (`cbt_rec_light` / `cbt_rec_heavy` in gotvr.ini).
+  - Saving still failed in session 14: the component was found, but the attack definition was not within one step of
+    the moveset entry. 0.18.58 now follows up to three pointer steps from the moveset entry and from the per-attack entry.
+    It records the path and the definition's hash, and checks that hash when the record is rebuilt.
+  - Look for `REC: ... SAVED for VR` after a flat session with a few combos. Until a record is saved, VR blows fall back
+    to the message path.
+  - Each katana blow now carries **where the blade met the enemy and which way it was moving** (the record's contact
+    point, velocity and direction). The game's reaction responds to your actual cut, not to the swing it was copied
+    from. Hotkey blows keep the copied swing.
+  - Damage is still scaled by swing speed and the two-hand multiplier on the record's base damage. Heavy (two hands +
+    charged) uses the heavy record.
+- **Katana weight (one-handed), after Blade & Sorcery and the playbook:**
+  - **Spring-damper:** B&S joins the weapon to the hand with a spring (pulls it back to the hand) and a damper (gives it
+    inertia: it builds speed slowly and is hard to stop). The katana's direction now follows the hand the same way: a
+    rotational spring-damper with damping 0.85, so a hint of follow-through when you stop a swing.
+  - **Gravity sag:** held level in one hand, the tip droops a little (`sword_weight_sag_deg`, 3° per unit of weight).
+  - **Two hands = a second joint:** the lag drops to a third (`sword_weight_two_hand` 0.33) and the sag to a fifth.
+  - **Soft limit (playbook ch02):** the blade trails the hand 1:1 up to 16°, and beyond that is compressed toward 28°.
+    It never stops dead or springs back.
+  - **Reset list (playbook ch02, FEAR VR):** the filter resets, with a log line, on a jump of the hilt (teleport,
+    recenter, body snap), a snap or smooth turn, the flat screen (menus, cutscenes), or a bad frame.
+  - **`sword_weight` = 1.0 by default:** 45 ms period one-handed, 15 ms two-handed, 3° sag: noticeable but small. Your
+    old 0 (off) was moved to 1.0 once. 0 turns it off; 0.5 lighter, 2 heavier. Blows are judged on the blade where you
+    see it (after the weight).
+
 ## 0.18.57: Ctrl+Shift+M crash fixed; one more step toward saving the flinching blow for VR
 
 **Install:** `xinput1_4.dll` only.

@@ -10,12 +10,12 @@ Right stick down - crouch
 Right grip - grab
 Left grip - grab
 Y - quick attack/assassinate
-X - weapon wheel
+X - quick press: heal; hold: weapon wheel
 B - dash (IF HOLDING THROWABLE, CYCLE ITEM)
 A - jump
 three line button (left controller) - menu
-Right trigger - Fire/shoot blowdart if held, otherwise focus
-Left trigger - Fire/shoot held item / if standoff, standoff
+Right trigger - the game's own right trigger (interact / pick up supplies); standoff when the standoff prompt is shown; held off while the katana is out (heavy charge)
+Left trigger - focus when not holding anything; slow-down time when holding the bow (archery, later)
 
 [WHEEL OPTIONS]
 Heal, Photomode, call horse, play flute, and recenter view

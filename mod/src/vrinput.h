@@ -34,12 +34,12 @@ static const struct { const char *key, *def, *what; } kCtl[C_N] = {
     {"left_stick_click", "l3", "run"}, {"right_stick_click", "r3", "crouch"},
     {"left_primary", "wheel", "item wheel (Quest X, hold; 0.18.24 owner's scheme)"}, {"left_secondary", "x+anim_short", "quick attack / assassinate (Quest Y)"}, {"left_menu", "start", "menu (the three-line button)"},
     {"right_primary", "a", "jump (Quest A)"}, {"right_secondary", "b", "dodge (Quest B)"}, {"right_menu", "none", "-"},
-    {"left_trigger", "none", "fire the held item (later)"}, {"right_trigger", "back", "Focus (0.18.43 owner: the right trigger is Focus while no kunai / item is held - the touchpad press, View on an Xbox pad)"},
+    {"left_trigger", "back", "Focus while nothing is held (0.18.61 owner; the touchpad press, View on an Xbox pad - held off while the katana is out)"}, {"right_trigger", "rt+up", "the game's own right trigger (R2: interact / pick up supplies) + standoff when the game offers it (D-pad up) (0.18.61 owner)"},
     {"left_grip", "none", "grab (hands: later)"}, {"right_grip", "none", "grab (0.18.10: unbound - the physical sword comes next)"},
     {"right_hand_at_head_trigger", "dpad_right+rs_up", "guiding wind"}, {"left_hand_at_head_trigger", "hud+dpad_right+rs_up", "HUD in front + the game's objective (touchpad swipe up)"}};
 static const int NWHEEL = 8;   // 0.18.7: up to 8 options; wheel_count (default 5) of them are used
 struct Cfg {
-    Out out[C_N]; Out wheel[NWHEEL]; char wheelName[NWHEEL][32]; int nWheel = 5;
+    Out out[C_N]; Out wheel[NWHEEL]; char wheelName[NWHEEL][32]; int nWheel = 5; Out wheelTap; int wheelHoldMs = 300;
     float dead = 0.2f, snapDeg = 30.0f, smoothGain = 1.0f, headM = 0.22f, rumble = 1.0f; int turnSmooth = 0, enabled = 1, debugOverlay = 1;
     int moveHead = 1;   // 0.18.22 (owner: "movement totally headset oriented at all times"): the left stick's forward = where the headset looks NOW
 };
@@ -49,7 +49,13 @@ static void loadCfg(const wchar_t *ini) {
         GetPrivateProfileStringW(L"controls", wk, wd, wb, 128, ini); WideCharToMultiByte(CP_UTF8, 0, wb, -1, o, n, nullptr, nullptr); };
     auto flt = [&](const char *key, float def, float lo, float hi) { char b[32], d[32]; snprintf(d, 32, "%g", def); str(key, d, b, 32); float v = (float)atof(b); return (v >= lo && v <= hi) ? v : def; };
     char b[128];
+    {   // 0.18.61 (owner): the triggers changed meaning once - RT = the game's own RT (+ standoff), LT = Focus. An ini written before gets them once.
+        wchar_t mv[8]; if (!GetPrivateProfileStringW(L"controls", L"controls_v", L"", mv, 8, ini)) {
+            WritePrivateProfileStringW(L"controls", L"right_trigger", L"rt+up", ini); WritePrivateProfileStringW(L"controls", L"left_trigger", L"back", ini);
+            WritePrivateProfileStringW(L"controls", L"controls_v", L"2", ini); logf("controls: triggers updated once - right trigger = the game's R2 + standoff, left trigger = Focus"); } }
     for (int c = 0; c < C_N; c++) { str(kCtl[c].key, kCtl[c].def, b, 128); cfg.out[c] = parseOut(b); }
+    // 0.18.61 (owner): the wheel button - a quick press heals (wheel_tap), held past wheel_hold_ms it opens the wheel
+    str("wheel_tap", "down", b, 128); cfg.wheelTap = parseOut(b); cfg.wheelHoldMs = (int)flt("wheel_hold_ms", 300.0f, 100.0f, 1500.0f);
     // 0.18.7 (owner's CONTROL_SCHEME.txt): Heal, Photo mode, Call horse, Play flute (touchpad swipe LEFT = hold D-pad right + flick
     // the right stick left on PC), Recenter view (the mod's own F11)
     static const char *wd[NWHEEL] = {"down", "right", "left", "dpad_right+rs_left+anim", "recenter", "none", "none", "none"},
@@ -271,6 +277,12 @@ static bool build(XINPUT_GAMEPAD &g, bool ctxFlat) {
             if (cfg.out[h ? C_RGRIP : C_LGRIP].m & OX_WHEEL) { if (wheelHand < 0) wheelHand = h; if (hd[h].squeeze > 0.6f) { wheelHeld = true; wheelHand = h; } }
         }
     }
+    {   // 0.18.61 a quick press = heal (cfg.wheelTap), the wheel only once the button has been held cfg.wheelHoldMs
+        static bool wPrev = false; static u64 wAt = 0; if (wheelHeld && !wPrev) wAt = now;
+        if (!wheelHeld && wPrev && !wheel.open && !wheel.used && now - wAt < (u64)cfg.wheelHoldMs && cfg.wheelTap.m) {
+            wheel.tapMask = cfg.wheelTap.m & ~(u32)(OX_RECENTER | OX_HUD | OX_WHEEL | OX_ANIM | OX_ANIMS); wheel.tapStart = now; wheel.tapUntil = now + 150; pulse(wheelHand < 0 ? 0 : wheelHand, 0.35f, 25);
+            logf("controls: quick press of the wheel button -> heal"); }
+        wPrev = wheelHeld; if (wheelHeld && now - wAt < (u64)cfg.wheelHoldMs) wheelHeld = false; else if (!wheelHeld) wPrev = false; }
     if (wheelHeld && !wheel.open && !wheel.used) { wheel.open = true; wheel.sel = -1; nWheelOpen++; pulse(wheelHand, 0.25f, 15); }
     if (!wheelHeld) { wheel.open = false; wheel.used = false; wheel.sel = -1; }
     bool stickBusy = false;

@@ -1596,6 +1596,58 @@ spaces, session, instance → TerminateProcess.
   report one eye or both.
 - Self-test PASS (selftest=0, 111): fingers with a shared palm joint and helper leaves (5 chains, index 3 joints), all earlier tests.
 
+## GoTVR 0.18.60 → 0.18.61 / host 0.15.2 — first VR combat test: parry, frame rate, left hand, controls, HUD
+- Frame rate: SYNC/s 55-60 sheathed vs 21 / 28 / 37 with the katana drawn (lower with more characters near). readable()
+  = VirtualQuery per call (cost grows with the region's size); vrBlade checks every registry entry every frame (alive,
+  hostile, position: ~8 calls each). Fix: per-thread cache of the last 32 regions for 200 ms (PERF/5s counts).
+- Left hand off the hilt while moving: solveArms side 0 aimed at sp.kat* (game thread, a tick old) while swordApply
+  carries the katana by the solved right fist. Side 0's P0 / Am now get the same correction (drawnTgtP / drawnTgtA →
+  fistGm[1] / fistDm[1]).
+- Sheathing animation still seen: the auto-sheathe came at 30.3 s (learned 16.3 s). sword_mask_while_held: maskUntil held
+  +400 ms every frame while S_DRAWN (legs stay free while walking).
+- Death fade → cutscene START → whole-view HUD: a fade alone neither starts nor holds a cutscene while Jin is down
+  (≤ 1.5 health, 8 s); g_jinDownAt / g_jinHurtAt from vitalsTick. Hit flash: M_CINEMA for ui_hit_fullscreen_ms after a
+  health loss.
+- Controls: right_trigger "rt+up", left_trigger "back" (migrated once, controls_v=2); blockMask + XB_BACK | XB_UP;
+  wheel tap (< wheel_hold_ms) = wheel_tap ("down" = heal), hold = wheel (self-test updated, fresh fake samples during
+  holds); heavy swing rumble 1.0 for sword_heavy_swing_rumble_ms.
+- Block / parry (parry.h, self-tested): hHitProc → parryTry for an enemy's record on Jin while the katana is out (vrBlade
+  feeds a 32-sample blade history on its own QPC clock); timing mode: the run of blade-in-line samples ending in the
+  latest one; entered ≤ parryMs × perfectMult → PARRY (LB fresh, replay after 50 ms), else BLOCK (LB held, replay
+  after 300 ms); the record (0x120 + tags) is copied and replayed with the original HitProc (parryReplay), checked
+  first (attacker alive, components / holder readable, pool, target still Jin); noteHit reports the composed flags.
+- Host 0.15.2: wrist_hud_mode 1 (migrated once, wrist_hud_v=2); wrist_hud_lock top: face = world up square to the
+  forearm line (grip +Z), right = toward the hand; head direction when the forearm is near vertical.
+- Self-test PASS (selftest=0).
+
+## GoTVR 0.18.59 → 0.18.60 — dog record slots; plainest blow per kind
+- recs[4] (light / heavy × people / dogs), ini keys cbt_rec_light / _heavy / _light_dog / _heavy_dog; hHitProc candidates
+  for class 14 and 16 targets; recJudge slot by the target's class; a same-reaction record is replaced only by a blow of
+  no more damage (session 16: 150 / 170 / 225 "light" blows). strike(): dog → its slot, else the people's; heavy → light
+  x1.6 when missing; any saved slot as the last resort.
+- Self-test PASS (selftest=0).
+
+## GoTVR 0.18.58 → 0.18.59 — the record carries its definition; records load at start
+- Session 15: 3-step search from both roots found no definition (separate asset array, 0xB0 per definition).
+- RecT.def[0xB0] copied at recLearn; recResolve: no holder / path → R.cell = &R.def (the composer and HitSend read only
+  **(rec+0x50) +0x88 / +0x9C / +0xA4). Save format v5 appends ";" + hex(def); load checks def+0x88 against the saved hash.
+- installStrike loads cbt_rec_light / cbt_rec_heavy at start (cbt_mode 2) so recJudge keeps a saved reacting record.
+- Self-test PASS (selftest=0).
+
+## GoTVR 0.18.57 → 0.18.58 — definition path (3 steps), VR contact / velocity in the record, katana weight model
+- Session 14: definition not found one step from the moveset / per-attack entries. defSearch: roots moveset entry (0xE0) and
+  per-attack entry (0x58); 1, 2 (≤ 0x200) or 3 (≤ 0x100) pointer steps; mode = root * 10 + steps; defHash (def+0x88)
+  saved and checked on rebuild. Save format v4. recResolve no longer requires k50 when a definition path exists; the
+  `//` comment that swallowed the rest of the rebuild line during the edit was caught at compile.
+- VR: Req carries the melee hit point and the tip velocity (vrBlade's own clock); strike(ctc) writes +0x90 / +0xA0 / +0xB0.
+- Katana weight (attack.h Weight): rotational spring-damper (period weight * 45 ms * (1 + (twoHandFactor - 1) * twoW),
+  damping 0.85), tangent velocity, gravity sag (sagDeg * weight * (1 - 0.8 twoW) * level), soft lag limit (16 → 28 deg),
+  non-finite guard; the filter runs on the blade's forward (tip side) so gravity lowers the tip. gotvr.cpp: reset list
+  (hilt jump > 40 cm, turnSeq change, g_flatRender, bad dt) with a SWORD log line. ini: sword_weight 1.0 (an old 0 moved
+  to 1.0 once, marker sword_weight_model=2), sword_weight_sag_deg 3, sword_weight_two_hand 0.33.
+- Self-test PASS (selftest=0) with new weight tests: 90 deg snap trails ≤ 28 deg, level sag 3.0 deg one hand / 0.6 two,
+  none pointing up, settles.
+
 ## GoTVR 0.18.56 → 0.18.57 — Ctrl+Shift+M crash (reaction bit on the message path); definition search
 - Session 13: Ctrl+Shift+M froze the game. The 0.18.56 message template had 0x11C01041 (reaction bit) without HitSend's
   composition. Fix: capture() refuses 0x10000000 (and 0x74000000 overall), tplLoad drops such a template from the ini,
@@ -2438,3 +2490,18 @@ spaces, session, instance → TerminateProcess.
   0.18.19 stop capture never fired in the log and took the head at the stop). Moving: |head - Hw| > dead zone -> the body turns to the
   head (tau fp_body_head_follow_s) and moveYaw follows Hw. gesture_indicator default 0.
 - Self-test PASS (selftest=0, 111): + move-from-rest forward; FP body follow with the moving turn.
+
+## GoTVR 0.18.61 → 0.18.62 / host 0.15.2 → 0.15.3 — VR session 18
+- `[HEADSET]` black screen on every hit: the full-view hit flash (M_CINEMA path) - default off (ui_hit_fullscreen_ms 0, v=2).
+- `[HEADSET]` two-hand flicker: explicit spring unstable at the two-hand stiffness -> implicit step (attack.h Weight::step).
+- `[HEADSET]` heavy never fired: charge drift 10 cm -> 25 cm (sword_heavy_v=2), heavy window 300 ms into the swing.
+- `[HEADSET]` parry never shown: 76 ms history; game sword auto-sheathed -> draw on guard + keep-drawn tap (the sheath blink /
+  sound = the game's auto-sheathe, which the tap should prevent). parry_mode=blade added (enemy weapon segment).
+- `[HEADSET]` VR arms lost on logs / ropes; flicked back during grapples -> hands above the head only, 1.2 s hold.
+- `[HEADSET]` walking backwards showed Jin's body: sword_mask_while_held froze the upper body -> default 0 (sword_mask_v=2).
+- `[HEADSET]` judder by direction and in menus without frame drops `[INFERENCE]`: host 72 -> 44 fps while the game ran
+  uncapped (GPU contention) -> capPace (xr_game_fps_cap 58, xr_menu_fps_cap 60).
+- `[HEADSET]` wrist HUD never seen: mode default 1 (wrist_hud_v=2), wider glance; the game hides its health art out of combat.
+- OPEN: black square behind the pickup item picture (rations) on the HUD layer. `[INFERENCE]` the picture is an off-screen
+  render with an opaque black background composited additively; additive on the flat screen, opaque on our transparent UI
+  image. Next: log the PSO blend of UI draws (CreateGraphicsPipelineState) and keep dst alpha for additive UI blends.

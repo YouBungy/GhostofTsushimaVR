@@ -181,3 +181,9 @@ did not buy a measured fix.
 - bloodborne-vr (https://github.com/laughtt/bloodborne-vr): the weapon wheel.
 - FRIK (Fallout 4 VR body): clavicle reach. HIGGS / SteamVR Interaction System: throw release velocity (kunai).
 - fear-vr: docs only.
+
+## Notes (2026-10-22, owner)
+- Archery: the left trigger is also the bow's slow-down time while holding the bow (LT = Focus only when nothing is held).
+- Wrist: HUD on the outside / top of the left forearm (game art only, locked to the forearm, no wrist roll); kunai on the inner forearm.
+- Hit feedback: the game's hit UI shown full view for now; a custom red vignette later.
+
