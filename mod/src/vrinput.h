@@ -116,7 +116,16 @@ static u64 kickAt = 0, flatFrom = 0; static bool kickFirst = true; static std::a
 // 0.18.54 cbt_assist=1 ONLY (off by default; owner: no attack animations in VR - kept as a setting to compare): the game's own attack
 // button pressed for a moment so Jin's attack plays when the katana's blow lands (bypasses blockMask; also works in flat play)
 static std::atomic<u32> forceMask{0}; static std::atomic<u64> forceUntil{0}, nForced{0};
-static void forcePress(u32 m, u32 ms) { forceMask = m; forceUntil = GetTickCount64() + ms; nForced++; }
+static std::atomic<u64> forceFrom{0};
+// 0.18.63 (review): one slot - a new press of the same button never cuts an active one short (the keep-drawn tap inside a block's
+// guard hold), and forcePressFresh releases a held button for gapMs first so the game sees a NEW press (a parry right after a block)
+static bool forceActive(u32 m, u64 now) { return (forceMask.load() & m) && now >= forceFrom.load() && now < forceUntil.load(); }
+static void forcePress(u32 m, u32 ms) { const u64 now = GetTickCount64(); nForced++;
+    if (forceActive(m, now) && forceMask.load() == m) { if (forceUntil.load() < now + ms) forceUntil = now + ms; return; }
+    forceMask = m; forceFrom = now; forceUntil = now + ms; }
+static u32 forcePressFresh(u32 m, u32 ms, u32 gapMs) { const u64 now = GetTickCount64(); nForced++;
+    if (!forceActive(m, now)) { forceMask = m; forceFrom = now; forceUntil = now + ms; return 0; }
+    forceMask = m; forceFrom = now + gapMs; forceUntil = now + gapMs + ms; return gapMs; }
 static std::atomic<u32> blockMask{0}; static std::atomic<u64> nBlocked{0};   // 0.18.29: pad buttons held off (the game's sword attacks while the physical katana is in hand)
 static std::atomic<u32> extReqMask{0}; static std::atomic<u64> extReqSeq{0}, nExt{0}; static u64 extSeen = 0, extStart = 0, extUntil = 0; static u32 extMask = 0;
 static void requestChord(u32 m) { extReqMask = m; extReqSeq++; }

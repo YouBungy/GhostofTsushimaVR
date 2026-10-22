@@ -22,6 +22,24 @@ refused to send images ("FRAME GENERATION is on" in the log, although it was off
 same-frame stereo (both eyes every frame) gets built. Please press **F10** once in each of: main menu, standing
 outdoors, riding, a cutscene, photo mode.
 
+## 0.18.63: fixes from a code review of 0.18.62 (no new features)
+
+**Install:** `xinput1_4.dll` only (the host is unchanged from 0.15.3).
+
+- **Possible crash fixed:** to save time, 0.18.61 remembered for 200 ms which game memory was safe to read. Game
+  memory can be handed back to Windows at any moment, so a remembered answer could go stale. Now only the game's
+  own program code is remembered that long; everything else is checked again after 50 ms.
+- **Guard could put the sword away:** the game's draw button is a toggle. A blocked blow could send it a second
+  time right after the mod had just drawn, and the game then sheathed again. Now it is sent only for a blow that
+  actually met your blade, and never within 2.5 s of the last draw.
+- **A parry right after a block counted as a block:** the guard was still held from the block, so the game never
+  saw a new press. It is now let go for 50 ms first, and the blow waits that long too.
+- **The keep-drawn tap could cut a block's guard short:** it now skips while a blow is held back or the guard is
+  pressed, and a short press never shortens a longer one.
+- **One-handed heavy charge:** moving your free left hand no longer restarts the charge.
+- **Log:** a `PARRY/total` line (blocks, parries, misses, and how often the enemy's weapon was found in
+  `parry_mode=blade`) appears whenever these change.
+
 ## 0.18.62 / GoTVRHost 0.15.3: fixes from VR session 18
 
 **Install:** `xinput1_4.dll` AND `GoTVR\GoTVRHost.exe`. Your gotvr.ini gets a few one-time changes (listed below).

@@ -65,7 +65,7 @@ struct Intent {
             releasedAt = 0;
             if (charge == 0) { charge = 1; chargeAt = now; chargeHand[0] = hands[0]; chargeHand[1] = hands[1]; ev |= E_CHARGE_START; }
             else if (charge == 1) {
-                const float m = fmaxf(len(sub(hands[0], chargeHand[0])), len(sub(hands[1], chargeHand[1])));
+                const float m = fmaxf(twoHands ? len(sub(hands[0], chargeHand[0])) : 0.0f, len(sub(hands[1], chargeHand[1])));   // 0.18.63: a free left hand never spends a one-handed charge
                 if (m > c.chargeMoveCm) { chargeAt = now; chargeHand[0] = hands[0]; chargeHand[1] = hands[1]; restarts++; }   // moved: begin again
                 else if (now - chargeAt >= (uint64_t)c.chargeMs) { charge = 2; ev |= E_CHARGED; }
             }
@@ -131,6 +131,7 @@ static inline bool selfTest() {
     Intent H; uint32_t ev = 0; for (int i = 0; i < 30; i++) { t += 18; ev |= H.step(t, v3(0, 0, 0), h, true, 1.0f, c); } ok &= (ev & E_CHARGED) && H.heavyReady();
     { Cfg c2 = c; c2.heavyTwoHands = true; Intent O; for (int i = 0; i < 40; i++) { t += 18; O.step(t, v3(0, 0, 0), h, false, 1.0f, c2); } ok &= !O.heavyReady() && O.charge == 0; }
     { Intent O1; uint32_t e1 = 0; for (int i = 0; i < 30; i++) { t += 18; e1 |= O1.step(t, v3(0, 0, 0), h, false, 1.0f, c); } ok &= (e1 & E_CHARGED) && O1.heavyReady(); }   // 0.18.62 one hand charges too (default)
+    { Intent O2; uint32_t e2 = 0; V3 hh[2] = {h[0], h[1]}; for (int i = 0; i < 30; i++) { t += 18; hh[0] = v3((float)(i * 6), 0, 0); e2 |= O2.step(t, v3(0, 0, 0), hh, false, 1.0f, c); } ok &= (e2 & E_CHARGED) != 0; }   // 0.18.63 the free left hand waving does not spend it
     Intent M; for (int i = 0; i < 20; i++) { t += 18; V3 hm[2] = {h[0], h[1]}; if (i >= 15) hm[1].x += 30; M.step(t, v3(0, 0, 0), hm, true, 1.0f, c); } ok &= M.charge == 1 && M.restarts == 1;
     // charged then swing (moving is fine once charged), trigger let go: kept for the grace, then lost; spent by a blow
     for (int i = 0; i < 5; i++) { t += 18; const V3 hm[2] = {v3(i * 7.f, 0, 100), v3(i * 7.f, 10, 100)}; H.step(t, v3(i * 7.2f, 0, 0), hm, true, 1.0f, c); } ok &= H.heavyReady();

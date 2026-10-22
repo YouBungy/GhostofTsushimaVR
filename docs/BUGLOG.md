@@ -2505,3 +2505,12 @@ spaces, session, instance → TerminateProcess.
 - OPEN: black square behind the pickup item picture (rations) on the HUD layer. `[INFERENCE]` the picture is an off-screen
   render with an opaque black background composited additively; additive on the flat screen, opaque on our transparent UI
   image. Next: log the PSO blend of UI draws (CreateGraphicsPipelineState) and keep dst alpha for additive UI blends.
+
+## GoTVR 0.18.62 → 0.18.63 — code review of the 0.18.58-0.18.62 diff (no headset run yet)
+- readable() cache: a heap region trusted 200 ms could be decommitted meanwhile -> 50 ms for non-image regions, 1 s for MEM_IMAGE.
+- parryTry sent the draw toggle on every blow while the game's sword was away (double toggle = sheathe) -> only after a judged
+  contact, shared 2.5 s limiter (g_drawChordAt) with the sword frame.
+- forcePress single slot: a parry after a held block never re-pressed LB; the keep-drawn tap shortened a block hold ->
+  forceFrom / forcePressFresh (50 ms release), a press never shortens an active one, tap skipped while ppend.on / LB forced.
+- atk::Intent: a free left hand moving > 25 cm restarted a one-handed charge -> left hand counted only with two hands.
+- Evidence for the 0.18.62 pacing (v18.log SYNC/s): menus 155-347 flat ticks/s uncapped, VR 56-70 pairs/s; host loop 44-72 fps.
