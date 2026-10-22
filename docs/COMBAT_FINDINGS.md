@@ -395,3 +395,9 @@ Still to find:
 - Owner question: "Can you not put a hitbox on the player held sword for parrying?" - 0.18.62 parry_mode=blade: the
   enemy's weapon = its right hand + 90 cm along its forearm (people share Jin's rig; joint 637 used when in that hand),
   judged against the katana blade capsule; falls back to the blow's line (dogs).
+
+## Session 22 (0.18.66 flat GUARD SCAN, 2026-10-22): Jin's guard flag
+- 12 block holds (Q, 1 s on / 1 s off, sword drawn, no enemies): pre == after != held for hero+0x14C 12/12 (0x3000104 -> 0x3000105,
+  bit 0 = guarding); float vectors hero+0x1E0/0x1E4, 0x200/0x204, 0x240..0x248, 0x3B0/0x3B4 non-zero only while guarding (guard
+  direction / pose data); hero+0xFB4 -34 vs -27 (float); hero+0x2D0 11/12; hero+0xF60 0x100 -> 0x101 in the first 3 holds only.
+- 0.18.67 hybrid parry: bit 0 set around oHitProc for the defended blow; composed flags logged (0x00400000 = guarded).

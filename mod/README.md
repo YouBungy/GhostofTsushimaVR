@@ -22,6 +22,25 @@ refused to send images ("FRAME GENERATION is on" in the log, although it was off
 same-frame stereo (both eyes every frame) gets built. Please press **F10** once in each of: main menu, standing
 outdoors, riding, a cutscene, photo mode.
 
+## 0.18.67: the game's own block effects in VR (from your flat GUARD SCAN)
+
+**Install:** `xinput1_4.dll` only. The host is unchanged from 0.15.6.
+
+- **What the flat test found:** in all 12 of your block holds, one bit of Jin's data switched on while guarding and
+  off on release: bit 0 of hero+0x14C (0x3000104 -> 0x3000105). It was the only value that did so every time. A few
+  direction values (+0x1E0, +0x240) are filled only while guarding.
+- **New default `parry_engine=hybrid` (changed once in your ini):**
+  - Your katana's hitbox still decides block or parry, exactly as in 0.18.66.
+  - The blow is then handed to the game with Jin's guard bit set for that one call, so the game handles it as a
+    guarded hit, with its own spark, clash and recoil. The bit is cleared again immediately.
+  - On a parry the attacker also staggers, as before.
+  - If the game still takes health (an unblockable attack, or the bit alone not being enough), the health is put
+    back, so the defence never fails.
+  - The `PARRY:` lines show what the game made of each blow ("GUARDED by the game", or "not guarded" and "health put
+    back"). `PARRY/total` counts both.
+- `parry_engine=mod` = 0.18.66's silent defence; `parry_engine=game` = the old guard-button route; `parry_guard_offset`
+  (0x14C) is where the flag lives.
+
 ## 0.18.66 / GoTVRHost 0.15.6: fixes from VR session 21
 
 **Install:** `xinput1_4.dll` AND `GoTVR\GoTVRHost.exe`. Both must be from this build, because the shared data block
