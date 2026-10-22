@@ -409,3 +409,17 @@ Still to find:
 - Hero dwords that never shared a value guarded vs unguarded: +0x148 (0x4000100 vs 0x6000100), +0x10D0.. stride 0x18 (6 vs 4),
   +0xF80 / +0xF84 / +0xFB0 / +0xFB4 floats, +0xEDC / +0xEEC / +0xF1C (-4.77e6 sentinel vs 15.4), +0x250 (pointer vs 0).
 - 0.18.70: the game's own guard button driven by the katana (guard engine).
+
+## Session 27 (0.18.74 flat GUARD TRACE, 2026-10-22): the parry is an interaction; enemy blows skip the hit submit
+- 25 enemy blows (4 guarded 0x03800000, 2 through a held guard, 19 unguarded; the spearman / brute 0x11802041 -125), 5 parries, 8 BLUE /
+  ~6 RED glint tags. 0 enemy blows went through HitSubmit 0x84CEA0 - they reach HitProc 0x8504D0 another way (round 2 logs the chain there).
+- Parry reward (+12.5, Jin -> Jin record +0x30 0x1087, hash -1) submitted from 0x71367f (script effect apply, also used by resolve heals)
+  <- 0x71a754 <- 0x71a8f6 <- 0x5758ab <- 0x574f84 (event listener, filters id) <- 0x4e5820 = EventBus::Broadcast 0x4E5780(bus 0x141CDDD30,
+  id, args) <- 0xB2043C in 0xB1F130 = Interaction::SetState(obj, state, params): obj+0x500 state, +0x28 owner, +0x510 partner handle; at the
+  end it broadcasts 0x98 (owner) and 0x99 (partner). Called with state 5 from 0xB26401 in 0xB25D40 (the interaction update: 2/3 -> 4 -> 5
+  on timers obj+0xEF8 / +0xEFC) <- 0xB24110 <- 0xB216B0 (update) <- 0xB5ACB7. Event args: 16-byte variants, count at +0x80 (0x4E4300 adds,
+  type 0xE = entity).
+- Parries were fresh block presses 0-79 ms old at the reward (the 5000 ms one was a re-press during a long hold).
+- Glint object diffs (enemy +0..0x3000 every 100 ms) are dominated by transforms - no stable field; script events (hook 0x7E05F0) only 0x17
+  from the hit delivery. Round 2: event-bus ids.
+- Hero read watchpoints (+0x148 / +0xED8 / +0x10D0 / +0xF80): ~600k hits, all frame-regular; nothing blow-specific. Off in round 2.

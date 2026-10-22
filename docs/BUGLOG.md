@@ -2609,3 +2609,9 @@ spaces, session, instance → TerminateProcess.
 - Owner: triggers send their (no item held) inputs only with that hand's grip open. vrinput.h trigFist latch (grip > trigger_grip_level 0.3
   while pulled -> muted until the trigger is released) + fistWait (grip > 0.1 at the pull: 80 ms to become a fist); gestures, the wheel
   and the press edge (trigWas) honour it. Self-test "trigger fist test". Katana heavy charge reads hd.trigger directly (unaffected).
+
+## GoTVR 0.18.74 → 0.18.75 / host 0.15.7 → 0.15.8
+- Owner (screenshot): the wrist HUD sat right on the forearm; wanted beside it to the left. xrwrist.h: offset L * wrist_hud_side_m (0.07,
+  wrist_hud_v=6), L = the panel's up axis (square to the forearm and the face), flipped to the head's left.
+- Flat log session 27 -> COMBAT_FINDINGS; guard trace round 2 (HITREC at HitProc, interaction SetState hook, event-bus ring, glint
+  event learning, guard_trace_dr off via guard_trace_v=2).

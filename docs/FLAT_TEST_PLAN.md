@@ -38,7 +38,7 @@
 3. **The pass boundary for W1b (world space).** Census the passes after TAA / tonemap and before the UI composite in flat
    (the render-pass atlas). This picks the point where the HUD quad is drawn against the game's depth.
 
-## Guard trace: our own block / parry signal (0.18.73, flat play)
+## Guard trace: our own block / parry signal (0.18.73, round 2 in 0.18.75, flat play)
 
 Goal: find where the game decides block vs parry vs hit, so the mod can send that decision itself instead of pressing the guard.
 
@@ -59,6 +59,10 @@ flat, sword drawn, and go to one or two plain swordsmen (no archers or brutes fi
 
    Then deal with the attack as usual (dodge the red, parry the blue). Press the key as soon as you see the glint; it only
    needs to be roughly on time.
+
+Round 2 (0.18.75) is the same session. The new lines are `GTR HITREC` (each enemy blow's record at the hit, with its chain),
+`GTR STATE` (interaction state changes, e.g. a parry), `GTR EVENTS` and `GLINT EVENTS` (event-bus ids). The read watchpoints
+are off. Most useful: several held blocks, several parries, some unguarded hits, and 5+ glints of each colour.
 
 What the log shows (GTR lines):
 - `GTR BLOW`: each enemy blow on Jin, with:

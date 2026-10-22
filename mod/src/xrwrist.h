@@ -12,7 +12,7 @@
 namespace wrist {
 static Chain sc; static bool on = false, cut = true, glanceOn = true; static int panelAtHead = 0, mode = 1, lockTop = 1, fromAim = 1;   // mode: 1 the game's own HUD art, 2 our gauge (always there), 3 both
 static float rect[4] = {0.015f, 0.865f, 0.235f, 0.125f};   // x, y, w, h as fractions of the UI image (measured on the 16:9 flat HUD)
-static float widthM = 0.10f, alongM = 0.11f, outM = 0.045f, rollDeg = 0.0f, upperM = 0.30f, lowerM = 0.29f, wristM = 0.10f; static u64 nBone = 0;
+static float widthM = 0.10f, alongM = 0.11f, outM = 0.045f, sideM = 0.07f, rollDeg = 0.0f, upperM = 0.30f, lowerM = 0.29f, wristM = 0.10f; static u64 nBone = 0;
 static vit::GlanceCfg gcfg; static vit::Glance glance; static vit::HandAtHead atHead;
 static bool shownNow = false, cutNow = false, headNow = false; static XrPosef pose{}; static int px[4] = {0, 0, 0, 0};
 static u32 lastChg = 0; static u64 nShown = 0, nFrames = 0; static LARGE_INTEGER qf{}, ql{};
@@ -38,13 +38,18 @@ static void load(const wchar_t *dir) {
         wchar_t fa[16]; GetPrivateProfileStringW(L"gotvr", L"wrist_hud_forearm", L"body", fa, 16, ini); fromAim = _wcsicmp(fa, L"grip") == 0 ? 0 : _wcsicmp(fa, L"aim") == 0 ? 1 : 2;
         upperM = f(L"wrist_hud_upper_arm_m", 0.30f); lowerM = f(L"wrist_hud_forearm_m", 0.29f);
         def(L"wrist_hud_from_wrist_m", L"0.10"); wristM = f(L"wrist_hud_from_wrist_m", 0.10f);
-        if (GetPrivateProfileIntW(L"gotvr", L"wrist_hud_v", 0, ini) < 5) { WritePrivateProfileStringW(L"gotvr", L"wrist_hud_out_m", L"0.045", ini); WritePrivateProfileStringW(L"gotvr", L"wrist_hud_v", L"5", ini); } outM = f(L"wrist_hud_out_m", 0.045f); } rollDeg = f(L"wrist_hud_roll_deg", 0.0f); gcfg.low = f(L"wrist_hud_low_hp", 0.30f);
+        if (GetPrivateProfileIntW(L"gotvr", L"wrist_hud_v", 0, ini) < 5) { WritePrivateProfileStringW(L"gotvr", L"wrist_hud_out_m", L"0.045", ini); WritePrivateProfileStringW(L"gotvr", L"wrist_hud_v", L"5", ini); } outM = f(L"wrist_hud_out_m", 0.045f);
+        // 0.15.8 (owner, 2026-10-22, with a screenshot: "where it currently lies is right in the forearm - have it slightly above, like where
+        // the red circle is ... more to the left of the forearm, not above in a global Y axis"): the panel moves sideways off the forearm,
+        // square to it and to the panel's face, toward your LEFT (as you see the arm) - wrist_hud_side_m (0.07; negative = the right side)
+        def(L"wrist_hud_side_m", L"0.07"); if (GetPrivateProfileIntW(L"gotvr", L"wrist_hud_v", 0, ini) < 6) { WritePrivateProfileStringW(L"gotvr", L"wrist_hud_side_m", L"0.07", ini); WritePrivateProfileStringW(L"gotvr", L"wrist_hud_v", L"6", ini); }
+        sideM = fmaxf(-0.25f, fminf(0.25f, f(L"wrist_hud_side_m", 0.07f))); } rollDeg = f(L"wrist_hud_roll_deg", 0.0f); gcfg.low = f(L"wrist_hud_low_hp", 0.30f);
     wchar_t v[96]; GetPrivateProfileStringW(L"gotvr", L"wrist_hud_rect", L"", v, 96, ini); float r[4]; if (swscanf(v, L"%f,%f,%f,%f", &r[0], &r[1], &r[2], &r[3]) == 4 && r[2] > 0.01f && r[3] > 0.01f) for (int i = 0; i < 4; i++) rect[i] = r[i];
     logf("wrist HUD: forearm line from %s", fromAim == 2 ? "an estimated elbow (headset + two-bone arm) - the wrist's own turns never move it" : fromAim == 1 ? "the controller's pointing direction" : "the grip axis");
     logf("wrist HUD: placed %s", lockTop ? "on TOP of the forearm, never rolling with the wrist (wrist_hud_lock = top)" : "on the back of the hand, turning with it (wrist_hud_lock = hand)");
     logf("wrist HUD: mode %d (%s)", mode, mode == 1 ? "the game's own health / resolve art" : mode == 2 ? "our gauge from the game's values, always there" : "our gauge + the game's own art above it");
-    logf("wrist HUD: %s (rect %.3f,%.3f %.3fx%.3f of the UI image, %.2f m wide, %.2f m up the forearm from the grip, %.3f m out, glance %d, cut from the room panel %d, room panel only with the hand at the head %d)",
-         on ? "ON" : "off (wrist_hud = 0)", rect[0], rect[1], rect[2], rect[3], widthM, alongM, outM, (int)glanceOn, (int)cut, panelAtHead);
+    logf("wrist HUD: %s (rect %.3f,%.3f %.3fx%.3f of the UI image, %.2f m wide, %.2f m up the forearm from the grip, %.3f m out, %.3f m to the left, glance %d, cut from the room panel %d, room panel only with the hand at the head %d)",
+         on ? "ON" : "off (wrist_hud = 0)", rect[0], rect[1], rect[2], rect[3], widthM, alongM, outM, sideM, (int)glanceOn, (int)cut, panelAtHead);
 }
 static XrQuaternionf qmul(XrQuaternionf a, XrQuaternionf b) { return {a.w * b.x + a.x * b.w + a.y * b.z - a.z * b.y, a.w * b.y - a.x * b.z + a.y * b.w + a.z * b.x, a.w * b.z + a.x * b.y - a.y * b.x + a.z * b.w, a.w * b.w - a.x * b.x - a.y * b.y - a.z * b.z}; }
 static void rot(XrQuaternionf q, const float *v, float *o) {   // q * v
@@ -106,7 +111,9 @@ static void decide(const XrPosef &head, bool headOk, u32 uiW, u32 uiH) {
             else if (m00 > m11 && m00 > m22) { const float s4 = sqrtf(1.0f + m00 - m11 - m22) * 2; r.w = (Y[2] - N[1]) / s4; r.x = 0.25f * s4; r.y = (Y[0] + X[1]) / s4; r.z = (N[0] + X[2]) / s4; }
             else if (m11 > m22) { const float s4 = sqrtf(1.0f + m11 - m00 - m22) * 2; r.w = (N[0] - X[2]) / s4; r.x = (Y[0] + X[1]) / s4; r.y = 0.25f * s4; r.z = (N[1] + Y[2]) / s4; }
             else { const float s4 = sqrtf(1.0f + m22 - m00 - m11) * 2; r.w = (X[1] - Y[0]) / s4; r.x = (N[0] + X[2]) / s4; r.y = (N[1] + Y[2]) / s4; r.z = 0.25f * s4; }
-            q = qmul(r, qz); for (int k = 0; k < 3; k++) ow[k] = bone ? boneW[k] - hd.grip.p[k] + A[k] * wristM + N[k] * outM : N[k] * outM + A[k] * alongM; } }
+            // the side: square to the forearm and the face (Y, the picture's up), turned to point to your left as you look at the arm
+            float L[3] = {Y[0], Y[1], Y[2]}; { const float xr[3] = {1, 0, 0}; float hr[3]; rot(head.orientation, xr, hr); if (L[0] * hr[0] + L[1] * hr[1] + L[2] * hr[2] > 0.0f) for (auto &x : L) x = -x; }
+            q = qmul(r, qz); for (int k = 0; k < 3; k++) ow[k] = (bone ? boneW[k] - hd.grip.p[k] + A[k] * wristM + N[k] * outM : N[k] * outM + A[k] * alongM) + L[k] * sideM; } }
     pose.orientation = q; pose.position = {hd.grip.p[0] + ow[0], hd.grip.p[1] + ow[1], hd.grip.p[2] + ow[2]};
     const float nz[3] = {0, 0, 1}; float n[3]; rot(q, nz, n);
     const float fz[3] = {0, 0, -1}; float fw[3]; const XrQuaternionf qh = head.orientation; rot(qh, fz, fw);

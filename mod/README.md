@@ -22,6 +22,22 @@ refused to send images ("FRAME GENERATION is on" in the log, although it was off
 same-frame stereo (both eyes every frame) gets built. Please press **F10** once in each of: main menu, standing
 outdoors, riding, a cutscene, photo mode.
 
+## 0.18.75: guard trace round 2, wrist HUD beside the forearm (host 0.15.8)
+
+**Install:** `xinput1_4.dll` and `GoTVR\GoTVRHost.exe`.
+
+- **Wrist HUD** (owner, with a screenshot): the panel moves off the top of the forearm to its left side, as you look at
+  the arm. It is still locked along the forearm and never rolls with the wrist. `wrist_hud_side_m` sets how far (0.07 m,
+  changed once; negative = the right side).
+- **Guard trace round 2 (flat only):** findings from the first flat log:
+  - The game's parry is an *interaction*, a small state machine between the attacker and Jin. It ends with an event
+    that gives Jin his parry health.
+  - Enemy blows reach Jin's hit processing directly, not through the hit submit.
+
+  So this round logs each enemy blow's record at the hit itself (guarded vs unguarded), every interaction state change
+  (what starts a parry), and the game's event-bus ids before blows, parries and glints. The read watchpoints are off
+  (`guard_trace_dr=0`); they only produced noise. Steps are in docs/FLAT_TEST_PLAN.md.
+
 ## 0.18.74: a fist sends no trigger input
 
 **Install:** `xinput1_4.dll`.
