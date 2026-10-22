@@ -22,6 +22,16 @@ refused to send images ("FRAME GENERATION is on" in the log, although it was off
 same-frame stereo (both eyes every frame) gets built. Please press **F10** once in each of: main menu, standing
 outdoors, riding, a cutscene, photo mode.
 
+## 0.18.73: guard trace flat test (host 0.15.7 fix)
+
+**Install:** `xinput1_4.dll` and `GoTVR\GoTVRHost.exe`.
+
+- **Host fix:** the 0.18.72 host never passed its settings to the UI shader (a line was inside a comment). The black-box
+  key and the hit-overlay removal now get their values.
+- **Guard trace (flat play only, `guard_trace` / `guard_trace_dr`):** instruments the game's hit submission and Jin's guard
+  fields, to find where the game decides block vs parry. The goal is for the VR blade to send that decision itself
+  instead of pressing the guard button. Steps are in docs/FLAT_TEST_PLAN.md. In VR nothing changes.
+
 ## 0.18.72: fixes from VR session 26 (host 0.15.7)
 
 **Install:** `xinput1_4.dll` and `GoTVR\GoTVRHost.exe`.

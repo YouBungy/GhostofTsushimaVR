@@ -86,7 +86,8 @@ static bool draw(ID3D12GraphicsCommandList *c, ID3D12Resource *src[], u32 srcIdx
         srvGen = gen; }
     c->SetGraphicsRootSignature(rs); c->SetPipelineState(pso); ID3D12DescriptorHeap *hp[] = {srv}; c->SetDescriptorHeaps(1, hp);
     D3D12_GPU_DESCRIPTOR_HANDLE g = srv->GetGPUDescriptorHandleForHeapStart(); g.ptr += (u64)srcIdx * srvStep; c->SetGraphicsRootDescriptorTable(0, g);
-    const float cst[2] = {on ? level : 0.0001f, (hurtOff && !full) ? (hurt ? 2.0f : 1.0f) : 0.0f};   // 0.15.7 (review): never during a full-view fade / cinematic c->SetGraphicsRoot32BitConstants(1, 2, cst, 0);
+    const float cst[2] = {on ? level : 0.0001f, (hurtOff && !full) ? (hurt ? 2.0f : 1.0f) : 0.0f};   // 0.15.7 (review): never during a full-view fade / cinematic
+    c->SetGraphicsRoot32BitConstants(1, 2, cst, 0);
     c->OMSetRenderTargets(1, &rtv, FALSE, nullptr); D3D12_VIEWPORT vp{0, 0, (float)w, (float)h, 0, 1}; D3D12_RECT sr{0, 0, (LONG)w, (LONG)h}; c->RSSetViewports(1, &vp); c->RSSetScissorRects(1, &sr);
     c->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); c->DrawInstanced(3, 1, 0, 0); nDrawn++;
     return true;
