@@ -132,6 +132,7 @@ static u32 forcePressFresh(u32 m, u32 ms, u32 gapMs) { const u64 now = GetTickCo
     if (!forceActive(m, now)) { forceMask = m; forceFrom = now; forceUntil = now + ms; return 0; }
     forceMask = m; forceFrom = now + gapMs; forceUntil = now + gapMs + ms; return gapMs; }
 static std::atomic<u32> blockMask{0}; static std::atomic<u64> nBlocked{0};   // 0.18.29: pad buttons held off (the game's sword attacks while the physical katana is in hand)
+static u64 chordTurnAt = 0;   // 0.18.72
 static std::atomic<u32> extReqMask{0}; static std::atomic<u64> extReqSeq{0}, nExt{0}; static u64 extSeen = 0, extStart = 0, extUntil = 0; static u32 extMask = 0;
 static void requestChord(u32 m) { extReqMask = m; extReqSeq++; }
 static Wheel wheel; static u64 gestUntil[2] = {0, 0}, gestStart[2] = {0, 0}; static u32 gestMask[2] = {0, 0}; static bool trigWas[2] = {false, false}, atHeadWas[2] = {false, false};
@@ -318,7 +319,12 @@ static bool build(XINPUT_GAMEPAD &g, bool ctxFlat) {
         }
     }
     if (now < wheel.tapUntil) applyStaged(wheel.tapMask, wheel.tapStart, wheel.tapUntil, now, g);
-    { const u64 sq = extReqSeq.load(); if (sq != extSeen) { extSeen = sq; extMask = extReqMask.load(); extStart = now; extUntil = now + 450; nExt++; } }
+    { const u64 sq = extReqSeq.load(); if (sq != extSeen) { extSeen = sq; extMask = extReqMask.load(); extStart = now; extUntil = now + 450; nExt++;
+          // 0.18.72 (owner, session 26: "the turning bug happens sometimes after I unsheathe my sword"): the draw / sheathe chord pushes the
+          // right stick, which turns the game camera - every degree it turns is taken into the view offset (as in a snap's catch-up) so the view
+          // holds still, and the turn ends like a snap (movement forward re-taken)
+          if (extMask & (OX_RSU | OX_RSD | OX_RSL | OX_RSR)) { bleedUntil = extUntil + 300; chordTurnAt = extUntil + 320; } }
+      if (chordTurnAt && now >= chordTurnAt) { chordTurnAt = 0; turnSeq++; moveCapture(30); } }
     if (now < extUntil) applyStaged(extMask, extStart, extUntil, now, g);
     // ---- turning: the view turns at once (snap or smooth); the game camera follows in the background ----
     if (!stickBusy) {

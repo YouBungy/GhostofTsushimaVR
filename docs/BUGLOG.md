@@ -2572,3 +2572,35 @@ spaces, session, instance → TerminateProcess.
   4.2-4.6 m from the head; the "riding ON" at 647099843 (knee 20 cm below the hip, crouched landing) was a false positive. Kick after a
   fall / slide of >= 1 s.
 - HIT SCAN (flat): hero 32 KB at each enemy blow on Jin, block held / time, composed flags; guarded vs unguarded value-set comparison.
+
+## GoTVR 0.18.71 → 0.18.72 / host 0.15.6 → 0.15.7 — VR session 26
+- `[LIVE]` crash: last lines a mod PARRY on dog 000004cbf53de000 (class 16) at 650835500, then tick=0 (game thread gone). No dog record
+  exists in VR (REC: light / heavy people's records only) -> the parry stagger (recOnly) and the queued cut used the people's light record
+  on a dog. Dogs: dog record or the message path; recOnly on a dog without one -> nothing.
+- `[LIVE]` guard engine passed blows to the game twice; both "not guarded by the game" (0x01001041 spear, 0x03800041 dog) -> mod defends
+  unless the record's damage (+0xE0/+0xE4/+0xEC) is already <= 0.
+- `[LIVE]` 2 parries by the GAME: guard hold lapsed when sp >= 0.8 m/s and re-pressed; keep-drawn LB tap with foes near. Hold kept while in
+  zone; tap skipped with a hostile within 4 m. xtMotion failure -> BLOCK.
+- `[LIVE]` 0 clashes; enemyBlade never instrumented in the clash scan -> ebWhy[] reasons + WEAPON/total + per-touch weapon distance; two-hand
+  weapon line (hands > 25 cm apart). Strike hold 300 ms (parry_hold_v=2).
+- `[LIVE]` HITS: too slow at 1.8-2.4 m/s; too short at 4.9-9.4 m/s (history < 100 ms) -> 1.8 m/s / 14 cm (sword_hit_v=2), travel over
+  >= 100 ms when the history is shorter.
+- `[DUMP]` ui_hit (d26): alpha 156-255 over the WHOLE image, colour black / dark red / orange cross; HUD bright on top. Key shader: overlay
+  = 4 probe points (50/30, 30/50, 70/50, 50/70 %) opaque & dark; then dark, red (r > 1.6 max(g,b), k < 0.8) and warm (r > 1.35 g, > 2 b) ->
+  transparent, rims k < 0.35 fade. Verified on the dump (numpy) and compiled under wine. bandsOf: veil over all rows with >= 6 red samples is
+  not a fade (the dump gave veil 13 / 13, reds 217).
+- Swing step (sword_lunge_swing_*), sheath catch x speed (sword_sheathe_moving_mult), body lead (fp_body_lead_s), chordTurnAt (RSR in the
+  draw chord).
+- Review (independent agent) fixes: forcePress in the guard hold cancelled forcePressFresh's 40 ms release (hold skipped 300 ms after a
+  fresh press; gaOn kept meanwhile); shader keyed full-screen fades (now needs >= 2 of 8 red edge probes and never with GV_UI_FULL);
+  two-hand weapon line fired on idle arms (now the left hand within 15 cm of an axis of joint 637 held in the right hand); record choice
+  never crosses dogs / people; bodyStep dt from QPC (GetTickCount64 gave dt 0 at 64+ pairs/s; < 2 ms = same frame; the tick clock when it
+  disagrees by > 30 ms for the self-test); melee 100 ms stretch only when hn < HIST; melee evaluated / contacts counters were inside a
+  comment; sword_hit_contact_cm / cooldown defs were inside a comment; WEAPON/total logged on its own counters; queued blows carry regGen;
+  recZero hand-off needs gaOn; bandsOf red channel by rbFmt; swing step ignores enemies > 150 cm above / below; keep-drawn tap taken early
+  right after a blow on Jin (60-400 ms) with a foe within 4 m instead of being skipped.
+- Haptic signatures (hapx): block 45 ms knock, parry rising double knock (50 + 90 ms at +85 ms) both hands, hit 4 x 28 ms buzzes
+  (fx_hit_rumble). Cut damage x(0.8 + 0.25 x position along the blade).
+- `[DUMP]` GhostOfTsushima.exe.71452.dmp (14:26 local, session 26): ACCESS_VIOLATION reading 0x4cbf29006e0 at GhostOfTsushima.exe+0x586e76 on
+  the game thread (tid 57568), rdi = r10 = the dog 0x4cbf53de000; the faulting stack holds the hit path (+0x856d8a, Deliver +0x85a8b8) and
+  cbt::strike's static record buffer (rebuilt 0.18.71 map) -> the people's record processed against a dog, as diagnosed from the log.

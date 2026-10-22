@@ -82,7 +82,10 @@ struct Core {
             // the line from the target's axis to the contact point: the closing speed is the relative velocity INTO the target
             const V3 ax = sub(T.b, T.a); const float al2 = dot(ax, ax); float u = al2 > 1e-6f ? dot(sub(cp, T.a), ax) / al2 : 0.0f; u = u < 0 ? 0 : u > 1 ? 1 : u;
             V3 n = sub(cp, add(T.a, mul(ax, u))); const float nl = len(n); n = nl > 1e-3f ? mul(n, 1.0f / nl) : mul(vr, -1.0f / fmaxf(1e-3f, len(vr)));
-            const float closing = -dot(vr, n) * 0.01f, travel = len(vr) * dts;   // the travel relative to the target (no locomotion) too evaluated++; contacts++;
+            // 0.18.72 (session 26: fast swings at 5-9 m/s refused as "too short"): when the history does not yet reach back 100 ms (a hitch
+            // restarted it, or the first frames of a pass at a low frame rate) the travel is the speed over 100 ms - a tremor still fails on speed
+            const float closing = -dot(vr, n) * 0.01f, travel = len(vr) * (hn < HIST && o == 0 && dts < 0.1f ? 0.1f : dts);   // the travel relative to the target (no locomotion) too
+            evaluated++; contacts++;   // 0.18.72 (review): these counters were inside the comment above
             if (closing > peakSpeed) peakSpeed = closing;
             inside[si] = true;
             if (closing < c.minSpeed) { tooSlow++; continue; }

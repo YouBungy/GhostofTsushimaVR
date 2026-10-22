@@ -76,3 +76,24 @@ refractory 250 ms after an active attack ends
 - GoTVR: attack.h Weight = rotational spring-damper on the blade's forward, gravity sag one-handed, a second hand = a
   second joint (a third of the lag, a fifth of the sag), soft lag limit, reset list in gotvr.cpp.
 
+
+## Session 26 research: block / parry / hit design in shipped VR melee games (0.18.72)
+- Skyrim VR "Pseudo Physical Weapon Collision and Parry" (canned enemy animations vs a tracked sword - our case): melee hits on the
+  player held 9 frames so the weapon-collision check can catch up; outcome tiers by controller speed (still: enemy keeps its combo,
+  gentle: recoil, fast: recoil + stagger); the player never recoils from a VR parry. https://nexusmods.com/skyrimspecialedition/mods/100781
+- Until You Fall: blocks judged on the overall gesture, not exact contact; directional prompts. https://www.roadtovr.com/?p=98204
+- Asgard's Wrath: some attacks need a swing in a counter direction (a held sword alone made fights "mushy").
+  https://www.unrealengine.com/en-US/developer-interviews/developer-sanzaru-games-aims-to-deliver-a-next-level-30-hour-vr-epic-with-asgard-s-wrath
+- Valhalla Combat (flat Skyrim): timed block 0.3 s, perfect 0.15 s, a failed attempt narrows the next window (decays every 0.5 s).
+  https://nexusmods.com/skyrimspecialedition/mods/64741
+- Skyrim VR [VRInput] defaults: fMeleeLinearVelocityThreshold 2.0, fMeleeSwingDuration 0.33 s, direction cooldown 0.25 s; rumble tick
+  0.01 s @ 0.3, confirm 0.3 s @ 0.3. https://stepmodifications.org/forum/topic/16196-skyrim-vr-default-values-for-all-valid-ini-settings/
+- Meta haptics: "success" = two events rising over ~175 ms, "error" = four abrupt events. https://developers.meta.com/horizon/design/haptics-system/
+- Parrying RPG (Skyrim): weapons colliding while both swing = the attacker recoils, no damage. https://nexusmods.com/skyrimspecialedition/mods/81356
+- Blade & Sorcery "Improved Collisions": impact assist only above 3 m/s. https://www.nexusmods.com/bladeandsorcery/mods/12703
+- Bannerlord: damage depends on where along the blade it lands. https://gamebanshee.com/k4awc
+- Ghost of Tsushima's own telegraph: red glint = unblockable (dodge), blue glint = must be parried - hooking the glint would be the early
+  wind-up signal the mod lacks (a future flat test).
+- Taken into 0.18.72: haptic signatures (block / parry / hit), the blade's sweet spot, the strike hold (the 9-frame idea in reverse - our
+  cut waits 300 ms for the enemy's blow), the hit gate at 1.8 m/s. Candidates: hit-stop / time dilation on a parry, a counter-direction
+  requirement for a parry, the glint hook + a directional rim tint.

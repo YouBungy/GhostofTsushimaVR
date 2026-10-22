@@ -22,6 +22,62 @@ refused to send images ("FRAME GENERATION is on" in the log, although it was off
 same-frame stereo (both eyes every frame) gets built. Please press **F10** once in each of: main menu, standing
 outdoors, riding, a cutscene, photo mode.
 
+## 0.18.72: fixes from VR session 26 (host 0.15.7)
+
+**Install:** `xinput1_4.dll` and `GoTVR\GoTVRHost.exe`.
+
+- **The crash when attacking a dog:** the log ended right after a parry on a dog's bite. Its stagger and your queued cut were
+  sent through the game's hit path with the *people's* sword record (no dog record is ever saved in VR). A dog now only
+  gets a dog's own record. Otherwise your cuts go through the plain message path, and the parry stagger is skipped.
+- **Gold parry, then still hit (spearman, dog):** with the game's guard up, the next blow was handed to the game, which did
+  not guard it. Jin was hit, the mod put the health back, but the damage effects showed. Any blow that meets your blade
+  is now defended by the mod. The game only takes a blow it has already made harmless.
+- **Sword held still but counted as a parry:**
+  - The game parries on a fresh guard *press* just before a blow. The guard assist let the guard go when you trembled
+    and pressed it again, and the keep-drawn guard tap (every 3 s) could land as a blow arrived. Both were game parries.
+  - The guard now stays held while the katana stays in the zone. A parry motion still gets its fresh press.
+  - With an enemy within 4 m, the keep-drawn tap is taken early, right after a blow on Jin, so it doesn't land as the
+    next blow arrives.
+  - If the controller's motion history is missing, the result is a block (no longer the noisy world-space guess).
+- **Swinging into an attack hit the enemy instead of deflecting:**
+  - Your cuts are held 300 ms instead of 200 (`parry_strike_hold_ms`, changed once). An attack that lands on your blade
+    in that time turns the touch into a deflect.
+  - The enemy-weapon search now handles weapons held in both hands far apart (spears, naginata): the weapon runs along
+    the line through both hands.
+  - A new `WEAPON/total` log line counts clashes and why a weapon was not found. Every cut also logs how far the enemy's
+    weapon was from your blade. Session 26 had no clashes at all, so these numbers will show what to fix next.
+- **Swings that did nothing:** the log had swings refused at 1.8-2.4 m/s and fast swings refused as "too short" (the
+  history had just restarted). Hits now count from 1.8 m/s and 14 cm (`sword_hit_min_speed`, `sword_hit_min_travel_cm`,
+  changed once). A short history is measured over 100 ms.
+- **Step on a swing (new):** a swing near enemies takes a small step toward the one you face most (the smallest angle
+  from your view, within the cone). It stops at `sword_lunge_stop_cm`. A cut's own lunge is skipped right after a swing step.
+  - `sword_lunge_swing_cm` (25): the step's length (0 = off).
+  - `sword_lunge_swing_deg` (45): the cone around your view.
+  - `sword_lunge_swing_range_cm` (250): how far an enemy can be.
+- **Sheathing while moving:** the sheath mouth's catch area grows with speed, up to `sword_sheathe_moving_mult` (2.0) at
+  3 m/s.
+- **Jin lagging behind the headset while moving:** the body is led by its own velocity (`fp_body_lead_s`, 0.022 s) and
+  follows faster while moving.
+- **Turning bug after unsheathing:** the game's draw chord includes a right-stick nudge, which turned the game camera.
+  The movement direction is now re-taken right after the chord.
+- **From other VR melee games** (Until You Fall, Asgard's Wrath, Skyrim VR's parry mods, Blade & Sorcery, Meta's haptics
+  guidelines):
+  - **Distinct haptics:**
+    - A block is one dull knock in the sword hand.
+    - A parry is a rising double knock in both hands.
+    - Being hit is four short buzzes in both hands (`fx_hit_rumble`, 0.7; 0 = off).
+  - **The blade's sweet spot:** a cut with the outer blade does up to 1.05x; one right at the guard does 0.8x.
+- **Smaller fixes from a code review:**
+  - The body's clock now uses the precise timer, so the body springs and lead no longer flicker at high frame rates.
+  - A queued cut is dropped if its enemy's slot was reused while it waited.
+  - People only get people's records and dogs only dogs'.
+  - The swing step ignores enemies on another level.
+  - The UI key never touches full-view fades or cinematics.
+- **UI: the game's damage HUD:** the hit dump showed the game's hit overlay is opaque over the whole view (black middle,
+  red streaks, an orange cross). The old key never touched it, and the cinematic detector read it as a fade (which put
+  the HUD over the whole view). The host's UI shader now finds the overlay itself and removes it, keeping the health
+  and resolve art. The cinematic detector ignores it. `hud_hide_game_hit` = 0 turns it off.
+
 ## 0.18.71: fixes from VR session 25
 
 **Install:** `xinput1_4.dll` only.
