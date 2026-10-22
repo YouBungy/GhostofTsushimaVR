@@ -423,3 +423,13 @@ Still to find:
 - Glint object diffs (enemy +0..0x3000 every 100 ms) are dominated by transforms - no stable field; script events (hook 0x7E05F0) only 0x17
   from the hit delivery. Round 2: event-bus ids.
 - Hero read watchpoints (+0x148 / +0xED8 / +0x10D0 / +0xF80): ~600k hits, all frame-regular; nothing blow-specific. Off in round 2.
+
+## Session 28 (0.18.75 flat round 2 + video, 2026-10-22): the guard is in the record; attacks are interactions
+- Enemy blows reach HitProc from the queue flush 0x85AE40 (HitSubmit queued them on another thread - round 1 only watched the game thread).
+- Guarded records at HitProc vs unguarded: +0x34 = -1 (unguarded: a small index 0..0x1d), +0x40 = 9 (0), +0x80 hash 0x5aaff71d1cecac23/24 (the
+  attack's own), +0xE0 damage 0 (100 / 125), tag count 2 (3). Ctrl+Shift+B wrote +0x34 = -1 and +0xE0 = 0 at HitProc: 16 / 16 blows composed
+  0x03800000 (guarded), no damage, block not pressed - but no spark (video): the spark / clang presumably need +0x40 / the guard hash / tags.
+- Every enemy attack is an interaction (0xB1F130): -1 -> 0 -> 1 (wind-up) -> 2 (strike; blows land here) or 3 / 4 (no contact) -> 4 -> 5 -> -1.
+  Video: the blue glint shows 0.21-0.29 s after 0 -> 1, the strike 0.3-0.6 s after the glint. Parry reward at the parried attack's 2 -> 4 / 5.
+- Video glints found by colour (blue: b > 200, b - r > 60; red: r > 220, r - g/b > 120) matched the owner's F6 tags within 0.2-0.35 s; video
+  aligned to the log by the hit flashes (tools/glint_video.py). Event-bus ids: nothing glint-specific yet.

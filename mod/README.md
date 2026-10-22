@@ -22,6 +22,25 @@ refused to send images ("FRAME GENERATION is on" in the log, although it was off
 same-frame stereo (both eyes every frame) gets built. Please press **F10** once in each of: main menu, standing
 outdoors, riding, a cutscene, photo mode.
 
+## 0.18.76: our own block signal; deflect by swinging into an attack
+
+**Install:** `xinput1_4.dll`.
+
+- **Blocks and parries no longer press the game's guard button** (owner: "send our own signal"):
+  - The flat test found the two hit-record fields that make the game treat a blow as guarded. With them written and no
+    block pressed, the game guarded 16 of 16 blows, with no damage.
+  - With `parry_engine=signal` (the new default, changed once), a blow your blade blocks or parries now goes to the game
+    marked guarded instead of being dropped.
+  - A parry still staggers the attacker. `parry_engine=mod` restores the old behaviour.
+- **Swinging into an enemy's attack deflects it:**
+  - The mod now follows each enemy's attack phases: wind-up, then strike. Red and blue glints appear about 0.25 s into the
+    wind-up.
+  - A blade touch on an enemy that is striking, or more than 0.3 s into its wind-up (`parry_deflect_windup_ms`), is a
+    deflect: no cut, and its blow counts as parried.
+- **Flat test (round 3, only if you want to help further):**
+  - `gtr_attacks.bin` stores each enemy attack's data, so a recorded video can tell which attacks glint red or blue.
+  - Ctrl+Shift+N tries the fuller guard signal, which may bring the game's spark and clang.
+
 ## 0.18.75: guard trace round 2, wrist HUD beside the forearm (host 0.15.8)
 
 **Install:** `xinput1_4.dll` and `GoTVR\GoTVRHost.exe`.

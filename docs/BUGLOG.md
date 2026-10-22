@@ -2615,3 +2615,9 @@ spaces, session, instance → TerminateProcess.
   wrist_hud_v=6), L = the panel's up axis (square to the forearm and the face), flipped to the head's left.
 - Flat log session 27 -> COMBAT_FINDINGS; guard trace round 2 (HITREC at HitProc, interaction SetState hook, event-bus ring, glint
   event learning, guard_trace_dr off via guard_trace_v=2).
+
+## GoTVR 0.18.75 → 0.18.76
+- parry_engine=signal (default, parry_v=9): mod-defended blows rewritten (+0x34 = -1, +0xE0 = 0) and passed to HitProc; health put back if
+  the game still took any. Interaction phase table (hook 0xB1F130 always on); katana touch on a striking / late-wind-up enemy = deflect.
+- Flat: gtr_attacks.bin (interaction 0x2000 + params 0x200 at 0 -> 1 and at the end of the wind-up), Ctrl+Shift+N full guard signal.
+- Fixed: parry_hilt_extend_cm / parry_tip_extend_cm defaults were inside a comment.
