@@ -2566,3 +2566,9 @@ spaces, session, instance → TerminateProcess.
 - Snap / smooth turn: body tween 0.06 s (snapFast). Keep-drawn guard tap every 3 s, all engines (sword_keep_v=2).
 - Movement direction wrong after a dismount (647097640: faces -112 -> 170 deg at 4.9 m/s): kick on riding off; guard 45 deg / 0.3 s / 1.5 m/s.
 - UI image saved once after the first hit (ui_hit_*.bmp).
+
+## GoTVR 0.18.68 → 0.18.69
+- Correction: no horse in session 23 (owner). 647094-647097: jump window held 46-71 frames/s (in the air / sliding), 7.6-8.8 m/s, game camera
+  4.2-4.6 m from the head; the "riding ON" at 647099843 (knee 20 cm below the hip, crouched landing) was a false positive. Kick after a
+  fall / slide of >= 1 s.
+- HIT SCAN (flat): hero 32 KB at each enemy blow on Jin, block held / time, composed flags; guarded vs unguarded value-set comparison.

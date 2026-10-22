@@ -22,6 +22,28 @@ refused to send images ("FRAME GENERATION is on" in the log, although it was off
 same-frame stereo (both eyes every frame) gets built. Please press **F10** once in each of: main menu, standing
 outdoors, riding, a cutscene, photo mode.
 
+## 0.18.69: the movement-direction bug (corrected), and the HIT SCAN flat test
+
+**Install:** `xinput1_4.dll` only.
+
+- **Correction:** 0.18.68 blamed a horse dismount for the movement-direction bug; there was no horse. The log actually
+  shows about 3 s with Jin in the air or sliding at 7.6-8.8 m/s (the jump window was held all that time), with the game
+  camera pulled back to 4.2-4.6 m. The direction was wrong right after. A brief "riding" reading after landing was a
+  false alarm.
+  - Now, when a fall or slide of 1 s or more ends, the start-up turn kick runs (what a snap does to the game camera).
+  - The faster direction guard from 0.18.68 stays: 45 deg off for 0.3 s at 1.5 m/s or more.
+- **HIT SCAN (flat play):** for the game's own guard and parry. Every enemy blow on Jin saves Jin's 32 KB of data just
+  before the game processes it, then logs what the game made of it: the composed flags, the damage, and whether block
+  was held and for how long.
+  - Guarded blows are compared with unguarded ones. The `HIT SCAN` lines list Jin's values that always differ between
+    the two groups; that is what the game's guard actually reads at the moment of the hit.
+
+**The flat test (`play_mode=flat`), one ordinary swordsman, heal whenever you need to:**
+1. Let him hit you about 5 times without blocking.
+2. Hold block (Q / LB) well before his swing and keep holding while he hits your guard, about 5 times.
+3. Try for parries, pressing block just before his blow lands, as many as you like. A few perfect parries would be ideal.
+4. Then set `play_mode` back to VR.
+
 ## 0.18.68: fixes from VR session 23
 
 **Install:** `xinput1_4.dll` only (the host is unchanged from 0.15.6).
