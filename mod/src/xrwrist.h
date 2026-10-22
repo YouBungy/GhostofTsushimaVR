@@ -10,7 +10,7 @@
 #pragma once
 #include "vitals.h"
 namespace wrist {
-static Chain sc; static bool on = false, cut = true, glanceOn = true; static int panelAtHead = 0, mode = 1, lockTop = 1;   // mode: 1 the game's own HUD art, 2 our gauge (always there), 3 both
+static Chain sc; static bool on = false, cut = true, glanceOn = true; static int panelAtHead = 0, mode = 1, lockTop = 1, fromAim = 1;   // mode: 1 the game's own HUD art, 2 our gauge (always there), 3 both
 static float rect[4] = {0.015f, 0.865f, 0.235f, 0.125f};   // x, y, w, h as fractions of the UI image (measured on the 16:9 flat HUD)
 static float widthM = 0.10f, alongM = 0.11f, outM = 0.045f, rollDeg = 0.0f;
 static vit::GlanceCfg gcfg; static vit::Glance glance; static vit::HandAtHead atHead;
@@ -20,14 +20,18 @@ static void load(const wchar_t *dir) {
     wchar_t ini[MAX_PATH]; swprintf(ini, MAX_PATH, L"%ls\\gotvr.ini", dir);
     auto f = [&](const wchar_t *k, float d) { wchar_t v[64]; GetPrivateProfileStringW(L"gotvr", k, L"", v, 64, ini); return v[0] ? (float)_wtof(v) : d; };
     auto def = [&](const wchar_t *k, const wchar_t *v) { wchar_t t[8]; if (!GetPrivateProfileStringW(L"gotvr", k, L"", t, 8, ini)) WritePrivateProfileStringW(L"gotvr", k, v, ini); };
-    def(L"wrist_hud", L"1"); def(L"wrist_hud_rect", L"0.015,0.865,0.235,0.125"); def(L"wrist_hud_width_m", L"0.10"); def(L"wrist_hud_from_hand_m", L"0.11");
-    def(L"wrist_hud_out_m", L"0.045"); def(L"wrist_hud_roll_deg", L"0"); def(L"wrist_hud_glance", L"1"); def(L"wrist_hud_cut", L"1"); def(L"wrist_hud_panel_at_head_only", L"0"); def(L"wrist_hud_low_hp", L"0.30"); def(L"wrist_hud_mode", L"1"); def(L"wrist_hud_lock", L"top");
+    def(L"wrist_hud", L"1"); def(L"wrist_hud_rect", L"0.015,0.865,0.235,0.125"); def(L"wrist_hud_width_m", L"0.10"); def(L"wrist_hud_from_hand_m", L"0.15");
+    def(L"wrist_hud_out_m", L"0.05"); def(L"wrist_hud_forearm", L"aim"); def(L"wrist_hud_roll_deg", L"0"); def(L"wrist_hud_glance", L"1"); def(L"wrist_hud_cut", L"1"); def(L"wrist_hud_panel_at_head_only", L"0"); def(L"wrist_hud_low_hp", L"0.30"); def(L"wrist_hud_mode", L"1"); def(L"wrist_hud_lock", L"top");
     {   // 0.18.61 (owner: "get rid of your version and just have the game's"): an ini written before keeps mode 3 - moved to 1 once
         wchar_t t[8]; if (!GetPrivateProfileStringW(L"gotvr", L"wrist_hud_v", L"", t, 8, ini)) { WritePrivateProfileStringW(L"gotvr", L"wrist_hud_mode", L"1", ini); WritePrivateProfileStringW(L"gotvr", L"wrist_hud_v", L"2", ini); } }
+    {   // 0.15.4 (owner, session 19: "the HUD was not on the forearm but to the left of the wrist - I want it overlaid on top of the forearm"):
+        // the forearm is now the controller's POINTING line (aim pose), further up the arm and a little higher - moved once
+        if (GetPrivateProfileIntW(L"gotvr", L"wrist_hud_v", 0, ini) < 3) { WritePrivateProfileStringW(L"gotvr", L"wrist_hud_from_hand_m", L"0.15", ini); WritePrivateProfileStringW(L"gotvr", L"wrist_hud_out_m", L"0.05", ini); WritePrivateProfileStringW(L"gotvr", L"wrist_hud_v", L"3", ini); } }
     on = f(L"wrist_hud", 1) != 0; cut = f(L"wrist_hud_cut", 1) != 0; glanceOn = f(L"wrist_hud_glance", 1) != 0; panelAtHead = f(L"wrist_hud_panel_at_head_only", 0) != 0 ? 1 : 0; mode = (int)f(L"wrist_hud_mode", 1); if (mode < 1 || mode > 3) mode = 1;
     { wchar_t lk[16]; GetPrivateProfileStringW(L"gotvr", L"wrist_hud_lock", L"top", lk, 16, ini); lockTop = _wcsicmp(lk, L"hand") != 0; }
     gcfg.faceDeg = f(L"wrist_hud_face_deg", 70.0f); gcfg.viewDeg = f(L"wrist_hud_view_deg", 40.0f); gcfg.maxM = f(L"wrist_hud_max_m", 0.80f);   // 0.18.62 (owner: "the forearm HUD never appeared") wider than 50 / 35 / 0.65
-    widthM = f(L"wrist_hud_width_m", 0.10f); alongM = f(L"wrist_hud_from_hand_m", 0.11f); outM = f(L"wrist_hud_out_m", 0.045f); rollDeg = f(L"wrist_hud_roll_deg", 0.0f); gcfg.low = f(L"wrist_hud_low_hp", 0.30f);
+    widthM = f(L"wrist_hud_width_m", 0.10f); alongM = f(L"wrist_hud_from_hand_m", 0.15f); outM = f(L"wrist_hud_out_m", 0.05f);
+    { wchar_t fa[16]; GetPrivateProfileStringW(L"gotvr", L"wrist_hud_forearm", L"aim", fa, 16, ini); fromAim = _wcsicmp(fa, L"grip") != 0; } rollDeg = f(L"wrist_hud_roll_deg", 0.0f); gcfg.low = f(L"wrist_hud_low_hp", 0.30f);
     wchar_t v[96]; GetPrivateProfileStringW(L"gotvr", L"wrist_hud_rect", L"", v, 96, ini); float r[4]; if (swscanf(v, L"%f,%f,%f,%f", &r[0], &r[1], &r[2], &r[3]) == 4 && r[2] > 0.01f && r[3] > 0.01f) for (int i = 0; i < 4; i++) rect[i] = r[i];
     logf("wrist HUD: placed %s", lockTop ? "on TOP of the forearm, never rolling with the wrist (wrist_hud_lock = top)" : "on the back of the hand, turning with it (wrist_hud_lock = hand)");
     logf("wrist HUD: mode %d (%s)", mode, mode == 1 ? "the game's own health / resolve art" : mode == 2 ? "our gauge from the game's values, always there" : "our gauge + the game's own art above it");
@@ -56,7 +60,10 @@ static void decide(const XrPosef &head, bool headOk, u32 uiW, u32 uiH) {
     if (lockTop) {   // 0.18.61 (owner: "I want the HUD on the outside, like in this photo ... it should stay locked on top of the forearm, not
         // rotating with my wrist"): the forearm's line from the grip (+Z toward the elbow) keeps the panel on the arm, but its face is the
         // world's UP taken square to that line - the top of the forearm whatever the wrist does. A forearm held near vertical faces you.
+        // 0.15.4: the forearm's line is the controller's POINTING direction (aim pose, toward the elbow = its +Z) - the grip's Z runs down
+        // the handle through the fist, across the forearm (session 19: the HUD sat beside the wrist)
         const float zA[3] = {0, 0, 1}; float A[3]; rot(qg, zA, A);
+        if (fromAim && (hd.poseValid & 2)) { const XrQuaternionf qa = {hd.aim.q[0], hd.aim.q[1], hd.aim.q[2], hd.aim.q[3]}; rot(qa, zA, A); }
         float up[3] = {0, 1, 0}; float d = up[0] * A[0] + up[1] * A[1] + up[2] * A[2];
         if (fabsf(d) > 0.92f) { const float hp3[3] = {head.position.x - hd.grip.p[0], head.position.y - hd.grip.p[1], head.position.z - hd.grip.p[2]}; for (int k = 0; k < 3; k++) up[k] = hp3[k]; d = up[0] * A[0] + up[1] * A[1] + up[2] * A[2]; }
         float N[3] = {up[0] - A[0] * d, up[1] - A[1] * d, up[2] - A[2] * d}; const float nl = sqrtf(N[0] * N[0] + N[1] * N[1] + N[2] * N[2]);

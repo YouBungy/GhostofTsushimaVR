@@ -2514,3 +2514,18 @@ spaces, session, instance → TerminateProcess.
   forceFrom / forcePressFresh (50 ms release), a press never shortens an active one, tap skipped while ppend.on / LB forced.
 - atk::Intent: a free left hand moving > 25 cm restarted a one-handed charge -> left hand counted only with two hands.
 - Evidence for the 0.18.62 pacing (v18.log SYNC/s): menus 155-347 flat ticks/s uncapped, VR 56-70 pairs/s; host loop 44-72 fps.
+
+## GoTVR 0.18.63 → 0.18.64 / host 0.15.3 → 0.15.4 — VR session 19
+- `[HEADSET]` parry / block never: v19.log 3 contacts judged (PARRY, 168 / 21 / 108 ms) - the replay at +50 ms went through twice,
+  "guarded" once (Jin already at 0). AND each held-back blow was followed 31-63 ms later by another record of the same swing (ids
+  232/233, 578/579) that passed (ppend.on) -> double damage. Fix: parry_engine=mod (swallow + stagger via strike), swallow repeats
+  (swAtt/swUntil) in both engines, game-engine delay 130 ms (parry_v=2).
+- `[HEADSET]` stance: sword_mask_while_held 2 (standing only; sword_mask_v=3).
+- `[HEADSET]` movement forward wrong until snap: BODY/s "Jin faces -121 deg from your forward, 4.3 m/s" at ~642066000; start-up kick
+  had run at 642041. Root cause open. Guard: vrin::moveFix from the run direction vs the stick's world direction (>= 2.5 m/s,
+  stick >= 0.8, 60+ deg steady 0.5 s), cleared on turnSeq; logs head / game camera / viewHold / stick / run yaws.
+- `[HEADSET]` third person after respawn: cutHold from sceneBars (death camera, 642259250); the load at 642261250 did not end it
+  (ev stayed true), sbar "hold" on dark edges for 6 s. Fix: loadingTick or a new hero pointer clears cutHold + sceneBars and resets
+  sbar pos/neg.
+- `[HEADSET]` grapple lag `[INFERENCE]`: host 55-67 fps stretches with the game at its 58 cap (GPU bound) -> adaptive cap (paceAdapt).
+- `[HEADSET]` wrist HUD beside the wrist: grip +Z runs down the handle (across the forearm) -> aim pose +Z (wrist_hud_v=3: 0.15 / 0.05 m).

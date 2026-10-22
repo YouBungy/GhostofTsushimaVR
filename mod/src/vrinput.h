@@ -105,6 +105,11 @@ static std::atomic<u64> jumpAt{0};
 // 0.18.20 (owner: "setting the movement direction to the headset's direction when stopped is not working properly"): 0.18.19 took it
 // 0.3 s after Jin stopped (your head then), so a look-around while standing still did not count. Now it is taken the moment the left
 // stick starts a move from rest (0.25 s idle): forward = where the headset looks as you start walking.
+// 0.18.64 movement-direction guard (session 19: "the same bug with the movement forward direction until I did a snap turn" - BODY/s:
+// Jin running 121-124 deg off where you pushed, at 4.3 m/s, fixed by a snap): the stick's intended WORLD direction is published here,
+// the game thread compares it with where Jin actually runs and, when they stay far apart while running, turns the stick by the
+// difference (moveFix) - cleared at every snap / smooth turn / menu exit (turnSeq), which is what fixed it by hand
+static std::atomic<float> stickWorldYaw{0}, stickMag{0}, moveFix{0}; static std::atomic<u64> stickAt{0}, nMoveFixes{0};
 static std::atomic<float> headYawNow{0}; static std::atomic<int> headYawOk{0}; static std::atomic<u64> nMoveStarts{0}, nHeadMoves{0};    // 0.18.19: last jump press (the arms stay VR through the jump animation)
 static std::atomic<float> viewHold{0};                                       // yaw (deg, + = left) the composed view is turned past the game camera
 static float lastGameYaw = 0; static bool lastYawOk = false; static u64 lastPoll = 0; static std::atomic<u64> bleedUntil{0}; static bool catching = false;
@@ -212,9 +217,11 @@ static bool build(XINPUT_GAMEPAD &g, bool ctxFlat) {
         else if (stickIdle) { stickIdle = false; if (now - idleSince >= 250 && headYawOk.load() && !ctxFlat) { moveYaw = headYawNow.load(); moveYawOk = 1; nMoveCaps++; nMoveStarts++; } }
     }
     // 0.18.22: with move_follows_head (default) the stick is turned by the headset's yaw on every poll - forward is always where you look
+    { const float m = sqrtf(ls[0] * ls[0] + ls[1] * ls[1]); stickMag = m; if (m > 0.05f && headYawOk.load()) { stickWorldYaw = wrap180(headYawNow.load() + atan2f(-ls[0], ls[1]) * 57.2957795f); stickAt = now; } }
+    { static u64 seenTurn = 0; const u64 ts = turnSeq.load(); if (ts != seenTurn) { seenTurn = ts; if (moveFix.load() != 0.0f) { moveFix = 0.0f; logf("controls: movement direction correction cleared (a turn / menu exit resets the game's own frame)"); } } }
     const bool headMove = cfg.moveHead && headYawOk.load() && gameYawOk.load();
     if (headMove) nHeadMoves++;
-    const float yoStick = headMove ? wrap180(headYawNow.load() - gameYaw.load())
+    const float yoStick = headMove ? wrap180(headYawNow.load() - gameYaw.load() + moveFix.load())
                         : (moveYawOk.load() && gameYawOk.load()) ? wrap180(moveYaw.load() - gameYaw.load()) : viewHold.load();
     if (const float yo = yoStick; !ctxFlat && fabsf(yo) > 0.01f) {   // "forward" = the headset's forward at the last snap / start / menu exit (0.18.17)
         const float a = yo / 57.2957795f, c = cosf(a), sn = sinf(a), x = ls[0], y = ls[1]; ls[0] = x * c - y * sn; ls[1] = x * sn + y * c; }

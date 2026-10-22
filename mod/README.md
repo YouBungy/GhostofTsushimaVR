@@ -22,6 +22,45 @@ refused to send images ("FRAME GENERATION is on" in the log, although it was off
 same-frame stereo (both eyes every frame) gets built. Please press **F10** once in each of: main menu, standing
 outdoors, riding, a cutscene, photo mode.
 
+## 0.18.64 / GoTVRHost 0.15.4: fixes from VR session 19
+
+**Install:** `xinput1_4.dll` AND `GoTVR\GoTVRHost.exe`. Your gotvr.ini gets a few one-time changes (listed below).
+
+- **Parry and block never worked:** the log showed three blows judged as parries, but the game never accepted its guard
+  in time. Worse, while the mod held the blow back, the same swing hit Jin again 30-60 ms later, so he took it twice.
+  - New default `parry_engine=mod`: the mod defends by itself. A blow that meets your blade is not applied to Jin
+    (block). A parry also staggers the attacker, with a light blow at `parry_stagger_damage` (0.15) of its damage.
+    No guard button, no game draw and no stance are involved. You feel a rumble: short for a block, longer for a
+    parry.
+  - One swing gets one defence: every further contact from the same attacker within `parry_swallow_ms` (450) is
+    ignored.
+  - Timing is the same as before: blade in the blow's path early = block, just in time = parry. `parry_mode=blade`
+    still works with it.
+  - `parry_engine=game` keeps the old route (the game's own guard, its sparks and slow-motion). It now waits 130 ms
+    for the guard instead of 50 ms (changed once in your ini), and also ignores repeat contacts.
+  - Not handled yet: the game's unblockable attacks are blocked too.
+- **Sword stance turning Jin's body:** `sword_mask_while_held` is now 2 (changed once). While you hold the katana and
+  Jin is standing, his pose from before the draw is kept, so the game's stance doesn't show. As soon as he moves, his
+  walk and run animations play as normal.
+- **Movement direction wrong until a snap turn:** the log showed Jin running about 120 deg away from where you pushed.
+  The cause isn't found yet, so the mod now checks for it:
+  - If Jin runs at least 60 deg off where the stick points, steadily for half a second, the stick is turned by the
+    difference.
+  - The correction is cleared at the next turn, since a snap turn fixed it before.
+  - The log records each correction with the camera values, to help find the real cause.
+- **Third person after respawning:** the death camera counted as a cutscene, and the respawn didn't end it. A load,
+  a black screen, or a new Jin (respawn) now ends it, so first person comes back right away. The death camera itself
+  still goes to third person.
+- **Lag when grappling:** the host held 72 fps most of the time but dropped to 55-67 in heavy stretches while the
+  game ran at its cap. The cap now adapts (`xr_game_fps_adaptive` 1):
+  - When the headset loop falls more than 4 fps behind, the cap drops 3 pairs/s (never below 40).
+  - After 3 s at full rate it climbs back, up to `xr_game_fps_cap`.
+  - `PERF/5s` shows the current cap.
+- **Wrist HUD beside the wrist (host 0.15.4):** the forearm line was taken from the controller's grip, whose axis runs
+  through your fist, across the forearm. It now uses the controller's pointing direction, which runs along the
+  forearm. The HUD sits 15 cm up the arm and 5 cm out on top (`wrist_hud_from_hand_m` / `wrist_hud_out_m`, changed
+  once). `wrist_hud_forearm=grip` restores the old line.
+
 ## 0.18.63: fixes from a code review of 0.18.62 (no new features)
 
 **Install:** `xinput1_4.dll` only (the host is unchanged from 0.15.3).
