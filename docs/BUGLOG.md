@@ -2529,3 +2529,18 @@ spaces, session, instance → TerminateProcess.
   sbar pos/neg.
 - `[HEADSET]` grapple lag `[INFERENCE]`: host 55-67 fps stretches with the game at its 58 cap (GPU bound) -> adaptive cap (paceAdapt).
 - `[HEADSET]` wrist HUD beside the wrist: grip +Z runs down the handle (across the forearm) -> aim pose +Z (wrist_hud_v=3: 0.15 / 0.05 m).
+
+## GoTVR 0.18.64 → 0.18.65 / host 0.15.4 → 0.15.5 — VR session 20
+- `[HEADSET]` parry worked but hard; v20: 11 blocks, 3 parries, 4 misses at 32-49 cm. Hitbox = guard - 30 cm .. tip + 12 cm, tolerance 40
+  (parry_v=3), pushed before the strike gates.
+- `[HEADSET]` no feedback: sfx::event (synth clang via PlaySound on a worker thread, fxSeq to the host), host fx layer (vignette on
+  vitHp drops, low-health pulse, block / parry rim flash). Shared block v17.
+- `[HEADSET]` arms: raised-hand gate = climbing only (slow < 1.2 m/s for 0.3 s); riding no longer skips the arm solve (riding fired
+  643731-643757 with the sword sheathed - ropes / logs).
+- `[HEADSET]` sheathe sound: the game's auto-sheathe (v20: 6.2-16.3 s after drawing) -> g_muteJinUntil (Jin's emitters to +10 km, before
+  the self-radius test); our own requested sheathe is not learned as the auto time.
+- `[HEADSET]` 30 deg turn after sheathing = the game's drawn stance -> game sheathe toggle once the katana is home and the hand is off
+  the hilt 0.4 s.
+- `[HEADSET]` "F1 changed the HUD": the log shows F1 = hand pitch +5 (20 -> 95 -> 45); the black square going away was not the HUD mode.
+  Hand pitch reset (fp_hand_v=2). Alt+F1 is the HUD A/B; Ctrl+Shift+U dumps the UI image (uidump).
+- `[HEADSET]` wrist HUD rolled / turned with the wrist (aim pose follows the wrist) -> forearm from an estimated elbow (positions only).

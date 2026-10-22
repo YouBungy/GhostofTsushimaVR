@@ -12,7 +12,7 @@
 namespace wrist {
 static Chain sc; static bool on = false, cut = true, glanceOn = true; static int panelAtHead = 0, mode = 1, lockTop = 1, fromAim = 1;   // mode: 1 the game's own HUD art, 2 our gauge (always there), 3 both
 static float rect[4] = {0.015f, 0.865f, 0.235f, 0.125f};   // x, y, w, h as fractions of the UI image (measured on the 16:9 flat HUD)
-static float widthM = 0.10f, alongM = 0.11f, outM = 0.045f, rollDeg = 0.0f;
+static float widthM = 0.10f, alongM = 0.11f, outM = 0.045f, rollDeg = 0.0f, upperM = 0.30f, lowerM = 0.29f;
 static vit::GlanceCfg gcfg; static vit::Glance glance; static vit::HandAtHead atHead;
 static bool shownNow = false, cutNow = false, headNow = false; static XrPosef pose{}; static int px[4] = {0, 0, 0, 0};
 static u32 lastChg = 0; static u64 nShown = 0, nFrames = 0; static LARGE_INTEGER qf{}, ql{};
@@ -21,7 +21,7 @@ static void load(const wchar_t *dir) {
     auto f = [&](const wchar_t *k, float d) { wchar_t v[64]; GetPrivateProfileStringW(L"gotvr", k, L"", v, 64, ini); return v[0] ? (float)_wtof(v) : d; };
     auto def = [&](const wchar_t *k, const wchar_t *v) { wchar_t t[8]; if (!GetPrivateProfileStringW(L"gotvr", k, L"", t, 8, ini)) WritePrivateProfileStringW(L"gotvr", k, v, ini); };
     def(L"wrist_hud", L"1"); def(L"wrist_hud_rect", L"0.015,0.865,0.235,0.125"); def(L"wrist_hud_width_m", L"0.10"); def(L"wrist_hud_from_hand_m", L"0.15");
-    def(L"wrist_hud_out_m", L"0.05"); def(L"wrist_hud_forearm", L"aim"); def(L"wrist_hud_roll_deg", L"0"); def(L"wrist_hud_glance", L"1"); def(L"wrist_hud_cut", L"1"); def(L"wrist_hud_panel_at_head_only", L"0"); def(L"wrist_hud_low_hp", L"0.30"); def(L"wrist_hud_mode", L"1"); def(L"wrist_hud_lock", L"top");
+    def(L"wrist_hud_out_m", L"0.05"); def(L"wrist_hud_forearm", L"body"); def(L"wrist_hud_roll_deg", L"0"); def(L"wrist_hud_glance", L"1"); def(L"wrist_hud_cut", L"1"); def(L"wrist_hud_panel_at_head_only", L"0"); def(L"wrist_hud_low_hp", L"0.30"); def(L"wrist_hud_mode", L"1"); def(L"wrist_hud_lock", L"top");
     {   // 0.18.61 (owner: "get rid of your version and just have the game's"): an ini written before keeps mode 3 - moved to 1 once
         wchar_t t[8]; if (!GetPrivateProfileStringW(L"gotvr", L"wrist_hud_v", L"", t, 8, ini)) { WritePrivateProfileStringW(L"gotvr", L"wrist_hud_mode", L"1", ini); WritePrivateProfileStringW(L"gotvr", L"wrist_hud_v", L"2", ini); } }
     {   // 0.15.4 (owner, session 19: "the HUD was not on the forearm but to the left of the wrist - I want it overlaid on top of the forearm"):
@@ -31,8 +31,14 @@ static void load(const wchar_t *dir) {
     { wchar_t lk[16]; GetPrivateProfileStringW(L"gotvr", L"wrist_hud_lock", L"top", lk, 16, ini); lockTop = _wcsicmp(lk, L"hand") != 0; }
     gcfg.faceDeg = f(L"wrist_hud_face_deg", 70.0f); gcfg.viewDeg = f(L"wrist_hud_view_deg", 40.0f); gcfg.maxM = f(L"wrist_hud_max_m", 0.80f);   // 0.18.62 (owner: "the forearm HUD never appeared") wider than 50 / 35 / 0.65
     widthM = f(L"wrist_hud_width_m", 0.10f); alongM = f(L"wrist_hud_from_hand_m", 0.15f); outM = f(L"wrist_hud_out_m", 0.05f);
-    { wchar_t fa[16]; GetPrivateProfileStringW(L"gotvr", L"wrist_hud_forearm", L"aim", fa, 16, ini); fromAim = _wcsicmp(fa, L"grip") != 0; } rollDeg = f(L"wrist_hud_roll_deg", 0.0f); gcfg.low = f(L"wrist_hud_low_hp", 0.30f);
+    {   // 0.15.5 (owner, session 20: "the wrist HUD kept rotating with my wrist - I want the rotation locked going along the forearm"):
+        // "body" (default) = the forearm from an estimated ELBOW (shoulder from the headset, two-bone arm) to the hand - positions only, so
+        // bending or turning the wrist never moves it; "aim" = the controller's pointing line (0.15.4); "grip" = the grip's axis (0.15.3)
+        if (GetPrivateProfileIntW(L"gotvr", L"wrist_hud_v", 0, ini) < 4) { WritePrivateProfileStringW(L"gotvr", L"wrist_hud_forearm", L"body", ini); WritePrivateProfileStringW(L"gotvr", L"wrist_hud_v", L"4", ini); }
+        wchar_t fa[16]; GetPrivateProfileStringW(L"gotvr", L"wrist_hud_forearm", L"body", fa, 16, ini); fromAim = _wcsicmp(fa, L"grip") == 0 ? 0 : _wcsicmp(fa, L"aim") == 0 ? 1 : 2;
+        upperM = f(L"wrist_hud_upper_arm_m", 0.30f); lowerM = f(L"wrist_hud_forearm_m", 0.29f); } rollDeg = f(L"wrist_hud_roll_deg", 0.0f); gcfg.low = f(L"wrist_hud_low_hp", 0.30f);
     wchar_t v[96]; GetPrivateProfileStringW(L"gotvr", L"wrist_hud_rect", L"", v, 96, ini); float r[4]; if (swscanf(v, L"%f,%f,%f,%f", &r[0], &r[1], &r[2], &r[3]) == 4 && r[2] > 0.01f && r[3] > 0.01f) for (int i = 0; i < 4; i++) rect[i] = r[i];
+    logf("wrist HUD: forearm line from %s", fromAim == 2 ? "an estimated elbow (headset + two-bone arm) - the wrist's own turns never move it" : fromAim == 1 ? "the controller's pointing direction" : "the grip axis");
     logf("wrist HUD: placed %s", lockTop ? "on TOP of the forearm, never rolling with the wrist (wrist_hud_lock = top)" : "on the back of the hand, turning with it (wrist_hud_lock = hand)");
     logf("wrist HUD: mode %d (%s)", mode, mode == 1 ? "the game's own health / resolve art" : mode == 2 ? "our gauge from the game's values, always there" : "our gauge + the game's own art above it");
     logf("wrist HUD: %s (rect %.3f,%.3f %.3fx%.3f of the UI image, %.2f m wide, %.2f m up the forearm from the grip, %.3f m out, glance %d, cut from the room panel %d, room panel only with the hand at the head %d)",
@@ -63,7 +69,22 @@ static void decide(const XrPosef &head, bool headOk, u32 uiW, u32 uiH) {
         // 0.15.4: the forearm's line is the controller's POINTING direction (aim pose, toward the elbow = its +Z) - the grip's Z runs down
         // the handle through the fist, across the forearm (session 19: the HUD sat beside the wrist)
         const float zA[3] = {0, 0, 1}; float A[3]; rot(qg, zA, A);
-        if (fromAim && (hd.poseValid & 2)) { const XrQuaternionf qa = {hd.aim.q[0], hd.aim.q[1], hd.aim.q[2], hd.aim.q[3]}; rot(qa, zA, A); }
+        if (fromAim == 1 && (hd.poseValid & 2)) { const XrQuaternionf qa = {hd.aim.q[0], hd.aim.q[1], hd.aim.q[2], hd.aim.q[3]}; rot(qa, zA, A); }
+        else if (fromAim == 2) {   // the left arm from the headset: shoulder 24 cm below / 18 cm left / 6 cm behind the eyes (head yaw only)
+            const float fz[3] = {0, 0, -1}; float hf[3]; rot(head.orientation, fz, hf); float fl = sqrtf(hf[0] * hf[0] + hf[2] * hf[2]);
+            if (fl > 1e-3f) { const float F3[3] = {hf[0] / fl, 0, hf[2] / fl}, R3[3] = {-F3[2], 0, F3[0]};   // right = forward x up (y up, -z forward)
+                const float Sh[3] = {head.position.x - R3[0] * 0.18f - F3[0] * 0.06f, head.position.y - 0.24f, head.position.z - R3[2] * 0.18f - F3[2] * 0.06f};
+                const float G[3] = {hd.grip.p[0], hd.grip.p[1], hd.grip.p[2]}; float D[3] = {G[0] - Sh[0], G[1] - Sh[1], G[2] - Sh[2]}; const float d = sqrtf(D[0] * D[0] + D[1] * D[1] + D[2] * D[2]);
+                if (d > 0.05f) { for (auto &x : D) x /= d; float El[3];
+                    if (d >= upperM + lowerM - 1e-3f) for (int k = 0; k < 3; k++) El[k] = Sh[k] + D[k] * upperM * d / (upperM + lowerM);   // straight arm
+                    else { const float a = (upperM * upperM - lowerM * lowerM + d * d) / (2.0f * d), h = sqrtf(fmaxf(0.0f, upperM * upperM - a * a));
+                        float P[3] = {-R3[0] * 0.5f - F3[0] * 0.3f, -1.0f, -R3[2] * 0.5f - F3[2] * 0.3f};   // the elbow hangs down, out to the left, a little back
+                        const float pd = P[0] * D[0] + P[1] * D[1] + P[2] * D[2]; for (int k = 0; k < 3; k++) P[k] -= pd * D[k]; const float pl = sqrtf(P[0] * P[0] + P[1] * P[1] + P[2] * P[2]);
+                        for (int k = 0; k < 3; k++) El[k] = Sh[k] + D[k] * a + (pl > 1e-4f ? P[k] / pl * h : 0.0f); }
+                    float E2[3] = {El[0] - G[0], El[1] - G[1], El[2] - G[2]}; const float el = sqrtf(E2[0] * E2[0] + E2[1] * E2[1] + E2[2] * E2[2]);
+                    if (el > 1e-3f) { static float Af[3] = {0, 0, 0}; const float bk = 0.35f;   // a light filter on the (already wrist-free) line
+                        for (int k = 0; k < 3; k++) Af[k] = Af[k] * (1.0f - bk) + E2[k] / el * bk; const float al = sqrtf(Af[0] * Af[0] + Af[1] * Af[1] + Af[2] * Af[2]);
+                        if (al > 1e-3f) for (int k = 0; k < 3; k++) A[k] = Af[k] / al; } } } }
         float up[3] = {0, 1, 0}; float d = up[0] * A[0] + up[1] * A[1] + up[2] * A[2];
         if (fabsf(d) > 0.92f) { const float hp3[3] = {head.position.x - hd.grip.p[0], head.position.y - hd.grip.p[1], head.position.z - hd.grip.p[2]}; for (int k = 0; k < 3; k++) up[k] = hp3[k]; d = up[0] * A[0] + up[1] * A[1] + up[2] * A[2]; }
         float N[3] = {up[0] - A[0] * d, up[1] - A[1] * d, up[2] - A[2] * d}; const float nl = sqrtf(N[0] * N[0] + N[1] * N[1] + N[2] * N[2]);

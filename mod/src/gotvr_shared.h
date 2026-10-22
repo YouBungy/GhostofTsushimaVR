@@ -7,7 +7,7 @@
 #include <stdint.h>
 
 #define GV_MAGIC 0x52565447u /* 'GTVR' */
-#define GV_VERSION 16u
+#define GV_VERSION 17u
 #define GV_TEXCOUNT 6        /* 2 eyes x 3 buffers (game writes round-robin, never waits on the host) */
 #define GV_UITEX 3           /* v8: UI-layer images, own size (the UI target's), names Local\GoTVR_<pid>_u<uiGen>_ui<i> */
 
@@ -142,6 +142,8 @@ struct GvShared {
     uint32_t vitChangedSeq;           // bumped per change (vitChanged = its bits)
     uint32_t vitChanged;
     uint32_t wristHostOn;             // host -> game: 1 = the wrist panel is in use this frame (diagnostics)
+    // v17 combat feedback (game -> host): bumped per event; kind 1 = block, 2 = parry; amp 0..1 (the host also watches vitHp for damage)
+    volatile LONG fxSeq; uint32_t fxKind; float fxAmp;
 };
 // head-locked HUD quad / world-locked panel / v9 FULL: the UI covers the whole view of each eye exactly like on the monitor
 // (cinematics: letterbox bars, fades and subtitles at the screen edges) - one quad per eye on the frustum its image used

@@ -27,7 +27,7 @@
 #include "gotvr_shared.h"
 
 typedef uint64_t u64; typedef uint32_t u32;
-#define HOST_VERSION "GoTVRHost 0.15.4 (wrist HUD on top of the forearm along the controller's pointing line (aim pose; the grip's axis runs across the forearm), 15 cm up the arm, 5 cm out; 0.15.3: wrist HUD shown by default (wrist_hud_mode 1 migrated once), easier glance (wrist_hud_face_deg 70, wrist_hud_view_deg 40, wrist_hud_max_m 0.80), logged every 10 s while shown; 0.15.2: the wrist HUD is the game's own art only (wrist_hud_mode 1), on TOP of the left forearm and never rolling with the wrist (wrist_hud_lock top); 0.15.1: the wrist gauge (W2): health (and resolve once found) painted from the game's values, always there when you look at your forearm - wrist_hud_mode 3 = our gauge + the game's own art above it; 0.15.0: the wrist HUD (W1): the game's own health / resolve rectangle on a quad on the outside of your left forearm when you look at it, cut from the room panel, the whole panel with the left hand at the head; shared block v16; every runtime extension logged; 0.14.4: the headset's own recenter (Meta button) recentres the game view, shared block v15, thumb / trigger touch for the VR fingers, five-option item wheel, shared block v14, item wheel + gesture indicator overlay, VR controllers: canonical controller per hand for Touch / Touch Plus / Index / Vive / WMR / HP / Pico / simple, haptics, pose prediction lead = measured pipeline lag, high GPU priority, pair-atomic xr=4, theatre screen, sharp UI layer: room-fixed HUD panel from the game, full-view cinematic UI, anamorphic 16:9 UI and flat frames of the square render)"
+#define HOST_VERSION "GoTVRHost 0.15.5 (combat feedback: the red damage vignette (stronger for a bigger loss, a heartbeat pulse at low health) and the block / parry rim flash, head-locked; the wrist HUD along an estimated forearm (elbow from the headset - the wrist's own turns never move it); shared block v17; 0.15.4: wrist HUD on top of the forearm along the controller's pointing line (aim pose; the grip's axis runs across the forearm), 15 cm up the arm, 5 cm out; 0.15.3: wrist HUD shown by default (wrist_hud_mode 1 migrated once), easier glance (wrist_hud_face_deg 70, wrist_hud_view_deg 40, wrist_hud_max_m 0.80), logged every 10 s while shown; 0.15.2: the wrist HUD is the game's own art only (wrist_hud_mode 1), on TOP of the left forearm and never rolling with the wrist (wrist_hud_lock top); 0.15.1: the wrist gauge (W2): health (and resolve once found) painted from the game's values, always there when you look at your forearm - wrist_hud_mode 3 = our gauge + the game's own art above it; 0.15.0: the wrist HUD (W1): the game's own health / resolve rectangle on a quad on the outside of your left forearm when you look at it, cut from the room panel, the whole panel with the left hand at the head; shared block v16; every runtime extension logged; 0.14.4: the headset's own recenter (Meta button) recentres the game view, shared block v15, thumb / trigger touch for the VR fingers, five-option item wheel, shared block v14, item wheel + gesture indicator overlay, VR controllers: canonical controller per hand for Touch / Touch Plus / Index / Vive / WMR / HP / Pico / simple, haptics, pose prediction lead = measured pipeline lag, high GPU priority, pair-atomic xr=4, theatre screen, sharp UI layer: room-fixed HUD panel from the game, full-view cinematic UI, anamorphic 16:9 UI and flat frames of the square render)"
 
 static FILE *g_log; static wchar_t g_dir[MAX_PATH];
 static void logf(const char *fmt, ...) {
@@ -378,6 +378,7 @@ static XrRect2Di screenRect(u32 w, u32 h, bool crop) {   // the part of the game
 // #runtime-owns-pacing / XR-005: one wait, one prediction, declare what you rendered; the declared pose stays the rendered one).
 #include "xroverlay.h"
 #include "xrgauge.h"   // v16 the wrist gauge (WRIST_HUD.md W2)
+#include "xrfx.h"      // v17 combat feedback: damage vignette, block / parry flash
 
 struct LeadRec { XrTime t; GvPose e0; };
 static LeadRec leadRing[128]; static u32 leadPos = 0; static double leadNs = 0, lagEma = 0; static u64 lagN = 0; static u32 lastLeadFrame = 0xFFFFFFFFu;
@@ -464,7 +465,10 @@ static void frame() {
     const bool wrCut = uiAcq && !(uiFlags & GV_UI_FULL) && wrist::cutNow;
     const u64 ovNow = GetTickCount64(); const bool ovNeed = useGame && ov::wantDraw(ovNow); u32 ovIdx = 0; const bool ovAcq = ovNeed && acquire(ov::sc, ovIdx);   // v13 overlay
     u32 gaIdx = 0; const bool gaAcq = useGame && wrist::shownNow && (wrist::mode & 2) && gauge::want(ovNow, wrist::gcfg.low) && !gauge::sc.broken && acquire(gauge::sc, gaIdx);   // v16 W2: our own gauge
+    const bool fxPlay = useGame && shown[0].valid && !(shown[0].flags & GV_SLOT_THEATER);
+    u32 fxIdx = 0; const bool fxAcq = fx::want(ovNow, fxPlay) && !fx::sc.broken && acquire(fx::sc, fxIdx);   // v17
     auto *c = beginCl();
+    if (fxAcq) fx::record(c, fx::sc.img[fxIdx], ring);
     if (ovAcq) ov::record(c, ov::sc.img[ovIdx], ring, ovNow);
     if (gaAcq) gauge::record(c, gauge::sc.img[gaIdx], ring, ovNow, wrist::gcfg.low);
     if (uiAcq) {
@@ -504,6 +508,7 @@ static void frame() {
     if (uiAcq) release(uiSc);
     if (wrAcq) release(wrist::sc);
     if (gaAcq) { release(gauge::sc); gauge::haveImage = true; }
+    if (fxAcq) { release(fx::sc); fx::haveImage = true; }
     if (ovAcq) { release(ov::sc); ov::sigDrawn = ov::sigOf(ovNow); ov::haveImage = true; }
     XrCompositionLayerProjectionView pv[2]; bool layerOk = true;
     for (int e = 0; e < 2; e++) {
@@ -526,7 +531,7 @@ static void frame() {
         }
     }
     XrCompositionLayerProjection pl{XR_TYPE_COMPOSITION_LAYER_PROJECTION}; pl.space = local; pl.viewCount = 2; pl.views = pv;
-    const XrCompositionLayerBaseHeader *layers[8] = {(XrCompositionLayerBaseHeader *)&pl, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr}; u32 nLayers = layerOk ? 1 : 0;
+    const XrCompositionLayerBaseHeader *layers[10] = {(XrCompositionLayerBaseHeader *)&pl, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr}; u32 nLayers = layerOk ? 1 : 0;
     // theatre: the left image of a flat-context pair goes on the screen; the projection layer is dropped (black room)
     // unless theaterBackdrop = 1. The eye-0 chain holds exactly that image (copied above this frame, or still shown).
     XrCompositionLayerQuad ql{XR_TYPE_COMPOSITION_LAYER_QUAD};
@@ -632,6 +637,13 @@ static void frame() {
             layers[nLayers++] = (XrCompositionLayerBaseHeader *)&gq;
         }
     }
+    XrCompositionLayerQuad fq{XR_TYPE_COMPOSITION_LAYER_QUAD};
+    if (fx::active && fx::haveImage && fx::sc.everReleased && !theatre && layerOk && nLayers < 10) {   // v17 the vignette / flash, in front of the eyes, on top
+        fq.layerFlags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT; fq.space = viewSp; fq.eyeVisibility = XR_EYE_VISIBILITY_BOTH;
+        fq.subImage.swapchain = fx::sc.sc; fq.subImage.imageRect = {{0, 0}, {(int32_t)fx::W, (int32_t)fx::H}};
+        fq.pose.orientation.w = 1; fq.pose.position = {0.0f, 0.0f, -fx::dist}; fq.size = {fx::sizeM * fx::dist, fx::sizeM * fx::dist};
+        layers[nLayers++] = (XrCompositionLayerBaseHeader *)&fq;
+    }
     {   static bool was = false; static u32 wasFlags = 0;
         if (theatre != was || (theatre && shown[0].flags != wasFlags)) {
             if (theatre) logf("theatre: ON (%s%s, image %dx%d at %d,%d of %ux%u, %u layer(s), display aspect %.3f)", (shown[0].flags & GV_SLOT_CROP169) ? "video, cropped to 16:9" : "full frame", (shown[0].flags & GV_SLOT_FLAT) ? ", flat-rendered" : ", stereo image",
@@ -670,7 +682,7 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR cmd, int) {
     S = (GvShared *)MapViewOfFile(m, FILE_MAP_ALL_ACCESS, 0, 0, sizeof(GvShared));
     if (!S || S->magic != GV_MAGIC || S->version != GV_VERSION) { logf("shared block version mismatch (game DLL and host must be the same build)"); return 1; }
     S->hostPid = GetCurrentProcessId(); logf("attached to game pid %u, mode %u", g_pid, S->mode);
-    wrist::load(g_dir);   // v16 the wrist HUD settings (gotvr.ini, next to this exe)
+    wrist::load(g_dir); fx::load(g_dir);   // v16 the wrist HUD settings (gotvr.ini, next to this exe)
     {   // v11 (BUG-69): the host's copies and the runtime's submission must not queue behind a GPU-bound game (playbook ch19
         // host starvation). WDDM GPU scheduling class: HIGH (4), else ABOVE_NORMAL (3).
         typedef LONG(APIENTRY * FnPrio)(HANDLE, int); S->hostGpuPrio = -1;

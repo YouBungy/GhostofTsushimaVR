@@ -22,6 +22,50 @@ refused to send images ("FRAME GENERATION is on" in the log, although it was off
 same-frame stereo (both eyes every frame) gets built. Please press **F10** once in each of: main menu, standing
 outdoors, riding, a cutscene, photo mode.
 
+## 0.18.65 / GoTVRHost 0.15.5: fixes from VR session 20
+
+**Install:** `xinput1_4.dll` AND `GoTVR\GoTVRHost.exe`. Both must be from this build, because they share a new data
+block (v17). Your gotvr.ini gets a few one-time changes, listed below.
+
+- **Parry hitbox:**
+  - The katana's parry hitbox is now the whole sword: from 30 cm below the guard (`parry_hilt_extend_cm`, covering
+    the hilt and your hands) to 12 cm past the tip (`parry_tip_extend_cm`).
+  - The margin around it is 40 cm (`parry_blade_tolerance_cm`, changed once from 30).
+  - It is recorded whenever the katana is in your hand. Before, it also needed the strike system to be ready.
+- **Feedback you can feel, hear and see:**
+  - Block: a short rumble, a low steel clang and a cool-white flash at the edges of the view.
+  - Parry: a stronger rumble, a bright ringing clang and a gold flash. The attacker also flinches.
+  - The clang is synthesized by the mod, so no game files are used. `fx_sound_volume` (0.7) sets its volume; 0 turns
+    it off.
+- **Damage vignette (host):**
+  - When Jin loses health, the edges of the view flash red, stronger for a bigger hit, and fade over
+    `fx_hit_fade_ms` (450).
+  - Below 30 % health a dim red heartbeat pulses at the edges.
+  - The centre of the view is never covered, like Half-Life: Alyx or Blade & Sorcery.
+  - `fx_vignette=0` turns it off; `fx_hit_strength` and `fx_low_health` adjust it.
+- **VR arms:** the game now takes Jin's arms only for climbing, takedowns and cutscenes.
+  - Climbing means a hand above the head while Jin moves slowly. Grapple swings are fast, so they keep the VR arms
+    (`arms_game_when_raised` 2; 1 = any raised hand, 0 = never).
+  - Ropes and logs set off the "riding" check; that check no longer takes the arms (`arms_game_when_riding` 0).
+- **The game's sheathe sound while holding the katana:**
+  - When the game puts its own sword away, all of Jin's sounds are silenced for 1.6 s. They are moved far away for
+    that moment.
+  - The hidden background draw is silenced too.
+- **Jin turned about 30 deg after sheathing:**
+  - Cause: the game's drawn-sword stance. Its sword stayed out (in the scabbard only for you) until its own
+    auto-sheathe.
+  - Now, once your katana is home and your hand has left the hilt for 0.4 s, the game puts its sword away too. This
+    is hidden and silent, so the stance ends right away.
+- **F1 is not the HUD switch in VR:** F1 / F2 / F3 trim the hand angle, so session 20's F1 presses turned the hands
+  from 20 to 45 deg. This build sets the hand pitch back to 20 once.
+  - The HUD switch for that test is **Alt+F1**: it draws the HUD into the 3D image (the old panel).
+  - For the black square, press **Ctrl+Shift+U** while it is on screen. That saves the HUD image as
+    `ui_dump_color.bmp` and `ui_dump_alpha.bmp` in the GoTVR folder. Send me those and the fix can be exact.
+- **Wrist HUD stays along the forearm (host):** the forearm line now runs from an estimated elbow (from your headset
+  and a two-bone arm) to your hand. Only positions are used, so turning or bending the wrist never moves it
+  (`wrist_hud_forearm=body`; `aim` / `grip` = the earlier versions; `wrist_hud_upper_arm_m` / `wrist_hud_forearm_m`
+  0.30 / 0.29).
+
 ## 0.18.64 / GoTVRHost 0.15.4: fixes from VR session 19
 
 **Install:** `xinput1_4.dll` AND `GoTVR\GoTVRHost.exe`. Your gotvr.ini gets a few one-time changes (listed below).
