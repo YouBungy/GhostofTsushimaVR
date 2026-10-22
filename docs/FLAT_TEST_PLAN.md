@@ -52,6 +52,13 @@ flat, sword drawn, and go to one or two plain swordsmen (no archers or brutes fi
 4. **Experiment (needs 1 + 2 first):** press Ctrl+Shift+B. For 20 s, do NOT block and let 2-3 blows land. The mod writes the
    record fields it learned from your guarded blows. If the game guards those blows by itself, that is our block signal.
 5. Optional: a spearman, and a dog bite, guarded and unguarded.
+6. **Red and blue glints (as many as you can, 5+ of each):** fight enemies that use them (a brute or spearman for red;
+   swordsmen's blue). The moment you SEE a glint, press:
+   - F5 or Mouse 4 (back side button) = RED
+   - F6 or Mouse 5 (front side button) = BLUE
+
+   Then deal with the attack as usual (dodge the red, parry the blue). Press the key as soon as you see the glint; it only
+   needs to be roughly on time.
 
 What the log shows (GTR lines):
 - `GTR BLOW`: each enemy blow on Jin, with:
@@ -63,6 +70,9 @@ What the log shows (GTR lines):
 - `GTR SELF`: the parry reward. Its call chain leads to the parry decision.
 - `GTR DIFF`: the record fields that tell guarded from unguarded.
 - `GTR NEAR` and `GTR READERS`: the game instructions that read Jin's guard fields at the moment of a blow.
+- `GLINT TAG`: per tag, what changed on that enemy in the second before your key, and its script events.
+- `GLINT LEARN`: the enemy fields that change before (nearly) every red or blue glint but seldom otherwise. This is the early
+  warning the VR mod lacks today.
 
 Afterwards: decompile the decision functions from the chains and readers. Then write the block / parry signal into the
 record, or call the decision code directly, from the VR blade.

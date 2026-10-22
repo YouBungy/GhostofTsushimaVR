@@ -31,6 +31,8 @@ outdoors, riding, a cutscene, photo mode.
 - **Guard trace (flat play only, `guard_trace` / `guard_trace_dr`):** instruments the game's hit submission and Jin's guard
   fields, to find where the game decides block vs parry. The goal is for the VR blade to send that decision itself
   instead of pressing the guard button. Steps are in docs/FLAT_TEST_PLAN.md. In VR nothing changes.
+- **Glint tags (same flat test):** press F5 / Mouse 4 when you see a RED glint and F6 / Mouse 5 for a BLUE one. The mod
+  records what changed on that enemy just before your key, to find the game's own warning flag for those attacks.
 
 ## 0.18.72: fixes from VR session 26 (host 0.15.7)
 
