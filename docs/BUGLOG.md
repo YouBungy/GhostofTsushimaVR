@@ -2544,3 +2544,15 @@ spaces, session, instance → TerminateProcess.
 - `[HEADSET]` "F1 changed the HUD": the log shows F1 = hand pitch +5 (20 -> 95 -> 45); the black square going away was not the HUD mode.
   Hand pitch reset (fp_hand_v=2). Alt+F1 is the HUD A/B; Ctrl+Shift+U dumps the UI image (uidump).
 - `[HEADSET]` wrist HUD rolled / turned with the wrist (aim pose follows the wrist) -> forearm from an estimated elbow (positions only).
+
+## GoTVR 0.18.65 → 0.18.66 / host 0.15.5 → 0.15.6 — VR session 21
+- `[DUMP]` ui_dump (Ctrl+Shift+U): alpha 255 over x 2040-2303, y 534-1080 (pickup panel), colour 0 in 82 % of it -> host key shader
+  (opaque & dark -> alpha = brightness / 0.20), compiled with d3dcompiler_47 at start (vs/ps 5.0, verified under wine).
+- `[HEADSET]` game hit overlay: keyed out (see-through dark / red) for 1.5 s after an HP drop (host fx::hurtNow).
+- `[HEADSET]` parry read as block: parry_mode=motion (parry.h mode 2, body-relative tip motion in the parry window), parry_v=4.
+- `[HEADSET]` sheathe animation after 0.18.65's game sheathe request: request removed; hip squaring while walking with gd (hipM, 0.6 s).
+- `[HEADSET]` wrist HUD not on the bone: Jin's left elbow / wrist (W array) mapped back through compose's inverse to tracking space,
+  shared v18 relative to the grip; the host lays the panel on it.
+- `[HEADSET]` ropes / logs: riding = markers AND a thigh near level (knee < 22 cm below the hip). v20 / v21 riding seconds: head ~140 cm
+  above the root, 0-10 m/s (horse).
+- `[HEADSET]` prompt jitter `[INFERENCE]`: adaptive cap swung 46-58 -> calmer hysteresis, floor 50.

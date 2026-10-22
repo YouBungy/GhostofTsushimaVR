@@ -12,7 +12,7 @@
 namespace wrist {
 static Chain sc; static bool on = false, cut = true, glanceOn = true; static int panelAtHead = 0, mode = 1, lockTop = 1, fromAim = 1;   // mode: 1 the game's own HUD art, 2 our gauge (always there), 3 both
 static float rect[4] = {0.015f, 0.865f, 0.235f, 0.125f};   // x, y, w, h as fractions of the UI image (measured on the 16:9 flat HUD)
-static float widthM = 0.10f, alongM = 0.11f, outM = 0.045f, rollDeg = 0.0f, upperM = 0.30f, lowerM = 0.29f;
+static float widthM = 0.10f, alongM = 0.11f, outM = 0.045f, rollDeg = 0.0f, upperM = 0.30f, lowerM = 0.29f, wristM = 0.10f; static u64 nBone = 0;
 static vit::GlanceCfg gcfg; static vit::Glance glance; static vit::HandAtHead atHead;
 static bool shownNow = false, cutNow = false, headNow = false; static XrPosef pose{}; static int px[4] = {0, 0, 0, 0};
 static u32 lastChg = 0; static u64 nShown = 0, nFrames = 0; static LARGE_INTEGER qf{}, ql{};
@@ -36,7 +36,9 @@ static void load(const wchar_t *dir) {
         // bending or turning the wrist never moves it; "aim" = the controller's pointing line (0.15.4); "grip" = the grip's axis (0.15.3)
         if (GetPrivateProfileIntW(L"gotvr", L"wrist_hud_v", 0, ini) < 4) { WritePrivateProfileStringW(L"gotvr", L"wrist_hud_forearm", L"body", ini); WritePrivateProfileStringW(L"gotvr", L"wrist_hud_v", L"4", ini); }
         wchar_t fa[16]; GetPrivateProfileStringW(L"gotvr", L"wrist_hud_forearm", L"body", fa, 16, ini); fromAim = _wcsicmp(fa, L"grip") == 0 ? 0 : _wcsicmp(fa, L"aim") == 0 ? 1 : 2;
-        upperM = f(L"wrist_hud_upper_arm_m", 0.30f); lowerM = f(L"wrist_hud_forearm_m", 0.29f); } rollDeg = f(L"wrist_hud_roll_deg", 0.0f); gcfg.low = f(L"wrist_hud_low_hp", 0.30f);
+        upperM = f(L"wrist_hud_upper_arm_m", 0.30f); lowerM = f(L"wrist_hud_forearm_m", 0.29f);
+        def(L"wrist_hud_from_wrist_m", L"0.10"); wristM = f(L"wrist_hud_from_wrist_m", 0.10f);
+        if (GetPrivateProfileIntW(L"gotvr", L"wrist_hud_v", 0, ini) < 5) { WritePrivateProfileStringW(L"gotvr", L"wrist_hud_out_m", L"0.045", ini); WritePrivateProfileStringW(L"gotvr", L"wrist_hud_v", L"5", ini); } outM = f(L"wrist_hud_out_m", 0.045f); } rollDeg = f(L"wrist_hud_roll_deg", 0.0f); gcfg.low = f(L"wrist_hud_low_hp", 0.30f);
     wchar_t v[96]; GetPrivateProfileStringW(L"gotvr", L"wrist_hud_rect", L"", v, 96, ini); float r[4]; if (swscanf(v, L"%f,%f,%f,%f", &r[0], &r[1], &r[2], &r[3]) == 4 && r[2] > 0.01f && r[3] > 0.01f) for (int i = 0; i < 4; i++) rect[i] = r[i];
     logf("wrist HUD: forearm line from %s", fromAim == 2 ? "an estimated elbow (headset + two-bone arm) - the wrist's own turns never move it" : fromAim == 1 ? "the controller's pointing direction" : "the grip axis");
     logf("wrist HUD: placed %s", lockTop ? "on TOP of the forearm, never rolling with the wrist (wrist_hud_lock = top)" : "on the back of the hand, turning with it (wrist_hud_lock = hand)");
@@ -69,7 +71,14 @@ static void decide(const XrPosef &head, bool headOk, u32 uiW, u32 uiH) {
         // 0.15.4: the forearm's line is the controller's POINTING direction (aim pose, toward the elbow = its +Z) - the grip's Z runs down
         // the handle through the fist, across the forearm (session 19: the HUD sat beside the wrist)
         const float zA[3] = {0, 0, 1}; float A[3]; rot(qg, zA, A);
-        if (fromAim == 1 && (hd.poseValid & 2)) { const XrQuaternionf qa = {hd.aim.q[0], hd.aim.q[1], hd.aim.q[2], hd.aim.q[3]}; rot(qa, zA, A); }
+        // 0.15.6 (owner, session 21: "not flush along the forearm ... nor glued onto the forearm bone"): Jin's own drawn forearm from the game
+        // DLL (shared v18, relative to the grip) - the panel sits ON that bone, wristM up from his wrist joint, outM above its centre line
+        float boneW[3] = {0, 0, 0}; bool bone = false;
+        { float ed[3], wd[3]; u32 aok = 0; gvRead(&S->armSeq, [&] { memcpy(ed, S->armElbowD, 12); memcpy(wd, S->armWristD, 12); aok = S->armOk; });
+          if (aok && fromAim == 2) { float E2[3]; for (int k = 0; k < 3; k++) { E2[k] = ed[k] - wd[k]; boneW[k] = hd.grip.p[k] + wd[k]; } const float el = sqrtf(E2[0] * E2[0] + E2[1] * E2[1] + E2[2] * E2[2]);
+              if (el > 0.1f) { for (int k = 0; k < 3; k++) A[k] = E2[k] / el; bone = true; nBone++; } } }
+        if (bone) {}
+        else if (fromAim == 1 && (hd.poseValid & 2)) { const XrQuaternionf qa = {hd.aim.q[0], hd.aim.q[1], hd.aim.q[2], hd.aim.q[3]}; rot(qa, zA, A); }
         else if (fromAim == 2) {   // the left arm from the headset: shoulder 24 cm below / 18 cm left / 6 cm behind the eyes (head yaw only)
             const float fz[3] = {0, 0, -1}; float hf[3]; rot(head.orientation, fz, hf); float fl = sqrtf(hf[0] * hf[0] + hf[2] * hf[2]);
             if (fl > 1e-3f) { const float F3[3] = {hf[0] / fl, 0, hf[2] / fl}, R3[3] = {-F3[2], 0, F3[0]};   // right = forward x up (y up, -z forward)
@@ -97,7 +106,7 @@ static void decide(const XrPosef &head, bool headOk, u32 uiW, u32 uiH) {
             else if (m00 > m11 && m00 > m22) { const float s4 = sqrtf(1.0f + m00 - m11 - m22) * 2; r.w = (Y[2] - N[1]) / s4; r.x = 0.25f * s4; r.y = (Y[0] + X[1]) / s4; r.z = (N[0] + X[2]) / s4; }
             else if (m11 > m22) { const float s4 = sqrtf(1.0f + m11 - m00 - m22) * 2; r.w = (N[0] - X[2]) / s4; r.x = (Y[0] + X[1]) / s4; r.y = 0.25f * s4; r.z = (N[1] + Y[2]) / s4; }
             else { const float s4 = sqrtf(1.0f + m22 - m00 - m11) * 2; r.w = (X[1] - Y[0]) / s4; r.x = (N[0] + X[2]) / s4; r.y = (N[1] + Y[2]) / s4; r.z = 0.25f * s4; }
-            q = qmul(r, qz); for (int k = 0; k < 3; k++) ow[k] = N[k] * outM + A[k] * alongM; } }
+            q = qmul(r, qz); for (int k = 0; k < 3; k++) ow[k] = bone ? boneW[k] - hd.grip.p[k] + A[k] * wristM + N[k] * outM : N[k] * outM + A[k] * alongM; } }
     pose.orientation = q; pose.position = {hd.grip.p[0] + ow[0], hd.grip.p[1] + ow[1], hd.grip.p[2] + ow[2]};
     const float nz[3] = {0, 0, 1}; float n[3]; rot(q, nz, n);
     const float fz[3] = {0, 0, -1}; float fw[3]; const XrQuaternionf qh = head.orientation; rot(qh, fz, fw);
@@ -114,8 +123,8 @@ static void decide(const XrPosef &head, bool headOk, u32 uiW, u32 uiH) {
     if (px[0] < 0) px[0] = 0; if (px[1] < 0) px[1] = 0; if (px[0] + px[2] > (int)uiW) px[2] = (int)uiW - px[0]; if (px[1] + px[3] > (int)uiH) px[3] = (int)uiH - px[1];
     if (px[2] < 4 || px[3] < 4) { shownNow = cutNow = false; return; }
     if (shownNow) nShown++;
-    { static u64 lastLog = 0, n0 = 0, s0 = 0; const u64 tl = GetTickCount64(); if (tl - lastLog > 10000) { if (lastLog) logf("wrist HUD: shown %llu of %llu frames in the last 10 s (glance: face %.0f deg, view %.0f deg, %.2f m) - note the game hides its own health art out of combat; wrist_hud_mode 3 adds our gauge",
-          (unsigned long long)(nShown - s0), (unsigned long long)(nFrames - n0), gcfg.faceDeg, gcfg.viewDeg, gcfg.maxM); lastLog = tl; n0 = nFrames; s0 = nShown; } }
+    { static u64 lastLog = 0, n0 = 0, s0 = 0; const u64 tl = GetTickCount64(); if (tl - lastLog > 10000) { if (lastLog) logf("wrist HUD: on Jin's forearm bone %llu frames; shown %llu of %llu frames in the last 10 s (glance: face %.0f deg, view %.0f deg, %.2f m) - note the game hides its own health art out of combat; wrist_hud_mode 3 adds our gauge",
+          (unsigned long long)nBone, (unsigned long long)(nShown - s0), (unsigned long long)(nFrames - n0), gcfg.faceDeg, gcfg.viewDeg, gcfg.maxM); lastLog = tl; n0 = nFrames; s0 = nShown; } }
     S->wristHostOn = shownNow ? 1 : 0;
 }
 } // namespace wrist

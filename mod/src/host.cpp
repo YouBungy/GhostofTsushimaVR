@@ -27,7 +27,7 @@
 #include "gotvr_shared.h"
 
 typedef uint64_t u64; typedef uint32_t u32;
-#define HOST_VERSION "GoTVRHost 0.15.5 (combat feedback: the red damage vignette (stronger for a bigger loss, a heartbeat pulse at low health) and the block / parry rim flash, head-locked; the wrist HUD along an estimated forearm (elbow from the headset - the wrist's own turns never move it); shared block v17; 0.15.4: wrist HUD on top of the forearm along the controller's pointing line (aim pose; the grip's axis runs across the forearm), 15 cm up the arm, 5 cm out; 0.15.3: wrist HUD shown by default (wrist_hud_mode 1 migrated once), easier glance (wrist_hud_face_deg 70, wrist_hud_view_deg 40, wrist_hud_max_m 0.80), logged every 10 s while shown; 0.15.2: the wrist HUD is the game's own art only (wrist_hud_mode 1), on TOP of the left forearm and never rolling with the wrist (wrist_hud_lock top); 0.15.1: the wrist gauge (W2): health (and resolve once found) painted from the game's values, always there when you look at your forearm - wrist_hud_mode 3 = our gauge + the game's own art above it; 0.15.0: the wrist HUD (W1): the game's own health / resolve rectangle on a quad on the outside of your left forearm when you look at it, cut from the room panel, the whole panel with the left hand at the head; shared block v16; every runtime extension logged; 0.14.4: the headset's own recenter (Meta button) recentres the game view, shared block v15, thumb / trigger touch for the VR fingers, five-option item wheel, shared block v14, item wheel + gesture indicator overlay, VR controllers: canonical controller per hand for Touch / Touch Plus / Index / Vive / WMR / HP / Pico / simple, haptics, pose prediction lead = measured pipeline lag, high GPU priority, pair-atomic xr=4, theatre screen, sharp UI layer: room-fixed HUD panel from the game, full-view cinematic UI, anamorphic 16:9 UI and flat frames of the square render)"
+#define HOST_VERSION "GoTVRHost 0.15.6 (the UI layer drawn through a small shader: opaque black UI pixels keyed out (the pickup panel's black box) and the game's own hit overlay removed for 1.5 s after a hit; the wrist HUD on Jin's drawn forearm bone; 0.15.5: combat feedback: the red damage vignette (stronger for a bigger loss, a heartbeat pulse at low health) and the block / parry rim flash, head-locked; the wrist HUD along an estimated forearm (elbow from the headset - the wrist's own turns never move it); shared block v17; 0.15.4: wrist HUD on top of the forearm along the controller's pointing line (aim pose; the grip's axis runs across the forearm), 15 cm up the arm, 5 cm out; 0.15.3: wrist HUD shown by default (wrist_hud_mode 1 migrated once), easier glance (wrist_hud_face_deg 70, wrist_hud_view_deg 40, wrist_hud_max_m 0.80), logged every 10 s while shown; 0.15.2: the wrist HUD is the game's own art only (wrist_hud_mode 1), on TOP of the left forearm and never rolling with the wrist (wrist_hud_lock top); 0.15.1: the wrist gauge (W2): health (and resolve once found) painted from the game's values, always there when you look at your forearm - wrist_hud_mode 3 = our gauge + the game's own art above it; 0.15.0: the wrist HUD (W1): the game's own health / resolve rectangle on a quad on the outside of your left forearm when you look at it, cut from the room panel, the whole panel with the left hand at the head; shared block v16; every runtime extension logged; 0.14.4: the headset's own recenter (Meta button) recentres the game view, shared block v15, thumb / trigger touch for the VR fingers, five-option item wheel, shared block v14, item wheel + gesture indicator overlay, VR controllers: canonical controller per hand for Touch / Touch Plus / Index / Vive / WMR / HP / Pico / simple, haptics, pose prediction lead = measured pipeline lag, high GPU priority, pair-atomic xr=4, theatre screen, sharp UI layer: room-fixed HUD panel from the game, full-view cinematic UI, anamorphic 16:9 UI and flat frames of the square render)"
 
 static FILE *g_log; static wchar_t g_dir[MAX_PATH];
 static void logf(const char *fmt, ...) {
@@ -378,7 +378,8 @@ static XrRect2Di screenRect(u32 w, u32 h, bool crop) {   // the part of the game
 // #runtime-owns-pacing / XR-005: one wait, one prediction, declare what you rendered; the declared pose stays the rendered one).
 #include "xroverlay.h"
 #include "xrgauge.h"   // v16 the wrist gauge (WRIST_HUD.md W2)
-#include "xrfx.h"      // v17 combat feedback: damage vignette, block / parry flash
+#include "xrfx.h"
+#include "xrkey.h"     // 0.15.6 the UI image's black boxes keyed out      // v17 combat feedback: damage vignette, block / parry flash
 
 struct LeadRec { XrTime t; GvPose e0; };
 static LeadRec leadRing[128]; static u32 leadPos = 0; static double leadNs = 0, lagEma = 0; static u64 lagN = 0; static u32 lastLeadFrame = 0xFFFFFFFFu;
@@ -472,10 +473,12 @@ static void frame() {
     if (ovAcq) ov::record(c, ov::sc.img[ovIdx], ring, ovNow);
     if (gaAcq) gauge::record(c, gauge::sc.img[gaIdx], ring, ovNow, wrist::gcfg.low);
     if (uiAcq) {
-        D3D12_RESOURCE_BARRIER br = barrier(uiSc.img[uiIdx], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_DEST); c->ResourceBarrier(1, &br);
-        D3D12_TEXTURE_COPY_LOCATION dst{uiSc.img[uiIdx], D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX, {}}, src{uiTex[uiPick.tex], D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX, {}};
-        c->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
-        br = barrier(uiSc.img[uiIdx], D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET); c->ResourceBarrier(1, &br);
+        D3D12_TEXTURE_COPY_LOCATION src{uiTex[uiPick.tex], D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX, {}};
+        if (!uiSc.rtv || !key::draw(c, uiTex, uiPick.tex, uiGenOpen, {uiSc.rtv->GetCPUDescriptorHandleForHeapStart().ptr + (SIZE_T)uiIdx * uiSc.step}, uiSc.w, uiSc.h, uiSc.fmt, fx::hurtNow(ovNow))) {
+            D3D12_RESOURCE_BARRIER br = barrier(uiSc.img[uiIdx], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_DEST); c->ResourceBarrier(1, &br);
+            D3D12_TEXTURE_COPY_LOCATION dst{uiSc.img[uiIdx], D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX, {}};
+            c->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
+            br = barrier(uiSc.img[uiIdx], D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET); c->ResourceBarrier(1, &br); }
         const int *wp = wrist::px;
         if (wrAcq) {   // v16 the health / resolve rectangle into the wrist image (same place, same size as in the UI image)
             D3D12_RESOURCE_BARRIER b2 = barrier(wrist::sc.img[wrIdx], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_DEST); c->ResourceBarrier(1, &b2);
@@ -682,7 +685,7 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR cmd, int) {
     S = (GvShared *)MapViewOfFile(m, FILE_MAP_ALL_ACCESS, 0, 0, sizeof(GvShared));
     if (!S || S->magic != GV_MAGIC || S->version != GV_VERSION) { logf("shared block version mismatch (game DLL and host must be the same build)"); return 1; }
     S->hostPid = GetCurrentProcessId(); logf("attached to game pid %u, mode %u", g_pid, S->mode);
-    wrist::load(g_dir); fx::load(g_dir);   // v16 the wrist HUD settings (gotvr.ini, next to this exe)
+    wrist::load(g_dir); fx::load(g_dir); key::load(g_dir);   // v16 the wrist HUD settings (gotvr.ini, next to this exe)
     {   // v11 (BUG-69): the host's copies and the runtime's submission must not queue behind a GPU-bound game (playbook ch19
         // host starvation). WDDM GPU scheduling class: HIGH (4), else ABOVE_NORMAL (3).
         typedef LONG(APIENTRY * FnPrio)(HANDLE, int); S->hostGpuPrio = -1;

@@ -38,11 +38,12 @@ static bool init() {
 }
 // intensities now: damage (red), flash (block / parry), low-health pulse
 static float hitI = 0, flashI = 0, lowI = 0;
+static bool hurtNow(u64 now) { return hitAt && now - hitAt < 1500; }   // 0.15.6: the game's own hit overlay is keyed out of the UI layer meanwhile (xrkey.h)
 static bool want(u64 now, bool gameplay) {
-    if (!on) return false;
     float h = 0, m = 0; u32 vok = 0; gvRead(&S->vitSeq, [&] { h = S->vitHp; m = S->vitHpMax; vok = S->vitOk; });
     if (vok && m > 0) { if (lastHp >= 0 && h < lastHp - 0.5f) { const float d = (lastHp - h) / m; hitAmp = fminf(1.0f, (0.45f + 3.0f * d) * strength); hitAt = now; nHits++; } lastHp = h; }
     else lastHp = -1.0f;
+    if (!on) return false;
     const LONG fs = S->fxSeq; if (fs != lastFx) { lastFx = fs; fxKind = S->fxKind; fxAmp = fminf(1.0f, fmaxf(0.0f, S->fxAmp)); fxAt = now; nFlashes++; }
     hitI = 0; if (hitAt) { const float t = (float)(now - hitAt); hitI = t < 60.0f ? hitAmp * t / 60.0f : hitAmp * expf(-(t - 60.0f) / fadeMs); if (hitI < 0.01f) hitI = 0; }
     flashI = 0; if (fxAt) { const float t = (float)(now - fxAt), dur = fxKind == 2 ? 240.0f : 160.0f; flashI = t < 30.0f ? fxAmp * t / 30.0f : fxAmp * expf(-(t - 30.0f) / dur); if (flashI < 0.01f) flashI = 0; }

@@ -22,6 +22,44 @@ refused to send images ("FRAME GENERATION is on" in the log, although it was off
 same-frame stereo (both eyes every frame) gets built. Please press **F10** once in each of: main menu, standing
 outdoors, riding, a cutscene, photo mode.
 
+## 0.18.66 / GoTVRHost 0.15.6: fixes from VR session 21
+
+**Install:** `xinput1_4.dll` AND `GoTVR\GoTVRHost.exe`. Both must be from this build, because the shared data block
+is now v18.
+
+- **Black square behind picked-up items, fixed with your UI capture:**
+  - The capture showed the pickup panel writing fully opaque alpha over its whole rectangle while its colour there is
+    black. On a monitor that does nothing; on the headset's separate HUD layer it is an opaque black box.
+  - The HUD layer now goes through a small shader on the way to the headset. A fully opaque pixel darker than
+    `hud_black_key_level` (0.20) becomes as see-through as it is dark, so black disappears and the dark glow around
+    the icon fades like it does on the monitor. Everything else is unchanged.
+  - `hud_black_key=0` returns to the plain copy.
+- **The game's own hit effect is gone:** for 1.5 s after Jin is hit, the game's dark and red hit overlay is keyed out
+  of the HUD layer. The red vignette replaces it (`hud_hide_game_hit=0` keeps the game's).
+- **Parry = motion (`parry_mode=motion`, the new default; changed once):**
+  - The blade must touch the blow, as before.
+  - Then: if your blade moved at least `parry_min_travel_cm` (12) at up to `parry_min_speed` (1.2 m/s) or more within
+    the parry window (`parry_timing_ms`, 220 ms before the blow lands), it is a PARRY. Held mostly still, it is a
+    BLOCK.
+  - The movement is measured against Jin's body, so walking with the sword held still is still a block.
+  - The `PARRY:` lines log the distance and speed of every contact.
+- **The sound is gone** (`fx_sound_volume` 0, changed once). The gold (parry) and silver (block) flashes stay.
+- **The sheathe animation after sheathing:** 0.18.65 asked the game to sheathe too, which played its sheathe
+  animation. That request is removed. Instead, the drawn stance's hip turn is taken out of Jin's body while he walks
+  with the game's sword out (the walking hips' average line). This fixes the 30 deg turn without the game sheathing.
+- **Wrist HUD glued to the forearm bone (host):** the game now sends Jin's actual left elbow and wrist positions to the
+  headset program. The panel lies flat on top of that bone, `wrist_hud_from_wrist_m` (0.10) up from his wrist and
+  `wrist_hud_out_m` (0.045) above the bone's line, and moves with your live controller. When that data is missing
+  it falls back to the estimated elbow.
+- **Walking on ropes / logs faces your headset:** the "riding" test (which stops the body follow) now also needs Jin
+  to be sitting, i.e. a thigh near level. On a beam or rope the thighs hang down, so the body follows your head like
+  normal walking. The log notes each riding on/off with the measurement.
+- **UI prompts jittering:** the frame cap swung between 46 and 58 every few seconds, and that changing rhythm against
+  the headset's 72 Hz made the HUD's prompts step unevenly. The cap now drops only after 2 bad seconds, by 2, never
+  under 50, and climbs back after 6 good seconds.
+- **The game's own block / parry effects in VR:** not yet. Jin's guard field still has to be found with the flat test
+  below (GUARD SCAN).
+
 ## 0.18.65 / GoTVRHost 0.15.5: fixes from VR session 20
 
 **Install:** `xinput1_4.dll` AND `GoTVR\GoTVRHost.exe`. Both must be from this build, because they share a new data

@@ -26,8 +26,8 @@ struct Cfg {
 enum : int { NONE = 0, BLOCK = 1, DEFLECT = 2 };
 static const int HN = 64;   // 0.18.62: 64 samples, at most one per 8 ms (the session-18 history held only 76 ms - several pushes per frame)
 struct Hist {
-    V3 g[HN], t[HN]; uint64_t ms[HN]; int n = 0, w = 0;
-    void push(V3 guard, V3 tip, uint64_t now) { g[w] = guard; t[w] = tip; ms[w] = now; w = (w + 1) % HN; if (n < HN) n++; }
+    V3 g[HN], t[HN], o[HN]; uint64_t ms[HN]; int n = 0, w = 0;   // o: Jin's position then (0.18.66: the blade's speed is measured against his body, not the world)
+    void push(V3 guard, V3 tip, uint64_t now, V3 origin = V3{}) { g[w] = guard; t[w] = tip; o[w] = origin; ms[w] = now; w = (w + 1) % HN; if (n < HN) n++; }
     int idx(int k) const { return ((w - 1 - k) % HN + HN) % HN; }   // k = 0 newest
 };
 struct Result { int kind = NONE; float distCm = 1e9f, speed = 0, travelCm = 0, enteredMs = -1; };
@@ -36,6 +36,16 @@ static inline Result judge(const Hist &h, uint64_t now, V3 attacker, V3 landing,
     for (int k = 0; k < h.n; k++) { const int i = h.idx(k); if ((float)(now - h.ms[i]) > win) break;
         float s, t; const float d2 = melee::segSeg(h.g[i], h.t[i], attacker, landing, s, t); if (d2 < r.distCm * r.distCm) r.distCm = sqrtf(d2); }
     if (r.distCm > c.tolCm) return r;
+    if (c.mode == 2) {   // 0.18.66 MOTION (owner, session 21: "I kept thinking I parried, but it was counted as a block - if the sword is mostly held still
+        // it is a block, but if the player has okay timing and the sword is moving a good amount, it is a parry ... moving to intercept the enemy's
+        // weapon around the same time the regular parry window is, and the hitboxes collide"): contact as always; then the tip's movement
+        // RELATIVE TO JIN over the last parryMs * perfectMult (the parry window) - top speed >= minSpeed and path >= minTravelCm = PARRY, else BLOCK
+        const float pw = c.parryMs * c.perfectMult;
+        for (int k = 0; k + 1 < h.n; k++) { const int i = h.idx(k), j = h.idx(k + 1); if ((float)(now - h.ms[j]) > pw) break;
+            const float dms = (float)(h.ms[i] - h.ms[j]); if (dms <= 0.5f) continue;
+            const float d = melee::len(melee::sub(melee::sub(h.t[i], h.o[i]), melee::sub(h.t[j], h.o[j])));
+            r.travelCm += d; const float sp = d / dms * 10.0f; if (sp > r.speed) r.speed = sp; }
+        r.kind = (r.speed >= c.minSpeed && r.travelCm >= c.minTravelCm) ? DEFLECT : BLOCK; return r; }
     if (c.mode == 0) {   // timing: the run of contact the latest contact belongs to - when did it start?
         int k0 = -1; for (int k = 0; k < h.n; k++) { const int i = h.idx(k); if ((float)(now - h.ms[i]) > win) break; float s, t; if (melee::segSeg(h.g[i], h.t[i], attacker, landing, s, t) <= c.tolCm * c.tolCm) { k0 = k; break; } }
         if (k0 < 0) return r; uint64_t entry = h.ms[h.idx(k0)]; bool open = true;
@@ -70,6 +80,12 @@ static inline bool selfTest() {
       t.windowMs = 1000.0f; ok &= judge(h2, 7000 + 31 * 20 + 5, A, P, t).kind == BLOCK;
       Hist h3; for (int i = 0; i < 40; i++) h3.push(melee::v3(-20, 40, 130), melee::v3(40, 50, 140), 8000 + i * 16); ok &= judge(h3, 8000 + 39 * 16 + 5, A, P, t).kind == BLOCK;
       Hist h4; for (int i = 0; i < 20; i++) h4.push(melee::v3(-120, 0, 60), melee::v3(-160, 20, 40), 9000 + i * 16); ok &= judge(h4, 9000 + 19 * 16 + 5, A, P, t).kind == NONE; }
+    // motion mode (0.18.66): held still while walking 1.5 m/s (the blade moves with Jin) -> BLOCK; a 2.5 m/s sweep into the line -> PARRY
+    { Cfg m = c; m.mode = 2; m.parryMs = 220.0f; m.minSpeed = 1.2f; m.minTravelCm = 12.0f;
+      Hist h5; for (int i = 0; i < 20; i++) { const float wx = i * 2.4f; h5.push(melee::v3(-20 + wx, 40, 130), melee::v3(40 + wx, 50, 140), 10000 + i * 16, melee::v3(wx, 0, 0)); }
+      ok &= judge(h5, 10000 + 19 * 16 + 5, A, P, m).kind == BLOCK;
+      Hist h6; for (int i = 0; i < 20; i++) { const float sx = i < 8 ? 0.0f : (float)(i - 8) * 4.0f; h6.push(melee::v3(-60 + sx, 40, 130), melee::v3(-10 + sx, 55, 140), 11000 + i * 16); }
+      const Result r6 = judge(h6, 11000 + 19 * 16 + 5, A, P, m); ok &= r6.kind == DEFLECT && r6.speed > 2.0f; }
     return ok;
 }
 } // namespace parry
