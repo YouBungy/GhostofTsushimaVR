@@ -61,6 +61,12 @@ block (v17). Your gotvr.ini gets a few one-time changes, listed below.
   - The HUD switch for that test is **Alt+F1**: it draws the HUD into the 3D image (the old panel).
   - For the black square, press **Ctrl+Shift+U** while it is on screen. That saves the HUD image as
     `ui_dump_color.bmp` and `ui_dump_alpha.bmp` in the GoTVR folder. Send me those and the fix can be exact.
+- **Finding the game's guard (a flat test, for the game's own block / parry effects in VR):**
+  - Set `play_mode=flat` and draw your sword near an enemy-free spot.
+  - Hold block (Q, or LB on a pad) for about 1 s, let go for about 1 s, and repeat 10 or more times.
+  - After each hold the log gets a `GUARD SCAN` line listing the parts of Jin's data that switch on while you guard
+    and back off when you let go. With that field found, the VR parry can switch the game's own guard on for the blow
+    your blade met.
 - **Wrist HUD stays along the forearm (host):** the forearm line now runs from an estimated elbow (from your headset
   and a two-bone arm) to your hand. Only positions are used, so turning or bending the wrist never moves it
   (`wrist_hud_forearm=body`; `aim` / `grip` = the earlier versions; `wrist_hud_upper_arm_m` / `wrist_hud_forearm_m`

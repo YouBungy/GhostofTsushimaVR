@@ -2709,6 +2709,23 @@ static void tick() {   // game thread (GameTick), flat play only
     u8 *h = fp::heroPtr();
     if (!h || !readable(h, NB)) { if (have) logf("OBS: the hero is gone (loading / menu)"); have = false; lastPOk = false; return; }
     const u32 *W = (const u32 *)h;
+    {   // 0.18.65 GUARD SCAN (flat play): Jin's "guarding" state, so the VR parry can switch the game's own guard on for the blow your blade met
+        // (the game's sparks / sounds / parry). Each BLOCK hold (Q or the pad's LB) of 0.3 s or more: the hero's 32 KB is taken as you press
+        // (pre), 0.3 s into the hold (held) and 0.3 s after you let go (rel). A dword with pre == rel != held is a guard candidate; after
+        // every hold the ones that did that most often are logged (GUARD SCAN lines). Hold block ~1 s, let go ~1 s, 10+ times, sword drawn.
+        static u32 pre[NW], held[NW]; static uint16_t cand[NW]; static u32 candHeld[NW], candRel[NW]; static int st = 0, nHolds = 0; static u64 t0 = 0, tr = 0;
+        const u64 tn = GetTickCount64(); const bool down = (GetAsyncKeyState('Q') & 0x8000) || (g_padHave[0][0] && (*(const WORD *)(g_padLast[0][0] + 4) & 0x0100));
+        if (h != lastHero) st = 0;
+        if (st == 0 && down) { memcpy(pre, W, NB); t0 = tn; st = 1; }
+        else if (st == 1) { if (!down) st = 0; else if (tn - t0 >= 300) { memcpy(held, W, NB); st = 2; } }
+        else if (st == 2) { if (!down) { tr = tn; st = 3; } }
+        else if (st == 3) { if (down) st = 0; else if (tn - tr >= 300) { st = 0; nHolds++;
+                for (int i = 0; i < NW; i++) if (pre[i] == W[i] && held[i] != W[i]) { cand[i]++; candHeld[i] = held[i]; candRel[i] = W[i]; }
+                int top[12]; int nt = 0; for (int i = 0; i < NW; i++) { if (cand[i] < 2) continue; int k; if (nt < 12) k = nt++; else if (cand[i] > cand[top[11]]) k = 11; else continue; top[k] = i; for (int j = k; j > 0 && cand[top[j]] > cand[top[j - 1]]; j--) { const int x = top[j]; top[j] = top[j - 1]; top[j - 1] = x; } }
+                char line[1200]; int n = snprintf(line, sizeof line, "GUARD SCAN: %d block holds | candidates (pre == after != held):", nHolds);
+                for (int j = 0; j < nt && n < (int)sizeof line - 80; j++) n += snprintf(line + n, sizeof line - (size_t)n, " hero+0x%04x %u/%d (held 0x%x, after 0x%x);", top[j] * 4, (unsigned)cand[top[j]], nHolds, candHeld[top[j]], candRel[top[j]]);
+                logf("%s", line); } }
+    }
     if (h != lastHero || !have) { lastHero = h; memcpy(prevW, W, NB); memset(chg, 0, sizeof chg); have = true; lastPOk = false; logf("OBS: hero %p (class id %d) - watching its first %d KB for flag changes", (void *)h, fp::classId(h), NB / 1024); return; }
     {   // where he is and how fast
         const float *M = (const float *)(h + 0x150); const float p[3] = {M[12], M[13], M[14]};
