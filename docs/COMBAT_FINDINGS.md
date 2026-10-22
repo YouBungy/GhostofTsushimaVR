@@ -401,3 +401,11 @@ Still to find:
   bit 0 = guarding); float vectors hero+0x1E0/0x1E4, 0x200/0x204, 0x240..0x248, 0x3B0/0x3B4 non-zero only while guarding (guard
   direction / pose data); hero+0xFB4 -34 vs -27 (float); hero+0x2D0 11/12; hero+0xF60 0x100 -> 0x101 in the first 3 holds only.
 - 0.18.67 hybrid parry: bit 0 set around oHitProc for the defended blow; composed flags logged (0x00400000 = guarded).
+
+## Session 24 (0.18.69 flat HIT SCAN, 2026-10-22): where the guard and the parry are decided
+- 11 enemy blows on Jin: 6 unguarded (composed 0x03800041, -87.5 / -100), 4 on a held guard (0x03800000, 0 damage, block held 422-1797 ms),
+  1 through the guard after 1797 ms (0x03800041 - a guard break / unblockable?). The guard is decided before HitProc (the attack side).
+- Game parries (4) never reach HitProc on Jin: only the +12.5 reward (flags 0x00000001, HitProc record Jin -> Jin, from 0x84d252).
+- Hero dwords that never shared a value guarded vs unguarded: +0x148 (0x4000100 vs 0x6000100), +0x10D0.. stride 0x18 (6 vs 4),
+  +0xF80 / +0xF84 / +0xFB0 / +0xFB4 floats, +0xEDC / +0xEEC / +0xF1C (-4.77e6 sentinel vs 15.4), +0x250 (pointer vs 0).
+- 0.18.70: the game's own guard button driven by the katana (guard engine).

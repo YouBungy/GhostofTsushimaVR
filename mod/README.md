@@ -22,6 +22,31 @@ refused to send images ("FRAME GENERATION is on" in the log, although it was off
 same-frame stereo (both eyes every frame) gets built. Please press **F10** once in each of: main menu, standing
 outdoors, riding, a cutscene, photo mode.
 
+## 0.18.70: the game's own block and parry in VR (from the HIT SCAN flat test)
+
+**Install:** `xinput1_4.dll` only.
+
+**What the flat test showed** (11 blows, several enemies):
+- A blow on your held guard still reaches Jin's hit processing, but the game composes it without its damage bits
+  (0x03800000 instead of 0x03800041). The guard is decided earlier, on the attacker's side, at the moment of contact.
+- A game parry never reaches it at all. Jin only receives his +12.5 parry reward (seen 4 times).
+- So the game's block and parry, with its sparks, sounds and the enemy's real parried reaction, can only come from
+  the game's own guard button being down at the right moment. Setting a flag when the blow arrives (0.18.67) is too
+  late.
+
+**New default `parry_engine=guard` (changed once):** your katana drives the game's guard button.
+- **Guard (block):** hold the katana up in front of you with a hostile within `guard_enemy_cm` (400). "Up" means the
+  blade's middle is within `guard_reach_cm` (75) of your chest, above the waist, with the tip not hanging down, and
+  the blade roughly still. While you do this, the game's guard is held, so the game blocks with its own effects.
+  Jin walks at the game's guarding speed while you do it.
+- **Parry:** move the blade into that zone (the same motion as the parry rule: 1.2 m/s or more). That is a fresh
+  guard press, which opens the game's own parry window. A game parry gives the gold flash and is logged ("the GAME
+  parried").
+- **Safety net:** a blow that still lands on your blade is defended by the mod as before, so you never take damage
+  from it. If the game's guard was up, the game takes the blow and the mod checks: no damage = the game blocked it;
+  otherwise the health is put back.
+- `parry_engine=mod` = the mod's silent defence only.
+
 ## 0.18.69: the movement-direction bug (corrected), and the HIT SCAN flat test
 
 **Install:** `xinput1_4.dll` only.
