@@ -2556,3 +2556,13 @@ spaces, session, instance → TerminateProcess.
 - `[HEADSET]` ropes / logs: riding = markers AND a thigh near level (knee < 22 cm below the hip). v20 / v21 riding seconds: head ~140 cm
   above the root, 0-10 m/s (horse).
 - `[HEADSET]` prompt jitter `[INFERENCE]`: adaptive cap swung 46-58 -> calmer hysteresis, floor 50.
+
+## GoTVR 0.18.67 → 0.18.68 — VR session 23
+- `[LIVE]` hybrid: every defended blow composed 0x03800041 (not guarded) with +0x14C already 0x03000105 in VR (bit 0 is not enough /
+  not the guard alone) -> damage, then restored -> vignette + game damage HUD. Default back to mod (parry_v=6).
+- `[LIVE]` 18 x "the light record's pointers could not be found" (game sword drawn) -> recResolve falls back to the saved definition copy
+  when movesetEntry fails; failure step logged; parry stagger recOnly (no message path).
+- Katana blows held 200 ms; dropped for an attacker defended within 600 ms (deflect touches).
+- Snap / smooth turn: body tween 0.06 s (snapFast). Keep-drawn guard tap every 3 s, all engines (sword_keep_v=2).
+- Movement direction wrong after a dismount (647097640: faces -112 -> 170 deg at 4.9 m/s): kick on riding off; guard 45 deg / 0.3 s / 1.5 m/s.
+- UI image saved once after the first hit (ui_hit_*.bmp).

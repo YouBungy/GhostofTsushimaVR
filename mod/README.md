@@ -22,6 +22,34 @@ refused to send images ("FRAME GENERATION is on" in the log, although it was off
 same-frame stereo (both eyes every frame) gets built. Please press **F10** once in each of: main menu, standing
 outdoors, riding, a cutscene, photo mode.
 
+## 0.18.68: fixes from VR session 23
+
+**Install:** `xinput1_4.dll` only (the host is unchanged from 0.15.6).
+
+- **Damage vignette and the game's damage HUD on a block / parry:**
+  - 0.18.67's hybrid route let the game take the blow first. The guard bit alone did not make the game guard (every
+    blow was composed "not guarded"); the health was put back afterwards, but by then the damage effects had played.
+  - `parry_engine` is back to `mod` (changed once): a defended blow never reaches Jin. `hybrid` stays as an option.
+  - The game's guard needs more than that one bit. That is the next research step.
+- **The parried enemy did not react and kept attacking:**
+  - Every blow this session, the parry staggers included, fell back to the message path ("the record's pointers could
+    not be found"). That path only does damage; it carries no hit reaction.
+  - When the attack's moveset entry is missing, the saved record now uses its own copy of the attack definition.
+  - The log says which step failed if it still does.
+  - The parry stagger now uses only the record path. A parry never does damage-only, reaction-less hits.
+- **No damage from a deflect:** the katana's blows wait `parry_strike_hold_ms` (200 ms). A blade touch on an enemy whose
+  attack you block or parry in that time (or did in the last 0.6 s) is dropped; the log says so.
+- **Snap turn:** the body turns with a snap or smooth turn in 0.06 s instead of the eased 0.35 s, so it lands with the
+  view.
+- **The game sheathing its sword (Jin stops moving):** the game's guard is tapped briefly every `sword_keep_drawn_ms`
+  (3000, changed once) while you hold the katana, with enemies around or not. The log reports the taps and the game's
+  own put-aways every 10 taps.
+- **Movement direction after a dismount:** the log shows it went wrong right after leaving the horse. The start-up
+  turn kick now also runs when riding ends, and the direction guard reacts sooner: 45 deg off for 0.3 s at 1.5 m/s
+  or more.
+- **The game's damage HUD:** the first time Jin is hit in a session, the HUD image is saved by itself
+  (`ui_hit_color.bmp` / `ui_hit_alpha.bmp` in the GoTVR folder), so its overlay can be keyed out exactly.
+
 ## 0.18.67: the game's own block effects in VR (from your flat GUARD SCAN)
 
 **Install:** `xinput1_4.dll` only. The host is unchanged from 0.15.6.
