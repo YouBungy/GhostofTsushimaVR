@@ -22,6 +22,27 @@ refused to send images ("FRAME GENERATION is on" in the log, although it was off
 same-frame stereo (both eyes every frame) gets built. Please press **F10** once in each of: main menu, standing
 outdoors, riding, a cutscene, photo mode.
 
+## 0.18.77: fixes from VR session 29
+
+**Install:** `xinput1_4.dll`.
+
+- **Parry made the enemy flinch and bleed:**
+  - The mod's "parry stagger" was a small damaging blow (log: 15 % damage on every parry). It is off now (`parry_stagger`
+    = 0). A parried blow is guarded, with the gold flash.
+  - The enemy's real parried reaction only comes from the game's own parry. The mod now knows when each enemy is winding
+    up, so when your blade moves into the zone in front of you during the late part of a nearby enemy's wind-up, it
+    gives the game ONE fresh guard press for that attack.
+  - If that press lands at the right moment, the game parries, with its animation, spark, clang and Jin's health gain.
+    `parry_game_assist` (1) turns this on; `parry_game_assist_ms` (250) is how far into the wind-up it starts.
+- **Third person at low health:**
+  - At low health the game darkens the edges of the screen on the HUD image. The cutscene detector read those rows as
+    letterbox bars.
+  - Below 40 % health, shortly after being hurt, the HUD image alone no longer starts a cutscene. Death still does.
+- **Movement-direction bug:** an invisible snap turn now runs 0.7 s after every draw and every sheathe, and after the
+  hidden draw.
+- **Swing step not noticeable:** the step pushed the stick for only 55 ms. It now pushes until Jin has really moved the
+  distance (25 cm, at most 0.45 s). The blow's own lunge works the same way.
+
 ## 0.18.76: our own block signal; deflect by swinging into an attack
 
 **Install:** `xinput1_4.dll`.

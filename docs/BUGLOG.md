@@ -2621,3 +2621,12 @@ spaces, session, instance → TerminateProcess.
   the game still took any. Interaction phase table (hook 0xB1F130 always on); katana touch on a striking / late-wind-up enemy = deflect.
 - Flat: gtr_attacks.bin (interaction 0x2000 + params 0x200 at 0 -> 1 and at the end of the wind-up), Ctrl+Shift+N full guard signal.
 - Fixed: parry_hilt_extend_cm / parry_tip_extend_cm defaults were inside a comment.
+
+## GoTVR 0.18.76 → 0.18.77 — VR session 29
+- `[LIVE]` parries: 18 "PARRY by the mod" each followed by "STRIKE parry stagger (... light record with the hit reaction, x0.15)" = a damaging
+  blow (flinch + blood). parry_stagger = 0; parry assist: fresh LB press once per enemy attack when the blade moves in (sp >= 2 m/s, net >= 10
+  cm in 80 ms, blade up in front) during the late wind-up (phase 1, 250-1500 ms in) of a hostile within 3.5 m.
+- `[LIVE]` third person at low health: 666093906 "cinematic letterbox on the HUD image (bar rows 6/6, veil 12/13)" at 75 / 350 HP -> cutscene ->
+  game camera. cineRead ignores the HUD image while HP < 40 % (> 1.5) and hurt < 30 s ago.
+- Owner: invisible snap turn on draw / sheathe -> turn kick 0.7 s after S_DRAWN / S_SHEATHED and after the draw chord.
+- `[LIVE]` 22 swing steps of 25 cm logged, not felt: 55 ms stick pushes; now closed loop on the hero position (stepStart / stepTick, 450 ms max).

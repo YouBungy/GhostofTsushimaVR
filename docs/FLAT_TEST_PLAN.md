@@ -81,6 +81,20 @@ What the log shows (GTR lines):
 Afterwards: decompile the decision functions from the chains and readers. Then write the block / parry signal into the
 record, or call the decision code directly, from the VR blade.
 
+## Guard trace round 3 (0.18.77, flat play): the game's own spark / clang, red and blue attacks
+
+Setup: `play_mode=flat` in `GoTVR\gotvr.ini`. Record the screen with Win+Alt+R in clips of about 3 minutes or less. No F5/F6
+needed; the video finds the glints.
+1. **Block 2-3 blows** with block held well before them. The mod learns a real guarded blow and its tags.
+2. **Ctrl+Shift+N**, then let 2-3 blows land WITHOUT blocking. The mod sends the full guard signal. Does the game spark /
+   clang / play Jin's block reaction? (The video shows it.)
+3. **Glint attackers:** fight brutes, spearmen and swordsmen that do red and blue attacks. Get as many glints as possible;
+   dodge the reds, parry the blues as usual.
+4. Send the clips. The log and `GoTVR\gtr_attacks.bin` are picked up from the game folder.
+
+Analysis: tools/glint_video.py finds the glints and aligns the video to the log. Each glint is matched to the enemy's
+wind-up dump in gtr_attacks.bin; red vs blue vs plain attacks are then compared field by field.
+
 ## After the session
 
 Report what passed, fix what didn't, and update BUGLOG / COMBAT_FINDINGS / WRIST_HUD. No git push unless the owner says.

@@ -333,7 +333,7 @@ static bool build(XINPUT_GAMEPAD &g, bool ctxFlat) {
           // right stick, which turns the game camera - every degree it turns is taken into the view offset (as in a snap's catch-up) so the view
           // holds still, and the turn ends like a snap (movement forward re-taken)
           if (extMask & (OX_RSU | OX_RSD | OX_RSL | OX_RSR)) { bleedUntil = extUntil + 300; chordTurnAt = extUntil + 320; } }
-      if (chordTurnAt && now >= chordTurnAt) { chordTurnAt = 0; turnSeq++; moveCapture(30); } }
+      if (chordTurnAt && now >= chordTurnAt) { chordTurnAt = 0; turnSeq++; moveCapture(30); kickAt = now + 50; } }   // 0.18.77: a real (invisible) turn kick after the hidden draw chord too
     if (now < extUntil) applyStaged(extMask, extStart, extUntil, now, g);
     // ---- turning: the view turns at once (snap or smooth); the game camera follows in the background ----
     if (!stickBusy) {
