@@ -22,6 +22,19 @@ refused to send images ("FRAME GENERATION is on" in the log, although it was off
 same-frame stereo (both eyes every frame) gets built. Please press **F10** once in each of: main menu, standing
 outdoors, riding, a cutscene, photo mode.
 
+## 0.18.74: a fist sends no trigger input
+
+**Install:** `xinput1_4.dll`.
+
+- **Triggers only work with an open hand** (owner: "the player can make a full fist without unwanted button inputs"):
+  - A trigger pulled while that hand's grip is closed sends nothing: no game button, no head gesture, no wheel.
+  - This stays true until you let go of the trigger.
+  - If the grip closes while the trigger is already pulled, the trigger's input stops.
+  - If the grip is already half closed, a trigger pull waits up to 80 ms to see whether it becomes a fist.
+- **Unchanged:** the katana's heavy charge (trigger while holding the sword) reads the trigger itself, so it works as before.
+- **Settings in `[controls]`:** `trigger_off_while_gripping` (1; 0 = the old behaviour) and `trigger_grip_level` (0.3, how
+  closed the grip must be).
+
 ## 0.18.73: guard trace flat test (host 0.15.7 fix)
 
 **Install:** `xinput1_4.dll` and `GoTVR\GoTVRHost.exe`.

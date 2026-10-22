@@ -2604,3 +2604,8 @@ spaces, session, instance → TerminateProcess.
 - `[DUMP]` GhostOfTsushima.exe.71452.dmp (14:26 local, session 26): ACCESS_VIOLATION reading 0x4cbf29006e0 at GhostOfTsushima.exe+0x586e76 on
   the game thread (tid 57568), rdi = r10 = the dog 0x4cbf53de000; the faulting stack holds the hit path (+0x856d8a, Deliver +0x85a8b8) and
   cbt::strike's static record buffer (rebuilt 0.18.71 map) -> the people's record processed against a dog, as diagnosed from the log.
+
+## GoTVR 0.18.73 → 0.18.74
+- Owner: triggers send their (no item held) inputs only with that hand's grip open. vrinput.h trigFist latch (grip > trigger_grip_level 0.3
+  while pulled -> muted until the trigger is released) + fistWait (grip > 0.1 at the pull: 80 ms to become a fist); gestures, the wheel
+  and the press edge (trigWas) honour it. Self-test "trigger fist test". Katana heavy charge reads hd.trigger directly (unaffected).

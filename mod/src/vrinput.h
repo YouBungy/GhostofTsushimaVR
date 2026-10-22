@@ -40,7 +40,7 @@ static const struct { const char *key, *def, *what; } kCtl[C_N] = {
 static const int NWHEEL = 8;   // 0.18.7: up to 8 options; wheel_count (default 5) of them are used
 struct Cfg {
     Out out[C_N]; Out wheel[NWHEEL]; char wheelName[NWHEEL][32]; int nWheel = 5; Out wheelTap; int wheelHoldMs = 300;
-    float dead = 0.2f, snapDeg = 30.0f, smoothGain = 1.0f, headM = 0.22f, rumble = 1.0f; int turnSmooth = 0, enabled = 1, debugOverlay = 1;
+    float dead = 0.2f, snapDeg = 30.0f, smoothGain = 1.0f, headM = 0.22f, rumble = 1.0f, fistGrip = 0.3f; int turnSmooth = 0, enabled = 1, debugOverlay = 1, fistOff = 1;
     int moveHead = 1;   // 0.18.22 (owner: "movement totally headset oriented at all times"): the left stick's forward = where the headset looks NOW
 };
 static Cfg cfg;
@@ -66,6 +66,10 @@ static void loadCfg(const wchar_t *ini) {
     cfg.snapDeg = flt("snap_turn_deg", 30.0f, 5.0f, 90.0f); cfg.smoothGain = flt("smooth_turn_speed", 1.0f, 0.1f, 1.0f); cfg.dead = flt("stick_deadzone", 0.2f, 0.0f, 0.6f);
     cfg.headM = flt("hand_at_head_m", 0.22f, 0.08f, 0.5f); cfg.rumble = flt("rumble_strength", 1.0f, 0.0f, 1.0f);
     str("enabled", "1", b, 128); cfg.enabled = atoi(b) != 0;
+    // 0.18.74 (owner: "make it so left trigger and right trigger only have their respective, no item held button inputs when grip is not
+    // held - that way the player can make a full fist without unwanted button inputs"): a trigger pulled while that hand's grip is closed
+    // (past trigger_grip_level 0.3) sends nothing - not its button, not a head gesture, not the wheel - until the trigger is let go
+    str("trigger_off_while_gripping", "1", b, 128); cfg.fistOff = atoi(b) != 0; cfg.fistGrip = flt("trigger_grip_level", 0.3f, 0.05f, 0.95f);
     str("move_follows_head", "1", b, 128); cfg.moveHead = atoi(b) != 0;   /* 0.18.22: 1 = forward is always the headset's forward; 0 = taken at move start / snap / menu (0.18.21) */
     str("gesture_indicator", "0", b, 128);   /* 0.18.20 owner: "remove the test hud that appears when raising hands" */ cfg.debugOverlay = atoi(b) != 0;
 }
@@ -135,7 +139,7 @@ static std::atomic<u32> blockMask{0}; static std::atomic<u64> nBlocked{0};   // 
 static u64 chordTurnAt = 0;   // 0.18.72
 static std::atomic<u32> extReqMask{0}; static std::atomic<u64> extReqSeq{0}, nExt{0}; static u64 extSeen = 0, extStart = 0, extUntil = 0; static u32 extMask = 0;
 static void requestChord(u32 m) { extReqMask = m; extReqSeq++; }
-static Wheel wheel; static u64 gestUntil[2] = {0, 0}, gestStart[2] = {0, 0}; static u32 gestMask[2] = {0, 0}; static bool trigWas[2] = {false, false}, atHeadWas[2] = {false, false};
+static Wheel wheel; static u64 gestUntil[2] = {0, 0}, gestStart[2] = {0, 0}; static u32 gestMask[2] = {0, 0}; static bool trigWas[2] = {false, false}, atHeadWas[2] = {false, false}, trigFist[2] = {false, false}; static u64 nFistHeld = 0, trigFrom[2] = {0, 0};
 static u32 prevBtn[2] = {0, 0};
 // 0.18.7: buttons + a stick flick are played the way a player does it - buttons first (D-pad right = the PC port's touchpad
 // modifier), the stick 120 ms later and released 30 ms before the buttons (0.18.6 did this for gestures; now also wheel options)
@@ -257,11 +261,15 @@ static bool build(XINPUT_GAMEPAD &g, bool ctxFlat) {
         if (hd[0].squeeze > 0.6f) g.wButtons |= XB_LB; if (hd[1].squeeze > 0.6f) g.wButtons |= XB_RB;
         return true;
     }
+    // 0.18.74 a fist: the trigger is ignored from the moment the grip closes with it pulled until the trigger is let go
+    for (int h = 0; h < 2; h++) { if (hd[h].trigger < 0.05f) { trigFist[h] = false; trigFrom[h] = 0; } else { if (!trigFrom[h]) trigFrom[h] = now; if (cfg.fistOff && hd[h].squeeze > cfg.fistGrip) { if (!trigFist[h]) nFistHeld++; trigFist[h] = true; } } }
+    // a fist closes trigger and grip together: with the grip already moving (> 0.1) the trigger waits up to 80 ms to see if it is a fist
+    auto fistWait = [&](int h) { return cfg.fistOff && hd[h].squeeze > 0.1f && trigFrom[h] && now - trigFrom[h] < 80; };
     // ---- head gestures (hand by the head + its trigger) ----
     bool atHead[2] = {false, false};
     for (int h = 0; h < 2; h++) {
         atHead[h] = hv && (hd[h].poseValid & 1) && dist(hd[h].grip.p, head.p) < cfg.headM;
-        const bool tr = hd[h].trigger > 0.6f;
+        const bool tr = hd[h].trigger > 0.6f && !trigFist[h] && !fistWait(h);
         if (atHead[h] && tr && !trigWas[h]) {   // edge while at the head: one gesture, held for 0.4 s
             const u32 m = cfg.out[h ? C_GEST_RHEAD : C_GEST_LHEAD].m; nGest++;
             if (m & OX_HUD) { hudToggle(); nHud++; } if (m & OX_ANIM) animHold(0); if (m & OX_ANIMS) animHold(1);
@@ -277,6 +285,7 @@ static bool build(XINPUT_GAMEPAD &g, bool ctxFlat) {
     auto trig = [&](int h, int c) {
         const u32 m = cfg.out[c].m; const float v = hd[h].trigger;
         if (atHead[h] || (trigWas[h] && now < gestUntil[h])) return;
+        if (trigFist[h] || fistWait(h)) return;   // 0.18.74 a fist sends nothing
         if (m & OX_WHEEL) return;   // the wheel reads it below
         if (m & (OX_LT | OX_RT)) apply(m & (OX_LT | OX_RT), g, v > 0.05f ? v : 0.0f);
         if (v > 0.6f) apply(m & ~(u32)(OX_LT | OX_RT), g);
@@ -290,7 +299,7 @@ static bool build(XINPUT_GAMEPAD &g, bool ctxFlat) {
                                                            {C_RPRIMARY, 1, GV_BTN_PRIMARY}, {C_RSECONDARY, 1, GV_BTN_SECONDARY}, {C_RMENU, 1, GV_BTN_MENU}, {C_RSTICKCLICK, 1, GV_BTN_STICK}};
         for (auto &x : wb) if (cfg.out[x.c].m & OX_WHEEL) { if (wheelHand < 0) wheelHand = x.h; if (hd[x.h].buttons & x.bit) { wheelHeld = true; wheelHand = x.h; } }
         for (int h = 0; h < 2; h++) {
-            if (cfg.out[h ? C_RTRIGGER : C_LTRIGGER].m & OX_WHEEL) { if (wheelHand < 0) wheelHand = h; if (!atHead[h] && hd[h].trigger > 0.6f) { wheelHeld = true; wheelHand = h; } }
+            if (cfg.out[h ? C_RTRIGGER : C_LTRIGGER].m & OX_WHEEL) { if (wheelHand < 0) wheelHand = h; if (!atHead[h] && hd[h].trigger > 0.6f && !trigFist[h] && !fistWait(h)) { wheelHeld = true; wheelHand = h; } }
             if (cfg.out[h ? C_RGRIP : C_LGRIP].m & OX_WHEEL) { if (wheelHand < 0) wheelHand = h; if (hd[h].squeeze > 0.6f) { wheelHeld = true; wheelHand = h; } }
         }
     }
@@ -356,7 +365,7 @@ static bool build(XINPUT_GAMEPAD &g, bool ctxFlat) {
         const float k = fminf(0.8f, fmaxf(0.25f, fabsf(yawOff) / 25.0f)); g.sThumbRX = axis(yawOff < 0 ? k : -k); bleedUntil = now + 250; }
     { const u32 bm = blockMask.load(); if (bm && (g.wButtons & (WORD)(bm & 0xFFFF))) { g.wButtons &= (WORD)~(bm & 0xFFFF); nBlocked++; }
       if ((bm & OX_RT) && g.bRightTrigger) { g.bRightTrigger = 0; nBlocked++; } if ((bm & OX_LT) && g.bLeftTrigger) { g.bLeftTrigger = 0; nBlocked++; } }
-    for (int h = 0; h < 2; h++) { trigWas[h] = hd[h].trigger > 0.6f; prevBtn[h] = hd[h].buttons; }
+    for (int h = 0; h < 2; h++) { trigWas[h] = hd[h].trigger > 0.6f && !trigFist[h] && !fistWait(h); prevBtn[h] = hd[h].buttons; }   // 0.18.74 a held-back pull is not a press yet
     { static bool aWas = false; const bool a = (g.wButtons & XB_A) != 0; if (a && !aWas) jumpAt = now; aWas = a; }
     if (g.wButtons || g.bLeftTrigger > 30 || g.bRightTrigger > 30 || abs(g.sThumbLX) > 3000 || abs(g.sThumbLY) > 3000 || abs(g.sThumbRX) > 3000 || abs(g.sThumbRY) > 3000) lastAct = now;   // 0.18.13: idle hold lets go
     ovPublish(atHead, true, wheelHand);
