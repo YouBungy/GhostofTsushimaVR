@@ -123,30 +123,79 @@ Record with Win+Alt+R (clips of 3 minutes or less), `play_mode=flat`. Don't pres
 
 ## Round 7 (0.18.86, flat play): katana sounds and render captures
 
-One session, `play_mode=flat`, the game's own anti-aliasing (TAA) in its graphics menu. Record a video only for part C (Win+Alt+R).
-Caps lock off. Each step names the log line that answers it.
+About 15 minutes. Nothing needs recording except the optional part C.
 
-**A. Sound learning (no video).**
-1. 5 light attacks in the air (left mouse / pad X), a second apart. Then 5 heavy attacks (right mouse / pad Y).
-2. Ctrl+Shift+D, then draw the sword with the game's own key within a second. Do it 3 times.
-3. Ctrl+Shift+S, then sheathe with the game's own key within a second. Do it 3 times.
-4. Stand still for 30 s (the baseline).
-Answer: `SOUND LEARN` lines and `SOUND: the game's ... sound is event 0x...`. A learned event is saved to gotvr.ini (`sound_*_event`)
-and VR uses it.
+### Before you start
 
-**B. Render captures (no video).** Ctrl+Shift+C captures the game's motion vectors and depth 0.5 s after the press. Press it twice
-quickly to capture 200 ms after your next attack instead. Wait 2 s between captures.
-1. Camera still, Jin standing idle: Ctrl+Shift+C. This is the reference; little should move.
-2. Camera still, sword out: Ctrl+Shift+C twice, then a light attack. Does Jin's moving sword have its own motion vectors?
-3. A slow camera pan with the mouse while pressing Ctrl+Shift+C. The whole image should move.
-4. Run sideways past a wall or a tree while pressing Ctrl+Shift+C.
-5. Look at something close (a fence or wall within 2 m), then at the horizon, with Ctrl+Shift+C each time. This shows which end of
-   the depth range is near.
-Answer: `CAPTURE #n velocity` / `CAPTURE #n depth` lines (format, value range, % of the image that moves, the 16 x 9 map) and the
-files `GoTVR\cap_<n>_velocity.raw` / `cap_<n>_depth.raw`. Send the log and the .raw files.
+1. In `GoTVR\gotvr.ini`, set `play_mode = flat`.
+2. In the game's graphics menu, set anti-aliasing to **TAA**. The captures must show the same anti-aliasing VR uses.
+3. Load a save outdoors with some enemies nearby but not yet fighting you. A quiet field is fine for parts A and B.
 
-**C. Glint check (optional, video).** Fight a group with red and blue attackers. Press F5 at each red glint and F6 at each blue one.
-Answer: each tag's `GTR` line names the attacker and the mod's verdict. They should agree.
+### Part A: teach the mod the katana sounds
+
+The mod has no sound files of its own. It plays the game's own sounds, but it first has to find which of the game's thousands of
+sound IDs is the sword whoosh, the draw and the sheathe. It does that by watching which sound plays every time you swing, draw or
+sheathe, and not while you stand still.
+
+1. **Light swings:** with the sword out, do 5 light attacks into the air (left mouse, or X on a pad), about one a second.
+2. **Heavy swings:** then 5 heavy attacks (right mouse, or Y on a pad).
+3. **Draws:** press **Ctrl+Shift+D**, then within a second draw the sword with the game's own key. Sheathe it again any way you like.
+   Do this 3 times. The hotkey tells the mod "a draw is coming".
+4. **Sheathes:** with the sword out, press **Ctrl+Shift+S**, then within a second sheathe it with the game's own key. Do this 3
+   times.
+5. **Baseline:** stand still, hands off, for 30 seconds. This tells the mod what the background sounds are, so it doesn't pick
+   wind or birds by mistake.
+
+Nothing changes on screen. When it works, the log has lines like `SOUND: the game's light swing sound is event 0x...`, and the ID
+is saved to gotvr.ini (`sound_swing_event` and so on). VR then plays those sounds from your own sword.
+
+### Part B: render captures
+
+**What a capture is.** Each frame the game draws two images you never see, alongside the picture:
+- **Motion vectors:** for every pixel, how far it moved since the last frame. The game's TAA uses them to line up the previous
+  frame with this one before blending the two. The ghost hand in VR is TAA fetching the previous frame from the wrong place,
+  which means wrong motion vectors on the arm.
+- **Depth:** for every pixel, how far away it is. The headset needs this to warp a repeated frame correctly (the Spacewarp
+  depth layer).
+
+**Ctrl+Shift+C** copies both of those images out of the game half a second after you press it. It saves them as two files in
+the `GoTVR` folder (`cap_0_velocity.raw` and `cap_0_depth.raw`, then `cap_1_...` and so on) and writes a summary to the log.
+- It is not a screenshot. You see nothing on screen, maybe a tiny hitch.
+- It does not need a video.
+
+Two ways to press it:
+- **Once:** captures half a second later. Use this when you want a picture of what is on screen now.
+- **Twice quickly** (within half a second): waits for your next attack (left mouse or pad X) and captures 0.2 s after it, in
+  the middle of the swing. Use this for the swing, because you can't press the hotkey and swing at the same moment.
+
+Wait about 2 seconds between captures. The five captures, each one answers one question:
+
+1. **Standing still.** Sword sheathed, don't touch the mouse or keyboard, press Ctrl+Shift+C once, keep still for a second.
+   This is the reference: almost nothing should be moving.
+2. **Mid-swing.** Sword out, camera still. Press Ctrl+Shift+C twice quickly, then do one light attack without moving the
+   mouse. *Question: does the game give Jin's swinging sword and arm their own motion? This decides how the ghost gets fixed.*
+3. **Camera pan.** Start turning the camera slowly and steadily with the mouse, press Ctrl+Shift+C once, keep turning for
+   another second. *Question: how the motion numbers are scaled, from a movement we know.*
+4. **Running sideways.** Run sideways (A or D) past a wall, a fence or trees, press Ctrl+Shift+C once while running. *Question:
+   do near things move more than far things in the motion image, as they should?*
+5. **Near and far.** Stand right in front of a wall, fence or rock (within 2 m) so it fills the middle of the screen, press
+   Ctrl+Shift+C once. Then turn to face open landscape with sky, and press it once more. That makes 6 captures in total.
+   *Question: which end of the depth range means near. The headset needs this the right way round.*
+
+In the log, each capture shows as:
+- `HOTKEY Ctrl+Shift+C: render capture in 0.5 s`;
+- then `CAPTURE: velocity ... copied` and `CAPTURE: depth ... copied`;
+- a moment later, `CAPTURE #n velocity: ... % of the image moves` with a 16 x 9 grid of numbers (how much of each part of the
+  screen moved) and `CAPTURE #n depth: values ... .. ...`.
+- If a line says `not read` instead, keep going and tell me which step.
+
+The files are large (tens of MB each). You don't need to send them: tell me when you're done and I'll read the log and the files
+from your game folder myself.
+
+### Part C (optional, record this one with Win+Alt+R): glint check
+
+Fight a group that has red and blue attackers. Press **F5** (or Mouse 4) when you see a red glint and **F6** (or Mouse 5) when you
+see a blue one. The log checks each press against the mod's own verdict on that attack. They should agree.
 
 ## After the session
 
