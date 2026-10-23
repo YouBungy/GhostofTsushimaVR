@@ -200,6 +200,16 @@ from your game folder myself.
 Fight a group that has red and blue attackers. Press **F5** (or Mouse 4) when you see a red glint and **F6** (or Mouse 5) when you
 see a blue one. The log checks each press against the mod's own verdict on that attack. They should agree.
 
+### Round 7 results (0.18.87)
+
+- Captures: all 6 taken. Motion vectors and depth decoded (docs/RENDER_PLAN.md, "Flat round 7 results").
+- Sounds:
+  - Heavy swing learned: 0x57a4ac64, tied with four other ids at 83 %.
+  - Sheathe learned: 0xff2b4871, tied with four at 100 %.
+  - Light swing not learned. The best id is at 28 %: each combo step plays a different whoosh.
+  - Draw not learned. 20 stray Delete edges arrived at the start screen. From 0.18.88 tags count only with Jin loaded, and once
+    per 2 s.
+
 ## After the session
 
 Report what passed, fix what didn't, and update BUGLOG / COMBAT_FINDINGS / WRIST_HUD. No git push unless the owner says.

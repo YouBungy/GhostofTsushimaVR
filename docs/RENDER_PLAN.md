@@ -1,5 +1,31 @@
 # Render plan: the TAA hand / sword ghost and the Spacewarp depth layer
 
+## Flat round 7 results (0.18.87, raining in game; render 1920 x 1080)
+
+- **Motion vectors:** R16G16_FLOAT, in screen fractions. In the mid-swing capture, Jin's body and the blade have their own motion,
+  separate from the camera's. This is **Case A**: the game writes per-object motion from the skin's current and previous pose.
+  - Background: about 2 px of camera motion. The blade: up to about 20 px.
+  - The rain draws no motion.
+- **Depth:** D32_FLOAT_S8X24. Subresource 0 is the 4-byte depth plane (row pitch = width x 4).
+  - Reversed-Z with an infinite far plane: the sky is exactly 0 (40 % of the far view); the ground at Jin's feet is about 0.044; the
+    nearest values are about 0.09.
+  - The near plane is about 10 cm (near / distance).
+- **Why the ghost, then (hypothesis):** xr = 4 renders both eyes from one tick. The skin palette is rebuilt once per tick (it is
+  stamped with the per-tick frame counter at item+8 +0x50, 0x59EB30 / 0x59EEF0). So the skin's "previous pose" is the previous
+  tick's in BOTH eyes.
+  - With the engine's cross-eye TAA (preset 7), the right eye's history is the LEFT frame of the SAME tick, where the hand
+    already is at this tick's pose.
+  - The right eye's hand pixels still say "I came from where I was a tick ago". TAA fetches history from there: background, or a
+    hand a tick old. The result is a translucent second hand.
+  - The left eye is consistent: its history is the previous tick's right frame.
+- **Test (0.18.88):** history_mode 8 / 9 (F6 in the headset) give each eye its own TAA history and reprojection on top of
+  preset 7's culling. Then history, camera and skin "previous pose" all agree. If the ghost goes away in 8 or 9, the hypothesis
+  holds. The fix is then either 8 / 9 itself (cost: a history copy per eye) or, cheaper, making the right eye's skin "previous
+  pose" equal its current one.
+- **VR capture (0.18.88):** Insert = both eyes now; Insert twice = both eyes 120 ms after your next katana swing. Hold your head
+  still and swing; the right-eye frame's hand motion shows the mismatch directly.
+
+
 Status 0.18.86. This is the work to do after flat round 7 (docs/FLAT_TEST_PLAN.md, part B), in this order. Each step says what it
 needs from the captures, what to build, and how to check it. The TAA path stays the default (`vr_aa = taa`) throughout. Every new
 piece gets its own ini switch, off until a headset session proves it. The culling preset 7 work is not touched.

@@ -2706,3 +2706,18 @@ spaces, session, instance → TerminateProcess.
 - **Fix:** the round 7 keys are now Insert (capture), Delete (draw tag) and End (sheathe tag), pressed alone. None of them is used
   by the mod elsewhere in flat play (Ctrl+End stays the VR left-hand trim). Ctrl+Shift+D / S had the same problem: Shift opens the
   stance menu, and S / D move Jin.
+
+## GoTVR 0.18.87 → 0.18.88 — flat round 7 read; TAA ghost test presets
+
+- **Round 7 captures** (owner: raining in game): Case A. The swinging arm and blade have their own motion vectors.
+  - Depth is reversed-Z with an infinite far plane (D32S8, depth plane 4 B/px).
+  - Details in docs/RENDER_PLAN.md.
+- **Ghost hypothesis:** the skin palette is rebuilt once per tick (frame-counter stamp at item+8 +0x50). So in xr = 4 the right
+  eye's skinned motion points to the previous tick, while its cross-eye history is the left frame of the same tick.
+- **Test:** history_mode 8 (per-eye TAA history + reprojection on preset 7) and 9 (+ per-eye camera velocity), reached with F6.
+  - The preset indicator now draws up to 9 squares (it stopped at 8).
+- **VR capture:** two consecutive frames (both eyes); which eye from the cameras. Insert twice = on the next katana swing.
+- **Capture fix:** the depth plane was read as 8-byte texels; now by row pitch.
+- **Sound tags** (owner: "I only tapped delete before drawing"):
+  - 20 Delete edges were logged at the start screen. Cause unknown; the owner pressed it only before draws.
+  - Tags now count only with Jin loaded and once per 2 s per kind.

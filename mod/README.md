@@ -22,6 +22,21 @@ refused to send images ("FRAME GENERATION is on" in the log, although it was off
 same-frame stereo (both eyes every frame) gets built. Please press **F10** once in each of: main menu, standing
 outdoors, riding, a cutscene, photo mode.
 
+## 0.18.88: the TAA ghost test (VR)
+
+**Install:** `xinput1_4.dll`.
+
+Flat round 7 showed that the game writes the swinging arm's own motion vectors. The likely cause of the ghost hand is that in VR
+the right eye blends the left eye's picture from the same moment, while the arm's motion data still points back one game tick.
+
+- **F6 in the headset** now goes up to **9** squares.
+  - 8 = each eye keeps its own TAA history (on preset 7's culling).
+  - 9 = 8 plus each eye's own camera motion.
+  - 7 is the normal default. Compare the hand ghost on a fast swing in 7, 8 and 9.
+- **Insert** in VR captures the motion vectors and depth of both eyes (two frames in a row). **Insert twice** captures both eyes
+  just after your next katana swing.
+- The sound learner's Delete / End tags count only once Jin is loaded, at most once every 2 s per key.
+
 ## 0.18.87: flat test keys without Shift
 
 **Install:** `xinput1_4.dll`.
