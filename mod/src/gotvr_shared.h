@@ -7,7 +7,7 @@
 #include <stdint.h>
 
 #define GV_MAGIC 0x52565447u /* 'GTVR' */
-#define GV_VERSION 18u
+#define GV_VERSION 19u
 #define GV_TEXCOUNT 6        /* 2 eyes x 3 buffers (game writes round-robin, never waits on the host) */
 #define GV_UITEX 3           /* v8: UI-layer images, own size (the UI target's), names Local\GoTVR_<pid>_u<uiGen>_ui<i> */
 
@@ -147,6 +147,14 @@ struct GvShared {
     // v18 Jin's drawn LEFT forearm for the wrist HUD (game -> host, seqlock): elbow / wrist joint positions in tracking space (metres)
     // RELATIVE to the left grip position the game used; the host adds its live grip position
     volatile LONG armSeq; float armElbowD[3], armWristD[3]; uint32_t armOk;
+    // v19 the depth layer (docs/RENDER_PLAN.md part 2; gotvr.ini xr_depth_layer): game -> host. One R32_FLOAT shared depth image per eye
+    // image (same index, size and generation; names Local\GoTVR_<pid>_g<gen>_dep<i>), reversed-Z with an infinite far plane (1 at the
+    // near plane, 0 at infinity). depthFrame[i] = the frame tag the depth in image i belongs to (0 = none: the frame had no depth),
+    // depthNear[i] = its near plane in metres; both written before the slot that names image i is published
+    volatile LONG depthOn;            // 1 = the depth images of this texture generation exist
+    uint32_t depthFrame[GV_TEXCOUNT]; float depthNear[GV_TEXCOUNT];
+    volatile LONG64 hostDepth;        // host frames that sent a depth layer (diagnostics)
+    volatile LONG hostDepthOk;        // host: 1 = depth swapchains made and the runtime takes depth
 };
 // head-locked HUD quad / world-locked panel / v9 FULL: the UI covers the whole view of each eye exactly like on the monitor
 // (cinematics: letterbox bars, fades and subtitles at the screen edges) - one quad per eye on the frustum its image used

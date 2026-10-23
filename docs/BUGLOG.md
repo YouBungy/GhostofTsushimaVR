@@ -2721,3 +2721,21 @@ spaces, session, instance → TerminateProcess.
 - **Sound tags** (owner: "I only tapped delete before drawing"):
   - 20 Delete edges were logged at the start screen. Cause unknown; the owner pressed it only before draws.
   - Tags now count only with Jin loaded and once per 2 s per kind.
+
+## GoTVR 0.18.88 → 0.18.89 / host 0.15.9 → 0.15.10 — the depth layer, swing sound sets
+
+- **Owner:** "Why don't we have VR light swings randomly play one of the many combo sounds?"
+  - Swing sets `sound_swing_events` / `sound_swing_heavy_events`, played at random with no immediate repeat.
+  - Seeded with round 7's zero-baseline light candidates and the heavy ids in 5 of 6 heavy swings.
+  - The learner adds light ids that appear in at least 12 % of light swings and in no baseline, draw or sheathe window.
+  - Flat PageDown / PageUp audition and drop ids (`sound_swing_drop`).
+- **Owner:** "What flat tests do you need ... before you build the spacewarp? Then build spacewarp."
+  - None were needed: round 7 gave the format, size, reversed-Z and infinite far plane.
+  - DLL: `dep::onVel` copies the depth plane (D32S8 subresource 0) after AA_Velocity into a private R32 image on the game's list
+    (engine transition to COPY_SOURCE first). `copyFrame` copies it next to the eye image (shared R32_FLOAT `_g<gen>_dep<i>`, same
+    index) and records `depthFrame[i]` (the slot's frame tag) and `depthNear[i]` (cam +0x664 / units per metre).
+  - Host: a D32_FLOAT depth swapchain per eye (when offered). The depth is copied only when `depthFrame` matches the shown image,
+    then attached as XrCompositionLayerDepthInfoKHR (minDepth 0, maxDepth 1, nearZ = infinity, farZ = near: reversed, infinite
+    far). Both eyes or neither.
+  - `xr_depth_layer` defaults to 0 until a headset session. The `DEPTH/s` log line reports it.
+- docs/VR_TEST_PLAN.md: everything since the last headset session (0.18.82).

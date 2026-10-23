@@ -22,6 +22,21 @@ refused to send images ("FRAME GENERATION is on" in the log, although it was off
 same-frame stereo (both eyes every frame) gets built. Please press **F10** once in each of: main menu, standing
 outdoors, riding, a cutscene, photo mode.
 
+## 0.18.89 / host 0.15.10: the depth layer, varied swing sounds
+
+**Install:** `xinput1_4.dll` and `GoTVR\GoTVRHost.exe` (the shared block is now v19, so both must be this build).
+
+- **Depth layer (`xr_depth_layer`, default 0):** with 1, each eye's depth goes to the headset runtime with its picture
+  (`XR_KHR_composition_layer_depth`). Runtimes that use depth for reprojection can then move near and far things correctly when a
+  frame is repeated.
+  - The depth is copied right after the game's motion-vector pass and sent with that eye's image.
+  - It is reversed-Z with an infinite far plane, as flat round 7 measured, and the near plane comes from the eye's camera.
+  - Only when the depth is the eye image's size. The `DEPTH/s` log line shows it working. Test it with SSW on and off (docs/VR_TEST_PLAN.md).
+- **Swing sounds:** each swing plays one of a set of the game's combo whooshes at random, never the same one twice in a row
+  (`sound_swing_events`, `sound_swing_heavy_events`; seeded from round 7). The flat learner adds new ones.
+  - In flat play, **PageDown** plays the set one by one at Jin. **PageUp** drops the last one played (saved as `sound_swing_drop`),
+    for anything that is a grunt or a rustle rather than a whoosh.
+
 ## 0.18.88: the TAA ghost test (VR)
 
 **Install:** `xinput1_4.dll`.

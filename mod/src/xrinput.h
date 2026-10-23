@@ -63,7 +63,7 @@ static const Profile kProfiles[] = {
 };
 #undef P
 static const int NPROF = (int)(sizeof kProfiles / sizeof kProfiles[0]);
-static const char *kWantExt[] = {"XR_META_touch_controller_plus", "XR_FB_touch_controller_pro", "XR_EXT_hp_mixed_reality_controller", "XR_BD_controller_interaction", "XR_FB_display_refresh_rate"};   // 0.15.9: + the display refresh rate (host, xr_display_hz)
+static const char *kWantExt[] = {"XR_META_touch_controller_plus", "XR_FB_touch_controller_pro", "XR_EXT_hp_mixed_reality_controller", "XR_BD_controller_interaction", "XR_FB_display_refresh_rate", "XR_KHR_composition_layer_depth"};   // 0.15.10: + the depth layer (xr_depth_layer)   // 0.15.9: + the display refresh rate (host, xr_display_hz)
 
 static PFN_xrStringToPath sToPath; static PFN_xrPathToString sPathToStr; static PFN_xrCreateActionSet sCreateSet; static PFN_xrCreateAction sCreateAct;
 static PFN_xrSuggestInteractionProfileBindings sSuggest; static PFN_xrAttachSessionActionSets sAttach; static PFN_xrSyncActions sSync;

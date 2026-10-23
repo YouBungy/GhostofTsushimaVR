@@ -90,6 +90,8 @@ Check: no ghost; the hands may show a little more aliasing at the edges. That is
 
 ## Part 2: Spacewarp depth layer
 
+**Status 0.18.89:** built (2b and 2c) behind `xr_depth_layer`, waiting for the headset test (docs/VR_TEST_PLAN.md step 7).
+
 ### 2a. Confirm the depth buffer (round 7 B, captures 1, 4 and 5)
 
 - Format, size and range from the `CAPTURE #n depth` line.

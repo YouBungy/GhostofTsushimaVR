@@ -27,7 +27,7 @@
 #include "gotvr_shared.h"
 
 typedef uint64_t u64; typedef uint32_t u32;
-#define HOST_VERSION "GoTVRHost 0.15.9 (the headset refresh rates logged, xr_display_hz picks one (0 = the runtime default); 0.15.8: the wrist HUD beside the forearm, to your left as you look at it - wrist_hud_side_m 0.07; 0.15.7: the game's hit overlay found in the UI image itself - it is opaque (black middle, red streaks, an orange cross over the whole view), so it is keyed out whenever it is up, not only 1.5 s after a health drop; 0.15.6: the UI layer drawn through a small shader: opaque black UI pixels keyed out (the pickup panel's black box) and the game's own hit overlay removed for 1.5 s after a hit; the wrist HUD on Jin's drawn forearm bone; 0.15.5: combat feedback: the red damage vignette (stronger for a bigger loss, a heartbeat pulse at low health) and the block / parry rim flash, head-locked; the wrist HUD along an estimated forearm (elbow from the headset - the wrist's own turns never move it); shared block v17; 0.15.4: wrist HUD on top of the forearm along the controller's pointing line (aim pose; the grip's axis runs across the forearm), 15 cm up the arm, 5 cm out; 0.15.3: wrist HUD shown by default (wrist_hud_mode 1 migrated once), easier glance (wrist_hud_face_deg 70, wrist_hud_view_deg 40, wrist_hud_max_m 0.80), logged every 10 s while shown; 0.15.2: the wrist HUD is the game's own art only (wrist_hud_mode 1), on TOP of the left forearm and never rolling with the wrist (wrist_hud_lock top); 0.15.1: the wrist gauge (W2): health (and resolve once found) painted from the game's values, always there when you look at your forearm - wrist_hud_mode 3 = our gauge + the game's own art above it; 0.15.0: the wrist HUD (W1): the game's own health / resolve rectangle on a quad on the outside of your left forearm when you look at it, cut from the room panel, the whole panel with the left hand at the head; shared block v16; every runtime extension logged; 0.14.4: the headset's own recenter (Meta button) recentres the game view, shared block v15, thumb / trigger touch for the VR fingers, five-option item wheel, shared block v14, item wheel + gesture indicator overlay, VR controllers: canonical controller per hand for Touch / Touch Plus / Index / Vive / WMR / HP / Pico / simple, haptics, pose prediction lead = measured pipeline lag, high GPU priority, pair-atomic xr=4, theatre screen, sharp UI layer: room-fixed HUD panel from the game, full-view cinematic UI, anamorphic 16:9 UI and flat frames of the square render)"
+#define HOST_VERSION "GoTVRHost 0.15.10 (the depth layer: each eye's depth to the runtime as XrCompositionLayerDepthInfoKHR when the game sends it (xr_depth_layer = 1, shared block v19); 0.15.9: the headset refresh rates logged, xr_display_hz picks one (0 = the runtime default); 0.15.8: the wrist HUD beside the forearm, to your left as you look at it - wrist_hud_side_m 0.07; 0.15.7: the game's hit overlay found in the UI image itself - it is opaque (black middle, red streaks, an orange cross over the whole view), so it is keyed out whenever it is up, not only 1.5 s after a health drop; 0.15.6: the UI layer drawn through a small shader: opaque black UI pixels keyed out (the pickup panel's black box) and the game's own hit overlay removed for 1.5 s after a hit; the wrist HUD on Jin's drawn forearm bone; 0.15.5: combat feedback: the red damage vignette (stronger for a bigger loss, a heartbeat pulse at low health) and the block / parry rim flash, head-locked; the wrist HUD along an estimated forearm (elbow from the headset - the wrist's own turns never move it); shared block v17; 0.15.4: wrist HUD on top of the forearm along the controller's pointing line (aim pose; the grip's axis runs across the forearm), 15 cm up the arm, 5 cm out; 0.15.3: wrist HUD shown by default (wrist_hud_mode 1 migrated once), easier glance (wrist_hud_face_deg 70, wrist_hud_view_deg 40, wrist_hud_max_m 0.80), logged every 10 s while shown; 0.15.2: the wrist HUD is the game's own art only (wrist_hud_mode 1), on TOP of the left forearm and never rolling with the wrist (wrist_hud_lock top); 0.15.1: the wrist gauge (W2): health (and resolve once found) painted from the game's values, always there when you look at your forearm - wrist_hud_mode 3 = our gauge + the game's own art above it; 0.15.0: the wrist HUD (W1): the game's own health / resolve rectangle on a quad on the outside of your left forearm when you look at it, cut from the room panel, the whole panel with the left hand at the head; shared block v16; every runtime extension logged; 0.14.4: the headset's own recenter (Meta button) recentres the game view, shared block v15, thumb / trigger touch for the VR fingers, five-option item wheel, shared block v14, item wheel + gesture indicator overlay, VR controllers: canonical controller per hand for Touch / Touch Plus / Index / Vive / WMR / HP / Pico / simple, haptics, pose prediction lead = measured pipeline lag, high GPU priority, pair-atomic xr=4, theatre screen, sharp UI layer: room-fixed HUD panel from the game, full-view cinematic UI, anamorphic 16:9 UI and flat frames of the square render)"
 
 static FILE *g_log; static wchar_t g_dir[MAX_PATH];
 static void logf(const char *fmt, ...) {
@@ -74,6 +74,10 @@ static ID3D12Resource *tex[GV_TEXCOUNT]; static ID3D12Fence *gameFence; static L
 struct Chain { XrSwapchain sc = XR_NULL_HANDLE; u32 w = 0, h = 0; ID3D12Resource *img[8] = {}; u32 n = 0; ID3D12DescriptorHeap *rtv = nullptr; u32 step = 0; DXGI_FORMAT fmt = DXGI_FORMAT_UNKNOWN; bool everReleased = false; bool broken = false; };
 #include "xrwrist.h"   // v16 the wrist HUD (docs/WRIST_HUD.md W1)
 static Chain eyeSc[2]; static Chain uiSc;   // v7: the game UI on its own quad layer
+// v19 (0.15.10) the depth layer: the game's per-eye depth (R32_FLOAT, reversed-Z, infinite far) -> a D32_FLOAT depth swapchain per eye,
+// chained to each projection view as XrCompositionLayerDepthInfoKHR (nearZ = infinity at depth 0, farZ = the near plane at depth 1)
+static ID3D12Resource *dtex[GV_TEXCOUNT]; static Chain depSc[2]; static bool depthUse = false;
+struct DepShown { bool valid = false; float nearM = 0.1f; }; static DepShown depShown[2];
 static ID3D12Resource *uiTex[GV_UITEX]; static LONG uiGenOpen = 0, uiGenFailed = 0;
 struct Shown { bool valid = false; u32 tex = 0; u32 frame = 0; u64 fence = 0; GvPose pose{}; float fov[4]{}; u32 flags = 0; };
 static Shown shown[2];   // what each eye's swapchain currently shows (declared pose/fov)
@@ -127,9 +131,25 @@ static bool makeChain(Chain &c, u32 w, u32 h, DXGI_FORMAT want) {
     logf("swapchain %ux%u format %d (wanted %d), %u images", w, h, (int)pick, (int)want, n);
     return true;
 }
+static bool makeDepthChain(Chain &c, u32 w, u32 h) {
+    u32 nf = 0; if (!ok(xrEnumerateSwapchainFormats_(sess, 0, &nf, nullptr), "xrEnumerateSwapchainFormats")) return false;
+    int64_t fm[64]; nf = nf > 64 ? 64 : nf; xrEnumerateSwapchainFormats_(sess, nf, &nf, fm); bool have = false;
+    for (u32 i = 0; i < nf; i++) if ((DXGI_FORMAT)fm[i] == DXGI_FORMAT_D32_FLOAT) have = true;
+    if (!have) { logf("depth layer: the runtime offers no D32_FLOAT swapchain -> off"); return false; }
+    XrSwapchainCreateInfo ci{XR_TYPE_SWAPCHAIN_CREATE_INFO};
+    ci.usageFlags = XR_SWAPCHAIN_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | XR_SWAPCHAIN_USAGE_TRANSFER_DST_BIT;
+    ci.format = DXGI_FORMAT_D32_FLOAT; ci.sampleCount = 1; ci.width = w; ci.height = h; ci.faceCount = 1; ci.arraySize = 1; ci.mipCount = 1;
+    if (!ok(xrCreateSwapchain_(sess, &ci, &c.sc), "xrCreateSwapchain(depth)")) return false;
+    c.w = w; c.h = h; c.fmt = DXGI_FORMAT_D32_FLOAT;
+    XrSwapchainImageD3D12KHR im[8]; for (auto &i : im) i = {XR_TYPE_SWAPCHAIN_IMAGE_D3D12_KHR};
+    u32 n = 0; xrEnumerateSwapchainImages_(c.sc, 0, &n, nullptr); n = n > 8 ? 8 : n;
+    if (!ok(xrEnumerateSwapchainImages_(c.sc, n, &n, (XrSwapchainImageBaseHeader *)im), "xrEnumerateSwapchainImages(depth)")) return false;
+    c.n = n; for (u32 i = 0; i < n; i++) c.img[i] = im[i].texture;
+    logf("depth swapchain %ux%u D32_FLOAT, %u images", w, h, n); return true;
+}
 static void killChain(Chain &c) { if (c.sc) { PFN_xrDestroySwapchain d = nullptr; gipa(inst, "xrDestroySwapchain", (PFN_xrVoidFunction *)&d); if (d) d(c.sc); } if (c.rtv) c.rtv->Release(); c = Chain{}; }
 static void destroyChains() {
-    killChain(wrist::sc);
+    killChain(wrist::sc); killChain(depSc[0]); killChain(depSc[1]); depthUse = false; depShown[0] = depShown[1] = DepShown{}; if (S) S->hostDepthOk = 0;
     if (uiSc.sc) { PFN_xrDestroySwapchain d = nullptr; gipa(inst, "xrDestroySwapchain", (PFN_xrVoidFunction *)&d); if (d) d(uiSc.sc); } if (uiSc.rtv) uiSc.rtv->Release(); uiSc = Chain{}; S->uiOk = 0;
     for (auto &t : uiTex) if (t) { t->Release(); t = nullptr; } uiGenOpen = 0;
     for (auto &c : eyeSc) { if (c.sc) { PFN_xrDestroySwapchain d = nullptr; gipa(inst, "xrDestroySwapchain", (PFN_xrVoidFunction *)&d); if (d) d(c.sc); } if (c.rtv) c.rtv->Release(); c = Chain{}; shown[&c - eyeSc] = Shown{}; } }
@@ -141,6 +161,7 @@ static void dropShared() {
     S->imagesOk = 0;
     destroyChains();
     for (auto &t : tex) if (t) { t->Release(); t = nullptr; }
+    for (auto &t : dtex) if (t) { t->Release(); t = nullptr; }
     texGen = 0;
 }
 static void openShared() {
@@ -175,6 +196,14 @@ static void openShared() {
     if (!good) { logf("shared generation %ld unusable -> black until the game publishes a new one", g); dropShared(); failedGen = g; return; }
     texGen = g; S->imagesOk = 1;
     logf("opened shared eye textures gen %ld: %ux%u format %d", g, texW, texH, (int)texFmt);
+    if (S->depthOn) {   // v19 the depth layer (the game sends it with xr_depth_layer = 1)
+        bool dk = xin::extOn("XR_KHR_composition_layer_depth"); if (!dk) logf("depth layer: the runtime does not offer XR_KHR_composition_layer_depth -> off");
+        for (int i = 0; i < GV_TEXCOUNT && dk; i++) { _snwprintf(sfx, 32, L"_g%ld_dep%d", (long)g, i); sfx[31] = 0; gvName(nm, 96, g_pid, sfx); HANDLE h = nullptr;
+            HRESULT hr = dev->OpenSharedHandleByName(nm, GENERIC_ALL, &h); if (SUCCEEDED(hr) && h) hr = dev->OpenSharedHandle(h, IID_PPV_ARGS(&dtex[i])); if (h) CloseHandle(h);
+            if (FAILED(hr) || !dtex[i]) { logf("depth layer: open %ls failed 0x%08lx -> off", nm, (unsigned long)hr); dk = false; } }
+        for (int e = 0; e < 2 && dk; e++) dk = makeDepthChain(depSc[e], texW, texH);
+        if (!dk) { killChain(depSc[0]); killChain(depSc[1]); for (auto &t : dtex) if (t) { t->Release(); t = nullptr; } }
+        depthUse = dk; S->hostDepthOk = dk ? 1 : 0; logf("depth layer: %s", dk ? "ON (each eye's depth goes to the runtime with its image)" : "off"); }
 }
 
 // v8: the UI images (own size and generation; the game builds them once it knows its UI texture)
@@ -508,8 +537,9 @@ static void frame() {
             c->ClearRenderTargetView({uiSc.rtv->GetCPUDescriptorHandleForHeapStart().ptr + (SIZE_T)uiIdx * uiSc.step}, z, 1, &r);
         }
     }
+    u32 dIdx[2] = {0, 0}; bool dAcq[2] = {false, false};   // v19 depth swapchain images acquired this frame
     for (int e = 0; e < 2; e++) {
-        if (!acq[e]) continue;
+        if (!acq[e]) { depShown[e].valid = false; continue; }
         Chain &h = *ch[e];
         if (useGame) {
             Shown best = pick[e];
@@ -520,17 +550,24 @@ static void frame() {
                 br = barrier(h.img[idx[e]], D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET); c->ResourceBarrier(1, &br);
                 if (best.fence != shown[e].fence || !shown[e].valid) S->hostCopied++; else S->hostReused++;
                 shown[e] = best;
-            } else { fillBlank(c, h, idx[e], e); shown[e].valid = false; }
+                depShown[e].valid = false;   // v19 its depth, when the game sent depth for exactly this image
+                if (depthUse && dtex[best.tex] && !(best.flags & (GV_SLOT_FLAT | GV_SLOT_THEATER)) && S->depthFrame[best.tex] == best.frame && acquire(depSc[e], dIdx[e])) {
+                    dAcq[e] = true; D3D12_RESOURCE_BARRIER db = barrier(depSc[e].img[dIdx[e]], D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_COPY_DEST); c->ResourceBarrier(1, &db);
+                    c->CopyResource(depSc[e].img[dIdx[e]], dtex[best.tex]);
+                    db = barrier(depSc[e].img[dIdx[e]], D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_DEPTH_WRITE); c->ResourceBarrier(1, &db);
+                    depShown[e].valid = true; depShown[e].nearM = S->depthNear[best.tex]; }
+            } else { fillBlank(c, h, idx[e], e); shown[e].valid = false; depShown[e].valid = false; }
         } else fillBlank(c, h, idx[e], e);
     }
     submitCl();                                                       // work is on the queue BEFORE release (review #1)
     for (int e = 0; e < 2; e++) if (acq[e]) release(*ch[e]);
+    for (int e = 0; e < 2; e++) if (dAcq[e]) release(depSc[e]);
     if (uiAcq) release(uiSc);
     if (wrAcq) release(wrist::sc);
     if (gaAcq) { release(gauge::sc); gauge::haveImage = true; }
     if (fxAcq) { release(fx::sc); fx::haveImage = true; }
     if (ovAcq) { release(ov::sc); ov::sigDrawn = ov::sigOf(ovNow); ov::haveImage = true; }
-    XrCompositionLayerProjectionView pv[2]; bool layerOk = true;
+    XrCompositionLayerProjectionView pv[2]; bool layerOk = true; XrCompositionLayerDepthInfoKHR di[2]; bool anyDepth = false;
     for (int e = 0; e < 2; e++) {
         pv[e] = {XR_TYPE_COMPOSITION_LAYER_PROJECTION_VIEW};
         Chain *use = ch[e];
@@ -548,8 +585,15 @@ static void frame() {
         if (imageIsGame && use == &eyeSc[e]) {   // v8: only the picture, not the game's letterbox bars, spans the eye frustum
             const int32_t *k = S->content;
             if (k[2] > 0 && k[3] > 0 && k[0] >= 0 && k[1] >= 0 && k[0] + k[2] <= (int32_t)use->w && k[1] + k[3] <= (int32_t)use->h) pv[e].subImage.imageRect = {{k[0], k[1]}, {k[2], k[3]}};
+            if (depShown[e].valid && dAcq[e] && depSc[e].everReleased && !(shown[e].flags & (GV_SLOT_FLAT | GV_SLOT_THEATER))) {   // v19 the depth of exactly this image
+                di[e] = {XR_TYPE_COMPOSITION_LAYER_DEPTH_INFO_KHR}; di[e].subImage.swapchain = depSc[e].sc; di[e].subImage.imageRect = pv[e].subImage.imageRect;
+                di[e].minDepth = 0.0f; di[e].maxDepth = 1.0f; di[e].nearZ = INFINITY; di[e].farZ = depShown[e].nearM;   // reversed-Z, infinite far: depth 0 = infinity, 1 = the near plane
+                pv[e].next = &di[e]; anyDepth = true;
+            }
         }
     }
+    if (anyDepth && (!pv[0].next || !pv[1].next)) { pv[0].next = pv[1].next = nullptr; anyDepth = false; }   // both eyes or neither
+    if (anyDepth) S->hostDepth++;
     XrCompositionLayerProjection pl{XR_TYPE_COMPOSITION_LAYER_PROJECTION}; pl.space = local; pl.viewCount = 2; pl.views = pv;
     const XrCompositionLayerBaseHeader *layers[10] = {(XrCompositionLayerBaseHeader *)&pl, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr}; u32 nLayers = layerOk ? 1 : 0;
     // theatre: the left image of a flat-context pair goes on the screen; the projection layer is dropped (black room)
