@@ -2699,3 +2699,10 @@ spaces, session, instance → TerminateProcess.
   first capture. Now a single press waits 0.5 s for a second press.
 - **Review, no change needed:** the outcome injection (list grow, fail-closed classify), the katana sound learner / playback, the
   sheathe pivot and the swing-step ease. The host refresh-rate request only asks for a rate the runtime offered.
+
+## GoTVR 0.18.86 → 0.18.87 — flat test keys
+
+- **Owner:** "Change the capture hotkey because c causes crouch and shift opens the stance menu."
+- **Fix:** the round 7 keys are now Insert (capture), Delete (draw tag) and End (sheathe tag), pressed alone. None of them is used
+  by the mod elsewhere in flat play (Ctrl+End stays the VR left-hand trim). Ctrl+Shift+D / S had the same problem: Shift opens the
+  stance menu, and S / D move Jin.

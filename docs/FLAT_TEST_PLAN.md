@@ -121,11 +121,15 @@ Record with Win+Alt+R (clips of 3 minutes or less), `play_mode=flat`. Don't pres
 4. Without hotkeys: hold block against 2 blows, then parry 2 the normal way (to compare with the game's own).
 5. Red and blue attackers: press **F5** at each red glint and **F6** at each blue one. The log compares each tag with the mod's verdict.
 
-## Round 7 (0.18.86, flat play): katana sounds and render captures
+## Round 7 (0.18.87, flat play): katana sounds and render captures
 
 About 15 minutes. Nothing needs recording except the optional part C.
 
 ### Before you start
+
+The test keys are Insert, Delete and End, pressed on their own (no Ctrl or Shift), so they never crouch Jin or open the
+stance menu.
+
 
 1. In `GoTVR\gotvr.ini`, set `play_mode = flat`.
 2. In the game's graphics menu, set anti-aliasing to **TAA**. The captures must show the same anti-aliasing VR uses.
@@ -139,10 +143,9 @@ sheathe, and not while you stand still.
 
 1. **Light swings:** with the sword out, do 5 light attacks into the air (left mouse, or X on a pad), about one a second.
 2. **Heavy swings:** then 5 heavy attacks (right mouse, or Y on a pad).
-3. **Draws:** press **Ctrl+Shift+D**, then within a second draw the sword with the game's own key. Sheathe it again any way you like.
-   Do this 3 times. The hotkey tells the mod "a draw is coming".
-4. **Sheathes:** with the sword out, press **Ctrl+Shift+S**, then within a second sheathe it with the game's own key. Do this 3
-   times.
+3. **Draws:** press **Delete**, then within a second draw the sword with the game's own key. Sheathe it again any way you like.
+   Do this 3 times. The key tells the mod "a draw is coming".
+4. **Sheathes:** with the sword out, press **End**, then within a second sheathe it with the game's own key. Do this 3 times.
 5. **Baseline:** stand still, hands off, for 30 seconds. This tells the mod what the background sounds are, so it doesn't pick
    wind or birds by mistake.
 
@@ -158,7 +161,7 @@ is saved to gotvr.ini (`sound_swing_event` and so on). VR then plays those sound
 - **Depth:** for every pixel, how far away it is. The headset needs this to warp a repeated frame correctly (the Spacewarp
   depth layer).
 
-**Ctrl+Shift+C** copies both of those images out of the game half a second after you press it. It saves them as two files in
+**Insert** copies both of those images out of the game half a second after you press it. It saves them as two files in
 the `GoTVR` folder (`cap_0_velocity.raw` and `cap_0_depth.raw`, then `cap_1_...` and so on) and writes a summary to the log.
 - It is not a screenshot. You see nothing on screen, maybe a tiny hitch.
 - It does not need a video.
@@ -170,20 +173,20 @@ Two ways to press it:
 
 Wait about 2 seconds between captures. The five captures, each one answers one question:
 
-1. **Standing still.** Sword sheathed, don't touch the mouse or keyboard, press Ctrl+Shift+C once, keep still for a second.
+1. **Standing still.** Sword sheathed, don't touch the mouse or keyboard, press Insert once, keep still for a second.
    This is the reference: almost nothing should be moving.
-2. **Mid-swing.** Sword out, camera still. Press Ctrl+Shift+C twice quickly, then do one light attack without moving the
+2. **Mid-swing.** Sword out, camera still. Press Insert twice quickly, then do one light attack without moving the
    mouse. *Question: does the game give Jin's swinging sword and arm their own motion? This decides how the ghost gets fixed.*
-3. **Camera pan.** Start turning the camera slowly and steadily with the mouse, press Ctrl+Shift+C once, keep turning for
+3. **Camera pan.** Start turning the camera slowly and steadily with the mouse, press Insert once, keep turning for
    another second. *Question: how the motion numbers are scaled, from a movement we know.*
-4. **Running sideways.** Run sideways (A or D) past a wall, a fence or trees, press Ctrl+Shift+C once while running. *Question:
+4. **Running sideways.** Run sideways (A or D) past a wall, a fence or trees, press Insert once while running. *Question:
    do near things move more than far things in the motion image, as they should?*
 5. **Near and far.** Stand right in front of a wall, fence or rock (within 2 m) so it fills the middle of the screen, press
-   Ctrl+Shift+C once. Then turn to face open landscape with sky, and press it once more. That makes 6 captures in total.
+   Insert once. Then turn to face open landscape with sky, and press it once more. That makes 6 captures in total.
    *Question: which end of the depth range means near. The headset needs this the right way round.*
 
 In the log, each capture shows as:
-- `HOTKEY Ctrl+Shift+C: render capture in 0.5 s`;
+- `HOTKEY Insert: render capture in 0.5 s`;
 - then `CAPTURE: velocity ... copied` and `CAPTURE: depth ... copied`;
 - a moment later, `CAPTURE #n velocity: ... % of the image moves` with a 16 x 9 grid of numbers (how much of each part of the
   screen moved) and `CAPTURE #n depth: values ... .. ...`.

@@ -22,6 +22,14 @@ refused to send images ("FRAME GENERATION is on" in the log, although it was off
 same-frame stereo (both eyes every frame) gets built. Please press **F10** once in each of: main menu, standing
 outdoors, riding, a cutscene, photo mode.
 
+## 0.18.87: flat test keys without Shift
+
+**Install:** `xinput1_4.dll`.
+
+- Ctrl+Shift+C crouched Jin and Shift opened the stance menu. The round 7 keys are now single keys with no modifier:
+  - **Insert** = render capture: once = in 0.5 s, twice quickly = 0.2 s after your next attack.
+  - **Delete** = "a draw is coming" and **End** = "a sheathe is coming", for the sound learner (were Ctrl+Shift+D / S).
+
 ## 0.18.86: DLSS quality setting, render capture for flat round 7
 
 **Install:** `xinput1_4.dll` (and `GoTVR\GoTVRHost.exe` from 0.18.84 if you don't have host 0.15.9 yet).
@@ -35,7 +43,7 @@ outdoors, riding, a cutscene, photo mode.
     Quality 3. `dlaa` sets the game's AA to DLAA (4) with no upscaler.
   - While it is set, changing DLSS in the game's menu works for that session but is not saved.
   - The log line `DLSS quality:` shows what the game read and its own saved choice.
-- **Render capture (flat round 7):** Ctrl+Shift+C saves the game's motion vectors and depth 0.5 s later. Press it twice quickly to
+- **Render capture (flat round 7):** Ctrl+Shift+C (Insert from 0.18.87) saves the game's motion vectors and depth 0.5 s later. Press it twice quickly to
   capture 200 ms after your next attack instead. The `CAPTURE` log lines give the format, the value range and a 16 x 9 map of what
   moves. The raw files go to `GoTVR\cap_<n>_*.raw`. They show whether the swinging arm has its own motion vectors (the TAA ghost)
   and which way the depth runs (the Spacewarp depth layer). See docs/FLAT_TEST_PLAN.md round 7 and docs/RENDER_PLAN.md.
