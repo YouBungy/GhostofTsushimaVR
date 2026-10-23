@@ -22,6 +22,18 @@ refused to send images ("FRAME GENERATION is on" in the log, although it was off
 same-frame stereo (both eyes every frame) gets built. Please press **F10** once in each of: main menu, standing
 outdoors, riding, a cutscene, photo mode.
 
+## 0.18.81: fast travel in the map, smoother menus
+
+**Install:** `xinput1_4.dll`.
+
+- **Fast travel:** the map's fast travel button is Triangle (Xbox Y), and no Quest button sent it. In menus, **Quest X**
+  now sends Triangle. In gameplay it still opens the item wheel. To change it, set `menu_left_primary` under `[controls]`
+  in gotvr.ini.
+- **Frame rate:** almost all of the last session was in the map, which ran at 60 frames a second on a 72 Hz headset.
+  That repeats every 5th frame and looks choppy. Menus, the map and videos now run at the headset's own rate
+  (`xr_menu_fps_cap = auto`). Gameplay was already at its normal 57-58 stereo pairs a second. The logging wasn't the
+  cause: the guard-trace logging only runs in flat play.
+
 ## 0.18.80: flat round 6 (our own block / parry signal, found)
 
 **Install:** `xinput1_4.dll`.

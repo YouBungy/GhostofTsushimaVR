@@ -41,6 +41,7 @@ static const int NWHEEL = 8;   // 0.18.7: up to 8 options; wheel_count (default 
 struct Cfg {
     Out out[C_N]; Out wheel[NWHEEL]; char wheelName[NWHEEL][32]; int nWheel = 5; Out wheelTap; int wheelHoldMs = 300;
     float dead = 0.2f, snapDeg = 30.0f, smoothGain = 1.0f, headM = 0.22f, rumble = 1.0f, fistGrip = 0.3f; int turnSmooth = 0, enabled = 1, debugOverlay = 1, fistOff = 1;
+    Out menuLPrimary{XB_Y};   // 0.18.81 Quest X in menus (fast travel = Triangle / Y)
     int moveHead = 1;   // 0.18.22 (owner: "movement totally headset oriented at all times"): the left stick's forward = where the headset looks NOW
 };
 static Cfg cfg;
@@ -71,6 +72,9 @@ static void loadCfg(const wchar_t *ini) {
     // (past trigger_grip_level 0.3) sends nothing - not its button, not a head gesture, not the wheel - until the trigger is let go
     str("trigger_off_while_gripping", "1", b, 128); cfg.fistOff = atoi(b) != 0; cfg.fistGrip = flt("trigger_grip_level", 0.3f, 0.05f, 0.95f);
     str("move_follows_head", "1", b, 128); cfg.moveHead = atoi(b) != 0;   /* 0.18.22: 1 = forward is always the headset's forward; 0 = taken at move start / snap / menu (0.18.21) */
+    // 0.18.81 (owner: "the fast travel button isn't working in the menu"): the map's fast travel is Triangle (Xbox Y), which no Quest
+    // button sent - Quest Y is X (Square) and Quest X opens the item wheel, which menus don't have. In menus Quest X now sends Y.
+    str("menu_left_primary", "y", b, 128); cfg.menuLPrimary = parseOut(b);
     str("gesture_indicator", "0", b, 128);   /* 0.18.20 owner: "remove the test hud that appears when raising hands" */ cfg.debugOverlay = atoi(b) != 0;
 }
 // ---------- state ----------
@@ -259,6 +263,7 @@ static bool build(XINPUT_GAMEPAD &g, bool ctxFlat) {
         g.sThumbRX = axis(rs[0]); g.sThumbRY = axis(rs[1]);
         g.bLeftTrigger = (BYTE)(hd[0].trigger * 255.0f); g.bRightTrigger = (BYTE)(hd[1].trigger * 255.0f);
         if (hd[0].squeeze > 0.6f) g.wButtons |= XB_LB; if (hd[1].squeeze > 0.6f) g.wButtons |= XB_RB;
+        if (btn(0, GV_BTN_PRIMARY)) apply(cfg.menuLPrimary.m & ~(u32)(OX_WHEEL | OX_HUD | OX_RECENTER | OX_ANIM | OX_ANIMS), g);   // 0.18.81 Quest X = Triangle (fast travel)
         return true;
     }
     // 0.18.74 a fist: the trigger is ignored from the moment the grip closes with it pulled until the trigger is let go

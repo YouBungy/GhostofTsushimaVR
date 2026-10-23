@@ -2647,3 +2647,11 @@ spaces, session, instance → TerminateProcess.
   at each wind-up / strike on Jin (all modes). Old Ctrl+Shift+B / N record-mark tests retired; B / N / P are the outcome signal now.
 - Round 5 needed no hotkeys, so the missing HOTKEY / GLINT TAG lines are expected; caps lock doesn't affect the mod's keys.
 
+## GoTVR 0.18.80 → 0.18.81 — VR session 33
+- Owner: fast travel didn't work in the map. GoT's fast travel is Triangle (Xbox Y); the VR mapping never sent Y (Quest Y = X / Square,
+  Quest X = the item wheel, which does nothing in menus). vrinput.h: in menus Quest X -> Y ([controls] menu_left_primary, default y).
+  Self-test step added.
+- Owner: "lower frame rate". Log: 2 sessions almost entirely on the theatre screen (map), game 60 frames/s (xr_menu_fps_cap 60, 12-15 ms
+  idle per frame) on a 72 Hz headset; gameplay 57 pairs/s at its cap. xr_menu_fps_cap = auto (headset rate, xr_menu_cap_v=2). Logging not
+  involved (guard trace is flat-only).
+
