@@ -48,6 +48,16 @@ piece gets its own ini switch, off until a headset session proves it. The cullin
   - What can be added is a depth layer. Runtimes that use depth for reprojection use it to move near and far things correctly when a
     frame is repeated. Whether Virtual Desktop's own SSW uses it must be tested; SteamVR's runtime does use submitted depth.
 
+## Session 35-36 update: the ghost is worst over glossy surfaces
+
+- History modes 8 / 9 (per-eye TAA history) ran (restored 118/s) and did not remove it.
+- The owner sees it most over glossy surfaces, so the suspect is screen-space reflections (SSR): the hands fill the screen in first
+  person, and SSR's own temporal history in xr = 4 is the other eye's frame.
+- `fp_ssr_off = 1` turns SSR off in first person as a test. The owner wants SSR on, so the fix must be SSR's own per-eye history (as
+  the TAA bank does for TAA).
+- **Next RE step:** find the SSR pass (the PC settings block ScreenSpaceReflections +0x84 -> the render service's SSR switch -> its
+  pass and the previous-frame colour it reads), then bank that history per eye.
+
 ## Part 1: TAA ghost
 
 ### 1a. Read the captures (no code)

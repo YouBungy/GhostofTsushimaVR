@@ -210,6 +210,18 @@ see a blue one. The log checks each press against the mod's own verdict on that 
   - Draw not learned. 20 stray Delete edges arrived at the start screen. From 0.18.88 tags count only with Jin loaded, and once
     per 2 s.
 
+## Round 8 (0.18.91, flat play): relearn the katana sounds (weapon sounds only)
+
+About 5 minutes, no video. `play_mode = flat`. The learner now only listens to Jin's own sword / hand sound objects.
+1. Load into the world and wait 5 s (the log says `katana sounds: Jin's model ...`).
+2. Draw the sword. 10 light attacks into the air, about one a second; then 6 heavy attacks.
+3. **Delete**, then draw with the game's key. Sheathe any way. Do this 3 times.
+4. With the sword out, **End**, then sheathe with the game's key. Do this 3 times.
+5. Stand still for 30 s.
+6. Check by ear: **PageDown** plays each learned sound at Jin, one after another (light swings, heavy swings, draw, sheathe
+   candidates; the log names each). **PageUp** drops the one just played if it isn't a sword sound. For a draw / sheathe candidate,
+   **Home** makes it THE draw / sheathe sound.
+
 ## After the session
 
 Report what passed, fix what didn't, and update BUGLOG / COMBAT_FINDINGS / WRIST_HUD. No git push unless the owner says.

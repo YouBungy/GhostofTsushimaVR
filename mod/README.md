@@ -22,6 +22,40 @@ refused to send images ("FRAME GENERATION is on" in the log, although it was off
 same-frame stereo (both eyes every frame) gets built. Please press **F10** once in each of: main menu, standing
 outdoors, riding, a cutscene, photo mode.
 
+## 0.18.91: fixes from VR session 36
+
+**Install:** `xinput1_4.dll`.
+
+- **Cuts that did nothing:** the log had 15 touches on enemies in the middle of an attack (a firecracker throw too) taken as
+  deflects. With `parry_engine = outcome` the game itself decides your block / parry when ITS blow arrives, so a cut on an attacking
+  enemy is now a cut (`parry_touch_deflect = 1` for the old way).
+- **Parry difficulty:** `parry_difficulty = easy | medium | hard` (default **medium**; `custom` uses `parry_window_ms` /
+  `parry_perfect_ms`).
+
+  | | parry window | perfect parry | blade speed | blade travel |
+  | --- | --- | --- | --- | --- |
+  | easy (0.18.90) | 300 ms | 150 ms | 2.0 m/s | 10 cm |
+  | medium | 200 ms | 100 ms | 2.5 m/s | 15 cm |
+  | hard | 130 ms | 60 ms | 3.0 m/s | 20 cm |
+
+- **Lunge:** the swing step goes up to 130 cm (was 80) at near full speed from the start. The blow's own lunge is 60 / 90 cm
+  (light / heavy; was 35 / 60).
+- **The katana vanished into the holster:**
+  - A sprint makes the game put its sword away, and the sword in your hand IS the game's. The log shows it 3.2 s after a draw, with
+    Jin at 6 m/s.
+  - The left stick click (sprint) is now held off while the katana is out (`sword_no_sprint = 1`).
+  - If the game still puts its sword away while yours is drawn, it is drawn again after 0.4 s. Before, it could take up to 5 s.
+  - That 3.2 s put-away had also been learned as the game's auto-sheathe time, which masked Jin's animation from 1.6 s after every
+    draw. Times under 8 s are no longer learned.
+- **Wrong swing sounds:**
+  - Round 7 learned the swing set from every sound around a swing, so it included Jin's voice and his cloth.
+  - The learner now takes only events on Jin's own sound objects attached to his sword or hands. It reads which joint each of
+    Jin's sound objects sits on.
+  - The old sets are cleared. **The swing, draw and sheathe sounds are silent until flat round 8** relearns them
+    (FLAT_TEST_PLAN.md).
+- **Screen-space reflections are on again** (`fp_ssr_off = 0`; 1 = the test switch). The real fix for the hand ghost over glossy
+  surfaces is still to find (docs/RENDER_PLAN.md).
+
 ## 0.18.90: fixes from VR session 35
 
 **Install:** `xinput1_4.dll`.

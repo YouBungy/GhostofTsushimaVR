@@ -2773,3 +2773,34 @@ spaces, session, instance → TerminateProcess.
     - Self-test caught a comment that swallowed the swing's PostEvent.
   - `fp_ssr_off` (1): SSR (+0x84) 0 through the game's apply in first person, restored with AO / SSS.
 - **Not fixed yet:** the enemy weapon skeleton lookup (spear clashes).
+
+## GoTVR 0.18.90 → 0.18.91 — VR session 36
+
+- **Owner:**
+  - "The noises playing during light attacks isn't correct."
+  - "Some of my attacks still did nothing, especially noticeable when an enemy was throwing a firecracker."
+  - "Increase the lunge distance and speed."
+  - "My sword randomly disappeared and went back into my holster, and my body also disappeared once."
+  - "Make the parry window timing somewhat harder ... easy / medium / hard" (default medium).
+  - Screen-space reflections: "I still want them on, so fix the bug."
+- **Log v36:**
+  - 31 blows (6 kills). 15 touches taken as deflects (enemy late in its wind-up or striking), 15 clashes.
+  - Swing steps of 80 cm.
+  - The game put its sword away 3.2 s after a draw, Jin at 6.1 m/s (a sprint). That was learned as autoAfterMs, masking every later
+    draw from 1.6 s.
+  - At 726090 the blade went back into the sheath with the hand off the hilt (an early draw let go).
+  - The body vanishing is not visible in the log. A load at 726116 changed the hero twice (fast travel / respawn); nothing else stands out.
+- **Fixes:**
+  - The touch-deflect rule is off under the outcome engine (`parry_touch_deflect`).
+  - `parry_difficulty` (window / perfect / speed / net: 300/150/2.0/10, 200/100/2.5/15, 130/60/3.0/20).
+  - `combat_v` 3: swing step 130, lunge 60 / 90; step 900 ms, magnitude floor 0.8, 30 ms ease-in.
+  - L3 is in blockMask while the katana is out (`sword_no_sprint`). A redraw 0.4 s after the game puts its sword away while ours is
+    DRAWN (no speed wait).
+  - autoAfterMs is only learned at 8 s or more.
+  - Sounds:
+    - aud records Jin's emitters (owner node, joint +0x48). In flat, Jin's model comes from findModel.
+    - idsIn keeps only events on joints 591 / 592 / 637 / the hands (`sound_learn_weapon_only`).
+    - `sound_v` 3 clears the old sets and events; no seeds.
+  - `fp_ssr_off` default 0 (`fp_ssr_v` 2).
+- **Open:** the SSR hand ghost (the reflection pass and its history are not identified yet); the body vanishing (needs a time or a
+  video).
