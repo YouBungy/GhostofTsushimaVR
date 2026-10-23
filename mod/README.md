@@ -22,6 +22,19 @@ refused to send images ("FRAME GENERATION is on" in the log, although it was off
 same-frame stereo (both eyes every frame) gets built. Please press **F10** once in each of: main menu, standing
 outdoors, riding, a cutscene, photo mode.
 
+## 0.18.92: lunge only when you mean it (session 37)
+
+**Install:** `xinput1_4.dll`.
+
+- **No-sprint removed.** If the game puts its sword away (a sprint), the katana is redrawn after 0.4 s as in 0.18.91.
+- **The swing step is now only for a clear attack on an enemy out of reach.** All of these must hold:
+  - A fast swing: at least 4 m/s (`sword_lunge_swing_min_speed`).
+  - An enemy you face within 30 degrees (`sword_lunge_swing_deg`), 1.7-4 m away (`sword_lunge_swing_min_cm`, `sword_lunge_swing_range_cm`).
+  - No enemy has started an attack on you in the last 1.2 s; you are parrying then.
+  - At most once every 1.5 s (`sword_lunge_swing_cooldown_ms`).
+- **The step on every hit is off** (`sword_lunge_cm` / `sword_lunge_heavy_cm` = 0). It moved you whenever your blade touched an
+  enemy that was already in reach.
+
 ## 0.18.91: fixes from VR session 36
 
 **Install:** `xinput1_4.dll`.

@@ -2804,3 +2804,23 @@ spaces, session, instance → TerminateProcess.
   - `fp_ssr_off` default 0 (`fp_ssr_v` 2).
 - **Open:** the SSR hand ghost (the reflection pass and its history are not identified yet); the body vanishing (needs a time or a
   video).
+
+## GoTVR 0.18.91 → 0.18.92 — session 37 (VR video)
+
+- **Owner:**
+  - "The no sprint with sword feature is awful ... remove that."
+  - "We need a lunge cooldown timer a lot. I kept gliding all over the place."
+  - "I kept lunging when I wanted to parry or was just trying to move around."
+  - "I only want to lunge to get closer to an enemy I am somewhat far away and when it is clear I am trying to attack."
+  - Video: when drawing, "the body stays forced a certain direction". "Is there no way to force the game to draw the sword
+    ourselves?"
+- **Fixes:**
+  - The L3 block is removed.
+  - Swing-step gate: tip speed >= 4 m/s (xtMotion), 170-400 cm, within 30 deg, no wind-up on Jin in 1.2 s (gtr::lastAttacker),
+    cooldown 1500 ms.
+  - `combat_v` 4: blow lunge 0 / 0, `sword_lunge_swing_deg` 30.
+- **Open: drawing without the game's draw state.**
+  - The game's weapon slots include Holster and Melee (name table 0x17A28E0). The katana is KatanaSaya (0x17A27E8).
+  - The idea: put the sword into the hand slot ourselves, so the game never enters its drawn-sword state (stance, auto-sheathe,
+    strafe facing).
+  - Needs the slot-attach function (RE, flat diagnostics).
