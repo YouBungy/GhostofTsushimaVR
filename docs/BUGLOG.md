@@ -2655,3 +2655,7 @@ spaces, session, instance → TerminateProcess.
   idle per frame) on a 72 Hz headset; gameplay 57 pairs/s at its cap. xr_menu_fps_cap = auto (headset rate, xr_menu_cap_v=2). Logging not
   involved (guard trace is flat-only).
 
+## GoTVR 0.18.81 → 0.18.82 — VR session 34
+- Owner: forced into third person on top of a pagoda. Log: FP/s "far camera" frames in 11 seconds with the game camera 6.2-7.9 m from the head
+  (fp_max_camera_distance_m 8). Session histogram: 156 s at 6-8 m; cutscene cameras 4457-6210 m. Default 8 -> 25 m; self-test camera 20 -> 40 m.
+

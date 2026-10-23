@@ -22,6 +22,15 @@ refused to send images ("FRAME GENERATION is on" in the log, although it was off
 same-frame stereo (both eyes every frame) gets built. Please press **F10** once in each of: main menu, standing
 outdoors, riding, a cutscene, photo mode.
 
+## 0.18.82: no third person up high
+
+**Install:** `xinput1_4.dll`.
+
+- On a pagoda roof (and other high spots) the game pulls its own camera 6-9 m back. The mod treated any camera more than
+  8 m from Jin's head as a cutscene camera and handed the view to it, so the view kept flipping to third person. The
+  limit is now 25 m (`fp_max_camera_distance_m`). Real cutscene cameras in the logs were thousands of metres away, and
+  cutscenes are also caught by the letterbox / fade detector.
+
 ## 0.18.81: fast travel in the map, smoother menus
 
 **Install:** `xinput1_4.dll`.
