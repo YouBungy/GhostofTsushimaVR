@@ -121,6 +121,15 @@ Record with Win+Alt+R (clips of 3 minutes or less), `play_mode=flat`. Don't pres
 4. Without hotkeys: hold block against 2 blows, then parry 2 the normal way (to compare with the game's own).
 5. Red and blue attackers: press **F5** at each red glint and **F6** at each blue one. The log compares each tag with the mod's verdict.
 
+## Round 7 (0.18.83, flat play): learn the katana sounds
+
+`play_mode=flat`. No video needed.
+1. 5 light attacks in the air (left mouse / pad X), a second apart, then 5 heavy attacks (right mouse / pad Y).
+2. Ctrl+Shift+D, then draw the sword with the game's own key within a second. Do it 3 times.
+3. Ctrl+Shift+S, then sheathe with the game's own key within a second. Do it 3 times.
+4. Stand still for 30 s (the baseline).
+The log's SOUND LEARN lines show the candidates. A learned event is saved to gotvr.ini (`sound_*_event`) and VR uses it.
+
 ## After the session
 
 Report what passed, fix what didn't, and update BUGLOG / COMBAT_FINDINGS / WRIST_HUD. No git push unless the owner says.

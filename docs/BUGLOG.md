@@ -2659,3 +2659,16 @@ spaces, session, instance → TerminateProcess.
 - Owner: forced into third person on top of a pagoda. Log: FP/s "far camera" frames in 11 seconds with the game camera 6.2-7.9 m from the head
   (fp_max_camera_distance_m 8). Session histogram: 156 s at 6-8 m; cutscene cameras 4457-6210 m. Default 8 -> 25 m; self-test camera 20 -> 40 m.
 
+## GoTVR 0.18.82 → 0.18.83 — flat round 6 + VR video (session 34)
+- Flat round 6: 3815 contacts on Jin. B window: 260 contacts -> outcome 9, 4 HITRECs GUARDED (Jin's defence state 0 -> 1 -> 2), the 5th
+  blow (an unblockable finisher, GuardEval -1) hit. N: outcome 11 x88, GTR SELF +12.5. P: outcome 10 x263, attacker interaction in state 5 for
+  1.6-2.3 s. Classification: normal 0x0f8f, blue 0x0d8d (no 9), red 0x0000 (+ tag e17e). parry_engine=outcome default (parry_v=10).
+- Glint tags: the nearest enemy was not the attacker (2 blue tags on a bystander, 2 red on a dog) -> verdict from the last wound-up attack.
+- `[LIVE]` sheathe rotation (video 33 s): the blade turned 37-55 deg onto the rail in 0.1-0.18 s with the hand off the hilt. Pivot in the mouth
+  (sheX from the game thread, applied to the blade in the pose job and to the right hand's lock), aligned over sword_sheathe_pivot_cm.
+- Katana sounds (ksnd): PostEvent hook (export 0xF0D990) ring + learning windows (VR: joint 637 leaving / reaching its parking spot; flat:
+  attack presses, Ctrl+Shift+D / S tags); playback on 3 own game objects, pause / resume (ExecuteActionOnPlayingID), swing volume
+  SetGameObjectOutputBusVolume(obj, all listeners, speed / sound_swing_full_speed). Self-test "katana sound test".
+- `[LIVE]` hand / sword ghosting: the video shows a translucent second hand offset beside the moving hand (TAA history). Not fixed yet:
+  per-eye TAA was tried in 0.18.37 and rejected; the motion vectors of the IK-edited arms are the next lead.
+

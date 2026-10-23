@@ -22,6 +22,31 @@ refused to send images ("FRAME GENERATION is on" in the log, although it was off
 same-frame stereo (both eyes every frame) gets built. Please press **F10** once in each of: main menu, standing
 outdoors, riding, a cutscene, photo mode.
 
+## 0.18.83: the game's own block and parry in VR, sheathing, katana sounds
+
+**Install:** `xinput1_4.dll`.
+
+- **Block / parry in VR (`parry_engine=outcome`, now the default):** flat round 6 proved the signal. With Ctrl+Shift+B, 4 of 4
+  blows were blocked by the game itself: Jin's own block reaction and no damage. The 5th was an unblockable finisher and landed,
+  as in the game. Ctrl+Shift+N / P made the attacker play its parried reaction, and the perfect parry gave the +12.5 reward.
+  In VR:
+  - Hold the katana up in front of you and the game blocks.
+  - Move it into that zone, or meet the enemy's weapon, and the game parries.
+  - That move counts as a perfect parry if the blow lands within 150 ms (`parry_perfect_ms`; `parry_outcome_code` = auto / 10 / 11).
+  - No button is pressed. Blue attacks can only be parried and red ones can't be stopped, by the game's own rules.
+- **Sheathing:** the blade used to snap onto the sheath's line the moment its tip reached the mouth (up to 55 degrees in a tenth
+  of a second). It now pivots in the mouth, stays in your hand, and lines up with the sheath over the first 20 cm going in
+  (`sword_sheathe_pivot_cm`, 0 = the old snap).
+- **Katana sounds:** the game's own sound events play through its Wwise sound engine. Nothing is copied from the game's files.
+  - Which event is the draw, sheathe or swing is learned from the game and saved to gotvr.ini (`sound_*_event`).
+  - Draw and sheathe sounds only play while the blade moves, pause when it stops, and stop if it goes back.
+  - A swing's whoosh plays at the game's volume at `sound_swing_full_speed` (6 m/s) and faster. Slower swings are proportionally
+    quieter.
+  - **Learning:** the draw is learned on VR draws and the sheathe when the game puts its own sword away. Swings need a short flat
+    session (see FLAT_TEST_PLAN round 7). Until an event is learned, that sound is silent.
+- **Glint tags** are now judged against the enemy whose attack wound up last, not the nearest one. Round 6's two blue tags matched
+  a BLUE attack by another swordsman 1 s earlier, and the red tags matched the brute's RED attack.
+
 ## 0.18.82: no third person up high
 
 **Install:** `xinput1_4.dll`.
