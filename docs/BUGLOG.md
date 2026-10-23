@@ -2739,3 +2739,37 @@ spaces, session, instance → TerminateProcess.
     far). Both eyes or neither.
   - `xr_depth_layer` defaults to 0 until a headset session. The `DEPTH/s` log line reports it.
 - docs/VR_TEST_PLAN.md: everything since the last headset session (0.18.82).
+
+## GoTVR 0.18.89 → 0.18.90 — VR session 35
+
+- **Owner, after session 35:**
+  - "None of the TAA fixes worked"; the ghost is "especially bad when my hand was over something glossy".
+  - "I believe the depth layer worked". The log has `xr_depth_layer = 0`, so it wasn't on.
+  - "the swing step needs to be increased a lot".
+  - Parries mostly "from the left to the right ... especially with spearmen".
+  - Swings into enemies "hit late, or nothing happened ... especially bad in perfect parries".
+  - Light sounds louder; no draw / sheathe sound.
+  - The sheathe's "90 degrees for a frame or two" (before video); the pivot wanted only at small angles.
+- **Log v35:**
+  - Contacts on Jin 512, ours 400 (block 21 / parry 379, every one taken).
+  - Swing steps of 25 cm toward enemies 109-167 cm away; 1-2 blade contacts in a fight.
+  - Every katana blow held 300 ms; 5 counter-cuts dropped as deflects (600 ms window).
+  - History modes 8 / 9 ran (restored 118/s).
+  - Draw / sheathe learned only late in the session, as one of six tied ids; 0x729f851a also appears in every flat sheathe window.
+  - Enemy weapon search "no skeleton" every time (clash detection only by the blow line).
+- **Video GoTTest1 33.4 s:** one frame with the blade's flat face, then edge-on again. That is the matrix lerp in fp's sword placement
+  (lastMt -> rail over 0.18 s) collapsing between the controller's roll and the sheath's.
+- **Fixes:**
+  - Delta rotation slerped (swd::rotPart).
+  - Pivot only when the entry angle <= `sword_sheathe_pivot_max_deg` (25).
+  - `combat_v` 2: `sword_lunge_swing_cm` 80, range 400, `guard_reach_cm` 110, `parry_strike_hold_ms` 150 (only while that enemy
+    is attacking, `gtr::attacking`), `parry_deflect_drop_ms` 200, `sword_hit_contact_cm` 10.
+  - Step 750 ms, magnitude floor 0.5.
+  - Sounds:
+    - `sound_v` 2: full speed 5 m/s and `sound_swing_gain` 1.4 (light only).
+    - Movement by a 0.5 cm anchor, pause after 160 ms.
+    - Ties broken against the other kinds.
+    - Draw / sheathe candidates saved (`sound_draw_candidates` / `sound_sheathe_candidates`); flat Home picks one.
+    - Self-test caught a comment that swallowed the swing's PostEvent.
+  - `fp_ssr_off` (1): SSR (+0x84) 0 through the game's apply in first person, restored with AO / SSS.
+- **Not fixed yet:** the enemy weapon skeleton lookup (spear clashes).

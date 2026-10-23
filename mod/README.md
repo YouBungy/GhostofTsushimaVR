@@ -22,6 +22,31 @@ refused to send images ("FRAME GENERATION is on" in the log, although it was off
 same-frame stereo (both eyes every frame) gets built. Please press **F10** once in each of: main menu, standing
 outdoors, riding, a cutscene, photo mode.
 
+## 0.18.90: fixes from VR session 35
+
+**Install:** `xinput1_4.dll`.
+
+- **Swing step:** up to 80 cm (was 25) toward the enemy you face, within 4 m, with a firmer start (`sword_lunge_swing_cm`,
+  `sword_lunge_swing_range_cm`). In the session the step was 25 cm toward enemies 1.1-1.7 m away, so the blade rarely reached them.
+- **Parry from either side:** the guard zone is now 110 cm from Jin (was 75). A backhand swing from the right, and a parry far out
+  against a spear, started outside the old zone and so didn't count (`guard_reach_cm`).
+- **Cuts land at once:** a blow waited 300 ms in case it was a deflect. Now it waits (150 ms) only while that enemy is attacking
+  you. A touch is dropped as a deflect only within 200 ms of your block / parry (was 600 ms), so the counter-cut after a (perfect)
+  parry lands (`parry_strike_hold_ms`, `parry_deflect_drop_ms`). The blade's contact is a little more forgiving (10 cm).
+- **Light swing sounds louder:** `sound_swing_gain` 1.4 and full volume from 5 m/s (`sound_swing_full_speed`).
+- **Draw / sheathe sounds:**
+  - A slow push used to count as "stopped" and paused the sound at once. It now plays while the blade keeps moving.
+  - The learner no longer picks a sound that also comes with other actions.
+  - In flat play, PageDown also plays the draw / sheathe candidates, and **Home** makes the one just played THE draw / sheathe
+    sound (`sound_draw_by_ear` / `sound_sheathe_by_ear`).
+- **Sheathing:**
+  - The one-frame 90-degree twist as the tip enters is fixed. The blade's turn from your hand onto the sheath is now interpolated
+    as a rotation; it was a blend of two matrices, which collapses when their rolls differ a lot.
+  - The pivot in the mouth only happens when the blade comes in within 25 degrees of the sheath (`sword_sheathe_pivot_max_deg`).
+    Wider, it goes straight in as before.
+- **Hand ghost over glossy surfaces:** screen-space reflections are off in first person in VR (`fp_ssr_off = 1`). Your own setting
+  comes back outside first person. The per-eye TAA tests (history modes 8 / 9) ran but didn't help, so 7 stays the default.
+
 ## 0.18.89 / host 0.15.10: the depth layer, varied swing sounds
 
 **Install:** `xinput1_4.dll` and `GoTVR\GoTVRHost.exe` (the shared block is now v19, so both must be this build).
