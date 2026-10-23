@@ -22,6 +22,25 @@ refused to send images ("FRAME GENERATION is on" in the log, although it was off
 same-frame stereo (both eyes every frame) gets built. Please press **F10** once in each of: main menu, standing
 outdoors, riding, a cutscene, photo mode.
 
+## 0.18.84 / host 0.15.9: WIP - DLSS, eased swing step, headset refresh rate
+
+**Install:** `xinput1_4.dll` and `GoTVR\GoTVRHost.exe`.
+
+- **`vr_aa = taa | dlss`** (new, default `taa`): with `taa` none of the mod's DLSS code runs, and the TAA path is exactly as before.
+  `dlss` turns on the per-eye DLSS work; choose DLSS in the game's graphics menu too.
+  - Each eye now also gets its own reprojection. Until now the mod's current preset never computed it, so per-eye DLSS had per-eye
+    history but cross-eye motion. That mismatch is the likely cause of the streaks.
+  - `dlss_per_eye = 1` (default) uses each eye's own motion vectors; `2` uses the engine's. Try both if it still streaks.
+- **Swing step:** it eases in over 90 ms and slows over the last 40 % of the distance, instead of a full-stick push that starts and
+  stops at once.
+- **Frame pacing:** the 57-58 pairs a second in the logs are stereo pairs, two game frames each, so the game renders about 116
+  frames a second. On a 72 Hz headset about one frame in five is shown twice. The host now logs the refresh rates the headset
+  offers. `xr_display_hz` in gotvr.ini (0 = the runtime's own) asks for one, for example 60 so every pair is shown exactly once.
+- **Depth / Spacewarp:** Virtual Desktop's runtime offers the depth layer (`XR_KHR_composition_layer_depth`) but not Meta's
+  Application SpaceWarp (`XR_FB_space_warp`). Its own Synchronous SpaceWarp works from the image alone. Submitting depth needs
+  each eye's depth buffer from the game, which is planned, not done.
+- **Snap turn** is already 30 degrees by default (`snap_turn_deg`), inside the recommended 22.5-30.
+
 ## 0.18.83: the game's own block and parry in VR, sheathing, katana sounds
 
 **Install:** `xinput1_4.dll`.

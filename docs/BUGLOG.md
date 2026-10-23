@@ -2672,3 +2672,10 @@ spaces, session, instance → TerminateProcess.
 - `[LIVE]` hand / sword ghosting: the video shows a translucent second hand offset beside the moving hand (TAA history). Not fixed yet:
   per-eye TAA was tried in 0.18.37 and rejected; the motion vectors of the IK-edited arms are the next lead.
 
+## GoTVR 0.18.83 → 0.18.84 / host 0.15.8 → 0.15.9 — research items (owner: "WIP - DLSS", backup pushed first)
+- vr_aa = taa | dlss (dlss_per_eye kept as the motion-vector choice). taa::sameEyeRun now also runs for per-eye DLSS (rep was never
+  built under preset 7 -> per-eye NGX history with cross-eye MVs / constants).
+- Swing step eased (stepTick: smoothstep in over 90 ms, out over the last 40 %, floor 0.25 of the stick; max 550 ms).
+- Host: XR_FB_display_refresh_rate enabled when offered; rates logged; xr_display_hz requests one. VDXR extension list (host.log):
+  composition_layer_depth yes, FB_space_warp no.
+

@@ -106,7 +106,7 @@ static std::atomic<float> rsOff[2]; static std::atomic<u64> rsOkUntil{0}, rsDriv
 static int rsOn = 1; static float rsDeadCm = 12.0f, rsStopCm = 5.0f;
 // 0.18.48 the katana's lunge (design doc: "when they do [make contact], the player's body lunges forward a bit"): the game DLL asks
 // for a push of the stick toward a world yaw for a few ms (distance / sword_lunge_stick_speed); it overrides your own stick meanwhile
-static std::atomic<float> lungeYaw{0}; static std::atomic<u64> lungeUntil{0}, nLunges{0};
+static std::atomic<float> lungeYaw{0}, lungeMag{1.0f}; static std::atomic<u64> lungeUntil{0}, nLunges{0};   // 0.18.84 lungeMag: the step's ease in / out
 static std::atomic<u64> lastAct{0};   // 0.18.13: last time the pad sent the game anything (idle hold)
 static std::atomic<u64> turnSeq{0};   // 0.18.15: counts snap / smooth turns (the body follow squares the hips after one)
 static std::atomic<u64> jumpAt{0};
@@ -150,7 +150,7 @@ static u32 prevBtn[2] = {0, 0};
 static void applyStaged(u32 m, u64 start, u64 until, u64 now, XINPUT_GAMEPAD &g);
 static std::atomic<u64> nPolls{0}, nActive{0}, nStale{0}, nSnaps{0}, nWheelOpen{0}, nWheelPick{0}, nGest{0}, nHud{0}; static std::atomic<int> rumbleMax{0};
 static u64 (*nowMs)() = GetTickCount64;   // self-test clock
-static void lunge(float worldYawDeg, u32 ms) { lungeYaw = worldYawDeg; lungeUntil = nowMs() + ms; nLunges++; }
+static void lunge(float worldYawDeg, u32 ms, float mag = 1.0f) { lungeYaw = worldYawDeg; lungeMag = mag; lungeUntil = nowMs() + ms; nLunges++; }
 static void hudToggle();                  // defined with the UI code
 static void recenterView();               // 0.18.7: the wheel's "Recenter view" (= F11), defined with the hotkeys
 static void animHold(int shortHold);       // 0.18.9: the game's animation owns Jin's arms (flute until you move / dodge; takedown / quick attack 2.5 s)
@@ -246,7 +246,7 @@ static bool build(XINPUT_GAMEPAD &g, bool ctxFlat) {
         } else rsMag = 0.0f;
     }
     if (now < lungeUntil.load() && !ctxFlat && !wheel.open && gameYawOk.load()) {   // 0.18.48 the lunge
-        const float rel = wrap180(lungeYaw.load() - gameYaw.load()) / 57.2957795f; ls[0] = -sinf(rel); ls[1] = cosf(rel); }
+        const float rel = wrap180(lungeYaw.load() - gameYaw.load()) / 57.2957795f, lm = fminf(1.0f, fmaxf(0.0f, lungeMag.load())); ls[0] = -sinf(rel) * lm; ls[1] = cosf(rel) * lm; }
     g.sThumbLX = axis(ls[0]); g.sThumbLY = axis(ls[1]);
     auto btn = [&](int h, u32 bit) { return (hd[h].buttons & bit) != 0; };
     const bool lsc = btn(0, GV_BTN_STICK), rsc = btn(1, GV_BTN_STICK);
