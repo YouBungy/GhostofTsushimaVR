@@ -2638,3 +2638,12 @@ spaces, session, instance → TerminateProcess.
 
 ## GoTVR 0.18.78 → 0.18.79
 - Flat round 4: full record marks = damage-only guard (no FX, attacker unaware). Round 5: hook 0x85A5D0 (all threads) -> GTR DESC chains.
+
+## GoTVR 0.18.79 → 0.18.80
+- Flat round 5: 0 GTR DESC lines (0x85A5D0 not on the enemy-blow path); 14 HITRECs (4 guarded +0x40 = 9, blue blows through a held block,
+  red brute 0x11802041). Video: 11 blue / 10 red glints, aligned on 9 of 10 hits (log ms = video s * 1000 + 681800287).
+- Ghidra: contact outcome list 0x86EC80 (via 0x870570) -> injected codes. Hooks: 0x86EC80, 0x870570 (flat or parry_engine=outcome);
+  0xB148B0 / 0xB0BEF0 / 0xB1E980 (flat logs); helpers 0x87A600, 0x872120, 0x871A50, 0x62E370 (signature-checked). Attack classification
+  at each wind-up / strike on Jin (all modes). Old Ctrl+Shift+B / N record-mark tests retired; B / N / P are the outcome signal now.
+- Round 5 needed no hotkeys, so the missing HOTKEY / GLINT TAG lines are expected; caps lock doesn't affect the mod's keys.
+

@@ -453,3 +453,25 @@ Still to find:
 - Video (111 s): 20 blue glints, 2 red. Wind-up starts 180-300 ms before the blue glint share definitions 3a039c00 (3 swordsmen), 37d4db40,
   38620350 (their small index arrays start at 2: "2 3 4 5 0 4" vs plain "1 2 3 4 5 0"); the red (a brute, 3c202390) looks like an
   unglinted 3b5640c0 in those arrays - no single flag yet.
+
+## Session 32 (0.18.79 flat round 5 + Ghidra, 2026-10-22): the outcome is decided at the contact
+- Round 5: 0x85A5D0 never ran for a blow on Jin. HitSubmit 0x84CEA0 is reached only through the wrappers 0x84CE60 (dedupe on target +
+  index; callers 0x6951B5, 0x906339, 0xB85E0D trace hits, 0xC267A6) and 0x85A490 (0xB79752, 0xB7E842 area hits, 0xCE8755).
+- The record's +0x60 / +0x78 is the attacker's melee component (vtable 0x11F6C90, type 0x18). On submit: +0xA0 = 0x86F280, +0xB8 = 0x870CE0.
+  0x870CE0 cancels the blow (+0x110 = 1) when the attacker's interaction has +0x530 = the player and +0x564 set (a parry registered), or
+  its result (+0x678) has code 7 / 12. It marks the descriptor guarded through 0x859830 (flags |= 0x4000, +0x10 = result +0x28 = the
+  outcome, so a real block's record +0x40 = 9) when Jin's combat object (+0x9C8) is in a defence state for this attacker
+  (+0x10B0 != -1, +0x10B8 = attacker, +0x1644 = its attack id +0x650).
+- **The decision:** 0x870570 Contact(comp, attack, contact, ?, result) calls 0x86EC80 Outcomes(comp, attack, attacker, victim, victimPlayer,
+  probe, list), then takes the first listed code that 0x872120 AtkL(comp, attack, code) supports (that attack's reaction table at comp
+  +0x5B0) -> 0xC7E2F0 result +0x28, 0x872350 adds the attacker's reaction, 0xC7D160 picks the spark / clang tables for codes 10 / 11 against
+  the player.
+  - 9 (block): the victim has status 0x25bd552ce3d14b (0x589170(victim, 0x10, hash)) and 0x87A600 GuardEval = 0. GuardEval gives -1 for
+    tag 0xc1e15444821be6a5 (or 0x90f49df7b918c8e0 under a game option); tag 0x898edaba1d52f6e6 sends it to the stance check 0x87A830.
+  - 11 then 10 / 10 (parry): char flag 0x29 + a katana (0xB16300(combat, 1)) + the guard press time (0x862270 of victim +0x1670) inside the
+    attack window 0xB114F0 [start, end]; 11 in the perfect part (or skill 0xce3075532c30cc0d).
+  - 0x6EC event-hash dispatcher 0x693E30: anim events 0x852483facf43b2bd / 0xde152d7e7785d189 -> defence events type 0 / 3 (0xB14AA0 ->
+    0xB148B0): each attacker on Jin's threat ring (+0x18B0, 12 x 0x30) gets 0xB20A40 DefMatch (-1 if tag 0xe17e19a0f0094653 = no deflect,
+    or outside the window; 5 perfect, 4 otherwise) -> +0x564 / +0x56C, and in its strike 0xB0BEF0 -> SetState(3) = the parried reaction.
+- Red / blue: per attack, AtkL support of 9 / 10 / 11 plus the tags above. Round 6 logs the verdict at every wind-up (GTR ATTACK).
+

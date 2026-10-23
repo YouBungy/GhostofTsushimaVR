@@ -111,6 +111,16 @@ Record with Win+Alt+R as before (clips of 3 minutes or less). No hotkeys needed.
 4. PARRY 2-3 blue attacks (tap block just before they land).
 5. A few RED attacks (dodge, or let one hit).
 
+## Guard trace round 6 (0.18.80, flat play): our own block and parry
+
+Record with Win+Alt+R (clips of 3 minutes or less), `play_mode=flat`. Don't press block or parry during steps 1-3.
+1. **Ctrl+Shift+B**, then let 3-4 ordinary blows land. Do you see the game's block spark and clang, and does the attacker recoil? Does
+   Jin lose health?
+2. **Ctrl+Shift+N**, then let 3-4 blows land: perfect parry. Does the attacker play its parried animation (slow motion, gold flash)?
+3. **Ctrl+Shift+P**, then 3-4 blows: ordinary parry.
+4. Without hotkeys: hold block against 2 blows, then parry 2 the normal way (to compare with the game's own).
+5. Red and blue attackers: press **F5** at each red glint and **F6** at each blue one. The log compares each tag with the mod's verdict.
+
 ## After the session
 
 Report what passed, fix what didn't, and update BUGLOG / COMBAT_FINDINGS / WRIST_HUD. No git push unless the owner says.

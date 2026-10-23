@@ -22,6 +22,26 @@ refused to send images ("FRAME GENERATION is on" in the log, although it was off
 same-frame stereo (both eyes every frame) gets built. Please press **F10** once in each of: main menu, standing
 outdoors, riding, a cutscene, photo mode.
 
+## 0.18.80: flat round 6 (our own block / parry signal, found)
+
+**Install:** `xinput1_4.dll`.
+
+- **Round 5 result:** none of the enemy blows on Jin went through the function round 5 watched. Ghidra then found where
+  they do come from: the game decides a blow's outcome at the moment the enemy's weapon reaches Jin, before any hit is
+  built. It lists the possible outcomes in order (block 9, parry 10, perfect parry 11, then the plain hits) and takes the
+  first one that particular attack allows. That choice plays the attacker's recoil or parried animation, picks the spark
+  and clang, and marks the hit.
+- **Our signal:** put the block (9) or the parry (11 / 10) first in that list. The game then plays its own block or
+  parry. An attack that can't be blocked or parried still lands, because the game checks that itself.
+- **Red / blue:** every enemy attack on Jin is now sorted when its wind-up starts: normal, BLUE (can't be blocked, only
+  parried) or RED (can't be blocked or parried). This comes from the attack's own outcome table and tags. Each F5 / F6
+  glint tag logs the mod's verdict next to yours.
+- **Flat test keys:** Ctrl+Shift+B = block signal, Ctrl+Shift+N = perfect parry, Ctrl+Shift+P = parry. Each lasts 20 s;
+  press it again to stop it early. Don't press block or parry yourself while one is on.
+- **VR (opt-in):** `parry_engine=outcome` in gotvr.ini. Hold the katana up in front of you to block, or move it into
+  that zone (or meet the enemy's weapon) to parry. No button is pressed. The default stays `signal` until the flat test
+  shows the game's own block and parry.
+
 ## 0.18.79: flat round 5 (where the game decides a block)
 
 **Install:** `xinput1_4.dll`.
