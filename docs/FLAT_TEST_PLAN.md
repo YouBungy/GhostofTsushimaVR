@@ -121,14 +121,32 @@ Record with Win+Alt+R (clips of 3 minutes or less), `play_mode=flat`. Don't pres
 4. Without hotkeys: hold block against 2 blows, then parry 2 the normal way (to compare with the game's own).
 5. Red and blue attackers: press **F5** at each red glint and **F6** at each blue one. The log compares each tag with the mod's verdict.
 
-## Round 7 (0.18.83, flat play): learn the katana sounds
+## Round 7 (0.18.86, flat play): katana sounds and render captures
 
-`play_mode=flat`. No video needed.
-1. 5 light attacks in the air (left mouse / pad X), a second apart, then 5 heavy attacks (right mouse / pad Y).
+One session, `play_mode=flat`, the game's own anti-aliasing (TAA) in its graphics menu. Record a video only for part C (Win+Alt+R).
+Caps lock off. Each step names the log line that answers it.
+
+**A. Sound learning (no video).**
+1. 5 light attacks in the air (left mouse / pad X), a second apart. Then 5 heavy attacks (right mouse / pad Y).
 2. Ctrl+Shift+D, then draw the sword with the game's own key within a second. Do it 3 times.
 3. Ctrl+Shift+S, then sheathe with the game's own key within a second. Do it 3 times.
 4. Stand still for 30 s (the baseline).
-The log's SOUND LEARN lines show the candidates. A learned event is saved to gotvr.ini (`sound_*_event`) and VR uses it.
+Answer: `SOUND LEARN` lines and `SOUND: the game's ... sound is event 0x...`. A learned event is saved to gotvr.ini (`sound_*_event`)
+and VR uses it.
+
+**B. Render captures (no video).** Ctrl+Shift+C captures the game's motion vectors and depth 0.5 s after the press. Press it twice
+quickly to capture 200 ms after your next attack instead. Wait 2 s between captures.
+1. Camera still, Jin standing idle: Ctrl+Shift+C. This is the reference; little should move.
+2. Camera still, sword out: Ctrl+Shift+C twice, then a light attack. Does Jin's moving sword have its own motion vectors?
+3. A slow camera pan with the mouse while pressing Ctrl+Shift+C. The whole image should move.
+4. Run sideways past a wall or a tree while pressing Ctrl+Shift+C.
+5. Look at something close (a fence or wall within 2 m), then at the horizon, with Ctrl+Shift+C each time. This shows which end of
+   the depth range is near.
+Answer: `CAPTURE #n velocity` / `CAPTURE #n depth` lines (format, value range, % of the image that moves, the 16 x 9 map) and the
+files `GoTVR\cap_<n>_velocity.raw` / `cap_<n>_depth.raw`. Send the log and the .raw files.
+
+**C. Glint check (optional, video).** Fight a group with red and blue attackers. Press F5 at each red glint and F6 at each blue one.
+Answer: each tag's `GTR` line names the attacker and the mod's verdict. They should agree.
 
 ## After the session
 

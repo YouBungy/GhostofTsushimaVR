@@ -22,6 +22,24 @@ refused to send images ("FRAME GENERATION is on" in the log, although it was off
 same-frame stereo (both eyes every frame) gets built. Please press **F10** once in each of: main menu, standing
 outdoors, riding, a cutscene, photo mode.
 
+## 0.18.86: DLSS quality setting, render capture for flat round 7
+
+**Install:** `xinput1_4.dll` (and `GoTVR\GoTVRHost.exe` from 0.18.84 if you don't have host 0.15.9 yet).
+
+- **`dlss_quality`** (new, default `game`): `game`, `ultra_performance`, `performance`, `balanced`, `quality` or `dlaa`. It
+  only applies with `vr_aa = dlss` in VR (`xr = 4`, `play_mode = vr`). Restart the game after changing it.
+  - The game keeps these settings in the registry (`HKCU\Software\Sucker Punch Productions\Ghost of Tsushima DIRECTOR'S CUT\Graphics`:
+    `AA`, `UpscaleMethod`, `UpscaleQuality`). The mod answers the game's own read of those values with your choice. It does not
+    change the registry, so your menu choice is still there for `vr_aa = taa` and flat play.
+  - The value order comes from the game's own converter to DLSS (0x468BD0): Ultra Performance 0, Performance 1, Balanced 2,
+    Quality 3. `dlaa` sets the game's AA to DLAA (4) with no upscaler.
+  - While it is set, changing DLSS in the game's menu works for that session but is not saved.
+  - The log line `DLSS quality:` shows what the game read and its own saved choice.
+- **Render capture (flat round 7):** Ctrl+Shift+C saves the game's motion vectors and depth 0.5 s later. Press it twice quickly to
+  capture 200 ms after your next attack instead. The `CAPTURE` log lines give the format, the value range and a 16 x 9 map of what
+  moves. The raw files go to `GoTVR\cap_<n>_*.raw`. They show whether the swinging arm has its own motion vectors (the TAA ghost)
+  and which way the depth runs (the Spacewarp depth layer). See docs/FLAT_TEST_PLAN.md round 7 and docs/RENDER_PLAN.md.
+
 ## 0.18.84 / host 0.15.9: WIP - DLSS, eased swing step, headset refresh rate
 
 **Install:** `xinput1_4.dll` and `GoTVR\GoTVRHost.exe`.

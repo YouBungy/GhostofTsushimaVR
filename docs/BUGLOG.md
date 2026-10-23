@@ -2679,3 +2679,23 @@ spaces, session, instance → TerminateProcess.
 - Host: XR_FB_display_refresh_rate enabled when offered; rates logged; xr_display_hz requests one. VDXR extension list (host.log):
   composition_layer_depth yes, FB_space_warp no.
 
+
+## GoTVR 0.18.84 → 0.18.86 — DLSS quality, render capture, review fixes
+
+- **Owner:** "For DLSS, add a .ini setting for the quality of DLSS (balanced, performance, quality, etc)".
+  - Found: the game's graphics settings table 0x461200 (AA +0x88, UpscaleMethod +0xB0, UpscaleQuality +0xB4).
+  - They are REG_DWORDs under `...\Ghost of Tsushima DIRECTOR'S CUT\Graphics`, read by 0x461960 (RegQueryValueExA) and written
+    by 0x462DA0 (RegSetValueExA).
+  - Enum names table 0x14855A0: AA Off/SMAA/SMAAT2x/TAA/DLAA; UpscaleMethod None/DLSS/FSR/XeSS; UpscaleQuality Ultra Performance /
+    Performance / Balanced / Quality / Ultra Quality / Ultra Quality Plus.
+  - 0x468BD0 maps quality 0/1/2/3 to NGX 3/0/1/2, which confirms the order.
+  - Fix: `dlss_quality` patches the exe's own import slots for RegQueryValueExA / RegSetValueExA in DllMain, before the game's first
+    settings read. Known build only (PE timestamp checked; undone if the worker's full SHA / signature check fails). Only
+    `vr_aa = dlss`, `xr = 4`, `play_mode = vr`. Self-test: the override answers only its names, passes a too-small buffer through and
+    swallows only those DWORD writes.
+- **0.18.85 render capture** (Ctrl+Shift+C): the motion-vector buffer (AA +0xEA90) and the depth from the frame ring. The depth
+  record is validated against the motion vectors' resource (same vtable, same size) before any call into it.
+- **Review fix:** a single Ctrl+Shift+C captured at once, so the "twice = after my next attack" double press also took a needless
+  first capture. Now a single press waits 0.5 s for a second press.
+- **Review, no change needed:** the outcome injection (list grow, fail-closed classify), the katana sound learner / playback, the
+  sheathe pivot and the swing-step ease. The host refresh-rate request only asks for a rate the runtime offered.
